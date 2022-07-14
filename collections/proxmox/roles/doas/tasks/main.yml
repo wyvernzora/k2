@@ -1,0 +1,18 @@
+---
+- name: proxmox.doas | install doas package
+  apt:
+    name: doas
+    state: latest
+    update_cache: yes
+
+- name: proxmox.doas | create :wheel group
+  group:
+    name: wheel
+    state: present
+
+- name: proxmox.doas | create config file
+  ansible.builtin.copy:
+    src: files/doas.conf
+    dest: /etc/doas.conf
+    owner: root
+    group: root

@@ -1,0 +1,29 @@
+---
+- name: Install nginx
+  package:
+    name: nginx
+    state: latest
+
+- name: Remove default nginx config
+  file:
+    dest: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Copy nginx config for proxmox
+  copy:
+    src: files/proxmox.conf
+    dest: /etc/nginx/conf.d/proxmox.conf
+
+- name: Copy SSL certificates
+  copy:
+    src: files/{{ item }}
+    dest: /etc/pve/local/{{ item }}
+  with_items:
+    - pve-ssl.pem
+    - pve-ssl.key
+
+- name: Restart nginx
+  service:
+    name: nginx
+    enabled: true
+    state: restarted

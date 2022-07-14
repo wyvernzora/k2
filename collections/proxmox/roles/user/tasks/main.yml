@@ -1,0 +1,24 @@
+---
+- name: proxmox.user | create non-admin user
+  user:
+    name: '{{username}}'
+    password: "{{ password }}"
+    group: wheel
+    update_password: always
+
+- name: proxmox.user | pull SSH key from github
+  ansible.posix.authorized_key:
+    user: '{{username}}'
+    key: 'https://github.com/{{username}}.keys'
+    state: present
+  register: create_user
+
+- name: proxmox.user | add user to the proxmox pam
+  ansible.builtin.shell:
+    cmd: /usr/sbin/pveum user add "{{ username }}@pam"
+  when: create_user.changed
+
+- name: proxmox.user | add user to the admins group
+  ansible.builtin.shell:
+    cmd: /usr/sbin/pveum acl modify / --roles Administrator --users {{ username }}@pam
+  when: create_user.changed

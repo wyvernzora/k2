@@ -1,0 +1,17 @@
+---
+- name: proxmox.apt | remove proxmox enterprise repo
+  ansible.builtin.apt_repository:
+    repo: deb https://enterprise.proxmox.com/debian/pve {{ansible_distribution_release}} pve-enterprise
+    state: absent
+
+- name: proxmox.apt | add proxmox no-subscription repo
+  ansible.builtin.apt_repository:
+    repo: deb http://download.proxmox.com/debian/pve {{ansible_distribution_release}} pve-no-subscription
+    state: present
+  register: repos
+
+- name: proxmox.apt | update cache and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+  when: repos.changed
