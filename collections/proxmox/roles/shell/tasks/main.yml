@@ -2,7 +2,8 @@
 - name: proxmox.shell | install fish
   apt:
     name: fish
-    state: present
+    state: latest
+  register: __install_fish
 
 - name: proxmox.shell | ensure config directory exists
   ansible.builtin.file:
@@ -13,19 +14,19 @@
 - name: proxmox.shell | install fisher
   ansible.builtin.shell:
     cmd: /usr/bin/fish -c "curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher"
-  when: fisher_config.changed
+  when: __install_fish.changed
 
 - name: proxmox.shell | copy fisher plugins file
   ansible.builtin.copy:
     src: files/fish_plugins
     dest: ~{{ username }}/.config/fish/fish_plugins
     owner: '{{ username }}'
-  register: fisher_config
+  register: __fisher_config
 
 - name: proxmox.shell | update fisher plugins
   ansible.builtin.shell:
     cmd: /usr/bin/fish -c "fisher update"
-  when: not fisher_config.changed
+  when: __fisher_config.changed
 
 - name: proxmox.shell | copy fisher config file
   ansible.builtin.copy:
