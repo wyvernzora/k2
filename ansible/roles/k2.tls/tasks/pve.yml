@@ -1,0 +1,19 @@
+- include_tasks: upload.yml
+
+- name: setup nginx proxy for Proxmox UI
+  block:
+    - name: install nginx
+      package:
+        name: nginx
+        state: latest
+
+    - name: remove default nginx config
+      file:
+        dest: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: copy nginx config for proxmox
+      template:
+        src: proxmox.conf
+        dest: /etc/nginx/conf.d/proxmox.conf
+      notify: restart and enable nginx service

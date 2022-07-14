@@ -1,0 +1,10 @@
+# Bootstraps Proxmox VE hosts
+---
+- hosts: proxmox
+  remote_user: root
+  roles:
+    - role: pve.nosub
+    - role: k2.user
+    - role: k2.fish
+    - role: k2.tls
+    - role: k2.vfio

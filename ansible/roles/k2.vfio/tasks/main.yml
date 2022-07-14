@@ -1,0 +1,88 @@
+---
+  - name: turn on IOMMU in GRUB parameters
+    grub_cmdline:
+        present:
+            - "intel_iommu=on"
+            - "iommu=pt"
+            - "rd.driver.pre=vfio-pci"
+  
+  - name: configure vfio modules to load on boot
+    lineinfile:
+        path: /etc/modules
+        line: "{{ item }}"
+    loop:
+        - vfio
+        - vfio_pci
+        - vfio_iommu_type1
+    register: __modules
+
+  - name: configure vfio modules to be included in initramfs
+    lineinfile:
+        path: /etc/initramfs-tools/modules
+        line: "{{ item }}"
+    loop:
+        - vfio
+        - vfio_pci
+        - vfio_iommu_type1
+    register: __initramfs_modules
+
+  - name: improve NVidia GPU stability
+    block:
+        - name: make sure that kvm.conf exists
+          file:
+              path: /etc/modprobe.d/kvm.conf
+              state: touch
+              owner: root
+              mode: 0600
+          changed_when: no
+        - name: add parameters to kvm.conf
+          lineinfile:
+              path: /etc/modprobe.d/kvm.conf
+              line: options kvm ignore_msrs=1 report_ignored_msrs=0
+  
+  - name: disable GPU drivers in Proxmox host
+    block:
+        - name: make sure that blacklist.conf exists
+          file:
+              path: /etc/modprobe.d/blacklist.conf
+              state: touch
+              owner: root
+              mode: 0600
+          changed_when: no
+        - name: add modules to blacklist.conf
+          lineinfile:
+              path: /etc/modprobe.d/blacklist.conf
+              line: "{{ item }}"
+          loop:
+              - blacklist radeon
+              - blacklist amdgpu
+              - blacklist nouveau
+              - blacklist nvidia
+              - blacklist nvidiafb
+              - blacklist nvidia_drm
+              - blacklist snd_hda_intel
+              - blacklist snd_hda_codec_hdmi
+              - blacklist i915
+
+  - name: check if bind_vfio script exists
+    stat:
+        path: /etc/initramfs-tools/scripts/init-top/bind_vfio
+    register: __bind_vfio
+
+  - name: copy bind_vfio script to initramfs
+    copy:
+        src: files/bind_vfio
+        dest: /etc/initramfs-tools/scripts/init-top/bind_vfio
+        mode: 0755
+        owner: root
+        group: root
+    when: not __bind_vfio.stat.exists
+    register: __copy_bind_vfio
+  
+  - name: update initramfs image
+    command:
+        cmd: update-initramfs -u -k all
+    when: >
+        __modules.changed or 
+        __initramfs_modules.changed or
+        __copy_bind_vfio.changed
