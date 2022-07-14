@@ -1,0 +1,6 @@
+.vagrant/
+.secrets/
+.state/
+
+*.log
+*.retry

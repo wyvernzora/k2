@@ -1,0 +1,57 @@
+---
+- name: Set up Ansible dependencies
+  hosts: all
+  gather_facts: no
+  pre_tasks:
+    - name: Install packages needed by Ansible
+      raw: /sbin/apk add python3
+
+- name: Bootstrap dependencies
+  become: yes
+  hosts: all
+  collections:
+    - wyvernzora.alpine
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Pull SSH key for Vagrant
+      authorized_key:
+        user: '{{ ansible_user }}'
+        key: '{{ lookup("file", "~/.ssh/id_ed25519.pub") }}'
+        state: present
+      when: ansible_user == 'vagrant'
+  roles:
+    - wyvernzora.alpine.apk
+    - wyvernzora.alpine.qemu
+    - wyvernzora.alpine.cgroups
+    - wyvernzora.alpine.doas
+    - wyvernzora.k3s.download
+  tasks:
+    - name: Install longhorn dependencies
+      apk:
+        name:
+          - open-iscsi
+          - bash
+          - curl
+          - findmnt
+          - lsblk
+
+- name: Set up master nodes
+  become: yes
+  hosts: master
+  collections:
+    - wyvernzora.alpine
+  vars_files:
+    - vars/main.yml
+  roles:
+    - wyvernzora.k3s.master
+    - wyvernzora.k3s.kubevip
+    - wyvernzora.k3s.metallb
+
+- name: Set up worker nodes
+  become: yes
+  hosts: worker
+  collections:
+    - wyvernzora.alpine
+  roles:
+    - wyvernzora.k3s.worker

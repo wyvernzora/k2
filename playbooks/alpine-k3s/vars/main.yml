@@ -1,0 +1,7 @@
+---
+# timezone: "America/Los_Angeles"
+
+k3s_user: k3s
+
+control_plane_vip: 10.10.1.4
+service_lb_cidr: 10.10.90.0/24
