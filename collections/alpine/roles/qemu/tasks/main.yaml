@@ -1,0 +1,14 @@
+---
+
+- name: Install QEMU guest agent
+  apk:
+    name: qemu-guest-agent
+    state: latest
+
+- name: Enable QEMU service
+  service:
+    name: qemu-guest-agent
+    state: started
+    enabled: yes
+    runlevel: boot
+  changed_when: false

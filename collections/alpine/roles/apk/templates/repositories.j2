@@ -1,0 +1,14 @@
+#/media/cdrom/apks
+{{ apk_mirror }}/alpine/{{ alpine_version }}/main
+{% if apk_enable_community -%}
+    {{ apk_mirror }}/alpine/{{ alpine_version }}/community
+{%- endif %}
+{% if apk_enable_edge -%}
+    {{ apk_mirror }}/alpine/edge/main
+{% if apk_enable_community -%}
+    {{ apk_mirror }}/alpine/edge/community
+{%- endif %}
+{% if apk_enable_testing -%}
+    {{ apk_mirror }}/alpine/edge/testing
+{%- endif %}
+{%- endif %}

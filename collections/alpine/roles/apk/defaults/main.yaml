@@ -1,0 +1,15 @@
+
+# Default apk mirror to use
+apk_mirror: https://dl-cdn.alpinelinux.org
+
+# Determines whether to enable community repo
+apk_enable_community: yes
+
+# Determines whether to enable edge repos
+apk_enable_edge: no
+
+# Determines whether to enable testing repo
+apk_enable_testing: no
+
+# Packages to make sure are present and updated
+apk_packages: [ ]

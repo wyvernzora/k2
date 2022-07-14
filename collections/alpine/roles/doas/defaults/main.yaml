@@ -1,0 +1,7 @@
+---
+
+# Group that has doas permissions
+doas_group: wheel
+
+# Allow wheel group nopass doas
+doas_nopass: yes

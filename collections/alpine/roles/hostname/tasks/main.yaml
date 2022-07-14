@@ -1,0 +1,12 @@
+---
+
+- name: Configure hostname
+  copy:
+    dest: /etc/hostname
+    content: '{{ hostname }}'
+  when: hostname is defined
+  register: __hostname
+
+- name: Reboot
+  reboot:
+  when: __hostname.changed

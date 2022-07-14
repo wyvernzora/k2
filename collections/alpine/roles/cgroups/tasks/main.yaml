@@ -1,0 +1,26 @@
+---
+
+- name: Add cgroups boot flags
+  bootflag:
+    flags:
+      - cgroup_enable=cpuset
+      - cgroup_memory=1
+      - cgroup_enable=memory
+    state: present
+  register: bootargs
+
+- name: Update bootloader
+  shell:
+    cmd: update-extlinux
+  when: bootargs.changed
+
+- name: Reboot
+  reboot:
+  when: bootargs.changed
+
+- name: Enable cgroup service
+  service:
+    name: cgroups
+    enabled: yes
+    state: started
+    runlevel: boot

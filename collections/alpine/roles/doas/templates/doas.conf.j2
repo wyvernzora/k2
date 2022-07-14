@@ -1,0 +1,2 @@
+permit nopass root
+permit {% if doas_nopass %}nopass{% else %}persist{% endif %} :{{ doas_group }}

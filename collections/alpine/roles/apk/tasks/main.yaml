@@ -1,0 +1,15 @@
+---
+
+- name: Set up apk repositories
+  template:
+    src: repositories.j2
+    dest: /etc/apk/repositories
+    mode: 0644
+  vars:
+    alpine_version: 'v{{ ansible_distribution_version.split(".")[:2] | join(".") }}'
+
+- name: Install apk packages
+  apk:
+    name: "{{ apk_packages }}"
+    state: latest
+  when: apk_packages | length > 0
