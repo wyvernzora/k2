@@ -1,0 +1,42 @@
+---
+- name: Load K3s leader node info
+  become: no
+  delegate_to: localhost
+  include_vars:
+    file: .state/k3s-leader.yaml
+
+- name: Copy namespace manifest
+  template:
+    src: metallb.ns.yaml.j2
+    dest: /var/lib/rancher/k3s/server/manifests/metallb.ns.yaml
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_host == k3s_leader.host
+
+- name: Copy config map manifest
+  template:
+    src: metallb.config.yaml.j2
+    dest: /var/lib/rancher/k3s/server/manifests/metallb.config.yaml
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_host == k3s_leader.host
+
+- name: Copy RBAC manifest
+  template:
+    src: metallb.rbac.yaml.j2
+    dest: /var/lib/rancher/k3s/server/manifests/metallb.rbac.yaml
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_host == k3s_leader.host
+
+- name: Copy deployment manifest
+  template:
+    src: metallb.yaml.j2
+    dest: /var/lib/rancher/k3s/server/manifests/metallb.yaml
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_host == k3s_leader.host

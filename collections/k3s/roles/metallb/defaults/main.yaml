@@ -1,0 +1,3 @@
+---
+metallb_speaker_version: v0.12.1
+metallb_controller_version: v0.12.1

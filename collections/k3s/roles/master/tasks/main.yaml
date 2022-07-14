@@ -1,0 +1,100 @@
+---
+
+- name: Disable traefik and servicelb if using MetalLB
+  set_fact:
+    k3s_extra_args: '{{ k3s_extra_args | default("") }} --no-deploy servicelb'
+  when: 
+    - '"wyvernzora.k3s.metallb" in ansible_play_role_names'
+
+- name: Set TLS SAN if using kubevip for control plane
+  set_fact:
+    k3s_extra_args: '{{ k3s_extra_args | default("") }} --tls-san {{ control_plane_vip }}'
+  when:
+    - '"wyvernzora.k3s.kubevip" in ansible_play_role_names'
+
+- name: Create K3S config directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 755
+  with_items:
+    - /etc/rancher/k3s
+    - /var/lib/rancher/k3s/server/manifests
+
+- name: Write K3s config file
+  template:
+    src: k3s.config.j2
+    dest: /etc/rancher/k3s/config.yaml
+    owner: root
+    group: root
+    mode: 644
+
+- name: Write K3s env file
+  template:
+    src: ../../../templates/k3s.env.j2
+    dest: /etc/rancher/k3s/k3s.env
+    owner: root
+    group: root
+    mode: 600
+  vars:
+    envars:
+      K3S_TOKEN: '{{ k3s_token }}'
+
+- name: Create K3s service
+  template:
+    src: ../../../templates/k3s.service.j2
+    dest: /etc/init.d/k3s
+    owner: root
+    group: root
+    mode: 755
+  vars:
+    k3s_command: server
+
+- name: Set up log rotation
+  copy:
+    src: ../../../files/k3s.logrotate
+    dest: /etc/logrotate.d/k3s
+
+- name: Start K3S service
+  service:
+    name: k3s
+    enabled: yes
+    state: restarted
+    runlevel: default
+
+- name: Wait for master nodes to join cluster
+  run_once: yes
+  delegate_to: "{{ k3s_leader.host }}"
+  remote_user: "{{ k3s_leader.user }}"
+  command:
+    cmd: k3s kubectl get nodes -l "node-role.kubernetes.io/master=true" -o=jsonpath="{.items[*].metadata.name}"
+  register: __masters
+  until: __masters.rc == 0 and (__masters.stdout.split() | length) == (ansible_play_hosts_all | length)
+  retries: "{{ retry_count | default(20) }}"
+  delay: 10
+  changed_when: false
+
+- name: Read node-token from master
+  run_once: yes
+  delegate_to: "{{ k3s_leader.host }}"
+  remote_user: "{{ k3s_leader.user }}"
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: node_token
+
+- name: Store K3s cluster info for workers
+  become: false
+  run_once: yes
+  delegate_to: localhost
+  copy:
+    content: >-
+      node_token: '{{ node_token.content | b64decode | regex_replace('\n', '') }}'
+      
+      k3s_leader:
+        name: '{{ k3s_leader.name }}'
+        host: '{{ k3s_leader.host }}'
+        user: '{{ k3s_leader.user }}'
+        ip: '{{ k3s_leader.ip }}'
+    dest: .state/k3s-leader.yaml

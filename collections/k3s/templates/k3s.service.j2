@@ -1,0 +1,31 @@
+#!/sbin/openrc-run
+LOG_FILE=/var/log/k3s.log
+ENV_FILE=/etc/rancher/k3s/k3s.env
+
+K3S_CMD_ARGS='{{ k3s_command }} {{ k3s_extra_args | default('') }}'
+
+depend() {
+    after network-online
+    want cgroups
+}
+
+start_pre() {
+    rm -f /tmp/k3s.*
+}
+
+supervisor=supervise-daemon
+name=k3s
+command=/usr/local/bin/k3s
+command_args="${K3S_CMD_ARGS} >>${LOG_FILE} 2&>1"
+
+output_log=${LOG_FILE}
+error_log=${LOG_FILE}
+
+pidfile="/var/run/k3s.pid"
+respawn_delay=5
+respawn_max=0
+
+set -o allexport
+if [ -f /etc/environment ]; then source /etc/environment; fi
+if [ -f ${ENV_FILE} ]; then source ${ENV_FILE}; fi
+set +o allexport
