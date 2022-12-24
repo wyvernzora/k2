@@ -1,20 +1,24 @@
 ---
 - name: Install nginx
+  become_user: root
   package:
     name: nginx
     state: latest
 
 - name: Remove default nginx config
+  become_user: root
   file:
     dest: /etc/nginx/sites-enabled/default
     state: absent
 
 - name: Copy nginx config for proxmox
+  become_user: root
   copy:
     src: files/proxmox.conf
     dest: /etc/nginx/conf.d/proxmox.conf
 
 - name: Copy SSL certificates
+  become_user: root
   copy:
     src: files/{{ item }}
     dest: /etc/pve/local/{{ item }}
@@ -22,8 +26,9 @@
     - pve-ssl.pem
     - pve-ssl.key
 
-- name: Restart nginx
-  service:
+- name: Restart and enable nginx service
+  become_user: root
+  systemd:
     name: nginx
     enabled: true
     state: restarted
