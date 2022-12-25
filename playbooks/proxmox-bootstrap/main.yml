@@ -11,8 +11,5 @@
       remote_user: root
     - role: wyvernzora.proxmox.user
       remote_user: root
-   #- role: wyvernzora.proxmox.shell
-   #  remote_user: root
-   #- role: wyvernzora.proxmox.shell
-   #  remote_user: "{{ username }}"
-   #- role: wyvernzora.proxmox.nginx
+    - role: wyvernzora.proxmox.shell
+    #- role: wyvernzora.proxmox.nginx
