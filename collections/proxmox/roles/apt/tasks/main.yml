@@ -4,12 +4,14 @@
     repo: deb https://enterprise.proxmox.com/debian/pve {{ansible_distribution_release}} pve-enterprise
     state: absent
     update_cache: no
+  become: yes
 
 - name: add proxmox no-subscription repo
   ansible.builtin.apt_repository:
     repo: deb http://download.proxmox.com/debian/pve {{ansible_distribution_release}} pve-no-subscription
     state: present
     update_cache: no
+  become: yes
   register: repos
 
 - name: update cache and upgrade packages
@@ -19,11 +21,17 @@
   when: repos.changed
 
 - name: check if subscription warning is already disabled
-  command:
-    cmd: grep -n -B 1 'No valid sub' proxmoxlib.js
+  shell:
+    cmd: |
+      grep -n -B 1 'No valid sub' proxmoxlib.js | grep 'void({'
     chdir: /usr/share/javascript/proxmox-widget-toolkit
   changed_when: no
+  become: yes
   register: __pve_sub_warning_check
+
+- name: debug
+  debug:
+    msg: '{{__pve_sub_warning_check}}'
 
 - name: remove no subscription warning
   shell:
@@ -31,4 +39,5 @@
       sed -Ezi.bkp "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" proxmoxlib.js
       systemctl restart pveproxy.service
     chdir: '/usr/share/javascript/proxmox-widget-toolkit'
-  when: __pve_sub_warning_check.stdout != ""
+  become: yes
+  when: __pve_sub_warning_check.stdout == ""
