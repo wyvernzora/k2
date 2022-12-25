@@ -10,4 +10,5 @@
     - role: wyvernzora.proxmox.apt
     - role: wyvernzora.proxmox.doas
     - role: wyvernzora.proxmox.shell
+    - role: wyvernzora.proxmox.tls
     - role: wyvernzora.proxmox.nginx

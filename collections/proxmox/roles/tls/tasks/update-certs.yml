@@ -1,0 +1,41 @@
+---
+- name: create local certificate temp directory
+  delegate_to: localhost
+  run_once: yes
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: '.{{ domain }}'
+  register: __tls_tempdir
+
+- name: locally pull latest {{ domain }} certificates for {{ domain }}
+  delegate_to: localhost
+  run_once: yes
+  amazon.aws.s3_object:
+    bucket: '{{ tls_certs.bucket }}'
+    object: '{{ domain }}/{{ item }}'
+    dest: '{{ __tls_tempdir.path }}/{{ item }}'
+    mode: get
+  register: __tls_certs
+  changed_when: no
+  with_items:
+    - chain.pem
+    - fullchain.pem
+    - privkey.pem
+
+- name: create certificate directory {{ tls_certs.dest }}/{{ domain }}
+  ansible.builtin.file:
+    dest: '{{ tls_certs.dest }}/{{ domain }}'
+    state: directory
+  become: yes
+
+- name: upload {{ domain }} certificates to remote host
+  become: yes
+  ansible.builtin.copy:
+    dest: '{{ tls_certs.dest }}/{{ domain }}/{{ item }}'
+    src: '{{ __tls_tempdir.path }}/{{ item }}'
+    owner: root
+    mode: 0600
+  with_items:
+    - chain.pem
+    - fullchain.pem
+    - privkey.pem
