@@ -1,0 +1,40 @@
+# This is an example vars file that contains exampl configuration for the
+# Proxmox bootstrap playbook. If you update this, make sure to rename the
+# file to vars.yml
+---
+
+# Configuration for the non-admin user to set up on the remote
+user:
+  # Username of the non-admin user.
+  # If not specified, uses local user name
+  # username: proxmox
+
+  # Password for the non-admin user.
+  # You can compute the value using the following command:
+  # $ htpasswd -bnBC 10 '' 'password_here'
+  password: $2y$10$Y60L74iC9f.azudfvN8AmO2KfO0X4JT5QE2ClVidcI50PUv6hkelO
+
+
+# Configuration where to download TLS certificates
+# Pulls from an S3 bucket where the following objects are expected:
+#  - s3://bucket/domain/chain.pem
+#  - s3://bucket/domain/fullchain.pem
+#  - s3://bucket/domain/privkey.pem
+tls_certs:
+
+  # S3 bucket where to find the TLS certificates
+  bucket: bucket-name
+
+  # Where to put the certificates
+  dest: /etc/letsencrypt/live
+
+  # Domains for which to pull certificates
+  domains:
+    - example.com
+
+# Configuration for ProxmoxVE
+pve:
+
+  # Domain for the PVE web UI.
+  # Since the certificate here is a wildcard certificate, only root domain will do
+  domain: example.com
