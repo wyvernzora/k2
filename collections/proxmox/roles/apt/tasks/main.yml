@@ -20,7 +20,7 @@
 
 - name: check if subscription warning is already disabled
   command:
-    cmd: grep -qn -B 1 'No valid sub' proxmoxlib.js
+    cmd: grep -n -B 1 'No valid sub' proxmoxlib.js
     chdir: /usr/share/javascript/proxmox-widget-toolkit
   changed_when: no
   register: __pve_sub_warning_check
