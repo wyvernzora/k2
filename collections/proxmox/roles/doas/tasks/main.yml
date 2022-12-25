@@ -4,11 +4,13 @@
     name: doas
     state: latest
     update_cache: yes
+  become: yes
 
 - name: proxmox.doas | create :wheel group
   group:
     name: wheel
     state: present
+  become: yes
 
 - name: proxmox.doas | create config file
   ansible.builtin.copy:
@@ -16,3 +18,4 @@
     dest: /etc/doas.conf
     owner: root
     group: root
+  become: yes

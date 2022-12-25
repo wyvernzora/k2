@@ -5,11 +5,9 @@
       include_vars:
         file: config/vars.yml
   roles: 
-    - role: wyvernzora.proxmox.apt
-      remote_user: root
-    - role: wyvernzora.proxmox.doas
-      remote_user: root
     - role: wyvernzora.proxmox.user
       remote_user: root
+    - role: wyvernzora.proxmox.apt
+    - role: wyvernzora.proxmox.doas
     - role: wyvernzora.proxmox.shell
     - role: wyvernzora.proxmox.nginx
