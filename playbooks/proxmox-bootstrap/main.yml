@@ -12,4 +12,4 @@
     - role: wyvernzora.proxmox.user
       remote_user: root
     - role: wyvernzora.proxmox.shell
-    #- role: wyvernzora.proxmox.nginx
+    - role: wyvernzora.proxmox.nginx
