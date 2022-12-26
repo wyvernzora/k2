@@ -29,10 +29,6 @@
   become: yes
   register: __pve_sub_warning_check
 
-- name: debug
-  debug:
-    msg: '{{__pve_sub_warning_check}}'
-
 - name: remove no subscription warning
   shell:
     cmd: |
