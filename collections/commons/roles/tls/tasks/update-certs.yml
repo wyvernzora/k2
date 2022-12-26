@@ -5,6 +5,7 @@
   ansible.builtin.tempfile:
     state: directory
     suffix: '.{{ domain }}'
+  changed_when: no
   register: __tls_tempdir
 
 - name: locally pull latest {{ domain }} certificates for {{ domain }}
