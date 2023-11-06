@@ -15,6 +15,11 @@
         - vfio_pci
     register: __modules_changed
   
+  - name: update initramfs image
+    command:
+        cmd: update-initramfs -u -k all
+    when: __modules_changed.changed
+
   - name: improve NVidia GPU stability
     block:
         - name: make sure that kvm.conf exists
@@ -28,7 +33,6 @@
           lineinfile:
               path: /etc/modprobe.d/kvm.conf
               line: options kvm ignore_msrs=1 report_ignored_msrs=0
-          register: __kvmconf_changed
   
   - name: disable GPU drivers in Proxmox host
     block:
@@ -50,15 +54,6 @@
               - blacklist nvidia
               - blacklist nvidiafb
               - blacklist nvidia_drm
-              - snd_hda_intel
-              - snd_hda_codec_hdmi
-              - i915
-          register: __blacklist_changed
-  
-  - name: update initramfs image
-    command:
-        cmd: update-initramfs -u -k all
-    when: >
-        __modules_changed.changed or
-        __kvmconf_changed.changed or
-        __blacklist_changed.changed
+              - blacklist snd_hda_intel
+              - blacklist snd_hda_codec_hdmi
+              - blacklist i915
