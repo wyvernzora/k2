@@ -4,7 +4,12 @@ FROM alpine
 ansible-base:
     FROM alpine
     RUN adduser -D -h '/ansible' ansible
-    RUN apk add --no-cache ansible openssh-client ca-certificates aws-cli py-boto3
+    RUN apk add --no-cache \
+        ansible \
+        aws-cli \
+        ca-certificates \
+        openssh-client \
+        py-boto3
     WORKDIR '/ansible'
     USER ansible
 
@@ -14,4 +19,4 @@ proxmox:
     RUN ansible-galaxy install -r requirements.yml
     VOLUME ["/ansible/config", "/ansible/.ssh", "/ansible/.aws"]
     CMD [ "ansible-playbook", "/ansible/main.yml" ]
-    SAVE IMAGE ghcr.io/wyvernzora/ansible-proxmox:latest
+    SAVE IMAGE --push ghcr.io/wyvernzora/ansible-proxmox:latest

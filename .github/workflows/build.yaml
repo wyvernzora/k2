@@ -1,0 +1,45 @@
+name: Publish
+
+on:
+    push:
+        tags:
+            - '*'
+        branches:
+            - '*'
+
+concurrency:
+    group: ci-publish-${{ github.head_ref || github.ref }}-${{ github.repository }}
+    cancel-in-progress: true
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+            packages: write
+        strategy:
+            matrix:
+                targets:
+                    - proxmox
+        env:
+            REGISTRY: ghcr.io
+            REGISTRY_USER: ${{ github.actor }}
+            REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: docker-practice/actions-setup-docker@master
+            - uses: earthly/actions-setup@v1
+            - uses: docker/login-action@v3
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ env.REGISTRY_USER }}
+                password: ${{ env.REGISTRY_PASSWORD }}
+            - name: Only push if chage is on main branch or is a tag
+              run: |
+                if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == refs/tags/v* ]]; then
+                    echo "PUSH_FLAG=--push" >> $GITHUB_ENV
+                else
+                    echo "PUSH_FLAG=" >> $GITHUB_ENV
+                fi
+            - run: earthly --ci $PUSH_FLAG +${{ matrix.targets }}
