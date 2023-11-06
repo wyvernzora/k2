@@ -1,9 +1,18 @@
 ---
+- name: create non-admin user group
+  group:
+      gid: "{{ user.gid }}"
+      name: "{{ user.username }}"
+
+
 - name: create non-admin user
   user:
+      uid: "{{ user.uid }}"
       name: "{{ user.username }}"
       password: "{{ user.password }}"
-      group: wheel
+      group: "{{ user.username }}"
+      groups:
+        - wheel
       update_password: always
   register: __user_create
 
