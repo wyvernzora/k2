@@ -1,0 +1,43 @@
+# Here we configure Proxmox VE APT sources for home lab use. Specifically, we switch all the enterprise sources
+# to their no-subscription variants, including the Ceph Quincy repo added in Proxmox 8.0.
+# For more details, see Proxmox VE documentation: https://pve.proxmox.com/wiki/Package_Repositories
+---
+- name: configure apt to use non-enterprise sources
+  block:
+      - name: remove proxmox enterprise repo
+        apt_repository:
+            repo: deb https://enterprise.proxmox.com/debian/pve {{ansible_distribution_release}} pve-enterprise
+            state: absent
+            update_cache: no
+        register: apt_pve_rm_sub
+
+      - name: add proxmox no-subscription repo
+        apt_repository:
+            repo: deb http://download.proxmox.com/debian/pve {{ansible_distribution_release}} pve-no-subscription
+            state: present
+            update_cache: no
+        register: apt_pve_add_nosub
+        
+      - name: remove ceph quincy enterprise repo
+        apt_repository:
+            repo: deb https://enterprise.proxmox.com/debian/ceph-quincy {{ansible_distribution_release}} enterprise
+            state: absent
+            update_cache: no
+        register: apt_ceph_rm_sub
+    
+      - name: add ceph quincy no-subscription repo
+        apt_repository:
+            repo: deb http://download.proxmox.com/debian/ceph-quincy {{ansible_distribution_release}} no-subscription
+            state: present
+            update_cache: no
+        register: apt_cept_add_nosub
+
+      - name: update cache and upgrade packages
+        apt:
+            update_cache: yes
+            upgrade: dist
+        when: >
+            apt_pve_rm_sub.changed or
+            apt_pve_add_nosub.changed or
+            apt_ceph_rm_sub.changed or
+            apt_cept_add_nosub.changed

@@ -1,0 +1,39 @@
+---
+- name: pull down latest TLS certificates
+  block:
+    - name: create local certificate directory
+      delegate_to: localhost
+      run_once: true
+      tempfile:
+        state: directory
+        suffix: ".{{ tls.domain }}"
+      changed_when: no
+      register: __tls_tempdir
+
+    - name: pull latest TLS certificate for {{ domain }}
+      delegate_to: localhost
+      run_once: true
+      amazon.aws.s3_object:
+        bucket: "{{ tls.bucket }}"
+        object: "{{ tls.domain }}/{{ item }}"
+        dest: "{{ __tls_tempdir.path }}/{{ item }}"
+        mode: get
+      register: __tls_certs
+      changed_when: no
+      with_items:
+        - fullchain.pem
+        - privkey.pem
+
+    - name: upload certificate to remote host
+      copy:
+        dest: "/etc/ssl/certs/{{ tls.domain }}.pem"
+        src: "{{ __tls_tempdir.path }}/fullchain.pem"
+        owner: root
+        mode: 0600
+
+    - name: upload private key to remote host
+      copy:
+        dest: "/etc/ssl/private/{{ tls.domain }}.pem"
+        src: "{{ __tls_tempdir.path }}/privkey.pem"
+        owner: root
+        mode: 0600

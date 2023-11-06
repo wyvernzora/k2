@@ -1,7 +1,0 @@
----
-{% if ansible_host == k3s_leader.host -%}
-    cluster-init: true
-{% else -%}
-    server: https://{{ k3s_leader.ip }}:6443
-{% endif %}
-write-kubeconfig-mode: '644'

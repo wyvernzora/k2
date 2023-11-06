@@ -1,0 +1,3 @@
+---
+- include_tasks: certs.yml
+- include_tasks: nginx.yml

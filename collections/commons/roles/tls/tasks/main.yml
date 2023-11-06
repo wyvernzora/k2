@@ -1,7 +1,0 @@
----
-
-- name: update TLS certificates
-  include_tasks: update-certs.yml
-  loop_control:
-    loop_var: domain
-  with_items: '{{ tls_certs.domains }}'

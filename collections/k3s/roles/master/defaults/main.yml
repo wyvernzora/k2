@@ -1,7 +1,0 @@
----
-k3s_token: '{{ lookup("password", ".state/k3s-token chars=ascii_letters,digits length=50") }}'
-k3s_leader:
-  name: '{{ ansible_play_hosts_all[0] }}'
-  host: '{{ hostvars[ansible_play_hosts_all[0]].ansible_host | default(ansible_play_hosts_all[0]) }}'
-  user: '{{ hostvars[ansible_play_hosts_all[0]].ansible_user | default("root") }}'
-  ip: '{{ hostvars[ansible_play_hosts_all[0]].ansible_default_ipv4.address }}'

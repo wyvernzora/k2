@@ -1,0 +1,11 @@
+---
+- hosts: all
+  remote_user: root
+  pre_tasks:
+    - name: Load config/vars.yml
+      include_vars:
+        file: config/vars.yml
+  roles:
+    - role: apt
+    - role: user
+    - role: tls

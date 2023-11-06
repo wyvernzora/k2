@@ -1,0 +1,26 @@
+---
+- name: create non-admin user
+  user:
+      name: "{{ user.username }}"
+      password: "{{ user.password }}"
+      group: wheel
+      update_password: always
+  register: __user_create
+
+- name: pull SSH key from github
+  authorized_key:
+      user: "{{ user.username }}"
+      key: "{{ item }}"
+      state: present
+  with_items: "{{ user.sshkeys }}"
+  register: __user_ssh_keys
+
+- name: add user to PVE
+  pveum_user:
+      username: wyvernzora
+
+- name: grant user PVE admin permissions
+  pveum_acl:
+      username: wyvernzora
+      role: Administrator
+      path: /
