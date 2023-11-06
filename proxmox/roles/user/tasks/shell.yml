@@ -60,7 +60,7 @@
       - name: update fisher plugins
         ansible.builtin.shell:
             cmd: "fisher update"
-            executable: /usr/bin/fish
+            executable: /bin/fish
         when: __fisher_config.changed
         register: __fisher_update
         loop:
@@ -86,9 +86,12 @@
           - "{{ user.username }}"
 
       - name: make sure ownership is correct
-        shell:
-            cmd: "chown -R {{ item }} ~{{ item }}/.config"
-        when: __fisher_config.changed
+        file:
+          path: "~{{ item }}/.config"
+          owner: "{{ item }}"
+          group: "{{ item }}"
+          recurse: yes
+          state: directory
         loop:
           - "root"
           - "{{ user.username }}"
