@@ -7,7 +7,7 @@
       update_password: always
   register: __user_create
 
-- name: pull SSH key from github
+- name: set up authorized SSH keys
   authorized_key:
       user: "{{ user.username }}"
       key: "{{ item }}"

@@ -9,3 +9,5 @@
     - role: apt
     - role: user
     - role: tls
+    - role: pcie
+

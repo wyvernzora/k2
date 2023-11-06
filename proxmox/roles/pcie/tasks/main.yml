@@ -1,0 +1,64 @@
+---
+  - name: turn on IOMMU in GRUB parameters
+    grub_cmdline:
+        present:
+            - "intel_iommu=on"
+            - "iommu=pt"
+  
+  - name: configure vfio modules to load on boot
+    lineinfile:
+        path: /etc/modules
+        line: "{{ item }}"
+    loop:
+        - vfio
+        - vfio_iommu_type1
+        - vfio_pci
+    register: __modules_changed
+  
+  - name: improve NVidia GPU stability
+    block:
+        - name: make sure that kvm.conf exists
+          file:
+              path: /etc/modprobe.d/kvm.conf
+              state: touch
+              owner: root
+              mode: 0600
+          changed_when: no
+        - name: add parameters to kvm.conf
+          lineinfile:
+              path: /etc/modprobe.d/kvm.conf
+              line: options kvm ignore_msrs=1 report_ignored_msrs=0
+          register: __kvmconf_changed
+  
+  - name: disable GPU drivers in Proxmox host
+    block:
+        - name: make sure that blacklist.conf exists
+          file:
+              path: /etc/modprobe.d/blacklist.conf
+              state: touch
+              owner: root
+              mode: 0600
+          changed_when: no
+        - name: add modules to blacklist.conf
+          lineinfile:
+              path: /etc/modprobe.d/blacklist.conf
+              line: "{{ item }}"
+          loop:
+              - blacklist radeon
+              - blacklist amdgpu
+              - blacklist nouveau
+              - blacklist nvidia
+              - blacklist nvidiafb
+              - blacklist nvidia_drm
+              - snd_hda_intel
+              - snd_hda_codec_hdmi
+              - i915
+          register: __blacklist_changed
+  
+  - name: update initramfs image
+    command:
+        cmd: update-initramfs -u -k all
+    when: >
+        __modules_changed.changed or
+        __kvmconf_changed.changed or
+        __blacklist_changed.changed
