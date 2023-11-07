@@ -6,8 +6,7 @@
       include_vars:
         file: config/vars.yml
   roles:
-    - role: apt
+    - role: nosub
     - role: user
     - role: tls
     - role: pcie
-
