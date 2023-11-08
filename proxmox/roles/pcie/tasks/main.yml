@@ -4,6 +4,7 @@
         present:
             - "intel_iommu=on"
             - "iommu=pt"
+            - "rd.driver.pre=vfio-pci"
   
   - name: configure vfio modules to load on boot
     lineinfile:
@@ -11,14 +12,19 @@
         line: "{{ item }}"
     loop:
         - vfio
-        - vfio_iommu_type1
         - vfio_pci
-    register: __modules_changed
-  
-  - name: update initramfs image
-    command:
-        cmd: update-initramfs -u -k all
-    when: __modules_changed.changed
+        - vfio_iommu_type1
+    register: __modules
+
+  - name: configure vfio modules to be included in initramfs
+    lineinfile:
+        path: /etc/initramfs-tools/modules
+        line: "{{ item }}"
+    loop:
+        - vfio
+        - vfio_pci
+        - vfio_iommu_type1
+    register: __initramfs_modules
 
   - name: improve NVidia GPU stability
     block:
@@ -57,3 +63,26 @@
               - blacklist snd_hda_intel
               - blacklist snd_hda_codec_hdmi
               - blacklist i915
+
+  - name: check if bind_vfio script exists
+    stat:
+        path: /etc/initramfs-tools/scripts/init-top/bind_vfio.sh
+    register: __bind_vfio
+
+  - name: copy bind_vfio script to initramfs
+    copy:
+        src: files/bind_vfio.sh
+        dest: /etc/initramfs-tools/scripts/init-top/bind_vfio.sh
+        mode: 0755
+        owner: root
+        group: root
+    when: not __bind_vfio.stat.exists
+    register: __copy_bind_vfio
+  
+  - name: update initramfs image
+    command:
+        cmd: update-initramfs -u -k all
+    when: >
+        __modules.changed or 
+        __initramfs_modules.changed or
+        __copy_bind_vfio.changed
