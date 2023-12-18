@@ -19,4 +19,4 @@ proxmox:
     RUN ansible-galaxy install -r requirements.yml
     VOLUME ["/ansible/config", "/ansible/.ssh", "/ansible/.aws"]
     CMD [ "ansible-playbook", "/ansible/main.yml" ]
-    SAVE IMAGE --push ghcr.io/wyvernzora/ansible-proxmox:latest
+    SAVE IMAGE --push ghcr.io/wyvernzora/k2-ansible-proxmox:latest
