@@ -66,13 +66,13 @@
 
   - name: check if bind_vfio script exists
     stat:
-        path: /etc/initramfs-tools/scripts/init-top/bind_vfio.sh
+        path: /etc/initramfs-tools/scripts/init-top/bind_vfio
     register: __bind_vfio
 
   - name: copy bind_vfio script to initramfs
     copy:
-        src: files/bind_vfio.sh
-        dest: /etc/initramfs-tools/scripts/init-top/bind_vfio.sh
+        src: files/bind_vfio
+        dest: /etc/initramfs-tools/scripts/init-top/bind_vfio
         mode: 0755
         owner: root
         group: root

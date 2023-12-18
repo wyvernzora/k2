@@ -1,0 +1,38 @@
+#!/bin/sh -e
+
+PREREQ=""
+prereqs() {
+	echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+# Add PCI device IDs to be bound to VFIO here
+# Example:
+#        0000:00:00.0 # Comment
+PCI_DEVICES="
+	# Put PCI device IDs that you wish to bind to VFIO
+	# Find PCI devices using the 'lspci -D' command
+    # Examples:
+    #
+	# 0000:02:00.0		# Integrated PERC HBA330
+	# 0000:83:00.0		# PCIe PERC H830
+	# 0000:07:00.0		# NVIDIA RTX A4000 (GPU)
+	# 0000:07:00.1		# NVIDIA RTX A4000 (Audio)
+	# 0000:84:00.0		# NVIDIA Quadro P400 (GPU)
+	# 0000:84:00.1		# NVIDIA Quadro P400 (Audio)
+"
+
+echo "$PCI_DEVICES" | while IFS= read -r LINE; do
+	DEVICE=$(echo "$LINE" | cut -d '#' -f 1 | xargs)
+	[ -z "$DEVICE" ] && continue
+	echo "vfio-pci" > /sys/bus/pci/devices/$DEVICE/driver_override
+	echo "bind_vfio: $DEVICE"
+done
+
+modprobe -i vfio-pci
