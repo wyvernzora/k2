@@ -15,7 +15,8 @@ ansible-base:
 
 proxmox:
     FROM +ansible-base
-    COPY "./proxmox" '.'
+    COPY "./playbooks/proxmox/" './'
+    COPY "./roles/" "./roles/"
     RUN ansible-galaxy install -r requirements.yml
     VOLUME ["/ansible/config", "/ansible/.ssh", "/ansible/.aws"]
     CMD [ "ansible-playbook", "/ansible/main.yml" ]

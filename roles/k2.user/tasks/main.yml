@@ -4,7 +4,6 @@
       gid: "{{ user.gid }}"
       name: "{{ user.username }}"
 
-
 - name: create non-admin user
   user:
       uid: "{{ user.uid }}"
@@ -24,12 +23,18 @@
   with_items: "{{ user.sshkeys }}"
   register: __user_ssh_keys
 
-- name: add user to PVE
-  pveum_user:
-      username: wyvernzora
+- name: install sudo
+  package:
+      name: sudo
+      state: present
 
-- name: grant user PVE admin permissions
-  pveum_acl:
-      username: wyvernzora
-      role: Administrator
-      path: /
+- name: create wheel group
+  group:
+      name: wheel
+      state: present
+
+- name: allow wheel group to sudo with no password
+  community.general.sudoers:
+      name: wheel
+      commands: ALL
+      group: wheel

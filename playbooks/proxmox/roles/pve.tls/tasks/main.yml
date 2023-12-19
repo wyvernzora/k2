@@ -1,4 +1,8 @@
 ---
+- name: Import k2.tls
+  import_role:
+    name: k2.tls
+
 - name: setup nginx proxy for Proxmox UI
   block:
     - name: install nginx

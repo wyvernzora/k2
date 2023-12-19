@@ -6,7 +6,8 @@
       include_vars:
         file: config/vars.yml
   roles:
-    - role: nosub
-    - role: user
-    - role: tls
-    - role: pcie
+    - role: pve.nosub
+    - role: pve.user
+    - role: k2.fish
+    - role: pve.tls
+    - role: k2.vfio
