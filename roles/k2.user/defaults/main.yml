@@ -1,0 +1,23 @@
+
+# ID of the non-root user
+k2_user_uid: 3000
+
+# ID of the non-root user's resource group
+k2_user_gid: 3000
+
+# Name of the non-root user
+k2_user_username: wyvernzora
+
+# Password of the non-root user. 
+# Disabled by default unless specified in vars.
+k2_user_password: "!"
+
+# SSH keys to set up for the non-root user.
+# None by default unless specified in vars.
+k2_user_sshkeys: [ https://github.com/wyvernzora.keys ]
+
+# PVE role to grant the user
+k2_user_pve_role: Administrator
+
+# PVE path to grant permissions for
+k2_user_pve_path: /

@@ -27,6 +27,4 @@
         register: __install_fish
 
 - include_tasks: fish.yml
-  loop:
-    - "root"
-    - "{{ user.username }}"
+  loop: "{{ k2_fish_users }}"

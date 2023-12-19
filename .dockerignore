@@ -1,0 +1,4 @@
+.assets
+.git*
+*.code-workspace
+Dockerfile

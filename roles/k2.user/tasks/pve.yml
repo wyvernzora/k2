@@ -1,0 +1,9 @@
+- name: add user to PVE
+  pveum_user:
+      username: "{{ k2_user_username }}"
+
+- name: grant user PVE admin permissions
+  pveum_acl:
+      username: "{{ k2_user_username }}"
+      role: "{{ k2_user_pve_role }}"
+      path: "{{ k2_user_pve_path }}"

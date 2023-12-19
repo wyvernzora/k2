@@ -1,4 +1,3 @@
----
 - name: pull down latest TLS certificates
   block:
     - name: create local certificate directory
@@ -6,16 +5,16 @@
       run_once: true
       tempfile:
         state: directory
-        suffix: ".{{ tls.domain }}"
+        suffix: ".{{ k2_tls_domain }}"
       changed_when: no
       register: __tls_tempdir
 
-    - name: pull latest TLS certificate for {{ domain }}
+    - name: pull latest TLS certificate for {{ k2_tls_domain }}
       delegate_to: localhost
       run_once: true
       amazon.aws.s3_object:
-        bucket: "{{ tls.bucket }}"
-        object: "{{ tls.domain }}/{{ item }}"
+        bucket: "{{ k2_tls_bucket }}"
+        object: "{{ k2_tls_domain}}/{{ item }}"
         dest: "{{ __tls_tempdir.path }}/{{ item }}"
         mode: get
       register: __tls_certs
@@ -24,16 +23,21 @@
         - fullchain.pem
         - privkey.pem
 
+- name: upload certificates to remote host
+  block:
     - name: upload certificate to remote host
       copy:
-        dest: "/etc/ssl/certs/{{ tls.domain }}.pem"
+        dest: "/etc/ssl/certs/{{ k2_tls_domain }}.pem"
         src: "{{ __tls_tempdir.path }}/fullchain.pem"
         owner: root
         mode: 0600
 
     - name: upload private key to remote host
       copy:
-        dest: "/etc/ssl/private/{{ tls.domain }}.pem"
+        dest: "/etc/ssl/private/{{ k2_tls_domain }}.pem"
         src: "{{ __tls_tempdir.path }}/privkey.pem"
         owner: root
         mode: 0600
+
+- import_tasks: pve.yml
+  when: "'proxmox' in group_names"

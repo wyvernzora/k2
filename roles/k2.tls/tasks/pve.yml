@@ -1,8 +1,3 @@
----
-- name: Import k2.tls
-  import_role:
-    name: k2.tls
-
 - name: setup nginx proxy for Proxmox UI
   block:
     - name: install nginx
@@ -19,9 +14,4 @@
       template:
         src: proxmox.conf
         dest: /etc/nginx/conf.d/proxmox.conf
-
-    - name: restart and enable nginx service
-      systemd:
-        name: nginx
-        enabled: true
-        state: restarted
+      notify: restart and enable nginx service

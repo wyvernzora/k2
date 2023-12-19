@@ -1,0 +1,6 @@
+
+# Default domain to grab TLS certificates for
+k2_tls_domain: wyvernzora.io
+
+# Default bucket to grab TLS certificates from
+k2_tls_bucket: io.wyvernzora.certs

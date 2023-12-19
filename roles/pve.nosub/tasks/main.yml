@@ -63,10 +63,4 @@
             regexp: '^\/\*!do-not-nag!\*\/.*$'
             line: /*!do-not-nag!*/window.addEventListener('load',function(){Proxmox.Utils.checked_command=function(cmd){cmd();};});
             state: present
-        register: __pve_nosub
-
-      - name: restart PVE proxy
-        systemd:
-            name: pveproxy
-            state: restarted
-        when: __pve_nosub.changed
+        notify: restart pveproxy
