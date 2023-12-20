@@ -25,3 +25,6 @@
 
 - import_tasks: pve.yml
   when: "'proxmox' in group_names"
+
+- import_tasks: truenas.yml
+  when: "'truenas' in group_names"
