@@ -183,7 +183,7 @@ class TrueNasCertModule:
     def request(self, method: str, url: str, body = None):
         if body is not None:
             body = json.dumps(body)
-        resp = requests.request(method, url, headers=self.headers, data=body)
+        resp = requests.request(method, url, headers=self.headers, data=body, verify=False)
         if resp.status_code != 200:
             raise Exception(resp.status_code, resp.content)
         return resp.json(object_hook=lambda d: SimpleNamespace(**d))
