@@ -18,4 +18,4 @@ COPY ./ ./
 RUN ansible-galaxy install -r requirements.yml
 ENV ANSIBLE_ROLES_PATH="/ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles"
 VOLUME [ "/ansible/.ssh", "/ansible/.aws", "/ansible/group_vars", "/ansible/host_vars", "/ansible/inventory" ]
-ENTRYPOINT [ "ansible-playbook" ]
+ENTRYPOINT [ "/ansible/entrypoint.sh" ]

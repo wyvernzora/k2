@@ -2,3 +2,6 @@
 .git*
 *.code-workspace
 Dockerfile
+inventory.ini
+group_vars/
+host_vars/

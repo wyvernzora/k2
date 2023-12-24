@@ -1,3 +1,4 @@
+# Bootstraps Proxmox VE hosts
 ---
 - hosts: proxmox
   remote_user: root
