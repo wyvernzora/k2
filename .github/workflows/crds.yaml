@@ -1,18 +1,18 @@
-name: Ansible
+name: CRDs
 on:
-  push:
-      branches:
-        - main
-      paths:
-        - 'ansible/**'
-  pull_request:
-      paths:
-        - 'ansible/**'
-  release:
-      types:
-        - published
+    push:
+        branches:
+          - main
+        paths:
+          - 'crds/**'
+    pull_request:
+        paths:
+          - 'crds/**'
+    release:
+        types:
+          - published
 jobs:
-    build-image:
+    build-crds-image:
         runs-on: ubuntu-latest
         permissions:
             id-token: write
@@ -33,13 +33,13 @@ jobs:
                 registry: ghcr.io
                 username: ${{ github.actor }}
                 password: ${{ secrets.GITHUB_TOKEN }}
-        
+
           - name: Build and publish
-            run: earthly --ci --push +ansible
+            run: earthly --ci --push +crds
 
           - name: Clean up old versions
             uses: actions/delete-package-versions@v4
             with:
-                package-name: k2-ansible
+                package-name: k2-crds
                 package-type: container
                 min-versions-to-keep: 10

@@ -1,9 +1,9 @@
 #cloud-config
 hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
 
-install:
-    device: /dev/sda
-    poweroff: true
+bundles:
+  - targets:
+      - run://ghcr.io/wyvernzora/k2-crds:latest
 
 users:
   - name: kairos
@@ -11,24 +11,24 @@ users:
     ssh_authorized_keys:
       - github:wyvernzora
 
+growpart:
+    devices: ['/']
+
 k3s:
     enabled: true
     args:
-        # Spin up k3s in cluster mode
-      - '--cluster-init'
-      - '--token={{op://K2/k2.wyvernzora.io/server-token}}'
+      - '--cluster-init'                      # Spin up k3s in cluster mode
+      - '--tls-san=10.10.8.2'                 # Make sure k8s control-plane cert has KubeVIP IP
+      - '--disable=traefik,servicelb'         # We'll be deploying our own Traefik and MetalLB
+      - '--secrets-encryption'                # Encrypt secrets at rest
+      - '--flannel-backend=wireguard-native'  # Use WireGuard for intra-cluster network
 
-        # Make sure k8s control-plane cert has KubeVIP IP
-      - '--tls-san=10.10.8.2'
+kubevip:
+    enabled: true
+    eip: 10.10.8.2
 
-        # We'll be deploying our own Traefik and MetalLB
-      - '--disable=traefik,servicelb'
+onepassword:
+    credentials: "{{ op://K2/1Password Connect/credential }}"
+    token: "{{ op://K2/1Password Connect/token }}"
 
-        # Encrypt secrets at rest
-      - '--secrets-encryption'
-
-        # Use WireGuard for intra-cluster network
-      - '--flannel-backend=wireguard-native'
-
-growpart:
-    devices: ['/']
+argocd: { }

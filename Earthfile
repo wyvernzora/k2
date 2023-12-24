@@ -1,6 +1,5 @@
 VERSION 0.6
 FROM alpine
-ARG BUNDLE
 ARG VERSION="latest"
 ARG IMAGE_REPOSITORY=ghcr.io/wyvernzora
 
@@ -13,20 +12,20 @@ version:
     FROM alpine
     RUN apk add git
     COPY . ./
-    RUN echo $(git describe --exact-match --tags || echo "v0.0.0-$(git log --oneline -n 1 | cut -d" " -f1)") > VERSION
+    RUN echo $(git describe --exact-match --tags || echo "$(git log --oneline -n 1 | cut -d" " -f1)") > VERSION
     SAVE ARTIFACT VERSION VERSION
 
 build:
     COPY +version/VERSION ./
     ARG VERSION=$(cat VERSION)
-    FROM DOCKERFILE -f ${BUNDLE}/Dockerfile ./${BUNDLE}
-    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-${BUNDLE}:${VERSION}
+    FROM DOCKERFILE -f bundles/${BUNDLE}/Dockerfile ./bundles/${BUNDLE}
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-bundle:${BUNDLE}
 
 renovate-validate:
     ARG RENOVATE_VERSION
     FROM renovate/renovate:$RENOVATE_VERSION
     WORKDIR /usr/src/app
-    COPY .github/renovate.json .
+    COPY ../.github/renovate.json .
     RUN renovate-config-validator
 
 shellcheck-lint:
@@ -39,3 +38,15 @@ shellcheck-lint:
 lint:
     BUILD +renovate-validate
     BUILD +shellcheck-lint
+
+ansible:
+    COPY +version/VERSION ./
+    ARG VERSION=$(cat VERSION)
+    FROM DOCKERFILE -f ansible/Dockerfile ./ansible
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${VERSION}
+
+crds:
+    COPY +version/VERSION ./
+    ARG VERSION=$(cat VERSION)
+    FROM DOCKERFILE -f crds/Dockerfile ./crds
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-crds:${VERSION}

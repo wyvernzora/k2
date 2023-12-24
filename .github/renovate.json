@@ -6,46 +6,18 @@
     "regexManagers": [
         {
             "fileMatch": [
-                "^Earthfile$"
+                "(.*/|^)Earthfile$",
+                "(.*/|^)Dockerfile"
             ],
             "matchStrings": [
-                "#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\sARG\\s+.+_VERSION=(?<currentValue>.*?)\\s"
+                "\\s*#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\s+ARG\\s+.+_VERSION=(?<currentValue>.*?)\\s"
             ],
             "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
         },
         {
-            "fileMatch": [
-                "^earthly\\.(sh|ps1)$"
-            ],
-            "datasourceTemplate": "docker",
-            "depNameTemplate": "earthly/earthly",
-            "matchStrings": [
-                "earthly\\/earthly:(?<currentValue>.*?)\\s"
-            ],
-            "versioningTemplate": "semver-coerced"
-        },
-        {
             "datasourceTemplate": "helm",
             "fileMatch": [
-                "^.+/run\\.sh$"
-            ],
-            "matchStrings": [
-                "#\\s*renovate:\\s*depName=(?<depName>.*?)(\\s+repoUrl=(?<registryUrl>.*?))?\\s([A-Z0-9_]*)VERSION=\"(?<currentValue>.*?)\"\\s"
-            ]
-        },
-        {
-            "datasourceTemplate": "helm",
-            "fileMatch": [
-                "^tests/.+_test\\.go$"
-            ],
-            "matchStrings": [
-                "//\\s*renovate:\\s*depName=(?<depName>.*?)(\\s+repoUrl=(?<registryUrl>.*?))?\\s+.*version: \\\"(?<currentValue>.*?)\\\"\""
-            ]
-        },
-        {
-            "datasourceTemplate": "helm",
-            "fileMatch": [
-                "^bundle/.+/templates/.+$"
+                "kairos/bootstrap/templates/.+$"
             ],
             "matchStrings": [
                 "{{\\/\\*\\s+renovate:\\s+depName=(?<depName>.*?)(\\s+repoUrl=(?<registryUrl>.*?))?\\s+\\*\/}}\n{{-\\s+\\$version\\s+:=\\s+\"(?<currentValue>.*?)\"\\s+-}}"

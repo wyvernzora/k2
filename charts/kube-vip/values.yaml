@@ -1,0 +1,5 @@
+kube-vip:
+    config:
+        address: 10.10.8.2
+    env:
+        cp_enable: "true"
