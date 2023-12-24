@@ -5,6 +5,10 @@ install:
     device: /dev/sda
     poweroff: true
 
+bundles:
+  - targets:
+      - run://ghcr.io/wyvernzora/k2-kairos-kube-vip:latest
+
 users:
   - name: kairos
     passwd: '{{ op://K2/wyvernzora/passwd }}'
@@ -32,3 +36,8 @@ k3s:
 
 growpart:
     devices: ['/']
+
+kubevip:
+    enabled: true
+    eip: 10.10.8.2
+    interface: ens18
