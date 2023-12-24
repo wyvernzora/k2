@@ -18,42 +18,18 @@
 ### Why containers?
 Repeatability. I have previously encountered issues setting up Ansible on my local machine, then making sure that its version is just right, then gathering all the dependencies and making sure their versions are just right. With containers everything is bundled in. If it works now, it will continue working down the line, just a `docker run` away.
 
-### K2 Commons
-These are bits and pieces that are not specific to any environment, and are applicable across different pieces of K2 infrastructure.
+### Ansible Roles
+| Role                                           | Description                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------- |
+| [`k2.fish`](ansible/roles/k2.fish)             | Set up Fish shell just the way I like it                      |
+| [`k2.tls`](ansible/roles/k2.tls/README.md)     | Pull the latest TLS certificates and update them where needed |
+| [`k2.user`](ansible/roles/k2.user/README.md)   | Set up non-root user and permissions                          |
+| [`k2.vfio`](ansible/roles/k2.vfio/README.md)   | Configure VFIO/IOMMU for PCI passthrough to VMs               |
+| [`k2.user`](ansible/roles/pve.nosub/README.md) | Stop ProxmoxVE nagging about subscription                     |
 
-#### `k2.fish`
-Installs fish shell for specified users and sets up config and plugins just the way I like them.
+### Ansible Playbooks
 
-#### `k2.tls`
-Pulls the latest TLS certificates from my S3 bucket and uploads them to the following directories on remote host:
- - Certificate: `/etc/ssl/certs/{{ domain }}.pem`
- - Private Key: `/etc/ssl/private/{{ domain }}.pem`
-
-#### `k2.user`
-Creates a non-admin user, sets up SSH keys and grants it passwordless sudo access.
-
-#### `k2.vfio`
-Sets up all the configs to bind PCI devices to VFIO driver and pass them through to VMs.
-
-### Playbooks
-
-#### `pve-bootstrap`
- - Replaces enterprise APT repos with no-subscription repos
- - Suppresses the "no-subscription" popup on login
- - Creates non-admin user via `k2.user` and adds as admin to the PVE cluster
- - Uploads TLS cert using `k2.tls` and sets up NGINX for TLS termination of admin UI
- - Sets up fish shell for `root` and non-admin user via `k2.fish`
- - Sets up PCI passthrough via `k2.vfio`
-
-#### `update-certs`
- - Pulls latest TLS certificates from S3
- - Uploads them to all the listed hosts
- - Performs any follow up action based on the host type
-    - Proxmox
-        - Restarts nginx
-    - TrueNAS
-        - Imports the certificate into TrueNAS config store
-        - Activates the certificate as the active WebUI cert
-        - Removes all other certificates for the same domain
-    - (TODO) Unifi
-        - Restarts `unifi-core`
+| Playbook        | Description                                       |
+| --------------- | ------------------------------------------------- |
+| `pve-bootstrap` | Set up ProxmoxVE hosts into a good starting state |
+| `update-certs`  | Update TLS certificates everywhere                |
