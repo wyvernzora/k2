@@ -1,16 +1,13 @@
 #cloud-config
 hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
 
-install:
-    device: /dev/sda
-    poweroff: true
-    bundles:
-      - targets:
-          - run://ghcr.io/wyvernzora/k2-kairos-bundle:1password-connect
-          - run://ghcr.io/wyvernzora/k2-kairos-bundle:argocd
-          - run://ghcr.io/wyvernzora/k2-kairos-bundle:cert-manager
-          - run://ghcr.io/wyvernzora/k2-kairos-bundle:kube-vip
-          - run://ghcr.io/wyvernzora/k2-kairos-bundle:traefik
+bundles:
+  - targets:
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:1password-connect
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:argocd
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:cert-manager
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:kube-vip
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:traefik
 
 users:
   - name: kairos
@@ -48,3 +45,9 @@ kubevip:
 onepassword:
     credentials: "{{ op://K2/1Password Connect/credential }}"
     token: "{{ op://K2/1Password Connect/token }}"
+
+argocd: { }
+
+cert_manager: { }
+
+traefik: { }
