@@ -1,7 +1,6 @@
 {{/* renovate: depName=kube-vip repoUrl=https://kube-vip.github.io/helm-charts */}}
 {{- $version := "26.0.0" -}}
 
-{{- with default({ } .Config.traefik) -}}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -15,7 +14,7 @@ metadata:
 spec:
   chart: traefik
   repo: https://traefik.github.io/charts
-  version: "{{ default $version .version }}"
+  version: "{{ default $version .Config.traefik.version }}"
   valuesContent: |-
     podAnnotations:
       prometheus.io/port: "8082"
@@ -36,4 +35,3 @@ spec:
         effect: "NoSchedule"
     service:
         ipFamilyPolicy: "PreferDualStack"
-{{- end -}}
