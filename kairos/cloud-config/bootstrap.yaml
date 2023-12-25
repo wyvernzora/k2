@@ -9,6 +9,7 @@ bundles:
   - targets:
       - run://ghcr.io/wyvernzora/k2-kairos-bundle:kube-vip
       - run://ghcr.io/wyvernzora/k2-kairos-bundle:1password-connect
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:traefik
 
 users:
   - name: kairos
@@ -46,3 +47,5 @@ kubevip:
 onepassword:
     credentials: "{{ op://K2/1Password Connect/credential }}"
     token: "{{ op://K2/1Password Connect/token }}"
+
+traefik: { }

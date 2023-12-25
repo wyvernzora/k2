@@ -1,0 +1,39 @@
+{{/* renovate: depName=kube-vip repoUrl=https://kube-vip.github.io/helm-charts */}}
+{{- $version := "26.0.0" -}}
+
+{{- with .Config.traefik -}}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traefik
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: traefik
+  namespace: traefik
+spec:
+  chart: traefik
+  repo: https://traefik.github.io/charts
+  version: "{{ default $version .version }}"
+  valuesContent: |-
+    podAnnotations:
+      prometheus.io/port: "8082"
+      prometheus.io/scrape: "true"
+    providers:
+      kubernetesIngress:
+        publishedService:
+          enabled: true
+    priorityClassName: "system-cluster-critical"
+    tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+    service:
+        ipFamilyPolicy: "PreferDualStack"
+{{- end -}}

@@ -17,6 +17,7 @@ jobs:
                 bundles:
                     - 1password-connect
                     - kube-vip
+                    - traefik
         env:
             REGISTRY: ghcr.io
             REGISTRY_USER: ${{ secrets.REGISTRY_USERNAME }}
