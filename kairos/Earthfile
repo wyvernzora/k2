@@ -19,14 +19,14 @@ version:
 build:
     COPY +version/VERSION ./
     ARG VERSION=$(cat VERSION)
-    FROM DOCKERFILE -f ${BUNDLE}/Dockerfile ./${BUNDLE}
+    FROM DOCKERFILE -f bundles/${BUNDLE}/Dockerfile ./bundles/${BUNDLE}
     SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-${BUNDLE}:${VERSION}
 
 renovate-validate:
     ARG RENOVATE_VERSION
     FROM renovate/renovate:$RENOVATE_VERSION
     WORKDIR /usr/src/app
-    COPY .github/renovate.json .
+    COPY ../.github/renovate.json .
     RUN renovate-config-validator
 
 shellcheck-lint:

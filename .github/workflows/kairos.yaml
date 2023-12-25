@@ -6,7 +6,7 @@ on:
     pull_request:
 
 jobs:
-    build:
+    build-bundles:
         runs-on: ubuntu-latest
         permissions:
             id-token: write
@@ -15,6 +15,7 @@ jobs:
         strategy:
             matrix:
                 bundles:
+                    - 1password-connect
                     - kube-vip
         env:
             REGISTRY: ghcr.io
