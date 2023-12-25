@@ -7,7 +7,8 @@ install:
 
 bundles:
   - targets:
-      - run://ghcr.io/wyvernzora/k2-kairos-kube-vip:latest
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:kube-vip
+      - run://ghcr.io/wyvernzora/k2-kairos-bundle:1password-connect
 
 users:
   - name: kairos
@@ -23,7 +24,7 @@ k3s:
     args:
         # Spin up k3s in cluster mode
       - '--cluster-init'
-      - '--token={{op://K2/k2.wyvernzora.io/server-token}}'
+      - '--token={{ op://K2/k2.wyvernzora.io/server-token }}'
 
         # Make sure k8s control-plane cert has KubeVIP IP
       - '--tls-san=10.10.8.2'
@@ -41,3 +42,7 @@ kubevip:
     enabled: true
     eip: 10.10.8.2
     interface: ens18
+
+onepassword:
+    credentials: "{{ op://K2/1Password Connect/credential }}"
+    token: "{{ op://K2/1Password Connect/token }}"
