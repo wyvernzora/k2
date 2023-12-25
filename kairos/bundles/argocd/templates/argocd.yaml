@@ -1,7 +1,7 @@
 {{/* renovate: depName=argo-cd repoUrl=https://argoproj.github.io/argo-helm */}}
 {{- $version := "5.51.0" -}}
 
-{{- with .Config.argocd -}}
+{{- with default({} .Config.argocd) -}}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -38,4 +38,8 @@ spec:
                     end
                     end
                     return hs
+            global:
+                tolerations:
+                  - key: "CriticalAddonsOnly"
+                    operator: "Exists"
 {{- end -}}
