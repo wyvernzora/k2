@@ -17,6 +17,7 @@ jobs:
                 bundles:
                     - 1password-connect
                     - argocd
+                    - cert-manager
                     - kube-vip
                     - traefik
         env:

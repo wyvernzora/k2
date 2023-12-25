@@ -1,0 +1,21 @@
+{{/* renovate: depName=cert-manager repoUrl=https://charts.jetstack.io */}}
+{{- $version := "1.13.3" -}}
+
+{{- with default({} .Config.cert_manager) -}}
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: cert-manager
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+    name: cert-manager
+    namespace: cert-manager
+spec:
+    chart: cert-manager
+    repo: https://charts.jetstack.io
+    version: "{{ default $version .version }}"
+    valuesContent: |-
+        installCRDs: "{{ default true .installCRDs }}"
+{{- end -}}
