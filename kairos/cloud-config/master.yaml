@@ -5,22 +5,23 @@ install:
     device: /dev/sda
     poweroff: true
 
-bundles:
-  - targets:
-      - run://ghcr.io/wyvernzora/k2-kairos-kube-vip:latest
-
 users:
   - name: kairos
     passwd: '{{ op://K2/wyvernzora/passwd }}'
     ssh_authorized_keys:
       - github:wyvernzora
 
+growpart:
+    devices: ['/']
+
 k3s:
     enabled: true
+    env:
+      K3S_TOKEN: "{{ op://K2/k2.wyvernzora.io/server-token }}"
     args:
         # Spin up k3s in cluster mode
       - '--cluster-init'
-      - '--token={{op://K2/k2.wyvernzora.io/server-token}}'
+      - '--server=10.10.8.2'
 
         # Make sure k8s control-plane cert has KubeVIP IP
       - '--tls-san=10.10.8.2'
@@ -33,11 +34,3 @@ k3s:
 
         # Use WireGuard for intra-cluster network
       - '--flannel-backend=wireguard-native'
-
-growpart:
-    devices: ['/']
-
-kubevip:
-    enabled: true
-    eip: 10.10.8.2
-    interface: ens18
