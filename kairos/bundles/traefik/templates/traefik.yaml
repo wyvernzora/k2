@@ -1,7 +1,7 @@
 {{/* renovate: depName=kube-vip repoUrl=https://kube-vip.github.io/helm-charts */}}
 {{- $version := "26.0.0" -}}
 
-{{- with .Config.traefik -}}
+{{- with default({ } .Config.traefik) -}}
 apiVersion: v1
 kind: Namespace
 metadata:
