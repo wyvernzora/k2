@@ -16,6 +16,7 @@ jobs:
             matrix:
                 bundles:
                     - 1password-connect
+                    - argocd
                     - kube-vip
                     - traefik
         env:
