@@ -20,7 +20,7 @@ build:
     COPY +version/VERSION ./
     ARG VERSION=$(cat VERSION)
     FROM DOCKERFILE -f bundles/${BUNDLE}/Dockerfile ./bundles/${BUNDLE}
-    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-${BUNDLE}:${VERSION}
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-bundle:${BUNDLE}
 
 renovate-validate:
     ARG RENOVATE_VERSION
