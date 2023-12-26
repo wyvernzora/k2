@@ -4,6 +4,9 @@ set -ex
 K3S_MANIFEST_DIR=${K3S_MANIFEST_DIR:-/var/lib/rancher/k3s/server/manifests/}
 TEMP_DIR=$(mktemp -d)
 
+# Copy CRDs to auto-deploy directory
+cp -r "./crds" "$K3S_MANIFEST_DIR"
+
 # Render templates into a temporary directory
 for FILE in templates/*; do 
     OUTFILE="$TEMP_DIR/${FILE##*/}"

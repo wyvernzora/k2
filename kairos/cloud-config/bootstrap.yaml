@@ -3,12 +3,7 @@ hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
 
 bundles:
   - targets:
-      - run://ghcr.io/wyvernzora/k2-kairos-bundle:crds
-      - run://ghcr.io/wyvernzora/k2-kairos-bundle:kube-vip
-      - run://ghcr.io/wyvernzora/k2-kairos-bundle:1password-connect
-      - run://ghcr.io/wyvernzora/k2-kairos-bundle:argocd
-      # - run://ghcr.io/wyvernzora/k2-kairos-bundle:cert-manager
-      # - run://ghcr.io/wyvernzora/k2-kairos-bundle:traefik
+      - run://ghcr.io/wyvernzora/k2-kairos-bootstrap:latest
 
 users:
   - name: kairos

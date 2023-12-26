@@ -1,6 +1,5 @@
 VERSION 0.6
 FROM alpine
-ARG BUNDLE
 ARG VERSION="latest"
 ARG IMAGE_REPOSITORY=ghcr.io/wyvernzora
 
@@ -13,7 +12,7 @@ version:
     FROM alpine
     RUN apk add git
     COPY . ./
-    RUN echo $(git describe --exact-match --tags || echo "v0.0.0-$(git log --oneline -n 1 | cut -d" " -f1)") > VERSION
+    RUN echo $(git describe --exact-match --tags || echo "$(git log --oneline -n 1 | cut -d" " -f1)") > VERSION
     SAVE ARTIFACT VERSION VERSION
 
 build:
@@ -39,3 +38,15 @@ shellcheck-lint:
 lint:
     BUILD +renovate-validate
     BUILD +shellcheck-lint
+
+ansible:
+    COPY +version/VERSION ./
+    ARG VERSION=$(cat VERSION)
+    FROM DOCKERFILE -f ansible/Dockerfile ./ansible
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${VERSION}
+
+kairos-bootstrap:
+    COPY +version/VERSION ./
+    ARG VERSION=$(cat VERSION)
+    FROM DOCKERFILE -f kairos/bootstrap/Dockerfile ./kairos/bootstrap
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-bootstrap:${VERSION}

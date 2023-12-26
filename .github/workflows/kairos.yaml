@@ -2,44 +2,44 @@ name: Kairos
 on:
     push:
         branches:
-            - main
+          - main
+        paths:
+          - 'kairos/**'
     pull_request:
-
+        paths:
+          - 'kairos/**'
+    release:
+        types:
+          - published
 jobs:
-    build-bundles:
+    build-bootstrap-bundle:
         runs-on: ubuntu-latest
         permissions:
             id-token: write
             contents: read
             packages: write
-        strategy:
-            matrix:
-                bundles:
-                    - 1password-connect
-                    - argocd
-                    - cert-manager
-                    - crds
-                    - kube-vip
-                    - traefik
-        env:
-            REGISTRY: ghcr.io
-            REGISTRY_USER: ${{ secrets.REGISTRY_USERNAME }}
-            REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-            - uses: docker-practice/actions-setup-docker@master
-            - uses: earthly/actions-setup@v1
-              with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  version: "latest"
-            - uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Build and publish
-              working-directory: ./kairos
-              run: earthly --ci --push +build --BUNDLE=${{ matrix.bundles }}
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - uses: earthly/actions-setup@v1
+            with:
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                version: "latest"
+
+          - name: Login to ghcr.io
+            uses: docker/login-action@v3
+            with:
+                registry: ghcr.io
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+
+          - name: Build and publish
+            run: earthly --ci --push +kairos-bootstrap
+
+          - name: Clean up old versions
+            uses: actions/delete-package-versions@v4
+            with:
+                package-name: k2-kairos-bootstrap
+                package-type: container
+                min-versions-to-keep: 10
