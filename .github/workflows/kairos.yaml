@@ -18,6 +18,7 @@ jobs:
                     - 1password-connect
                     - argocd
                     - cert-manager
+                    - crds
                     - kube-vip
                     - traefik
         env:
