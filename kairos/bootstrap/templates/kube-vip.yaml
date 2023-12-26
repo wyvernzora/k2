@@ -21,5 +21,5 @@ spec:
       address: "{{ .eip }}"
     env:
       vip_interface: "{{ default "eth0" .interface }}"
-      cp_enable: "{{ default "true" .enable }}"
+      cp_enable: "true"
 {{- end -}}

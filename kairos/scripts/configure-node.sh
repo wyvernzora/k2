@@ -33,4 +33,4 @@ esac
 
 echo -e "Using config file $CONFIG_FILE"
 echo -e "When asked for password, use 'kairos'"
-op inject -i "$CONFIG_FILE" | ssh kairos@$HOST "cat > cloud-config.yaml && sudo kairos-agent manual-install --reboot cloud-config.yaml"
+op inject -i "$CONFIG_FILE" | ssh kairos@$HOST "cat > cloud-config.yaml && sudo kairos-agent --debug manual-install --reboot cloud-config.yaml"

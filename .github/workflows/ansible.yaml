@@ -35,7 +35,6 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
         
           - name: Build and publish
-            working-directory: ./kairos
             run: earthly --ci --push +ansible
 
           - name: Clean up old versions
