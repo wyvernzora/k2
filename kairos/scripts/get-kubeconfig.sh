@@ -7,4 +7,4 @@ if [ -z "$HOST" ]; then
     exit 1
 fi
 
-ssh "kairos@$HOST" "sudo cat /etc/rancher/k3s/k3s.yaml" | sed "s/127\.0\.0\.1/10.10.8.2/"
+ssh "kairos@$HOST" "sudo cat /etc/rancher/k3s/k3s.yaml" | sed "s/127\.0\.0\.1/$HOST/"
