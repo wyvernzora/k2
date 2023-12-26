@@ -12,7 +12,7 @@ on:
         types:
           - published
 jobs:
-    build-bootstrap-bundle:
+    build-bootstrap-image:
         runs-on: ubuntu-latest
         permissions:
             id-token: write

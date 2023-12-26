@@ -1,4 +1,4 @@
-name: Build and publish Ansible image
+name: Ansible
 on:
   push:
       branches:
@@ -12,7 +12,7 @@ on:
       types:
         - published
 jobs:
-    build-ansible:
+    build-image:
         runs-on: ubuntu-latest
         permissions:
             id-token: write
