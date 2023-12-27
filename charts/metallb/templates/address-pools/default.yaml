@@ -1,0 +1,12 @@
+#
+# Default address pool that can only be accessed from
+# non-sandboxed VLANs.
+#
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+    name: default-pool
+    namespace: metallb-system
+spec:
+    addresses:
+      - 10.10.20.1-10.10.20.254
