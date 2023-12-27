@@ -40,7 +40,13 @@ lint:
     BUILD +shellcheck-lint
 
 ansible:
-    BUILD ./ansible+build
+    COPY +version/VERSION ./
+    ARG VERSION=$(cat VERSION)
+    FROM DOCKERFILE -f ansible/Dockerfile ./ansible
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${VERSION}
 
 kairos-bootstrap:
-    BUILD ./kairos/bootstrap+build
+    COPY +version/VERSION ./
+    ARG VERSION=$(cat VERSION)
+    FROM DOCKERFILE -f kairos/bootstrap/Dockerfile ./kairos/bootstrap
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-bootstrap:${VERSION}
