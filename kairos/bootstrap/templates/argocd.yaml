@@ -1,6 +1,7 @@
 {{/* renovate: depName=argo-cd repoUrl=https://argoproj.github.io/argo-helm */}}
 {{- $version := "5.51.6" -}}
 
+{{- with .Config -}}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -10,11 +11,12 @@ apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
     name: argocd
-    namespace: argocd
+    namespace: kube-system
 spec:
     chart: argo-cd
     repo: https://argoproj.github.io/argo-helm
-    version: "{{ default $version .Config.argocd.version }}"
+    targetNamespace: argocd
+    version: "{{ default $version .argocd.version }}"
     valuesContent: |-
         secret:
             createSecret: false
@@ -41,3 +43,4 @@ spec:
                 tolerations:
                   - key: "CriticalAddonsOnly"
                     operator: "Exists"
+{{- end -}}
