@@ -7,7 +7,7 @@ ARG ARGOCD_CRD_VERSION=v2.9.3
 RUN kustomize build https://github.com/argoproj/argo-cd/manifests/crds?ref=${ARGOCD_CRD_VERSION} > argocd.crds.yaml
 
 # renovate: datasource=github-releases depName=cert-manager/cert-manager
-ARG CERT_MANAGER_CRD_VERSION=v1.12.2
+ARG CERT_MANAGER_CRD_VERSION=v1.13.3
 RUN curl -sL https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_CRD_VERSION}/cert-manager.crds.yaml > cert-manager.crds.yaml
 
 # renovate: datasource=github-releases depName=metallb/metallb
