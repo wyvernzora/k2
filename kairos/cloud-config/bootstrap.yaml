@@ -26,7 +26,6 @@ k3s:
 kubevip:
     enabled: true
     eip: 10.10.8.2
-    interface: ens18
 
 onepassword:
     credentials: "{{ op://K2/1Password Connect/credential }}"

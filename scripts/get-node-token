@@ -3,7 +3,7 @@
 HOST="$1"
 
 if [ -z "$HOST" ]; then
-    echo "Usage: ./get-node-token.sh <HOST>"
+    echo "Usage: get-node-token <HOST>"
     exit 1
 fi
 
