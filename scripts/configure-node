@@ -16,13 +16,13 @@ help() {
 CONFIG_FILE=""
 case "$TYPE" in
     b|bootstrap)
-        CONFIG_FILE="$ROOT/../kairos/cloud-config/bootstrap.yaml"
+        CONFIG_FILE="$ROOT/../kairos/bootstrap.yaml"
         ;;
     m|master)
-        CONFIG_FILE="$ROOT/../kairos/cloud-config/master.yaml"
+        CONFIG_FILE="$ROOT/../kairos/master.yaml"
         ;;
     w|worker)
-        CONFIG_FILE="$ROOT/../kairos/cloud-config/worker.yaml"
+        CONFIG_FILE="$ROOT/../kairos/worker.yaml"
         ;;
     *)
         help
