@@ -45,8 +45,8 @@ ansible:
     FROM DOCKERFILE -f ansible/Dockerfile ./ansible
     SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${VERSION}
 
-kairos-bootstrap:
+crds:
     COPY +version/VERSION ./
     ARG VERSION=$(cat VERSION)
-    FROM DOCKERFILE -f kairos/bootstrap/Dockerfile ./kairos/bootstrap
-    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-kairos-bootstrap:${VERSION}
+    FROM DOCKERFILE -f crds/Dockerfile ./crds
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-crds:${VERSION}

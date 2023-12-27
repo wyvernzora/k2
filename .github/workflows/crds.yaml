@@ -1,18 +1,18 @@
-name: Kairos
+name: CRDs
 on:
     push:
         branches:
           - main
         paths:
-          - 'kairos/**'
+          - 'crds/**'
     pull_request:
         paths:
-          - 'kairos/**'
+          - 'crds/**'
     release:
         types:
           - published
 jobs:
-    build-bootstrap-image:
+    build-crds-image:
         runs-on: ubuntu-latest
         permissions:
             id-token: write
@@ -35,11 +35,11 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
 
           - name: Build and publish
-            run: earthly --ci --push +kairos-bootstrap
+            run: earthly --ci --push +crds
 
           - name: Clean up old versions
             uses: actions/delete-package-versions@v4
             with:
-                package-name: k2-kairos-bootstrap
+                package-name: k2-crds
                 package-type: container
                 min-versions-to-keep: 10
