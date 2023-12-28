@@ -1,5 +1,5 @@
 apiVersion: v2
-name: k2-metallb
+name: metallb
 version: 1.0.0
 
 dependencies:

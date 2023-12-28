@@ -19,7 +19,11 @@ spec:
         targetRevision: {{ $.Values.gitops.revision }}
 {{- if $app.helm }}
     helm:
-{{ toYaml $app.helm | indent 12  }}
+{{ toYaml $app.helm | indent 8  }}
+{{- end }}
+{{- if $app.ignoreDifferences }}
+    ignoreDifferences:
+{{ toYaml $app.ignoreDifferences | indent 8 }}
 {{- end }}
     syncPolicy:
         automated:

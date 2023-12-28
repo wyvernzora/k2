@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+    name: letsencrypt-prod
+    namespace: "{{ $.Release.namespace }}"
+spec:
+    acme:
+        email: wyvernzora+letsencrypt@gmail.com
+        privateKeySecretRef:
+            name: letsencrypt-prod-privkey
+        server: https://acme-v02.api.letsencrypt.org/directory
+        solvers:
+          - selector:
+                dnsZones:
+                  - "wyvernzora.io"
+            dns01:
+                route53:
+                    region: us-west-2
+                    accessKeyIDSecretRef:
+                        name: cert-manager-aws-credentials
+                        key: "access key id"
+                    secretAccessKeySecretRef:
+                        name: cert-manager-aws-credentials
+                        key: "secret access key"
