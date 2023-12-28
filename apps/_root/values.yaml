@@ -7,13 +7,15 @@ syncWaves:
     - name: crds
       path: apps/crds
       namespace: kube-system
+    - name: kube-vip
+      path: apps/kube-vip
+      namespace: kube-vip
   - apps:
     - name: metallb
       path: apps/metallb
       namespace: metallb-system
-    - name: kube-vip
-      path: apps/kube-vip
-      namespace: kube-vip
+    - name: 1password
+      path: apps/1password
   - apps:
     - name: argocd
       path: apps/argocd
