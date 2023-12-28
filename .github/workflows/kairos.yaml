@@ -1,4 +1,4 @@
-name: CRDs
+name: Kairos
 on:
     push:
         branches:
@@ -6,16 +6,16 @@ on:
         tags:
           - 'v*'
         paths:
-          - 'crds/**'
+          - 'kairos/bootstrap/**'
           - '.github/workflows/**'
     pull_request:
         paths:
-          - 'crds/**'
+          - 'kairos/bootstrap/**'
     release:
         types:
           - published
 jobs:
-    build-crds-image:
+    build-image:
         runs-on: ubuntu-latest
         permissions:
             id-token: write
@@ -36,7 +36,7 @@ jobs:
                 registry: ghcr.io
                 username: ${{ github.actor }}
                 password: ${{ secrets.GITHUB_TOKEN }}
-
+        
           - name: Determine the image tag
             shell: bash
             run: |
@@ -49,12 +49,12 @@ jobs:
                 echo "TAG=${TAG}" >> $GITHUB_ENV
 
           - name: Build and publish
-            run: earthly --ci --push +crds --TAG=${{ env.TAG }}
+            run: earthly --ci --push +bootstrap --TAG=${{ env.TAG }}
 
           - name: Clean up old versions
             uses: actions/delete-package-versions@v4
             with:
-                package-name: k2-ansible
+                package-name: k2-bootstrap
                 package-type: container
                 min-versions-to-keep: 3
                 delete-only-untagged-versions: 'true'

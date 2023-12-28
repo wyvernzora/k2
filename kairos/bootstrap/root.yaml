@@ -1,26 +1,20 @@
-{{- range $waveIndex, $wave := .Values.syncWaves -}}
-{{- range $index, $app := $wave.apps }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-    name: {{ $app.name }}
-    namespace: {{ $.Release.Namespace }}
+    name: k2-root
+    namespace: argocd
     annotations:
-        argocd.argoproj.io/sync-wave: '{{ $waveIndex }}'
+        argocd.argoproj.io/sync-wave: '0'
 spec:
     destination:
-        namespace: {{ default $app.name $app.namespace }}
+        namespace: argocd
         server: https://kubernetes.default.svc
     project: default
     source:
-        path: {{ $app.path }}
-        repoURL: {{ $.Values.gitops.repo }}
-        targetRevision: {{ $.Values.gitops.revision }}
-{{- if $app.helm }}
-    helm:
-{{ toYaml $app.helm | indent 12  }}
-{{- end }}
+        path: apps/_root
+        repoURL: https://github.com/wyvernzora/k2
+        targetRevision: main
     syncPolicy:
         automated:
             prune: true
@@ -35,5 +29,3 @@ spec:
           - CreateNamespace=true
           - ServerSideApply=true
           - ApplyOutOfSyncOnly=true
-{{ end -}}
-{{- end -}}

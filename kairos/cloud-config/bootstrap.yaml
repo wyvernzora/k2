@@ -3,7 +3,7 @@ hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
 
 bundles:
   - targets:
-      - run://ghcr.io/wyvernzora/k2-crds:latest
+      - run://ghcr.io/wyvernzora/k2-bootstrap:main
 
 users:
   - name: kairos
@@ -23,12 +23,6 @@ k3s:
       - '--secrets-encryption'                # Encrypt secrets at rest
       - '--flannel-backend=wireguard-native'  # Use WireGuard for intra-cluster network
 
-kubevip:
-    enabled: true
-    eip: 10.10.8.2
-
 onepassword:
     credentials: "{{ op://K2/1Password Connect/credential }}"
     token: "{{ op://K2/1Password Connect/token }}"
-
-argocd: { }

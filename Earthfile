@@ -30,6 +30,6 @@ ansible:
     FROM DOCKERFILE -f ansible/Dockerfile ./ansible
     SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${TAG}
 
-crds:
-    FROM DOCKERFILE -f crds/Dockerfile ./crds
-    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-crds:${TAG}
+bootstrap:
+    FROM DOCKERFILE -f kairos/bootstrap/Dockerfile ./kairos/bootstrap
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-bootstrap:${TAG}
