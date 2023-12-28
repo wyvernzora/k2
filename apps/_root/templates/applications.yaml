@@ -1,4 +1,5 @@
-{{- range $index, $app := .Values.apps }}
+{{- range $waveIndex, $wave := .Values.syncWaves }}
+{{- range $index, $app := $wave.apps -}}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -6,7 +7,7 @@ metadata:
     name: {{ $app.name }}
     namespace: {{ $.Release.Namespace }}
     annotations:
-        argocd.argoproj.io/sync-wave: '{{ default 0 $app.syncWave }}'
+        argocd.argoproj.io/sync-wave: '{{ $waveIndex }}'
 spec:
     destination:
         namespace: {{ default $app.name $app.namespace }}
@@ -34,4 +35,5 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - ApplyOutOfSyncOnly=true
+{{- end -}}
 {{- end -}}

@@ -1,0 +1,20 @@
+gitops:
+    repo: https://github.com/wyvernzora/k2
+    revision: main
+
+syncWaves:
+  - apps:
+    - name: crds
+      path: apps/crds
+      namespace: kube-system
+  - apps:
+    - name: metallb
+      path: apps/metallb
+      namespace: metallb-system
+    - name: kube-vip
+      path: apps/kube-vip
+      namespace: kube-vip
+  - apps:
+    - name: argocd
+      path: apps/argocd
+      namespace: argocd
