@@ -2,9 +2,12 @@ name: CRDs
 on:
     push:
         branches:
-          - main
+          - '**'
+        tags:
+          - 'v*'
         paths:
           - 'crds/**'
+          - '.github/workflows/**'
     pull_request:
         paths:
           - 'crds/**'
@@ -34,12 +37,24 @@ jobs:
                 username: ${{ github.actor }}
                 password: ${{ secrets.GITHUB_TOKEN }}
 
+          - name: Determine the image tag
+            shell: bash
+            run: |
+                if [[ $GITHUB_REF == refs/tags/* ]]; then
+                    TAG="${GITHUB_REF#refs/tags/}"
+                else
+                    BRANCH_TAG=$(echo "${GITHUB_REF#refs/heads/}" | sed 's/[^a-zA-Z0-9._-]/-/g')
+                    TAG="${BRANCH_TAG}"
+                fi
+                echo "TAG=${TAG}" >> $GITHUB_ENV
+
           - name: Build and publish
-            run: earthly --ci --push +crds
+            run: earthly --ci --push +crds --TAG=${{ env.TAG }}
 
           - name: Clean up old versions
             uses: actions/delete-package-versions@v4
             with:
-                package-name: k2-crds
+                package-name: k2-ansible
                 package-type: container
-                min-versions-to-keep: 10
+                min-versions-to-keep: 3
+                delete-only-untagged-versions: 'true'

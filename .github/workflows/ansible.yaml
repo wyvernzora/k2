@@ -1,16 +1,19 @@
 name: Ansible
 on:
-  push:
-      branches:
-        - main
-      paths:
-        - 'ansible/**'
-  pull_request:
-      paths:
-        - 'ansible/**'
-  release:
-      types:
-        - published
+    push:
+        branches:
+          - '**'
+        tags:
+          - 'v*'
+        paths:
+          - 'ansible/**'
+          - '.github/workflows/**'
+    pull_request:
+        paths:
+          - 'ansible/**'
+    release:
+        types:
+          - published
 jobs:
     build-image:
         runs-on: ubuntu-latest
@@ -34,12 +37,24 @@ jobs:
                 username: ${{ github.actor }}
                 password: ${{ secrets.GITHUB_TOKEN }}
         
+          - name: Determine the image tag
+            shell: bash
+            run: |
+                if [[ $GITHUB_REF == refs/tags/* ]]; then
+                    TAG="${GITHUB_REF#refs/tags/}"
+                else
+                    BRANCH_TAG=$(echo "${GITHUB_REF#refs/heads/}" | sed 's/[^a-zA-Z0-9._-]/-/g')
+                    TAG="${BRANCH_TAG}"
+                fi
+                echo "TAG=${TAG}" >> $GITHUB_ENV
+
           - name: Build and publish
-            run: earthly --ci --push +ansible
+            run: earthly --ci --push +ansible --TAG=${{ env.TAG }}
 
           - name: Clean up old versions
             uses: actions/delete-package-versions@v4
             with:
                 package-name: k2-ansible
                 package-type: container
-                min-versions-to-keep: 10
+                min-versions-to-keep: 3
+                delete-only-untagged-versions: 'true'
