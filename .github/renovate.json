@@ -22,6 +22,17 @@
             "matchStrings": [
                 "{{\\/\\*\\s+renovate:\\s+depName=(?<depName>.*?)(\\s+repoUrl=(?<registryUrl>.*?))?\\s+\\*\/}}\n{{-\\s+\\$version\\s+:=\\s+\"(?<currentValue>.*?)\"\\s+-}}"
             ]
+        },
+        {
+            "fileMatch": [
+                "(.*/|^)kustomization\\.ya?ml"
+            ],
+            "matchStrings": [
+                "\\s*https://github.com/(?<depName>[^/]+/[^/]+)/.+/?ref=(?<currentValue>.+)\\s*",
+                "\\s*https://github.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>.+)/.+\\s*"
+            ],
+            "datasourceTemplate": "github-releases",
+            "versioningTemplate": "semver"
         }
     ]
 }
