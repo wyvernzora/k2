@@ -6,11 +6,11 @@ on:
         tags:
           - 'v*'
         paths:
-          - 'kairos/bootstrap/**'
+          - 'kairos/cluster-init/**'
           - '.github/workflows/**'
     pull_request:
         paths:
-          - 'kairos/bootstrap/**'
+          - 'kairos/cluster-init/**'
     release:
         types:
           - published
@@ -49,12 +49,12 @@ jobs:
                 echo "TAG=${TAG}" >> $GITHUB_ENV
 
           - name: Build and publish
-            run: earthly --ci --push +bootstrap --TAG=${{ env.TAG }}
+            run: earthly --ci --push +cluster-init --TAG=${{ env.TAG }}
 
           - name: Clean up old versions
             uses: actions/delete-package-versions@v4
             with:
-                package-name: k2-bootstrap
+                package-name: k2-cluster-init
                 package-type: container
                 min-versions-to-keep: 3
                 delete-only-untagged-versions: 'true'

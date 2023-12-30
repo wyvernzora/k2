@@ -3,7 +3,7 @@ hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
 
 bundles:
   - targets:
-      - run://ghcr.io/wyvernzora/k2-bootstrap:main
+      - run://ghcr.io/wyvernzora/k2-cluster-init:main
 
 users:
   - name: kairos

@@ -30,6 +30,6 @@ ansible:
     FROM DOCKERFILE -f ansible/Dockerfile ./ansible
     SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${TAG}
 
-bootstrap:
-    FROM DOCKERFILE -f kairos/bootstrap/Dockerfile ./kairos/bootstrap
-    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-bootstrap:${TAG}
+cluster-init:
+    FROM DOCKERFILE -f kairos/cluster-init/Dockerfile ./kairos/cluster-init
+    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-cluster-init:${TAG}
