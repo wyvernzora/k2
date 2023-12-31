@@ -4,9 +4,9 @@ gitops:
 
 syncWaves:
   - apps:
-    - name: cert-manager-crd
-      path: gitops/infra/cert-manager-crd
-      namespace: cert-manager
+    - name: crds
+      path: gitops/infra/crds
+      namespace: default
     - name: kube-vip
       path: gitops/infra/kube-vip
     - name: metallb

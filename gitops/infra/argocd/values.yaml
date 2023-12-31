@@ -4,7 +4,7 @@ argo-cd:
     repoServer:
         extraContainers:
           - name: cdk8s-plugin
-            image: ghcr.io/wyvernzora/argocd-cdk8s-plugin:v1.0.1
+            image: ghcr.io/wyvernzora/argocd-cdk8s-plugin:v1.1.0
             command:
               - /var/run/argocd/argocd-cmp-server
             volumeMounts:
