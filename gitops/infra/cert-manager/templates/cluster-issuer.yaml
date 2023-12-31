@@ -18,7 +18,7 @@ spec:
                     region: us-west-2
                     accessKeyIDSecretRef:
                         name: cert-manager-aws-credentials
-                        key: "access key id"
+                        key: "access-key-id"
                     secretAccessKeySecretRef:
                         name: cert-manager-aws-credentials
-                        key: "secret access key"
+                        key: "secret-access-key"
