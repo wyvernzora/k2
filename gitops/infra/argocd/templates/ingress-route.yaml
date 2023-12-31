@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+    name: argocd-main
+    namespace: argocd
+spec:
+    routes:
+      - kind: Rule
+        match: Host(`deploy.wyvernzora.io`)
+        services:
+          - kind: Service
+            name: argocd-server
+            namespace: argocd
+            port: 80
