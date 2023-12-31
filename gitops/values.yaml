@@ -7,6 +7,7 @@ syncWaves:
     - name: crds
       path: gitops/infra/crds
       namespace: default
+      autoSync: false
     - name: kube-vip
       path: gitops/infra/kube-vip
     - name: metallb
