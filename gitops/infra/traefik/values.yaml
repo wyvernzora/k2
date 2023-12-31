@@ -1,3 +1,9 @@
+certificate:
+    domain: '*.wyvernzora.io'
+    issuer:
+        kind: ClusterIssuer
+        name: letsencrypt-prod
+
 traefik:
     podAnnotations:
         prometheus.io/port: "8082"
