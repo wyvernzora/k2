@@ -5,25 +5,25 @@ gitops:
 syncWaves:
   - apps:
     - name: cert-manager-crd
-      path: apps/cert-manager-crd
+      path: gitops/infra/cert-manager-crd
       namespace: cert-manager
     - name: kube-vip
-      path: apps/kube-vip
+      path: gitops/infra/kube-vip
     - name: metallb
-      path: apps/metallb
+      path: gitops/infra/metallb
       namespace: metallb-system
     - name: 1password
-      path: apps/1password
+      path: gitops/infra/1password
   - apps:
     - name: cert-manager
-      path: apps/cert-manager
+      path: gitops/infra/cert-manager
   - apps:
     - name: traefik
-      path: apps/traefik
+      path: gitops/infra/traefik
       ignoreDifferences:
         - kind: IngressRoute
           name: traefik-dashboard
   - apps:
     - name: argocd
-      path: apps/argocd
+      path: gitops/infra/argocd
       namespace: argocd
