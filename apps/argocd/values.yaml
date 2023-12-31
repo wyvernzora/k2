@@ -1,10 +1,26 @@
 argo-cd:
     secret:
         createSecret: false
+    repoServer:
+        extraContainers:
+          - name: cdk8s-plugin
+            image: ghcr.io/wyvernzora/argocd-cdk8s-plugin:v1.0.1
+            command:
+              - /var/run/argocd/argocd-cmp-server
+            volumeMounts:
+              - name: var-files
+                mountPath: /var/run/argocd
+              - name: plugins
+                mountPath: /home/argocd/cmp-server/plugins
+              - name: cdk8s-working-dir
+                mountPath: /tmp
+            securityContext:
+                runAsNonRoot: true
+                runAsUser: 999
+        volumes:
+          - name: cdk8s-working-dir
+            emptyDir: { }
     configs:
-        crds:
-            # CRDs should be installed as part of k2-crds bundle on cluster bootstrap
-            install: false
         params:
             # Let ingress handle TLS termination
             server.insecure: true
