@@ -15,6 +15,7 @@ export class BlockyDeployment extends Deployment {
                 name: 'blocky-depl',
                 ...props.metadata
             },
+            replicas: 1,
         })
         const configVolume = this.createConfigVolume(props.config);
         const container = this.createBlockyContainer(configVolume);
