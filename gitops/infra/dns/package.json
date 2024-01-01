@@ -1,0 +1,16 @@
+{
+  "name": "@wyvernzora/k2-infra-dns",
+  "version": "1.0.0",
+  "description": "K2 DNS cdk8s app",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "cdk8s": "^2.68.22",
+    "cdk8s-plus-27": "^2.7.70",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3"
+  }
+}

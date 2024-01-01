@@ -24,6 +24,8 @@ syncWaves:
       ignoreDifferences:
         - kind: IngressRoute
           name: traefik-dashboard
+    - name: dns
+      path: gitops/infra/dns
   - apps:
     - name: argocd
       path: gitops/infra/argocd
