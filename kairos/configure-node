@@ -32,4 +32,4 @@ case "$TYPE" in
 esac
 
 echo -e "Using config file $CONFIG_FILE"
-op inject -i "$CONFIG_FILE" | sshpass -p "kairos" ssh "kairos@$HOST" "cat > cloud-config.yaml && sudo kairos-agent manual-install --reboot cloud-config.yaml"
+op inject -i "$CONFIG_FILE" | sshpass -p "kairos" ssh "kairos@$HOST" "cat > cloud-config.yaml && sudo kairos-agent --debug manual-install --reboot cloud-config.yaml"

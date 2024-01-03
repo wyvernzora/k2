@@ -1,10 +1,6 @@
 #cloud-config
 hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
 
-install:
-    device: /dev/sda
-    poweroff: true
-
 users:
   - name: kairos
     passwd: '{{ op://K2/wyvernzora/passwd }}'
