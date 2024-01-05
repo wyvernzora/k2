@@ -7,7 +7,7 @@ install:
 
 users:
   - name: kairos
-    passwd: '{{ op://K2/wyvernzora/passwd }}'
+    passwd: '{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}'
     ssh_authorized_keys:
       - github:wyvernzora
 
@@ -17,7 +17,7 @@ growpart:
 k3s:
     enabled: true
     env:
-      K3S_TOKEN: "{{ op://K2/k2.wyvernzora.io/server-token }}"
+      K3S_TOKEN: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/xnuknpx3mjqgrgqd7ybv3u7wpy/node-token }}"
     args:
         # Spin up k3s in cluster mode
       - '--cluster-init'

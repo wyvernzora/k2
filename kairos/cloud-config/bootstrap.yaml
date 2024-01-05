@@ -7,7 +7,7 @@ bundles:
 
 users:
   - name: kairos
-    passwd: '{{ op://K2/wyvernzora/passwd }}'
+    passwd: '{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}'
     ssh_authorized_keys:
       - github:wyvernzora
 
@@ -24,5 +24,5 @@ k3s:
       - '--flannel-backend=wireguard-native'  # Use WireGuard for intra-cluster network
 
 onepassword:
-    credentials: "{{ op://K2/1Password Connect/credential }}"
-    token: "{{ op://K2/1Password Connect/token }}"
+    credentials: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/b53fcrureoovna2yjccdesedum/credential }}"
+    token: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/b53fcrureoovna2yjccdesedum/token }}"
