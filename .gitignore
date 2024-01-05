@@ -1,5 +1,7 @@
 config/
 .vagrant
 *.code-workspace
-*/charts/*
-*/Chart.lock
+charts/*
+Chart.lock
+node_modules
+dist
