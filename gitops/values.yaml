@@ -5,31 +5,31 @@ gitops:
 syncWaves:
   - apps:
     - name: crds
-      path: gitops/infra/crds
+      path: gitops/core/crds
       namespace: default
       autoSync: false
     - name: kube-vip
-      path: gitops/infra/kube-vip
+      path: gitops/network/kube-vip
     - name: metallb
-      path: gitops/infra/metallb
+      path: gitops/network/metallb
       namespace: metallb-system
     - name: 1password
-      path: gitops/infra/1password
+      path: gitops/core/1password
   - apps:
     - name: cert-manager
-      path: gitops/infra/cert-manager
+      path: gitops/network/cert-manager
     - name: longhorn
-      path: gitops/infra/longhorn
+      path: gitops/storage/longhorn
       namespace: longhorn-system
   - apps:
     - name: traefik
-      path: gitops/infra/traefik
+      path: gitops/network/traefik
       ignoreDifferences:
         - kind: IngressRoute
           name: traefik-dashboard
     - name: dns
-      path: gitops/infra/dns
+      path: gitops/network/dns
   - apps:
     - name: argocd
-      path: gitops/infra/argocd
+      path: gitops/core/argocd
       namespace: argocd
