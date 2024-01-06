@@ -1,7 +1,7 @@
 <div align="center">
     <br>
     <br>
-    <img width="182" src="../../.assets/k2.png">
+    <img width="182" src="../.github/assets/k2.png">
     <h1 align="center">K2</h1>
 </div>
 
