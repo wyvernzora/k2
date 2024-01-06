@@ -18,6 +18,9 @@ syncWaves:
   - apps:
     - name: cert-manager
       path: gitops/infra/cert-manager
+    - name: longhorn
+      path: gitops/infra/longhorn
+      namespace: longhorn-system
   - apps:
     - name: traefik
       path: gitops/infra/traefik
