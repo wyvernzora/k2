@@ -3,11 +3,14 @@ gitops:
     revision: main
 
 syncWaves:
+
   - apps:
     - name: crds
-      path: gitops/core/crds
+      path: crds
       namespace: default
       autoSync: false
+
+  - apps:
     - name: kube-vip
       path: gitops/network/kube-vip
     - name: metallb
@@ -15,12 +18,14 @@ syncWaves:
       namespace: metallb-system
     - name: 1password
       path: gitops/core/1password
+
   - apps:
     - name: cert-manager
       path: gitops/network/cert-manager
     - name: longhorn
       path: gitops/storage/longhorn
       namespace: longhorn-system
+
   - apps:
     - name: traefik
       path: gitops/network/traefik
@@ -29,6 +34,7 @@ syncWaves:
           name: traefik-dashboard
     - name: dns
       path: gitops/network/dns
+
   - apps:
     - name: argocd
       path: gitops/core/argocd
