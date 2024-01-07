@@ -36,6 +36,10 @@ syncWaves:
       path: gitops/network/dns
 
   - apps:
+      name: glauth
+      path: gitops/auth/glauth
+
+  - apps:
     - name: argocd
       path: gitops/core/argocd
       namespace: argocd
