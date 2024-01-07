@@ -9,12 +9,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
-    "cdk8s-cli": "^2.198.28",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "generate-crds": "kubectl kustomize crds -o crds/k2.crds.yaml",
-    "import-crds": "npm run generate-crds && cdk8s import -l typescript crds/k2.crds.yaml -o crds"
   }
 }

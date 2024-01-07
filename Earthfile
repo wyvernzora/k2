@@ -26,10 +26,55 @@ lint:
     BUILD +renovate-validate
     BUILD +shellcheck-lint
 
+###############################################################################
+# Ansible Playbooks                                                           #
+###############################################################################
 ansible:
-    FROM DOCKERFILE -f ansible/Dockerfile ./ansible
+    FROM alpine
+    RUN apk add --no-cache \
+        ansible \
+        aws-cli \
+        ca-certificates \
+        openssh-client \
+        py-boto3
+    RUN adduser -D -h '/ansible' ansible
+    WORKDIR '/ansible'
+    USER ansible
+    COPY ansible .
+    RUN ansible-galaxy install -r requirements.yml
+    ENV ANSIBLE_ROLES_PATH="/ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles"
+    VOLUME [ "/ansible/.ssh", "/ansible/.aws", "/ansible/group_vars", "/ansible/host_vars", "/ansible/inventory" ]
+    ENTRYPOINT [ "/ansible/entrypoint.sh" ]
     SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${TAG}
 
+###############################################################################
+# Generate cdk8s constructs for imported CRDs                                 #
+###############################################################################
+generate-crd-constructs:
+    FROM node:alpine
+    WORKDIR /build
+    COPY crds/kustomization.yaml .
+    RUN mkdir -p /imports && \
+        apk add --no-cache kustomize git && \
+        npm install -g cdk8s-cli
+    RUN kustomize build . > manifest.yaml && \
+        cdk8s import -l typescript -o /imports manifest.yaml && \
+        cp /build/kustomization.yaml /imports/kustomization.yaml
+    SAVE ARTIFACT /imports AS LOCAL ./crds
+
+###############################################################################
+# Kairos Cluster Init                                                         #
+###############################################################################
+cluster-init-manifests:
+    FROM alpine
+    WORKDIR /build
+    COPY kairos/cluster-init .
+    COPY gitops/core/argocd/values.yaml argocd/values.yaml
+    RUN ./build.sh
+    SAVE ARTIFACT /manifests
+
 cluster-init:
-    FROM DOCKERFILE -f kairos/cluster-init/Dockerfile ./kairos/cluster-init
+    FROM scratch
+    COPY +cluster-init-manifests/manifests /manifests
+    COPY kairos/cluster-init/run.sh .
     SAVE IMAGE --push $IMAGE_REPOSITORY/k2-cluster-init:${TAG}
