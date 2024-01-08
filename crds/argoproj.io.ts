@@ -1320,13 +1320,6 @@ export interface ApplicationSpecSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * Components specifies a list of kustomize components to add to the kustomization before building
-   *
-   * @schema ApplicationSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * ForceCommonAnnotations specifies whether to force applying common annotations to resources for Kustomize apps
    *
    * @schema ApplicationSpecSourceKustomize#forceCommonAnnotations
@@ -1401,7 +1394,6 @@ export function toJson_ApplicationSpecSourceKustomize(obj: ApplicationSpecSource
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -1640,13 +1632,6 @@ export interface ApplicationSpecSourcesKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * Components specifies a list of kustomize components to add to the kustomization before building
-   *
-   * @schema ApplicationSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * ForceCommonAnnotations specifies whether to force applying common annotations to resources for Kustomize apps
    *
    * @schema ApplicationSpecSourcesKustomize#forceCommonAnnotations
@@ -1721,7 +1706,6 @@ export function toJson_ApplicationSpecSourcesKustomize(obj: ApplicationSpecSourc
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -2075,13 +2059,6 @@ export interface ApplicationOperationSyncSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * Components specifies a list of kustomize components to add to the kustomization before building
-   *
-   * @schema ApplicationOperationSyncSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * ForceCommonAnnotations specifies whether to force applying common annotations to resources for Kustomize apps
    *
    * @schema ApplicationOperationSyncSourceKustomize#forceCommonAnnotations
@@ -2156,7 +2133,6 @@ export function toJson_ApplicationOperationSyncSourceKustomize(obj: ApplicationO
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -2395,13 +2371,6 @@ export interface ApplicationOperationSyncSourcesKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * Components specifies a list of kustomize components to add to the kustomization before building
-   *
-   * @schema ApplicationOperationSyncSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * ForceCommonAnnotations specifies whether to force applying common annotations to resources for Kustomize apps
    *
    * @schema ApplicationOperationSyncSourcesKustomize#forceCommonAnnotations
@@ -2476,7 +2445,6 @@ export function toJson_ApplicationOperationSyncSourcesKustomize(obj: Application
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -4563,11 +4531,6 @@ export interface ApplicationSetSpec {
    */
   readonly template: ApplicationSetSpecTemplate;
 
-  /**
-   * @schema ApplicationSetSpec#templatePatch
-   */
-  readonly templatePatch?: string;
-
 }
 
 /**
@@ -4586,7 +4549,6 @@ export function toJson_ApplicationSetSpec(obj: ApplicationSetSpec | undefined): 
     'strategy': toJson_ApplicationSetSpecStrategy(obj.strategy),
     'syncPolicy': toJson_ApplicationSetSpecSyncPolicy(obj.syncPolicy),
     'template': toJson_ApplicationSetSpecTemplate(obj.template),
-    'templatePatch': obj.templatePatch,
   };
   // filter undefined values
   return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
@@ -9835,11 +9797,6 @@ export interface ApplicationSetSpecTemplateSpecSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -9896,7 +9853,6 @@ export function toJson_ApplicationSetSpecTemplateSpecSourceKustomize(obj: Applic
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -10091,11 +10047,6 @@ export interface ApplicationSetSpecTemplateSpecSourcesKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -10152,7 +10103,6 @@ export function toJson_ApplicationSetSpecTemplateSpecSourcesKustomize(obj: Appli
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -16277,11 +16227,6 @@ export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -16338,7 +16283,6 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -16533,11 +16477,6 @@ export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpec
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -16594,7 +16533,6 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -16888,11 +16826,6 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKustomize
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -16949,7 +16882,6 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceKus
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -17144,11 +17076,6 @@ export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesKustomiz
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -17205,7 +17132,6 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesKu
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -17499,11 +17425,6 @@ export interface ApplicationSetSpecGeneratorsGitTemplateSpecSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -17560,7 +17481,6 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourceKustomiz
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -17755,11 +17675,6 @@ export interface ApplicationSetSpecGeneratorsGitTemplateSpecSourcesKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -17816,7 +17731,6 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourcesKustomi
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -18110,11 +18024,6 @@ export interface ApplicationSetSpecGeneratorsListTemplateSpecSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -18171,7 +18080,6 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourceKustomi
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -18366,11 +18274,6 @@ export interface ApplicationSetSpecGeneratorsListTemplateSpecSourcesKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -18427,7 +18330,6 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourcesKustom
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -20035,11 +19937,6 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -20096,7 +19993,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceKusto
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -20291,11 +20187,6 @@ export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomize 
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -20352,7 +20243,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKust
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -21960,11 +21850,6 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -22021,7 +21906,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourceKustom
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -22216,11 +22100,6 @@ export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -22277,7 +22156,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKusto
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -22571,11 +22449,6 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKustomize {
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -22632,7 +22505,6 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourceKusto
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -22827,11 +22699,6 @@ export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKustomize 
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -22888,7 +22755,6 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesKust
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -23182,11 +23048,6 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceKustom
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -23243,7 +23104,6 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -23438,11 +23298,6 @@ export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesKusto
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -23499,7 +23354,6 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -23793,11 +23647,6 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceKustom
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -23854,7 +23703,6 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -24049,11 +23897,6 @@ export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesKusto
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -24110,7 +23953,6 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -35481,11 +35323,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionReso
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -35542,7 +35379,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -35737,11 +35573,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionReso
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -35798,7 +35629,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -36092,11 +35922,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpe
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -36153,7 +35978,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -36348,11 +36172,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpe
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -36409,7 +36228,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -36703,11 +36521,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSour
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -36764,7 +36577,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -36959,11 +36771,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSour
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -37020,7 +36827,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -37314,11 +37120,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSou
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -37375,7 +37176,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -37570,11 +37370,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSou
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -37631,7 +37426,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -37925,11 +37719,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecS
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -37986,7 +37775,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -38181,11 +37969,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecS
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -38242,7 +38025,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -38536,11 +38318,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -38597,7 +38374,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -38792,11 +38568,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplate
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -38853,7 +38624,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -39147,11 +38917,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -39208,7 +38973,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -39403,11 +39167,6 @@ export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplate
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -39464,7 +39223,6 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -40056,11 +39814,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResou
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -40117,7 +39870,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -40312,11 +40064,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResou
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -40373,7 +40120,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -40667,11 +40413,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -40728,7 +40469,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -40923,11 +40663,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpec
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -40984,7 +40719,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -41278,11 +41012,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourc
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -41339,7 +41068,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -41534,11 +41262,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourc
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -41595,7 +41318,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -41889,11 +41611,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSour
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -41950,7 +41667,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -42145,11 +41861,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSour
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -42206,7 +41917,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -42500,11 +42210,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSo
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -42561,7 +42266,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -42756,11 +42460,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSo
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -42817,7 +42516,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -43111,11 +42809,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateS
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -43172,7 +42865,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -43367,11 +43059,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateS
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -43428,7 +43115,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -43722,11 +43408,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateS
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -43783,7 +43464,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),
@@ -43978,11 +43658,6 @@ export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateS
   readonly commonLabels?: { [key: string]: string };
 
   /**
-   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourcesKustomize#components
-   */
-  readonly components?: string[];
-
-  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourcesKustomize#forceCommonAnnotations
    */
   readonly forceCommonAnnotations?: boolean;
@@ -44039,7 +43714,6 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
     'commonAnnotations': ((obj.commonAnnotations) === undefined) ? undefined : (Object.entries(obj.commonAnnotations).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
     'commonAnnotationsEnvsubst': obj.commonAnnotationsEnvsubst,
     'commonLabels': ((obj.commonLabels) === undefined) ? undefined : (Object.entries(obj.commonLabels).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {})),
-    'components': obj.components?.map(y => y),
     'forceCommonAnnotations': obj.forceCommonAnnotations,
     'forceCommonLabels': obj.forceCommonLabels,
     'images': obj.images?.map(y => y),

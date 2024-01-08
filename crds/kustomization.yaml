@@ -3,10 +3,10 @@ kind: Kustomization
 
 resources:
     # Core
-  - https://github.com/1Password/onepassword-operator/config/crd?v=1.8.0
-  - https://github.com/argoproj/argo-cd/manifests/crds?v=v2.9.3
+  - https://github.com/1Password/onepassword-operator/config/crd?ref=v1.8.0
+  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.9.3
 
     # Network
   - https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.crds.yaml
-  - https://github.com/metallb/metallb/config/crd?v=v0.13.12
-  - https://github.com/traefik/traefik-helm-chart/traefik/crds?v=26.0.0
+  - https://github.com/metallb/metallb/config/crd?ref=v0.13.12
+  - https://github.com/traefik/traefik-helm-chart/traefik/crds?ref=v26.0.0
