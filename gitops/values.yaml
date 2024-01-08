@@ -1,45 +1,55 @@
 gitops:
-    repo: https://github.com/wyvernzora/k2
-    revision: main
+  repo: https://github.com/wyvernzora/k2
+  revision: main
 
 syncWaves:
 
   - apps:
-    - name: crds
-      path: crds
-      namespace: default
-      autoSync: false
+      - name: crds
+        path: crds
+        namespace: k2-core
+        autoSync: false
 
   - apps:
-    - name: kube-vip
-      path: gitops/network/kube-vip
-    - name: metallb
-      path: gitops/network/metallb
-      namespace: metallb-system
-    - name: 1password
-      path: gitops/core/1password
+      - name: kube-vip
+        path: gitops/network/kube-vip
+        namespace: k2-network
+
+      - name: metallb
+        path: gitops/network/metallb
+        namespace: k2-network
+
+      - name: 1password
+        path: gitops/core/1password
+        namespace: k2-core
 
   - apps:
-    - name: cert-manager
-      path: gitops/network/cert-manager
-    - name: longhorn
-      path: gitops/storage/longhorn
-      namespace: longhorn-system
+      - name: cert-manager
+        path: gitops/core/cert-manager
+        namespace: k2-core
+
+      - name: longhorn
+        path: gitops/storage/longhorn
+        namespace: k2-storage
 
   - apps:
-    - name: traefik
-      path: gitops/network/traefik
-      ignoreDifferences:
-        - kind: IngressRoute
-          name: traefik-dashboard
-    - name: dns
-      path: gitops/network/dns
+      - name: traefik
+        path: gitops/network/traefik
+        namespace: k2-network
+        ignoreDifferences:
+          - kind: IngressRoute
+            name: traefik-dashboard
+
+      - name: dns
+        path: gitops/network/dns
+        namespace: k2-network
 
   - apps:
-      name: glauth
-      path: gitops/auth/glauth
+      - name: glauth
+        path: gitops/auth/glauth
+        namespace: k2-auth
 
   - apps:
-    - name: argocd
-      path: gitops/core/argocd
-      namespace: argocd
+      - name: argocd
+        path: gitops/core/argocd
+        namespace: k2-core

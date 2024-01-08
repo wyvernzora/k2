@@ -3,6 +3,8 @@
 # Note that this script in run from Docker build context.
 set -ex
 
+OUTPUT=/manifests/k2-cluster-init.yaml
+
 # Install required build tools
 apk add --no-cache moreutils helm yq
 
@@ -14,23 +16,28 @@ helm repo update
 # Create output directory
 mkdir -p /manifests
 
-# Render ArgoCD manifests
+# Prepare Argo CD values file
 yq -i '.argo-cd' argocd/values.yaml
-cat argocd/namespace.yaml > /manifests/argocd.yaml
-helm template \
-    --namespace argocd \
-    --create-namespace \
-    --release-name argocd \
-    --values argocd/values.yaml \
-    argo/argo-cd >> /manifests/argocd.yaml
-cat argocd/root-app.yaml >> /manifests/argocd.yaml
 
-# Render 1Password Operator manifests
-cat 1password/namespace.yaml > /manifests/1password.yaml
-cat 1password/secret.yaml >> /manifests/1password.yaml
-helm template \
-    --namespace 1password \
-    --create-namespace \
-    --release-name 1password-connect \
-    --set operator.create=true \
-    1password/connect >> /manifests/1password.yaml
+# Render cluster-init manifest
+{
+  # Core Namespace
+  cat manifests/namespace.yaml
+
+  # Argo CD
+  helm template \
+      --namespace k2-core \
+      --release-name argocd \
+      --values argocd/values.yaml \
+      argo/argo-cd
+  cat manifests/root-app.yaml
+
+  # 1Password Connect
+  cat manifests/op-secret.yaml
+  helm template \
+      --namespace k2-core \
+      --release-name 1password-connect \
+      --set operator.create=true \
+      1password/connect
+
+} >> "$OUTPUT"

@@ -1,5 +1,5 @@
 #
-# Sandbox address pool that is accessible from sandboxed VLANs. 
+# Sandbox address pool that is accessible from sandboxed VLANs.
 # Due to security considerations IPs from this pool are never assigned
 # unless explicitly specified in LoadBalancer spec.
 #
@@ -7,7 +7,7 @@ apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
     name: sandbox-pool
-    namespace: metallb-system
+    namespace: {{ $.Release.Namespace }}
 spec:
     autoAssign: false
     addresses:

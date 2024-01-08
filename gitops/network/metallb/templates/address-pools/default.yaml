@@ -6,7 +6,7 @@ apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
     name: default-pool
-    namespace: metallb-system
+    namespace: {{ $.Release.Namespace }}
 spec:
     addresses:
       - 10.10.12.1-10.10.12.254

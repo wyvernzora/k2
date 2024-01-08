@@ -2,7 +2,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
     name: argocd-main
-    namespace: argocd
+    namespace: {{ $.Release.Namespace }}
 spec:
     routes:
       - kind: Rule
@@ -10,5 +10,5 @@ spec:
         services:
           - kind: Service
             name: argocd-server
-            namespace: argocd
+            namespace: {{ $.Release.Namespace }}
             port: 80
