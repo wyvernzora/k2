@@ -44,6 +44,10 @@ syncWaves:
           - kind: IngressRoute
             name: traefik-dashboard
 
+      - name: k8s-gateway
+        path: gitops/network/k8s-gateway
+        namespace: k2-network
+
       - name: blocky
         path: gitops/network/blocky
         namespace: k2-network

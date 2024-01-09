@@ -24,6 +24,12 @@ export class BlockyConfig extends ConfigMap {
             upstream: {
                 [DefaultClientGroup]: [`1.1.1.1`],
             },
+            conditional: {
+                fallbackUpstream: true,
+                mapping: {
+                    'wyvernzora.io': 'k8s-gateway.k2-network.svc.cluster.local',
+                },
+            },
             blocking: {
                 blackLists: {
                     [DefaultBlocklistGroup]: blockLists || [],

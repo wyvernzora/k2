@@ -3,6 +3,18 @@
     "extends": [
         "config:base"
     ],
+    "lockFileMaintenance": {
+        "enabled": true,
+        "automerge": true
+    },
+    "packageRules": [
+        {
+            "matchUpdateTypes": ["minor", "patch"],
+            "matchDepTypes": ["devDependencies"],
+            "automergeType": "branch",
+            "automerge": true
+        }
+    ],
     "regexManagers": [
         {
             "fileMatch": [
