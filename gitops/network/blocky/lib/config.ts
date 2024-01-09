@@ -5,13 +5,13 @@ import * as YAML from "yaml"
 const DefaultClientGroup = "default"
 const DefaultBlocklistGroup = "default"
 
-export interface DnsConfigProps {
+export interface BlockyConfigProps {
     readonly blockLists: string[]
 }
 
-export class DnsConfig extends ConfigMap {
+export class BlockyConfig extends ConfigMap {
 
-    constructor(scope: Construct, id: string, props: DnsConfigProps) {
+    constructor(scope: Construct, id: string, props: BlockyConfigProps) {
         super(scope, id, { });
         this.addBlockyConfig(props.blockLists);
     }

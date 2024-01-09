@@ -1,17 +1,17 @@
 import { Cpu, Deployment, Protocol, Volume } from "cdk8s-plus-27";
-import { DnsConfig } from "./config";
+import { BlockyConfig } from "./config";
 import { Construct } from "constructs";
 import { Size } from "cdk8s";
 
 
-export interface DnsDeploymentProps {
+export interface BlockyDeploymentProps {
     readonly replicas: number
-    readonly config: DnsConfig
+    readonly config: BlockyConfig
 }
 
-export class DnsDeployment extends Deployment {
+export class BlockyDeployment extends Deployment {
 
-    constructor(scope: Construct, id: string, props: DnsDeploymentProps) {
+    constructor(scope: Construct, id: string, props: BlockyDeploymentProps) {
         super(scope, id, { replicas: props.replicas });
         const configVolume = Volume.fromConfigMap(this, 'config', props.config);
         this.addBlockyContainer(configVolume);
