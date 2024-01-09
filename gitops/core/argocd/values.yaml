@@ -1,6 +1,11 @@
 argo-cd:
     secret:
         createSecret: false
+    server:
+        ingress:
+            enabled: true
+            hosts:
+                - deploy.wyvernzora.io
     repoServer:
         extraContainers:
           - name: cdk8s-plugin
