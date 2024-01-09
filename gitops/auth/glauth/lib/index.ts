@@ -3,7 +3,7 @@ import {Construct} from "constructs";
 import {GlauthConfig} from "./config";
 import {GlauthCertificate} from "./certificate";
 import {GlauthDeployment} from "./deployment";
-import {Service, ServiceType} from "cdk8s-plus-27";
+import {Service} from "cdk8s-plus-27";
 import {GlauthUsers} from "./users";
 
 
@@ -27,9 +27,7 @@ export class GlauthChart extends Chart {
             users: users,
             certificate: certificate,
         });
-        this.service = deployment.exposeViaService({
-            serviceType: ServiceType.LOAD_BALANCER,
-        });
+        this.service = deployment.exposeViaService({ name: 'glauth' });
     }
 
 }
