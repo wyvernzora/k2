@@ -1,8 +1,9 @@
 .idea
 .vagrant
 *.code-workspace
-charts/*
+charts
 node_modules
+imports/
 dist
 tmp
 cdk.out

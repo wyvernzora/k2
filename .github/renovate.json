@@ -33,6 +33,15 @@
             ],
             "datasourceTemplate": "github-releases",
             "versioningTemplate": "semver"
+        },
+        {
+            "fileMatch": [
+                "(.*/|^)cdk8s\\.ya?ml"
+            ],
+            "matchStrings": [
+                "helm:(?<repo>.+)/(?<depName>.+)@(?<version>.+)"
+            ],
+            "datasourceTemplate": "helm"
         }
     ]
 }

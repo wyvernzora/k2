@@ -54,6 +54,11 @@ syncWaves:
         namespace: k2-auth
 
   - apps:
+        - name: authelia
+          path: gitops/auth/authelia
+          namespace: k2-auth
+
+  - apps:
       - name: argocd
         path: gitops/core/argocd
         namespace: k2-core
