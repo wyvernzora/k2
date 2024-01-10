@@ -11,4 +11,10 @@ spec:
         kind: {{ .issuer.kind }}
         name: {{ .issuer.name }}
     secretName: default-certificate
+    secretTemplate:
+        annotations:
+            reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+            reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "k2-auth"
+            reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+            reflector.v1.k8s.emberstack.com/reflection-auto-namespace: "k2-auth"
 {{- end -}}

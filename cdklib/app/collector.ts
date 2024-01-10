@@ -20,7 +20,8 @@ export class Collector extends Construct {
     }
 
     public get applications(): Application[] {
-        return Object.values(this._applications);
+        return Object.values(this._applications)
+            .sort((a, b) => a.syncWave - b.syncWave);
     }
 
     public addApplication(app: Application): void {
@@ -77,6 +78,12 @@ export class Collector extends Construct {
                 LOG(`wave ${index}: ${app.name}`)
                 app.syncWave = index;
             }
+        }
+    }
+
+    public printWaves(): void {
+        for (const app of this.applications) {
+            console.error(`Wave ${app.syncWave} - ${app.name}`)
         }
     }
 }
