@@ -15,8 +15,6 @@ spec:
         path: gitops
         repoURL: https://github.com/wyvernzora/k2
         targetRevision: main
-        helm:
-            skipCrds: true
     syncPolicy:
         automated:
             prune: true

@@ -20,7 +20,7 @@ authelia:
             ldap:
                 enabled: true
                 implementation: custom
-                url: ldaps://glauth.k2-auth.svc.cluster.local
+                url: ldap://glauth.k2-auth.svc.cluster.local
                 tls:
                     server_name: ldap.wyvernzora.io
                 base_dn: dc=wyvernzora,dc=io

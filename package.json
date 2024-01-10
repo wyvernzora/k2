@@ -5,13 +5,17 @@
   "dependencies": {
     "cdk8s": "^2.68.22",
     "cdk8s-plus-27": "^2.7.70",
+    "debug": "^4.3.4",
+    "fast-glob": "^3.3.2",
+    "find-root": "^1.1.0",
     "yaml": "^2.3.4"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/find-root": "^1.1.4",
     "@types/node": "^20.10.6",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
-  "scripts": {
-  }
+  "scripts": {}
 }

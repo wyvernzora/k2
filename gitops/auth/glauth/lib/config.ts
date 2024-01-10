@@ -4,7 +4,6 @@ import {Construct} from "constructs";
 
 export interface GlauthConfigProps {
     readonly ldapPort: number
-    readonly ldapsPort: number
     readonly domain: string
 }
 
@@ -17,10 +16,7 @@ export class GlauthConfig extends ConfigMap {
     enabled = true
     listen = "0.0.0.0:${props.ldapPort}"
 [ldaps]
-    enabled = true
-    listen = "0.0.0.0:${props.ldapsPort}"
-    cert = "/app/tls/glauth.crt"
-    key = "/app/tls/glauth.key"
+    enabled = false
 [backend]
     datastore = "config"
     baseDN = "${props.domain.split('.').map((s) => `dc=${s}`).join(',')}"

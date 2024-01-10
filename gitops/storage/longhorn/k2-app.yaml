@@ -1,0 +1,4 @@
+name: longhorn
+namespace: k2-storage
+dependsOn:
+    - traefik
