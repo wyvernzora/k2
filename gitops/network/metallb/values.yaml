@@ -1,1 +1,2 @@
-{ }
+crds:
+    enabled: false
