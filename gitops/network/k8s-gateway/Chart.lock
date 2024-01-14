@@ -1,6 +1,6 @@
 dependencies:
 - name: k8s-gateway
   repository: https://ori-edge.github.io/k8s_gateway/
-  version: 2.1.0
-digest: sha256:48a4c17029c20ebb25b12275a3e74e173f26203c88c534645057f78b70778af2
-generated: "2024-01-09T12:21:21.027358-08:00"
+  version: 2.3.0
+digest: sha256:93ab370c5c6ec26629b10fd68d730a0f52e46e333ed8e090d2a60e9bb07d0a41
+generated: "2024-01-14T09:52:22.164251985Z"
