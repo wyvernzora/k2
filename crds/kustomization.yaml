@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
     # Core
   - https://github.com/1Password/onepassword-operator/config/crd?ref=v1.8.0
-  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.9.4
+  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.9.5
 
     # Network
   - https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.crds.yaml
