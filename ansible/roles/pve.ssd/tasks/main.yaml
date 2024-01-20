@@ -1,0 +1,24 @@
+---
+- name: Reduce SSD wear
+  when: k2_ssd_mode
+  block:
+  - name: Disable write-intensive services
+    service:
+      name: "{{ item }}"
+      enabled: no
+      state: stopped
+    with_items:
+      - pve-ha-lrm
+      - pve-ha-crm
+
+
+  - name: Create journald config directory
+    file:
+      path: /etc/systemd/journald.conf.d
+      state: directory
+
+  - name: Disable persistent logging
+    copy:
+      src: files/in-mem-logs.conf
+      dest: /etc/systemd/journald.conf.d/in-mem-logs.conf
+    notify: restart journald

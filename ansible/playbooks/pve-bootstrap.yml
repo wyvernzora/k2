@@ -4,6 +4,7 @@
   remote_user: root
   roles:
     - role: pve.nosub
+    - role: pve.ssd
     - role: k2.user
     - role: k2.fish
     - role: k2.tls
