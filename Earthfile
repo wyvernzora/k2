@@ -1,6 +1,5 @@
 VERSION 0.6
 FROM alpine
-ARG TAG="latest"
 ARG IMAGE_REPOSITORY=ghcr.io/wyvernzora
 
 # renovate: datasource=docker depName=renovate/renovate versioning=docker
@@ -36,8 +35,12 @@ ansible:
         aws-cli \
         ca-certificates \
         openssh-client \
-        py-boto3
-    RUN adduser -D -h '/ansible' ansible
+        py-boto3 && \
+        adduser -D -h '/ansible' ansible && \
+        rm -rf /var/cache/apk/* /usr/share/doc /usr/share/man/ /usr/share/info/* /var/cache/man/* /tmp/* /etc/fstab && \
+        rm -fr /etc/init.d /lib/rc /etc/conf.d /etc/inittab /etc/runlevels /etc/rc.conf && \
+        rm -rf /etc/sysctl* /etc/modprobe.d /etc/modules /etc/mdev.conf /etc/acpi && \
+        find / -xdev -type l -exec test ! -e {} \; -delete
     WORKDIR '/ansible'
     USER ansible
     COPY ansible .
@@ -45,21 +48,31 @@ ansible:
     ENV ANSIBLE_ROLES_PATH="/ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles"
     VOLUME [ "/ansible/.ssh", "/ansible/.aws", "/ansible/group_vars", "/ansible/host_vars", "/ansible/inventory" ]
     ENTRYPOINT [ "/ansible/entrypoint.sh" ]
-    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-ansible:${TAG}
+    SAVE IMAGE $IMAGE_REPOSITORY/k2-ansible:dev
+
+ansible-multiarch:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +ansible
 
 ###############################################################################
 # Generate cdk8s constructs for imported CRDs                                 #
 ###############################################################################
+render-crd-manifests:
+    FROM alpine
+    WORKDIR /build
+    COPY crds/kustomization.yaml .
+    RUN apk add --no-cache kustomize git && \
+        kustomize build . > crds.yaml
+    SAVE ARTIFACT crds.yaml
+
 generate-crd-constructs:
     FROM node:alpine
     WORKDIR /build
-    COPY crds/kustomization.yaml .
+    COPY crds/*.yaml .
+    COPY (+render-crd-manifests/crds.yaml) /build
     RUN mkdir -p /imports && \
-        apk add --no-cache kustomize git && \
-        npm install -g cdk8s-cli
-    RUN kustomize build . > manifest.yaml && \
-        cdk8s import -l typescript -o /imports manifest.yaml && \
-        cp /build/kustomization.yaml /imports/kustomization.yaml
+        npm install -g cdk8s-cli && \
+        cdk8s import -l typescript -o /imports crds.yaml && \
+        cp /build/kustomization.yaml /build/k2-app.yaml /imports/
     SAVE ARTIFACT /imports AS LOCAL ./crds
 
 ###############################################################################
@@ -70,11 +83,15 @@ cluster-init-manifests:
     WORKDIR /build
     COPY kairos/cluster-init .
     COPY gitops/core/argocd/values.yaml argocd/values.yaml
+    COPY (+render-crd-manifests/crds.yaml) crds.yaml
     RUN ./build.sh
     SAVE ARTIFACT /manifests
 
 cluster-init:
-    FROM scratch
+    FROM alpine
     COPY +cluster-init-manifests/manifests /manifests
     COPY kairos/cluster-init/run.sh .
-    SAVE IMAGE --push $IMAGE_REPOSITORY/k2-cluster-init:${TAG}
+    SAVE IMAGE $IMAGE_REPOSITORY/k2-cluster-init:dev
+
+cluster-init-multiarch:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +cluster-init

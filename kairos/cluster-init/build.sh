@@ -21,6 +21,9 @@ yq -i '.argo-cd' argocd/values.yaml
 
 # Render cluster-init manifest
 {
+  # CRDs
+  cat crds.yaml
+
   # Core Namespace
   cat manifests/namespace.yaml
 

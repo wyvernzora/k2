@@ -1,60 +1,69 @@
 name: Ansible
 on:
-    push:
-        branches:
-          - '**'
-        tags:
-          - 'v*'
-        paths:
-          - 'ansible/**'
-          - '.github/workflows/**'
-    pull_request:
-        paths:
-          - 'ansible/**'
-    release:
-        types:
-          - published
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+    paths:
+      - 'ansible/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'ansible/**'
+  release:
+    types:
+      - published
 jobs:
-    build-image:
-        runs-on: ubuntu-latest
-        permissions:
-            id-token: write
-            contents: read
-            packages: write
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
+  build-image:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-          - uses: earthly/actions-setup@v1
-            with:
-                github-token: ${{ secrets.GITHUB_TOKEN }}
-                version: "latest"
+      - uses: earthly/actions-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: "latest"
 
-          - name: Login to ghcr.io
-            uses: docker/login-action@v3
-            with:
-                registry: ghcr.io
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
-        
-          - name: Determine the image tag
-            shell: bash
-            run: |
-                if [[ $GITHUB_REF == refs/tags/* ]]; then
-                    TAG="${GITHUB_REF#refs/tags/}"
-                else
-                    BRANCH_TAG=$(echo "${GITHUB_REF#refs/heads/}" | sed 's/[^a-zA-Z0-9._-]/-/g')
-                    TAG="${BRANCH_TAG}"
-                fi
-                echo "TAG=${TAG}" >> $GITHUB_ENV
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: all
 
-          - name: Build and publish
-            run: earthly --ci --push +ansible --TAG=${{ env.TAG }}
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-          - name: Clean up old versions
-            uses: actions/delete-package-versions@v4
-            with:
-                package-name: k2-ansible
-                package-type: container
-                min-versions-to-keep: 3
-                delete-only-untagged-versions: 'true'
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/wyvernzora/k2-ansible
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+
+      - name: Build and publish
+        run: |
+          earthly --strict +ansible-multiarch
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            docker tag ghcr.io/wyvernzora/k2-ansible:dev "$tag"
+            docker push "$tag"
+          done
+
+      - name: Clean up old versions
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: k2-ansible
+          package-type: container
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: 'true'
