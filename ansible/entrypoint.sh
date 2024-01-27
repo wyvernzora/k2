@@ -3,7 +3,7 @@
 function print_available_playbooks() {
     echo -e "Available playbooks:\n"
     for FILE in playbooks/*.yml; do
-        echo -e "  $(basename "${FILE%.yml}")\t\t\t$(head -n 1 "$FILE" | sed "s/^# //")" 
+        echo -e "  $(basename "${FILE%.yml}")\t\t\t$(head -n 1 "$FILE" | sed "s/^# //")"
     done
 }
 
@@ -20,11 +20,9 @@ function help() {
     echo -e "  AWS_REGION"
     echo -e ""
     echo -e "Volumes:\n"
-    echo -e "  /ansible/.ssh/\t\tSSH keys to be used for bootstrapping"
-    echo -e "  /ansible/.aws/\t\tAWS credentials file, if any"
+    echo -e "  /root/.ssh/\t\tSSH keys to be used for bootstrapping"
+    echo -e "  /root/.aws/\t\tAWS credentials file, if any"
     echo -e "  /ansible/inventory/\t\tInventory files here"
-    echo -e "  /ansible/group_vars/\t\tGroup var files here"
-    echo -e "  /ansible/host_vars/\t\tHost var files here"
     echo -e ""
 }
 
@@ -42,4 +40,6 @@ if [ ! -f "$PLAYBOOK" ]; then
     exit 1
 fi
 
+export ANSIBLE_ROLES_PATH="$ANSIBLE_ROLES_PATH:/ansible/roles"
+export ANSIBLE_HOST_KEY_CHECKING="False"
 ansible-playbook -i /ansible/inventory "$PLAYBOOK"

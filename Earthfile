@@ -29,24 +29,11 @@ lint:
 # Ansible Playbooks                                                           #
 ###############################################################################
 ansible:
-    FROM alpine
-    RUN apk add --no-cache \
-        ansible \
-        aws-cli \
-        ca-certificates \
-        openssh-client \
-        py-boto3 && \
-        adduser -D -h '/ansible' ansible && \
-        rm -rf /var/cache/apk/* /usr/share/doc /usr/share/man/ /usr/share/info/* /var/cache/man/* /tmp/* /etc/fstab && \
-        rm -fr /etc/init.d /lib/rc /etc/conf.d /etc/inittab /etc/runlevels /etc/rc.conf && \
-        rm -rf /etc/sysctl* /etc/modprobe.d /etc/modules /etc/mdev.conf /etc/acpi && \
-        find / -xdev -type l -exec test ! -e {} \; -delete
-    WORKDIR '/ansible'
-    USER ansible
+    FROM willhallonline/ansible:2.15-alpine-3.18
     COPY ansible .
-    RUN ansible-galaxy install -r requirements.yml
-    ENV ANSIBLE_ROLES_PATH="/ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles"
-    VOLUME [ "/ansible/.ssh", "/ansible/.aws", "/ansible/group_vars", "/ansible/host_vars", "/ansible/inventory" ]
+    RUN pip install --no-cache-dir botocore boto3 && \
+        ansible-galaxy install -r requirements.yml
+    VOLUME [ "/ansible/.ssh", "/ansible/.aws", "/ansible/inventory" ]
     ENTRYPOINT [ "/ansible/entrypoint.sh" ]
     SAVE IMAGE $IMAGE_REPOSITORY/k2-ansible:dev
 

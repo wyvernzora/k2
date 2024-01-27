@@ -1,13 +1,14 @@
 #!/bin/bash
 
 ROOT=$(dirname $0)
+AWS_CREDENTIALS='op://zfsyjjcwge4w4gw6dh4zaqndhq/4e3fjp3t5qoxepo36h5waiv4r4';
 
 docker run --rm -it \
-    -e AWS_ACCESS_KEY_ID \
-    -e AWS_SECRET_ACCESS_KEY \
-    -e AWS_REGION \
+    -e AWS_ACCESS_KEY_ID="$(op read "$AWS_CREDENTIALS/access key id")" \
+    -e AWS_SECRET_ACCESS_KEY="$(op read "$AWS_CREDENTIALS/secret access key")" \
+    -e AWS_REGION="$(op read "$AWS_CREDENTIALS/default region")" \
     -e AWS_PROFILE \
-    -v $HOME/.aws:/ansible/.aws:ro \
-    -v $HOME/.ssh:/ansible/.ssh:ro \
-    -v $ROOT/../.private/ansible-inventory:/ansible/inventory:ro \
-    ghcr.io/wyvernzora/k2-ansible:latest "$@"
+    -v $HOME/.aws:/root/.aws:ro \
+    -v $HOME/.ssh:/root/.ssh:ro \
+    -v $ROOT/../inventory:/ansible/inventory:ro \
+    ghcr.io/wyvernzora/k2-ansible:dev "$@"
