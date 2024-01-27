@@ -46,7 +46,7 @@ ansible-multiarch:
 render-crd-manifests:
     FROM alpine
     WORKDIR /build
-    COPY crds/kustomization.yaml .
+    COPY crds/*.yaml .
     RUN apk add --no-cache kustomize git && \
         kustomize build . > crds.yaml
     SAVE ARTIFACT crds.yaml
@@ -54,13 +54,12 @@ render-crd-manifests:
 generate-crd-constructs:
     FROM node:alpine
     WORKDIR /build
-    COPY crds/*.yaml .
+    RUN mkdir -p /output
+    COPY crds /output
     COPY (+render-crd-manifests/crds.yaml) /build
-    RUN mkdir -p /imports && \
-        npm install -g cdk8s-cli && \
-        cdk8s import -l typescript -o /imports crds.yaml && \
-        cp /build/kustomization.yaml /build/k2-app.yaml /imports/
-    SAVE ARTIFACT /imports AS LOCAL ./crds
+    RUN npm install -g cdk8s-cli && \
+        cdk8s import -l typescript -o /output crds.yaml
+    SAVE ARTIFACT /output AS LOCAL ./crds
 
 ###############################################################################
 # Kairos Cluster Init                                                         #
