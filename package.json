@@ -45,6 +45,7 @@
   "scripts": {
     "eslint": "eslint --ext .ts .",
     "prettier": "prettier '{cdklib,gitops}/**/*.ts' '**/*.yaml' '!**/templates/**/*.yaml'",
+    "lint:check": "npm run eslint && npm run prettier -- --check",
     "lint:fix": "npm run eslint -- --fix && npm run prettier -- --write"
   }
 }

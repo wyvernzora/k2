@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+APPS=$(find . -type f -name "k2-app.yaml" | sed 's/\/k2-app.yaml$//')
+for APP_ROOT in $APPS; do
+  echo "Building: $APP_ROOT"
+  (
+    cd "$APP_ROOT"
+    mkdir -p dist
+
+    if [ -f "cdk8s.yaml" ]; then
+      cdk8s synth -p > dist/manifest.yaml
+    fi
+
+    if [ -f "kustomization.yaml" ]; then
+      kustomize build . > dist/manifest.yaml
+    fi
+
+    if [ -f "helm/Chart.yaml" ]; then
+      helm template helm > dist/manifest.yaml
+    fi
+  )
+done

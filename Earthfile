@@ -7,6 +7,9 @@ ARG RENOVATE_VERSION=37
 # renovate: datasource=docker depName=koalaman/shellcheck-alpine versioning=docker
 ARG SHELLCHECK_VERSION=v0.9.0
 
+###############################################################################
+# Build & Test                                                                #
+###############################################################################
 renovate-validate:
     ARG RENOVATE_VERSION
     FROM renovate/renovate:$RENOVATE_VERSION
@@ -14,16 +17,30 @@ renovate-validate:
     COPY ./.github/renovate.json .
     RUN renovate-config-validator
 
-shellcheck-lint:
+shellcheck:
     ARG SHELLCHECK_VERSION
     FROM koalaman/shellcheck-alpine:$SHELLCHECK_VERSION
     WORKDIR /mnt
     COPY . .
-    RUN find . -name "*.sh" -print | xargs -r -n1 shellcheck
+    RUN find . -name "*.sh" -name "!node_modules" -print | xargs -r -n1 shellcheck
 
-lint:
+test-apps:
+    FROM node:alpine
+    WORKDIR /mnt
+    COPY . .
+    RUN apk add --no-cache kustomize helm git && \
+        npm install -g cdk8s-cli && \
+        npm install
+    RUN npm run lint:check && ls -la ./test
+    RUN ./test/test-apps
+
+test:
     BUILD +renovate-validate
-    BUILD +shellcheck-lint
+    BUILD +shellcheck
+    BUILD +test-apps
+
+test-multiarch:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +test
 
 ###############################################################################
 # Ansible Playbooks                                                           #
