@@ -14,8 +14,37 @@
     "@types/debug": "^4.1.12",
     "@types/find-root": "^1.1.4",
     "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.4",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
-  "scripts": {}
+  "eslintConfig": {
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier"
+    ],
+    "rules": {},
+    "ignorePatterns": [
+      "crds/*.ts",
+      "node_modules"
+    ]
+  },
+  "prettier": {
+  },
+  "scripts": {
+    "eslint": "eslint --ext .ts .",
+    "prettier": "prettier '{cdklib,gitops}/**/*.ts' '**/*.yaml' '!**/templates/**/*.yaml'",
+    "lint:fix": "npm run eslint -- --fix && npm run prettier -- --write"
+  }
 }
