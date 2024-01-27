@@ -2,25 +2,25 @@
 hostname: 'k2-{{ "{{ trunc -4 .MachineID }}" }}'
 
 install:
-    device: /dev/sda
-    poweroff: true
+  device: /dev/sda
+  poweroff: true
 
 users:
   - name: kairos
-    passwd: '{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}'
+    passwd: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}"
     ssh_authorized_keys:
       - github:wyvernzora
 
 growpart:
-    devices: ['/']
+  devices: ["/"]
 
 k3s:
-    enabled: true
-    env:
-      K3S_TOKEN: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/xnuknpx3mjqgrgqd7ybv3u7wpy/node-token }}"
-    args:
-      - '--server=https://10.10.8.2:6443'     # Join the existing cluster at control-plane VIP
-      - '--tls-san=10.10.8.2'                 # Make sure k8s control-plane cert has KubeVIP IP
-      - '--disable=traefik,servicelb'         # We'll be deploying our own Traefik and MetalLB
-      - '--secrets-encryption'                # Encrypt secrets at rest
-      - '--flannel-backend=wireguard-native'  # Use WireGuard for intra-cluster network
+  enabled: true
+  env:
+    K3S_TOKEN: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/xnuknpx3mjqgrgqd7ybv3u7wpy/node-token }}"
+  args:
+    - "--server=https://10.10.8.2:6443" # Join the existing cluster at control-plane VIP
+    - "--tls-san=10.10.8.2" # Make sure k8s control-plane cert has KubeVIP IP
+    - "--disable=traefik,servicelb" # We'll be deploying our own Traefik and MetalLB
+    - "--secrets-encryption" # Encrypt secrets at rest
+    - "--flannel-backend=wireguard-native" # Use WireGuard for intra-cluster network

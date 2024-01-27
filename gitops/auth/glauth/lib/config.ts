@@ -1,17 +1,17 @@
-import {ConfigMap} from "cdk8s-plus-27";
-import {Construct} from "constructs";
-
+import { ConfigMap } from "cdk8s-plus-27";
+import { Construct } from "constructs";
 
 export interface GlauthConfigProps {
-    readonly ldapPort: number
-    readonly domain: string
+  readonly ldapPort: number;
+  readonly domain: string;
 }
 
 export class GlauthConfig extends ConfigMap {
-
-    constructor(scope: Construct, id: string, props: GlauthConfigProps) {
-        super(scope, id, { });
-        this.addData("config.cfg", `
+  constructor(scope: Construct, id: string, props: GlauthConfigProps) {
+    super(scope, id, {});
+    this.addData(
+      "config.cfg",
+      `
 [ldap]
     enabled = true
     listen = "0.0.0.0:${props.ldapPort}"
@@ -19,7 +19,10 @@ export class GlauthConfig extends ConfigMap {
     enabled = false
 [backend]
     datastore = "config"
-    baseDN = "${props.domain.split('.').map((s) => `dc=${s}`).join(',')}"
+    baseDN = "${props.domain
+      .split(".")
+      .map((s) => `dc=${s}`)
+      .join(",")}"
 [behaviors]
     IgnoreCapabilities = false
     LimitFailedBinds = true
@@ -28,7 +31,7 @@ export class GlauthConfig extends ConfigMap {
     BlockFailedBindsFor = 60
     PruneSourceTableEvery = 600
     PruneSourcesOlderThan = 600
-        `);
-    }
-
+        `,
+    );
+  }
 }

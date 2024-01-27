@@ -1,2 +1,2 @@
 reflector:
-    priorityClassName: system-cluster-critical
+  priorityClassName: system-cluster-critical

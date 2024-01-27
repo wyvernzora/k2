@@ -1,46 +1,46 @@
 argo-cd:
-    secret:
-        createSecret: false
-    server:
-        ingress:
-            enabled: true
-            hosts:
-                - deploy.wyvernzora.io
-    repoServer:
-        extraContainers:
-          - name: cdk8s-plugin
-            image: ghcr.io/wyvernzora/argocd-cdk8s-plugin:v1.1.0
-            command:
-              - /var/run/argocd/argocd-cmp-server
-            volumeMounts:
-              - name: var-files
-                mountPath: /var/run/argocd
-              - name: plugins
-                mountPath: /home/argocd/cmp-server/plugins
-              - name: cdk8s-working-dir
-                mountPath: /tmp
-            securityContext:
-                runAsNonRoot: true
-                runAsUser: 999
-        volumes:
+  secret:
+    createSecret: false
+  server:
+    ingress:
+      enabled: true
+      hosts:
+        - deploy.wyvernzora.io
+  repoServer:
+    extraContainers:
+      - name: cdk8s-plugin
+        image: ghcr.io/wyvernzora/argocd-cdk8s-plugin:v1.1.0
+        command:
+          - /var/run/argocd/argocd-cmp-server
+        volumeMounts:
+          - name: var-files
+            mountPath: /var/run/argocd
+          - name: plugins
+            mountPath: /home/argocd/cmp-server/plugins
           - name: cdk8s-working-dir
-            emptyDir: { }
-    configs:
-        params:
-            # Let ingress handle TLS termination
-            server.insecure: true
-        cm:
-            statusbadge.enabled: "true"
-            resource.customizations.health.argoproj.io_Application: |
-                hs = {}
-                hs.status = "Progressing"
-                hs.message = ""
-                if obj.status ~= nil then
-                if obj.status.health ~= nil then
-                    hs.status = obj.status.health.status
-                        if obj.status.health.message ~= nil then
-                            hs.message = obj.status.health.message
-                        end
+            mountPath: /tmp
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+    volumes:
+      - name: cdk8s-working-dir
+        emptyDir: {}
+  configs:
+    params:
+      # Let ingress handle TLS termination
+      server.insecure: true
+    cm:
+      statusbadge.enabled: "true"
+      resource.customizations.health.argoproj.io_Application: |
+        hs = {}
+        hs.status = "Progressing"
+        hs.message = ""
+        if obj.status ~= nil then
+        if obj.status.health ~= nil then
+            hs.status = obj.status.health.status
+                if obj.status.health.message ~= nil then
+                    hs.message = obj.status.health.message
                 end
-                end
-                return hs
+        end
+        end
+        return hs

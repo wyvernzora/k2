@@ -1,5 +1,5 @@
 name: argocd
 namespace: k2-core
 dependsOn:
-    - crds
-    - traefik
+  - crds
+  - traefik

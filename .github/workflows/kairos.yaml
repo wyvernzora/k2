@@ -2,16 +2,16 @@ name: Kairos
 on:
   push:
     branches:
-      - '**'
+      - "**"
     tags:
-      - 'v*'
+      - "v*"
     paths:
-      - 'crds/kustomization.yaml'
-      - 'kairos/cluster-init/**'
-      - '.github/workflows/**'
+      - "crds/kustomization.yaml"
+      - "kairos/cluster-init/**"
+      - ".github/workflows/**"
   pull_request:
     paths:
-      - 'kairos/cluster-init/**'
+      - "kairos/cluster-init/**"
   release:
     types:
       - published
@@ -67,4 +67,4 @@ jobs:
           package-name: k2-cluster-init
           package-type: container
           min-versions-to-keep: 3
-          delete-only-untagged-versions: 'true'
+          delete-only-untagged-versions: "true"

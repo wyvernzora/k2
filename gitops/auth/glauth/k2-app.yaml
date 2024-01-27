@@ -1,5 +1,5 @@
 name: glauth
 namespace: k2-auth
 dependsOn:
-    - 1password
-    - cert-manager
+  - 1password
+  - cert-manager

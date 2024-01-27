@@ -1,4 +1,4 @@
 k8s-gateway:
-    domain: wyvernzora.io
-    service:
-        type: ClusterIP
+  domain: wyvernzora.io
+  service:
+    type: ClusterIP

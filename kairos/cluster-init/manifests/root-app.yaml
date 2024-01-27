@@ -2,30 +2,30 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-    name: k2-root
-    namespace: k2-core
-    annotations:
-        argocd.argoproj.io/sync-wave: '0'
+  name: k2-root
+  namespace: k2-core
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
-    destination:
-        namespace: k2-core
-        server: https://kubernetes.default.svc
-    project: default
-    source:
-        path: gitops
-        repoURL: https://github.com/wyvernzora/k2
-        targetRevision: main
-    syncPolicy:
-        automated:
-            prune: true
-            selfHeal: true
-        retry:
-            limit: 10
-            backoff:
-                duration: 1m
-                maxDuration: 16m
-                factor: 2
-        syncOptions:
-          - CreateNamespace=true
-          - ServerSideApply=true
-          - ApplyOutOfSyncOnly=true
+  destination:
+    namespace: k2-core
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: gitops
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 1m
+        maxDuration: 16m
+        factor: 2
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true

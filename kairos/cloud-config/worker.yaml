@@ -3,15 +3,15 @@ hostname: 'k2-{{ "{{ trunc -4 .MachineID }}" }}'
 
 users:
   - name: kairos
-    passwd: '{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}'
+    passwd: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}"
     ssh_authorized_keys:
       - github:wyvernzora
 
 growpart:
-    devices: ['/']
+  devices: ["/"]
 
 k3s-agent:
-    enabled: true
-    env:
-      K3S_TOKEN: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/xnuknpx3mjqgrgqd7ybv3u7wpy/node-token }}"
-      K3S_URL: "https://10.10.8.2:6443"
+  enabled: true
+  env:
+    K3S_TOKEN: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/xnuknpx3mjqgrgqd7ybv3u7wpy/node-token }}"
+    K3S_URL: "https://10.10.8.2:6443"

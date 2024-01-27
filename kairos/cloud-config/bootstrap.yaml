@@ -7,29 +7,28 @@ install:
 
 users:
   - name: kairos
-    passwd: '{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}'
+    passwd: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}"
     ssh_authorized_keys:
       - github:wyvernzora
 
 growpart:
-    devices: ['/']
+  devices: ["/"]
 
 k3s:
-    enabled: true
-    args:
-      - '--cluster-init'                      # Spin up k3s in cluster mode
-      - '--tls-san=10.10.8.2'                 # Make sure k8s control-plane cert has KubeVIP IP
-      - '--disable=traefik,servicelb'         # We'll be deploying our own Traefik and MetalLB
-      - '--secrets-encryption'                # Encrypt secrets at rest
-      - '--flannel-backend=wireguard-native'  # Use WireGuard for intra-cluster network
+  enabled: true
+  args:
+    - "--cluster-init" # Spin up k3s in cluster mode
+    - "--tls-san=10.10.8.2" # Make sure k8s control-plane cert has KubeVIP IP
+    - "--disable=traefik,servicelb" # We'll be deploying our own Traefik and MetalLB
+    - "--secrets-encryption" # Encrypt secrets at rest
+    - "--flannel-backend=wireguard-native" # Use WireGuard for intra-cluster network
 
 stages:
-
 
 bundles:
   - targets:
       - run://ghcr.io/wyvernzora/k2-cluster-init:main
 
 onepassword:
-    credentials: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/b53fcrureoovna2yjccdesedum/credential }}"
-    token: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/b53fcrureoovna2yjccdesedum/token }}"
+  credentials: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/b53fcrureoovna2yjccdesedum/credential }}"
+  token: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/b53fcrureoovna2yjccdesedum/token }}"

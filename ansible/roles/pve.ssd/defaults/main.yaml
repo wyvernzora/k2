@@ -1,4 +1,3 @@
-
 # Changes some of the ProxmoxVE settings to reduce SSD wear if set to true
 # Downside is that it turns off persistent logging and some of the HA services
 k2_ssd_mode: true
