@@ -1,0 +1,5 @@
+name: rancher
+namespace: k2-core
+dependsOn:
+  - cert-manager
+  - traefik

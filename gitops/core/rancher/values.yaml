@@ -1,0 +1,3 @@
+rancher:
+  hostname: rancher.wyvernzora.io
+  tls: external
