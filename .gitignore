@@ -1,5 +1,6 @@
 .idea
 .vagrant
+.envrc
 *.code-workspace
 charts
 node_modules
