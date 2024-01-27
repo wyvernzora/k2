@@ -1,5 +1,5 @@
 #cloud-config
-hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
+hostname: 'k2-{{ "{{ trunc -4 .MachineID }}" }}'
 
 install:
     device: /dev/sda
@@ -19,18 +19,8 @@ k3s:
     env:
       K3S_TOKEN: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/xnuknpx3mjqgrgqd7ybv3u7wpy/node-token }}"
     args:
-        # Spin up k3s in cluster mode
-      - '--cluster-init'
-      - '--server=10.10.8.2'
-
-        # Make sure k8s control-plane cert has KubeVIP IP
-      - '--tls-san=10.10.8.2'
-
-        # We'll be deploying our own Traefik and MetalLB
-      - '--disable=traefik,servicelb'
-
-        # Encrypt secrets at rest
-      - '--secrets-encryption'
-
-        # Use WireGuard for intra-cluster network
-      - '--flannel-backend=wireguard-native'
+      - '--server=https://10.10.8.2:6443'     # Join the existing cluster at control-plane VIP
+      - '--tls-san=10.10.8.2'                 # Make sure k8s control-plane cert has KubeVIP IP
+      - '--disable=traefik,servicelb'         # We'll be deploying our own Traefik and MetalLB
+      - '--secrets-encryption'                # Encrypt secrets at rest
+      - '--flannel-backend=wireguard-native'  # Use WireGuard for intra-cluster network

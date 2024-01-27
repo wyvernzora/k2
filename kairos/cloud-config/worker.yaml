@@ -1,5 +1,5 @@
 #cloud-config
-hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
+hostname: 'k2-{{ "{{ trunc -4 .MachineID }}" }}'
 
 users:
   - name: kairos

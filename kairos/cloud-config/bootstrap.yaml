@@ -1,9 +1,9 @@
 #cloud-config
-hostname: 'k2-{{ "{{ trunc 4 .MachineID }}" }}'
+hostname: 'k2-{{ "{{ trunc -4 .MachineID }}" }}'
 
-bundles:
-  - targets:
-      - run://ghcr.io/wyvernzora/k2-cluster-init:main
+install:
+  device: /dev/sda
+  poweroff: true
 
 users:
   - name: kairos
@@ -22,6 +22,13 @@ k3s:
       - '--disable=traefik,servicelb'         # We'll be deploying our own Traefik and MetalLB
       - '--secrets-encryption'                # Encrypt secrets at rest
       - '--flannel-backend=wireguard-native'  # Use WireGuard for intra-cluster network
+
+stages:
+
+
+bundles:
+  - targets:
+      - run://ghcr.io/wyvernzora/k2-cluster-init:main
 
 onepassword:
     credentials: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/b53fcrureoovna2yjccdesedum/credential }}"
