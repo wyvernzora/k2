@@ -16,7 +16,7 @@ export class BlockyChart extends Chart {
     const config = new BlockyConfig(this, "config", props);
     const deployment = new BlockyDeployment(this, "depl", {
       config,
-      replicas: 2,
+      replicas: 3,
     });
     this.service = deployment.exposeViaService({
       name: "blocky",
