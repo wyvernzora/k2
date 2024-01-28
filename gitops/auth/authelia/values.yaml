@@ -2,6 +2,8 @@ authelia:
   domain: "wyvernzora.io"
   ingress:
     enabled: true
+    tls:
+      enabled: false
   pod:
     kind: Deployment
     extraVolumes:

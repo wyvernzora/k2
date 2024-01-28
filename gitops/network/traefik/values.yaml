@@ -29,4 +29,7 @@ traefik:
     ipFamilyPolicy: "PreferDualStack"
   ingressRoute:
     dashboard:
-      enabled: false
+      enabled: true
+      matchRule: "Host(`k2.wyvernzora.io`) && PathPrefix(`/traefik`)"
+      entryPoints: ["web", "websecure"]
+      middlewares: ["k2-auth-authelia@kubernetescrd"]
