@@ -2,10 +2,6 @@ authelia:
   domain: "wyvernzora.io"
   ingress:
     enabled: true
-    traefikCRD:
-      enabled: true
-      entryPoints:
-        - websecure
   pod:
     kind: Deployment
     extraVolumes:
