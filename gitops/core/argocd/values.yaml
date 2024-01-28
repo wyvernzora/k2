@@ -4,6 +4,8 @@ argo-cd:
   server:
     ingress:
       enabled: true
+      annotations:
+        traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
       hosts:
         - deploy.wyvernzora.io
   repoServer:
@@ -29,6 +31,8 @@ argo-cd:
     params:
       # Let ingress handle TLS termination
       server.insecure: true
+      # Disable builtin auth and let Authelia handle it
+      server.disable.auth: true
     cm:
       statusbadge.enabled: "true"
       resource.customizations.health.argoproj.io_Application: |
