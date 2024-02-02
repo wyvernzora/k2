@@ -9,3 +9,4 @@
     - role: k2.fish
     - role: k2.tls
     - role: k2.vfio
+    - role: pve.vip

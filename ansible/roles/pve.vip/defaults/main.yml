@@ -1,0 +1,9 @@
+
+# The IP address of the VIP for the PVE cluster
+k2_pve_vip_address: 10.10.7.254
+
+# The interface to use for the VIP
+k2_pve_mgmt_interface: vmbr0.10
+
+# The VRRP password for the PVE cluster
+k2_pve_vrrp_pass: "UcaUSvPkr0xNg9A04wwa7UCl2KF6SN9G"
