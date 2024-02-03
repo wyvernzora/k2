@@ -25,6 +25,19 @@ export class BlockyConfig extends ConfigMap {
         upstream: {
           [DefaultClientGroup]: [`1.1.1.1`],
         },
+        customDNS: {
+          customTTL: "1h",
+          filterUnmappedTypes: true,
+          mapping: {
+            "unifi.wyvernzora.io": "10.10.1.1",
+            "roxy.wyvernzora.io": "10.10.7.1",
+            "eris.wyvernzora.io": "10.10.7.2",
+            "sylphy.wyvernzora.io": "10.10.7.3",
+            "pve.wyvernzora.io": "10.10.7.254",
+            "rumi.wyvernzora.io": "10.10.8.1",
+            "k8s.wyvernzora.io": "10.10.8.2",
+          },
+        },
         conditional: {
           fallbackUpstream: true,
           mapping: {
