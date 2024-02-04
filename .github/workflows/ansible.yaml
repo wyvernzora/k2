@@ -2,7 +2,8 @@ name: Ansible
 on:
   push:
     branches:
-      - "**"
+      - "dev"
+      - "main"
     tags:
       - "v*"
     paths:
@@ -17,6 +18,8 @@ on:
 jobs:
   build-image:
     runs-on: ubuntu-latest
+    if: >
+      github.event_name != 'pull_request' || github.event.pull_request.user.login == 'renovate[bot]'
     permissions:
       id-token: write
       contents: read
