@@ -5,15 +5,15 @@ import {
   VolumeMount,
 } from "cdk8s-plus-27";
 import { Construct } from "constructs";
-import { K2Volume, K2VolumeProps } from "~lib";
+import { VolumeProps, createVolume } from "~lib";
 import { Size } from "cdk8s";
 
 export interface SonarrDeploymentProps {
   readonly volumes: SonarrVolumes;
 }
 export interface SonarrVolumes {
-  readonly anime: K2VolumeProps;
-  readonly config: K2VolumeProps;
+  readonly anime: VolumeProps;
+  readonly config: VolumeProps;
 }
 
 export class SonarrDeployment extends Deployment {
@@ -32,15 +32,14 @@ export class SonarrDeployment extends Deployment {
   }
 
   private createVolumeMounts(volumes: SonarrVolumes): VolumeMount[] {
-    const ephemeral = K2Volume.ephemeral(this, "vol-eph");
+    const ephemeral = createVolume(this, "vol-eph", { kind: "ephemeral" });
     return [
-      K2Volume.fromProps(this, `vol-config`, volumes.config).mount({
+      createVolume(this, `vol-config`, volumes.config).mount({
         path: "/config",
       }),
-      K2Volume.fromProps(this, `vol-anime`, volumes.anime).mount({
+      createVolume(this, `vol-anime`, volumes.anime).mount({
         path: "/mnt/anime",
       }),
-
       // Make backups and logs ephemeral since we do not use this
       ephemeral.mount({ path: "/config/Backups" }),
       ephemeral.mount({ path: "/config/logs" }),
