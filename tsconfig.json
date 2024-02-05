@@ -11,6 +11,7 @@
     "baseUrl": ".",
     "paths": {
       "~crds/*": ["./crds/*"],
+      "~lib": ["./cdklib"],
       "~lib/*": ["./cdklib/*"]
     },
     "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */

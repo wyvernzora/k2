@@ -1,0 +1,6 @@
+name: sonarr
+namespace: sonarr
+dependsOn:
+  - metallb
+  - traefik
+  - longhorn
