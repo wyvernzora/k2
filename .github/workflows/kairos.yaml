@@ -65,7 +65,7 @@ jobs:
           done
 
       - name: Clean up old versions
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with:
           package-name: k2-cluster-init
           package-type: container
