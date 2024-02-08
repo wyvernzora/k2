@@ -6,8 +6,7 @@ argo-cd:
       enabled: true
       annotations:
         traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
-      hosts:
-        - deploy.wyvernzora.io
+      hostname: deploy.wyvernzora.io
   repoServer:
     extraContainers:
       - name: cdk8s-plugin
