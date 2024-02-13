@@ -5,23 +5,16 @@ import {
   VolumeMount,
 } from "cdk8s-plus-27";
 import { Construct } from "constructs";
-import { VolumeProps, createVolume } from "~lib";
+import { K2Volume, K2Volumes } from "~lib";
 import { Size } from "cdk8s";
 
 export interface SonarrDeploymentProps {
-  readonly volumes: SonarrVolumes;
+  readonly volumes: K2Volumes<"anime" | "config">;
 }
-export interface SonarrVolumes {
-  readonly anime: VolumeProps;
-  readonly config: VolumeProps;
-}
+type Props = SonarrDeploymentProps;
 
 export class SonarrDeployment extends Deployment {
-  constructor(
-    scope: Construct,
-    id: string,
-    { volumes }: SonarrDeploymentProps,
-  ) {
+  constructor(scope: Construct, id: string, { volumes }: Props) {
     super(scope, id, {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
@@ -31,22 +24,20 @@ export class SonarrDeployment extends Deployment {
     this.addSonarrContainer(mounts);
   }
 
-  private createVolumeMounts(volumes: SonarrVolumes): VolumeMount[] {
-    const ephemeral = createVolume(this, "vol-eph", { kind: "ephemeral" });
-    return [
-      createVolume(this, `vol-config`, volumes.config).mount({
-        path: "/config",
-      }),
-      createVolume(this, `vol-anime`, volumes.anime).mount({
-        path: "/mnt/anime",
-      }),
-      // Make backups and logs ephemeral since we do not use this
-      ephemeral.mount({ path: "/config/Backups" }),
-      ephemeral.mount({ path: "/config/logs" }),
-    ];
+  private *createVolumeMounts(
+    volumes: Props["volumes"],
+  ): Iterable<VolumeMount> {
+    yield volumes.config(this, "vol-config").mount(this, { path: "/config" });
+    yield volumes.anime(this, "vol-anime").mount(this, { path: "/mnt/anime" });
+    yield K2Volume.ephemeral()(this, "vol-backups").mount(this, {
+      path: "/config/Backups",
+    });
+    yield K2Volume.ephemeral()(this, "vol-logs").mount(this, {
+      path: "/config/logs",
+    });
   }
 
-  private addSonarrContainer(mounts: VolumeMount[]): void {
+  private addSonarrContainer(mounts: Iterable<VolumeMount>): void {
     this.addContainer({
       image: "quay.io/linuxserver.io/sonarr:4.0.1",
       ports: [
@@ -55,7 +46,7 @@ export class SonarrDeployment extends Deployment {
           number: 8989,
         },
       ],
-      volumeMounts: mounts,
+      volumeMounts: [...mounts],
       envVariables: {
         PUID: { value: "3000" },
         PGID: { value: "2001" },

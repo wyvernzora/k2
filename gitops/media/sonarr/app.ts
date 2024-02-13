@@ -1,5 +1,6 @@
 import { App, Size, YamlOutputType } from "cdk8s";
 import { SonarrChart } from "./lib/chart";
+import { K2Volume } from "~lib";
 
 const app = new App({
   yamlOutputType: YamlOutputType.FILE_PER_APP,
@@ -8,14 +9,12 @@ const app = new App({
 new SonarrChart(app, "sonarr", {
   host: "sonarr.wyvernzora.io",
   volumes: {
-    config: {
-      kind: "replicated",
+    config: K2Volume.replicated({
       size: Size.gibibytes(4),
-    },
-    anime: {
-      kind: "nas",
+    }),
+    anime: K2Volume.bulk({
       path: "/mnt/data/media/anime/series",
-    },
+    }),
   },
 });
 

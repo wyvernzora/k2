@@ -1,27 +1,23 @@
 import { App, Size, YamlOutputType } from "cdk8s";
-import { QbitTorrentChart } from "./lib/chart";
+import { QBitTorrentChart } from "./lib/chart";
+import { K2Volume } from "~lib";
 
 const app = new App({
   yamlOutputType: YamlOutputType.FILE_PER_APP,
 });
 
-new QbitTorrentChart(app, "qbittorrent", {
+new QBitTorrentChart(app, "qbittorrent", {
   host: "dl.wyvernzora.io",
   volumes: {
-    config: {
-      kind: "replicated",
+    config: K2Volume.replicated({
       size: Size.gibibytes(4),
-    },
-    downloads: {
-      anime: {
-        kind: "nas",
-        path: "/mnt/data/media/anime/downloads",
-      },
-      airing: {
-        kind: "nas",
-        path: "/mnt/data/media/anime/airing",
-      },
-    },
+    }),
+    anime: K2Volume.bulk({
+      path: "/mnt/data/media/anime/downloads",
+    }),
+    airing: K2Volume.bulk({
+      path: "/mnt/data/media/anime/airing",
+    }),
   },
 });
 

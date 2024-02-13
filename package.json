@@ -34,7 +34,9 @@
       "plugin:@typescript-eslint/recommended",
       "prettier"
     ],
-    "rules": {},
+    "rules": {
+      "@typescript-eslint/no-namespace": "off"
+    },
     "ignorePatterns": [
       "crds/*.ts",
       "node_modules"

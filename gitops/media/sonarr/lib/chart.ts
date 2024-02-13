@@ -1,11 +1,11 @@
 import { Chart } from "cdk8s";
 import { Construct } from "constructs";
 import { Deployment, Ingress, IngressBackend, Service } from "cdk8s-plus-27";
-import { SonarrDeployment, SonarrVolumes } from "./deployment";
+import { SonarrDeployment, SonarrDeploymentProps } from "./deployment";
 
 export interface SonarrChartProps {
   readonly host: string;
-  readonly volumes: SonarrVolumes;
+  readonly volumes: SonarrDeploymentProps["volumes"];
 }
 
 export class SonarrChart extends Chart {

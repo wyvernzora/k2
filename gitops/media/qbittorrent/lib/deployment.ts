@@ -1,4 +1,4 @@
-import { createVolume, VolumeProps } from "~lib";
+import { K2Volumes } from "~lib";
 import { Construct } from "constructs";
 import {
   Cpu,
@@ -8,47 +8,34 @@ import {
 } from "cdk8s-plus-27";
 import { Size } from "cdk8s";
 
-export interface QbitTorrentDeploymentProps {
-  readonly volumes: QbitTorrentVolumes;
+export interface QBitTorrentDeploymentProps {
+  readonly volumes: K2Volumes<"config" | "anime" | "airing">;
 }
+type Props = QBitTorrentDeploymentProps;
 
-export interface QbitTorrentVolumes {
-  readonly config: VolumeProps;
-  readonly downloads: Record<string, VolumeProps>;
-}
-
-export class QbitTorrentDeployment extends Deployment {
-  constructor(
-    scope: Construct,
-    id: string,
-    { volumes }: QbitTorrentDeploymentProps,
-  ) {
+export class QBitTorrentDeployment extends Deployment {
+  constructor(scope: Construct, id: string, { volumes }: Props) {
     super(scope, id, {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
     });
-
     const mounts = this.createVolumeMounts(volumes);
     this.addQbitTorrentContainer(mounts);
   }
 
-  private createVolumeMounts(volumes: QbitTorrentVolumes): VolumeMount[] {
-    const mounts = [
-      createVolume(this, "vol-config", volumes.config).mount({
-        path: "/config",
-      }),
-    ];
-    Object.entries(volumes.downloads)
-      .map(([name, props]) =>
-        createVolume(this, `vol-${name}`, props).mount({
-          path: `/data/${name}`,
-        }),
-      )
-      .forEach((vol) => mounts.push(vol));
-    return mounts;
+  private *createVolumeMounts(
+    volumes: Props["volumes"],
+  ): IterableIterator<VolumeMount> {
+    yield volumes.config(this, "vol-config").mount(this, { path: "/config" });
+    yield volumes
+      .anime(this, "vol-anime")
+      .mount(this, { path: "/downloads/anime" });
+    yield volumes
+      .anime(this, "vol-airing")
+      .mount(this, { path: "/downloads/airing" });
   }
 
-  private addQbitTorrentContainer(mounts: VolumeMount[]): void {
+  private addQbitTorrentContainer(mounts: Iterable<VolumeMount>): void {
     this.addContainer({
       image: "ghcr.io/hotio/qbittorrent:release-4.6.3",
       ports: [
@@ -57,7 +44,7 @@ export class QbitTorrentDeployment extends Deployment {
           number: 8080,
         },
       ],
-      volumeMounts: mounts,
+      volumeMounts: [...mounts],
       envVariables: {
         PUID: { value: "3000" },
         PGID: { value: "2001" },
