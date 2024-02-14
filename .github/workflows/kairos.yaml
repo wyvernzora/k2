@@ -7,7 +7,7 @@ on:
     tags:
       - "v*"
     paths:
-      - "crds/kustomization.yaml"
+      - "infrastructure/crds/kustomization.yaml"
       - "kairos/cluster-init/**"
       - ".github/workflows/**"
   pull_request:

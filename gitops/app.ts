@@ -1,5 +1,5 @@
 import { App, Chart } from "cdk8s";
-import { Collector } from "~lib/app/collector";
+import { Collector } from "./lib/collector";
 import findRoot from "find-root";
 
 const app = new App();

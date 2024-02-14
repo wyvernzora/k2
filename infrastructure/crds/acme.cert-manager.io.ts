@@ -559,14 +559,14 @@ export function toJson_ChallengeSpecSolverDns01Akamai(obj: ChallengeSpecSolverDn
  */
 export interface ChallengeSpecSolverDns01AzureDns {
   /**
-   * if both this and ClientSecret are left unset MSI will be used
+   * Auth: Azure Service Principal: The ClientID of the Azure Service Principal used to authenticate with Azure DNS. If set, ClientSecret and TenantID must also be set.
    *
    * @schema ChallengeSpecSolverDns01AzureDns#clientID
    */
   readonly clientId?: string;
 
   /**
-   * if both this and ClientID are left unset MSI will be used
+   * Auth: Azure Service Principal: A reference to a Secret containing the password associated with the Service Principal. If set, ClientID and TenantID must also be set.
    *
    * @schema ChallengeSpecSolverDns01AzureDns#clientSecretSecretRef
    */
@@ -587,7 +587,7 @@ export interface ChallengeSpecSolverDns01AzureDns {
   readonly hostedZoneName?: string;
 
   /**
-   * managed identity configuration, can not be used at the same time as clientID, clientSecretSecretRef or tenantID
+   * Auth: Azure Workload Identity or Azure Managed Service Identity: Settings to enable Azure Workload Identity or Azure Managed Service Identity If set, ClientID, ClientSecret and TenantID must not be set.
    *
    * @schema ChallengeSpecSolverDns01AzureDns#managedIdentity
    */
@@ -608,7 +608,7 @@ export interface ChallengeSpecSolverDns01AzureDns {
   readonly subscriptionId: string;
 
   /**
-   * when specifying ClientID and ClientSecret then this field is also needed
+   * Auth: Azure Service Principal: The TenantID of the Azure Service Principal used to authenticate with Azure DNS. If set, ClientID and ClientSecret must also be set.
    *
    * @schema ChallengeSpecSolverDns01AzureDns#tenantID
    */
@@ -1196,7 +1196,7 @@ export function toJson_ChallengeSpecSolverDns01AkamaiClientTokenSecretRef(obj: C
 /* eslint-enable max-len, quote-props */
 
 /**
- * if both this and ClientID are left unset MSI will be used
+ * Auth: Azure Service Principal: A reference to a Secret containing the password associated with the Service Principal. If set, ClientID and TenantID must also be set.
  *
  * @schema ChallengeSpecSolverDns01AzureDnsClientSecretSecretRef
  */
@@ -1249,7 +1249,7 @@ export enum ChallengeSpecSolverDns01AzureDnsEnvironment {
 }
 
 /**
- * managed identity configuration, can not be used at the same time as clientID, clientSecretSecretRef or tenantID
+ * Auth: Azure Workload Identity or Azure Managed Service Identity: Settings to enable Azure Workload Identity or Azure Managed Service Identity If set, ClientID, ClientSecret and TenantID must not be set.
  *
  * @schema ChallengeSpecSolverDns01AzureDnsManagedIdentity
  */
@@ -1262,7 +1262,7 @@ export interface ChallengeSpecSolverDns01AzureDnsManagedIdentity {
   readonly clientId?: string;
 
   /**
-   * resource ID of the managed identity, can not be used at the same time as clientID
+   * resource ID of the managed identity, can not be used at the same time as clientID Cannot be used for Azure Managed Service Identity
    *
    * @schema ChallengeSpecSolverDns01AzureDnsManagedIdentity#resourceID
    */
@@ -1582,8 +1582,8 @@ export interface ChallengeSpecSolverHttp01GatewayHttpRouteParentRefs {
   /**
    * Namespace is the namespace of the referent. When unspecified, this refers to the local namespace of the Route.
    * Note that there are specific rules for ParentRefs which cross namespace boundaries. Cross-namespace references are only valid if they are explicitly allowed by something in the namespace they are referring to. For example: Gateway has the AllowedRoutes field, and ReferenceGrant provides a generic way to enable any other kind of cross-namespace reference.
-   * ParentRefs from a Route to a Service in the same namespace are "producer" routes, which apply default routing rules to inbound connections from any namespace to the Service.
-   * ParentRefs from a Route to a Service in a different namespace are "consumer" routes, and these routing rules are only applied to outbound connections originating from the same namespace as the Route, for which the intended destination of the connections are a Service targeted as a ParentRef of the Route.
+   * <gateway:experimental:description> ParentRefs from a Route to a Service in the same namespace are "producer" routes, which apply default routing rules to inbound connections from any namespace to the Service.
+   * ParentRefs from a Route to a Service in a different namespace are "consumer" routes, and these routing rules are only applied to outbound connections originating from the same namespace as the Route, for which the intended destination of the connections are a Service targeted as a ParentRef of the Route. </gateway:experimental:description>
    * Support: Core
    *
    * @schema ChallengeSpecSolverHttp01GatewayHttpRouteParentRefs#namespace
@@ -1593,7 +1593,7 @@ export interface ChallengeSpecSolverHttp01GatewayHttpRouteParentRefs {
   /**
    * Port is the network port this Route targets. It can be interpreted differently based on the type of parent resource.
    * When the parent resource is a Gateway, this targets all listeners listening on the specified port that also support this kind of Route(and select this Route). It's not recommended to set `Port` unless the networking behaviors specified in a Route must apply to a specific port as opposed to a listener(s) whose port(s) may be changed. When both Port and SectionName are specified, the name and port of the selected listener must match both specified values.
-   * When the parent resource is a Service, this targets a specific port in the Service spec. When both Port (experimental) and SectionName are specified, the name and port of the selected port must match both specified values.
+   * <gateway:experimental:description> When the parent resource is a Service, this targets a specific port in the Service spec. When both Port (experimental) and SectionName are specified, the name and port of the selected port must match both specified values. </gateway:experimental:description>
    * Implementations MAY choose to support other parent resources. Implementations supporting other types of parent resources MUST clearly document how/if Port is interpreted.
    * For the purpose of status, an attachment is considered successful as long as the parent resource accepts it partially. For example, Gateway listeners can restrict which Routes can attach to them by Route kind, namespace, or hostname. If 1 of 2 Gateway listeners accept attachment from the referencing Route, the Route MUST be considered successfully attached. If no Gateway listeners accept attachment from this Route, the Route MUST be considered detached from the Gateway.
    * Support: Extended
@@ -2201,11 +2201,25 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
  */
 export interface ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#labelSelector
    */
   readonly labelSelector?: ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -2238,6 +2252,8 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -2291,11 +2307,25 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
  */
 export interface ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#labelSelector
    */
   readonly labelSelector?: ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -2328,6 +2358,8 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -2418,11 +2450,25 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityNo
  */
 export interface ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#labelSelector
    */
   readonly labelSelector?: ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -2455,6 +2501,8 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -2465,7 +2513,7 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector
  */
@@ -2545,11 +2593,25 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
  */
 export interface ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#labelSelector
    */
   readonly labelSelector?: ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -2582,6 +2644,8 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -2592,7 +2656,7 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector
  */
@@ -2846,7 +2910,7 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityNo
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector
  */
@@ -3010,7 +3074,7 @@ export function toJson_ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPo
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ChallengeSpecSolverHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector
  */

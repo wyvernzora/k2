@@ -38,7 +38,7 @@
       "@typescript-eslint/no-namespace": "off"
     },
     "ignorePatterns": [
-      "crds/*.ts",
+      "infrastructure/crds/*.ts",
       "node_modules"
     ]
   },

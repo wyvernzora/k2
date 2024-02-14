@@ -10,7 +10,7 @@
     "rootDir": ".",                                      /* Specify the root folder within your source files. */
     "baseUrl": ".",
     "paths": {
-      "~crds/*": ["./crds/*"],
+      "~crds/*": ["./infrastructure/crds/*"],
       "~lib": ["./cdklib"],
       "~lib/*": ["./cdklib/*"]
     },

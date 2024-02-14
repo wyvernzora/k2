@@ -185,6 +185,21 @@ export interface CertificateSpec {
   readonly literalSubject?: string;
 
   /**
+   * x.509 certificate NameConstraint extension which MUST NOT be used in a non-CA certificate. More Info: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
+   * This is an Alpha Feature and is only enabled with the `--feature-gates=NameConstraints=true` option set on both the controller and webhook components.
+   *
+   * @schema CertificateSpec#nameConstraints
+   */
+  readonly nameConstraints?: CertificateSpecNameConstraints;
+
+  /**
+   * `otherNames` is an escape hatch for SAN that allows any type. We currently restrict the support to string like otherNames, cf RFC 5280 p 37 Any UTF8 String valued otherName can be passed with by setting the keys oid: x.x.x.x and UTF8Value: somevalue for `otherName`. Most commonly this would be UPN set with oid: 1.3.6.1.4.1.311.20.2.3 You should ensure that any OID passed is valid for the UTF8String type as we do not explicitly validate this.
+   *
+   * @schema CertificateSpec#otherNames
+   */
+  readonly otherNames?: CertificateSpecOtherNames[];
+
+  /**
    * Private key options. These include the key algorithm and size, the used encoding and the rotation policy.
    *
    * @schema CertificateSpec#privateKey
@@ -265,6 +280,8 @@ export function toJson_CertificateSpec(obj: CertificateSpec | undefined): Record
     'issuerRef': toJson_CertificateSpecIssuerRef(obj.issuerRef),
     'keystores': toJson_CertificateSpecKeystores(obj.keystores),
     'literalSubject': obj.literalSubject,
+    'nameConstraints': toJson_CertificateSpecNameConstraints(obj.nameConstraints),
+    'otherNames': obj.otherNames?.map(y => toJson_CertificateSpecOtherNames(y)),
     'privateKey': toJson_CertificateSpecPrivateKey(obj.privateKey),
     'renewBefore': obj.renewBefore,
     'revisionHistoryLimit': obj.revisionHistoryLimit,
@@ -385,6 +402,87 @@ export function toJson_CertificateSpecKeystores(obj: CertificateSpecKeystores | 
   const result = {
     'jks': toJson_CertificateSpecKeystoresJks(obj.jks),
     'pkcs12': toJson_CertificateSpecKeystoresPkcs12(obj.pkcs12),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
+}
+/* eslint-enable max-len, quote-props */
+
+/**
+ * x.509 certificate NameConstraint extension which MUST NOT be used in a non-CA certificate. More Info: https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10
+ * This is an Alpha Feature and is only enabled with the `--feature-gates=NameConstraints=true` option set on both the controller and webhook components.
+ *
+ * @schema CertificateSpecNameConstraints
+ */
+export interface CertificateSpecNameConstraints {
+  /**
+   * if true then the name constraints are marked critical.
+   *
+   * @schema CertificateSpecNameConstraints#critical
+   */
+  readonly critical?: boolean;
+
+  /**
+   * Excluded contains the constraints which must be disallowed. Any name matching a restriction in the excluded field is invalid regardless of information appearing in the permitted
+   *
+   * @schema CertificateSpecNameConstraints#excluded
+   */
+  readonly excluded?: CertificateSpecNameConstraintsExcluded;
+
+  /**
+   * Permitted contains the constraints in which the names must be located.
+   *
+   * @schema CertificateSpecNameConstraints#permitted
+   */
+  readonly permitted?: CertificateSpecNameConstraintsPermitted;
+
+}
+
+/**
+ * Converts an object of type 'CertificateSpecNameConstraints' to JSON representation.
+ */
+/* eslint-disable max-len, quote-props */
+export function toJson_CertificateSpecNameConstraints(obj: CertificateSpecNameConstraints | undefined): Record<string, any> | undefined {
+  if (obj === undefined) { return undefined; }
+  const result = {
+    'critical': obj.critical,
+    'excluded': toJson_CertificateSpecNameConstraintsExcluded(obj.excluded),
+    'permitted': toJson_CertificateSpecNameConstraintsPermitted(obj.permitted),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
+}
+/* eslint-enable max-len, quote-props */
+
+/**
+ * @schema CertificateSpecOtherNames
+ */
+export interface CertificateSpecOtherNames {
+  /**
+   * OID is the object identifier for the otherName SAN. The object identifier must be expressed as a dotted string, for example, "1.2.840.113556.1.4.221".
+   *
+   * @schema CertificateSpecOtherNames#oid
+   */
+  readonly oid?: string;
+
+  /**
+   * utf8Value is the string value of the otherName SAN. The utf8Value accepts any valid UTF8 string to set as value for the otherName SAN.
+   *
+   * @schema CertificateSpecOtherNames#utf8Value
+   */
+  readonly utf8Value?: string;
+
+}
+
+/**
+ * Converts an object of type 'CertificateSpecOtherNames' to JSON representation.
+ */
+/* eslint-disable max-len, quote-props */
+export function toJson_CertificateSpecOtherNames(obj: CertificateSpecOtherNames | undefined): Record<string, any> | undefined {
+  if (obj === undefined) { return undefined; }
+  const result = {
+    'oid': obj.oid,
+    'utf8Value': obj.utf8Value,
   };
   // filter undefined values
   return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
@@ -697,6 +795,14 @@ export interface CertificateSpecKeystoresPkcs12 {
    */
   readonly passwordSecretRef: CertificateSpecKeystoresPkcs12PasswordSecretRef;
 
+  /**
+   * Profile specifies the key and certificate encryption algorithms and the HMAC algorithm used to create the PKCS12 keystore. Default value is `LegacyRC2` for backward compatibility.
+   * If provided, allowed values are: `LegacyRC2`: Deprecated. Not supported by default in OpenSSL 3 or Java 20. `LegacyDES`: Less secure algorithm. Use this option for maximal compatibility. `Modern2023`: Secure algorithm. Use this option in case you have to always use secure algorithms (eg. because of company policy). Please note that the security of the algorithm is not that important in reality, because the unencrypted certificate and private key are also stored in the Secret.
+   *
+   * @schema CertificateSpecKeystoresPkcs12#profile
+   */
+  readonly profile?: CertificateSpecKeystoresPkcs12Profile;
+
 }
 
 /**
@@ -708,6 +814,113 @@ export function toJson_CertificateSpecKeystoresPkcs12(obj: CertificateSpecKeysto
   const result = {
     'create': obj.create,
     'passwordSecretRef': toJson_CertificateSpecKeystoresPkcs12PasswordSecretRef(obj.passwordSecretRef),
+    'profile': obj.profile,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
+}
+/* eslint-enable max-len, quote-props */
+
+/**
+ * Excluded contains the constraints which must be disallowed. Any name matching a restriction in the excluded field is invalid regardless of information appearing in the permitted
+ *
+ * @schema CertificateSpecNameConstraintsExcluded
+ */
+export interface CertificateSpecNameConstraintsExcluded {
+  /**
+   * DNSDomains is a list of DNS domains that are permitted or excluded.
+   *
+   * @schema CertificateSpecNameConstraintsExcluded#dnsDomains
+   */
+  readonly dnsDomains?: string[];
+
+  /**
+   * EmailAddresses is a list of Email Addresses that are permitted or excluded.
+   *
+   * @schema CertificateSpecNameConstraintsExcluded#emailAddresses
+   */
+  readonly emailAddresses?: string[];
+
+  /**
+   * IPRanges is a list of IP Ranges that are permitted or excluded. This should be a valid CIDR notation.
+   *
+   * @schema CertificateSpecNameConstraintsExcluded#ipRanges
+   */
+  readonly ipRanges?: string[];
+
+  /**
+   * URIDomains is a list of URI domains that are permitted or excluded.
+   *
+   * @schema CertificateSpecNameConstraintsExcluded#uriDomains
+   */
+  readonly uriDomains?: string[];
+
+}
+
+/**
+ * Converts an object of type 'CertificateSpecNameConstraintsExcluded' to JSON representation.
+ */
+/* eslint-disable max-len, quote-props */
+export function toJson_CertificateSpecNameConstraintsExcluded(obj: CertificateSpecNameConstraintsExcluded | undefined): Record<string, any> | undefined {
+  if (obj === undefined) { return undefined; }
+  const result = {
+    'dnsDomains': obj.dnsDomains?.map(y => y),
+    'emailAddresses': obj.emailAddresses?.map(y => y),
+    'ipRanges': obj.ipRanges?.map(y => y),
+    'uriDomains': obj.uriDomains?.map(y => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
+}
+/* eslint-enable max-len, quote-props */
+
+/**
+ * Permitted contains the constraints in which the names must be located.
+ *
+ * @schema CertificateSpecNameConstraintsPermitted
+ */
+export interface CertificateSpecNameConstraintsPermitted {
+  /**
+   * DNSDomains is a list of DNS domains that are permitted or excluded.
+   *
+   * @schema CertificateSpecNameConstraintsPermitted#dnsDomains
+   */
+  readonly dnsDomains?: string[];
+
+  /**
+   * EmailAddresses is a list of Email Addresses that are permitted or excluded.
+   *
+   * @schema CertificateSpecNameConstraintsPermitted#emailAddresses
+   */
+  readonly emailAddresses?: string[];
+
+  /**
+   * IPRanges is a list of IP Ranges that are permitted or excluded. This should be a valid CIDR notation.
+   *
+   * @schema CertificateSpecNameConstraintsPermitted#ipRanges
+   */
+  readonly ipRanges?: string[];
+
+  /**
+   * URIDomains is a list of URI domains that are permitted or excluded.
+   *
+   * @schema CertificateSpecNameConstraintsPermitted#uriDomains
+   */
+  readonly uriDomains?: string[];
+
+}
+
+/**
+ * Converts an object of type 'CertificateSpecNameConstraintsPermitted' to JSON representation.
+ */
+/* eslint-disable max-len, quote-props */
+export function toJson_CertificateSpecNameConstraintsPermitted(obj: CertificateSpecNameConstraintsPermitted | undefined): Record<string, any> | undefined {
+  if (obj === undefined) { return undefined; }
+  const result = {
+    'dnsDomains': obj.dnsDomains?.map(y => y),
+    'emailAddresses': obj.emailAddresses?.map(y => y),
+    'ipRanges': obj.ipRanges?.map(y => y),
+    'uriDomains': obj.uriDomains?.map(y => y),
   };
   // filter undefined values
   return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
@@ -830,6 +1043,21 @@ export function toJson_CertificateSpecKeystoresPkcs12PasswordSecretRef(obj: Cert
   return Object.entries(result).reduce((r, i) => (i[1] === undefined) ? r : ({ ...r, [i[0]]: i[1] }), {});
 }
 /* eslint-enable max-len, quote-props */
+
+/**
+ * Profile specifies the key and certificate encryption algorithms and the HMAC algorithm used to create the PKCS12 keystore. Default value is `LegacyRC2` for backward compatibility.
+ * If provided, allowed values are: `LegacyRC2`: Deprecated. Not supported by default in OpenSSL 3 or Java 20. `LegacyDES`: Less secure algorithm. Use this option for maximal compatibility. `Modern2023`: Secure algorithm. Use this option in case you have to always use secure algorithms (eg. because of company policy). Please note that the security of the algorithm is not that important in reality, because the unencrypted certificate and private key are also stored in the Secret.
+ *
+ * @schema CertificateSpecKeystoresPkcs12Profile
+ */
+export enum CertificateSpecKeystoresPkcs12Profile {
+  /** LegacyRC2 */
+  LEGACY_RC2 = "LegacyRC2",
+  /** LegacyDES */
+  LEGACY_DES = "LegacyDES",
+  /** Modern2023 */
+  MODERN2023 = "Modern2023",
+}
 
 
 /**
@@ -1394,6 +1622,13 @@ export interface ClusterIssuerSpecCa {
   readonly crlDistributionPoints?: string[];
 
   /**
+   * IssuingCertificateURLs is a list of URLs which this issuer should embed into certificates it creates. See https://www.rfc-editor.org/rfc/rfc5280#section-4.2.2.1 for more details. As an example, such a URL might be "http://ca.domain.com/ca.crt".
+   *
+   * @schema ClusterIssuerSpecCa#issuingCertificateURLs
+   */
+  readonly issuingCertificateUrLs?: string[];
+
+  /**
    * The OCSP server list is an X.509 v3 extension that defines a list of URLs of OCSP responders. The OCSP responders can be queried for the revocation status of an issued certificate. If not set, the certificate will be issued with no OCSP servers set. For example, an OCSP server URL could be "http://ocsp.int-x3.letsencrypt.org".
    *
    * @schema ClusterIssuerSpecCa#ocspServers
@@ -1417,6 +1652,7 @@ export function toJson_ClusterIssuerSpecCa(obj: ClusterIssuerSpecCa | undefined)
   if (obj === undefined) { return undefined; }
   const result = {
     'crlDistributionPoints': obj.crlDistributionPoints?.map(y => y),
+    'issuingCertificateURLs': obj.issuingCertificateUrLs?.map(y => y),
     'ocspServers': obj.ocspServers?.map(y => y),
     'secretName': obj.secretName,
   };
@@ -2388,14 +2624,14 @@ export function toJson_ClusterIssuerSpecAcmeSolversDns01Akamai(obj: ClusterIssue
  */
 export interface ClusterIssuerSpecAcmeSolversDns01AzureDns {
   /**
-   * if both this and ClientSecret are left unset MSI will be used
+   * Auth: Azure Service Principal: The ClientID of the Azure Service Principal used to authenticate with Azure DNS. If set, ClientSecret and TenantID must also be set.
    *
    * @schema ClusterIssuerSpecAcmeSolversDns01AzureDns#clientID
    */
   readonly clientId?: string;
 
   /**
-   * if both this and ClientID are left unset MSI will be used
+   * Auth: Azure Service Principal: A reference to a Secret containing the password associated with the Service Principal. If set, ClientID and TenantID must also be set.
    *
    * @schema ClusterIssuerSpecAcmeSolversDns01AzureDns#clientSecretSecretRef
    */
@@ -2416,7 +2652,7 @@ export interface ClusterIssuerSpecAcmeSolversDns01AzureDns {
   readonly hostedZoneName?: string;
 
   /**
-   * managed identity configuration, can not be used at the same time as clientID, clientSecretSecretRef or tenantID
+   * Auth: Azure Workload Identity or Azure Managed Service Identity: Settings to enable Azure Workload Identity or Azure Managed Service Identity If set, ClientID, ClientSecret and TenantID must not be set.
    *
    * @schema ClusterIssuerSpecAcmeSolversDns01AzureDns#managedIdentity
    */
@@ -2437,7 +2673,7 @@ export interface ClusterIssuerSpecAcmeSolversDns01AzureDns {
   readonly subscriptionId: string;
 
   /**
-   * when specifying ClientID and ClientSecret then this field is also needed
+   * Auth: Azure Service Principal: The TenantID of the Azure Service Principal used to authenticate with Azure DNS. If set, ClientID and ClientSecret must also be set.
    *
    * @schema ClusterIssuerSpecAcmeSolversDns01AzureDns#tenantID
    */
@@ -3128,7 +3364,7 @@ export function toJson_ClusterIssuerSpecAcmeSolversDns01AkamaiClientTokenSecretR
 /* eslint-enable max-len, quote-props */
 
 /**
- * if both this and ClientID are left unset MSI will be used
+ * Auth: Azure Service Principal: A reference to a Secret containing the password associated with the Service Principal. If set, ClientID and TenantID must also be set.
  *
  * @schema ClusterIssuerSpecAcmeSolversDns01AzureDnsClientSecretSecretRef
  */
@@ -3181,7 +3417,7 @@ export enum ClusterIssuerSpecAcmeSolversDns01AzureDnsEnvironment {
 }
 
 /**
- * managed identity configuration, can not be used at the same time as clientID, clientSecretSecretRef or tenantID
+ * Auth: Azure Workload Identity or Azure Managed Service Identity: Settings to enable Azure Workload Identity or Azure Managed Service Identity If set, ClientID, ClientSecret and TenantID must not be set.
  *
  * @schema ClusterIssuerSpecAcmeSolversDns01AzureDnsManagedIdentity
  */
@@ -3194,7 +3430,7 @@ export interface ClusterIssuerSpecAcmeSolversDns01AzureDnsManagedIdentity {
   readonly clientId?: string;
 
   /**
-   * resource ID of the managed identity, can not be used at the same time as clientID
+   * resource ID of the managed identity, can not be used at the same time as clientID Cannot be used for Azure Managed Service Identity
    *
    * @schema ClusterIssuerSpecAcmeSolversDns01AzureDnsManagedIdentity#resourceID
    */
@@ -3514,8 +3750,8 @@ export interface ClusterIssuerSpecAcmeSolversHttp01GatewayHttpRouteParentRefs {
   /**
    * Namespace is the namespace of the referent. When unspecified, this refers to the local namespace of the Route.
    * Note that there are specific rules for ParentRefs which cross namespace boundaries. Cross-namespace references are only valid if they are explicitly allowed by something in the namespace they are referring to. For example: Gateway has the AllowedRoutes field, and ReferenceGrant provides a generic way to enable any other kind of cross-namespace reference.
-   * ParentRefs from a Route to a Service in the same namespace are "producer" routes, which apply default routing rules to inbound connections from any namespace to the Service.
-   * ParentRefs from a Route to a Service in a different namespace are "consumer" routes, and these routing rules are only applied to outbound connections originating from the same namespace as the Route, for which the intended destination of the connections are a Service targeted as a ParentRef of the Route.
+   * <gateway:experimental:description> ParentRefs from a Route to a Service in the same namespace are "producer" routes, which apply default routing rules to inbound connections from any namespace to the Service.
+   * ParentRefs from a Route to a Service in a different namespace are "consumer" routes, and these routing rules are only applied to outbound connections originating from the same namespace as the Route, for which the intended destination of the connections are a Service targeted as a ParentRef of the Route. </gateway:experimental:description>
    * Support: Core
    *
    * @schema ClusterIssuerSpecAcmeSolversHttp01GatewayHttpRouteParentRefs#namespace
@@ -3525,7 +3761,7 @@ export interface ClusterIssuerSpecAcmeSolversHttp01GatewayHttpRouteParentRefs {
   /**
    * Port is the network port this Route targets. It can be interpreted differently based on the type of parent resource.
    * When the parent resource is a Gateway, this targets all listeners listening on the specified port that also support this kind of Route(and select this Route). It's not recommended to set `Port` unless the networking behaviors specified in a Route must apply to a specific port as opposed to a listener(s) whose port(s) may be changed. When both Port and SectionName are specified, the name and port of the selected listener must match both specified values.
-   * When the parent resource is a Service, this targets a specific port in the Service spec. When both Port (experimental) and SectionName are specified, the name and port of the selected port must match both specified values.
+   * <gateway:experimental:description> When the parent resource is a Service, this targets a specific port in the Service spec. When both Port (experimental) and SectionName are specified, the name and port of the selected port must match both specified values. </gateway:experimental:description>
    * Implementations MAY choose to support other parent resources. Implementations supporting other types of parent resources MUST clearly document how/if Port is interpreted.
    * For the purpose of status, an attachment is considered successful as long as the parent resource accepts it partially. For example, Gateway listeners can restrict which Routes can attach to them by Route kind, namespace, or hostname. If 1 of 2 Gateway listeners accept attachment from the referencing Route, the Route MUST be considered successfully attached. If no Gateway listeners accept attachment from this Route, the Route MUST be considered detached from the Gateway.
    * Support: Extended
@@ -4133,11 +4369,25 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
  */
 export interface ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#labelSelector
    */
   readonly labelSelector?: ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -4170,6 +4420,8 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -4223,11 +4475,25 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
  */
 export interface ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#labelSelector
    */
   readonly labelSelector?: ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -4260,6 +4526,8 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -4350,11 +4618,25 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
  */
 export interface ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#labelSelector
    */
   readonly labelSelector?: ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -4387,6 +4669,8 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -4397,7 +4681,7 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector
  */
@@ -4477,11 +4761,25 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
  */
 export interface ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#labelSelector
    */
   readonly labelSelector?: ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -4514,6 +4812,8 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -4524,7 +4824,7 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector
  */
@@ -4778,7 +5078,7 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector
  */
@@ -4942,7 +5242,7 @@ export function toJson_ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecA
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema ClusterIssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector
  */
@@ -5554,6 +5854,13 @@ export interface IssuerSpecCa {
   readonly crlDistributionPoints?: string[];
 
   /**
+   * IssuingCertificateURLs is a list of URLs which this issuer should embed into certificates it creates. See https://www.rfc-editor.org/rfc/rfc5280#section-4.2.2.1 for more details. As an example, such a URL might be "http://ca.domain.com/ca.crt".
+   *
+   * @schema IssuerSpecCa#issuingCertificateURLs
+   */
+  readonly issuingCertificateUrLs?: string[];
+
+  /**
    * The OCSP server list is an X.509 v3 extension that defines a list of URLs of OCSP responders. The OCSP responders can be queried for the revocation status of an issued certificate. If not set, the certificate will be issued with no OCSP servers set. For example, an OCSP server URL could be "http://ocsp.int-x3.letsencrypt.org".
    *
    * @schema IssuerSpecCa#ocspServers
@@ -5577,6 +5884,7 @@ export function toJson_IssuerSpecCa(obj: IssuerSpecCa | undefined): Record<strin
   if (obj === undefined) { return undefined; }
   const result = {
     'crlDistributionPoints': obj.crlDistributionPoints?.map(y => y),
+    'issuingCertificateURLs': obj.issuingCertificateUrLs?.map(y => y),
     'ocspServers': obj.ocspServers?.map(y => y),
     'secretName': obj.secretName,
   };
@@ -6548,14 +6856,14 @@ export function toJson_IssuerSpecAcmeSolversDns01Akamai(obj: IssuerSpecAcmeSolve
  */
 export interface IssuerSpecAcmeSolversDns01AzureDns {
   /**
-   * if both this and ClientSecret are left unset MSI will be used
+   * Auth: Azure Service Principal: The ClientID of the Azure Service Principal used to authenticate with Azure DNS. If set, ClientSecret and TenantID must also be set.
    *
    * @schema IssuerSpecAcmeSolversDns01AzureDns#clientID
    */
   readonly clientId?: string;
 
   /**
-   * if both this and ClientID are left unset MSI will be used
+   * Auth: Azure Service Principal: A reference to a Secret containing the password associated with the Service Principal. If set, ClientID and TenantID must also be set.
    *
    * @schema IssuerSpecAcmeSolversDns01AzureDns#clientSecretSecretRef
    */
@@ -6576,7 +6884,7 @@ export interface IssuerSpecAcmeSolversDns01AzureDns {
   readonly hostedZoneName?: string;
 
   /**
-   * managed identity configuration, can not be used at the same time as clientID, clientSecretSecretRef or tenantID
+   * Auth: Azure Workload Identity or Azure Managed Service Identity: Settings to enable Azure Workload Identity or Azure Managed Service Identity If set, ClientID, ClientSecret and TenantID must not be set.
    *
    * @schema IssuerSpecAcmeSolversDns01AzureDns#managedIdentity
    */
@@ -6597,7 +6905,7 @@ export interface IssuerSpecAcmeSolversDns01AzureDns {
   readonly subscriptionId: string;
 
   /**
-   * when specifying ClientID and ClientSecret then this field is also needed
+   * Auth: Azure Service Principal: The TenantID of the Azure Service Principal used to authenticate with Azure DNS. If set, ClientID and ClientSecret must also be set.
    *
    * @schema IssuerSpecAcmeSolversDns01AzureDns#tenantID
    */
@@ -7288,7 +7596,7 @@ export function toJson_IssuerSpecAcmeSolversDns01AkamaiClientTokenSecretRef(obj:
 /* eslint-enable max-len, quote-props */
 
 /**
- * if both this and ClientID are left unset MSI will be used
+ * Auth: Azure Service Principal: A reference to a Secret containing the password associated with the Service Principal. If set, ClientID and TenantID must also be set.
  *
  * @schema IssuerSpecAcmeSolversDns01AzureDnsClientSecretSecretRef
  */
@@ -7341,7 +7649,7 @@ export enum IssuerSpecAcmeSolversDns01AzureDnsEnvironment {
 }
 
 /**
- * managed identity configuration, can not be used at the same time as clientID, clientSecretSecretRef or tenantID
+ * Auth: Azure Workload Identity or Azure Managed Service Identity: Settings to enable Azure Workload Identity or Azure Managed Service Identity If set, ClientID, ClientSecret and TenantID must not be set.
  *
  * @schema IssuerSpecAcmeSolversDns01AzureDnsManagedIdentity
  */
@@ -7354,7 +7662,7 @@ export interface IssuerSpecAcmeSolversDns01AzureDnsManagedIdentity {
   readonly clientId?: string;
 
   /**
-   * resource ID of the managed identity, can not be used at the same time as clientID
+   * resource ID of the managed identity, can not be used at the same time as clientID Cannot be used for Azure Managed Service Identity
    *
    * @schema IssuerSpecAcmeSolversDns01AzureDnsManagedIdentity#resourceID
    */
@@ -7674,8 +7982,8 @@ export interface IssuerSpecAcmeSolversHttp01GatewayHttpRouteParentRefs {
   /**
    * Namespace is the namespace of the referent. When unspecified, this refers to the local namespace of the Route.
    * Note that there are specific rules for ParentRefs which cross namespace boundaries. Cross-namespace references are only valid if they are explicitly allowed by something in the namespace they are referring to. For example: Gateway has the AllowedRoutes field, and ReferenceGrant provides a generic way to enable any other kind of cross-namespace reference.
-   * ParentRefs from a Route to a Service in the same namespace are "producer" routes, which apply default routing rules to inbound connections from any namespace to the Service.
-   * ParentRefs from a Route to a Service in a different namespace are "consumer" routes, and these routing rules are only applied to outbound connections originating from the same namespace as the Route, for which the intended destination of the connections are a Service targeted as a ParentRef of the Route.
+   * <gateway:experimental:description> ParentRefs from a Route to a Service in the same namespace are "producer" routes, which apply default routing rules to inbound connections from any namespace to the Service.
+   * ParentRefs from a Route to a Service in a different namespace are "consumer" routes, and these routing rules are only applied to outbound connections originating from the same namespace as the Route, for which the intended destination of the connections are a Service targeted as a ParentRef of the Route. </gateway:experimental:description>
    * Support: Core
    *
    * @schema IssuerSpecAcmeSolversHttp01GatewayHttpRouteParentRefs#namespace
@@ -7685,7 +7993,7 @@ export interface IssuerSpecAcmeSolversHttp01GatewayHttpRouteParentRefs {
   /**
    * Port is the network port this Route targets. It can be interpreted differently based on the type of parent resource.
    * When the parent resource is a Gateway, this targets all listeners listening on the specified port that also support this kind of Route(and select this Route). It's not recommended to set `Port` unless the networking behaviors specified in a Route must apply to a specific port as opposed to a listener(s) whose port(s) may be changed. When both Port and SectionName are specified, the name and port of the selected listener must match both specified values.
-   * When the parent resource is a Service, this targets a specific port in the Service spec. When both Port (experimental) and SectionName are specified, the name and port of the selected port must match both specified values.
+   * <gateway:experimental:description> When the parent resource is a Service, this targets a specific port in the Service spec. When both Port (experimental) and SectionName are specified, the name and port of the selected port must match both specified values. </gateway:experimental:description>
    * Implementations MAY choose to support other parent resources. Implementations supporting other types of parent resources MUST clearly document how/if Port is interpreted.
    * For the purpose of status, an attachment is considered successful as long as the parent resource accepts it partially. For example, Gateway listeners can restrict which Routes can attach to them by Route kind, namespace, or hostname. If 1 of 2 Gateway listeners accept attachment from the referencing Route, the Route MUST be considered successfully attached. If no Gateway listeners accept attachment from this Route, the Route MUST be considered detached from the Gateway.
    * Support: Extended
@@ -8293,11 +8601,25 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
  */
 export interface IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#labelSelector
    */
   readonly labelSelector?: IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecution#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -8330,6 +8652,8 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -8383,11 +8707,25 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
  */
 export interface IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#labelSelector
    */
   readonly labelSelector?: IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecution#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -8420,6 +8758,8 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -8510,11 +8850,25 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
  */
 export interface IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#labelSelector
    */
   readonly labelSelector?: IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -8547,6 +8901,8 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -8557,7 +8913,7 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector
  */
@@ -8637,11 +8993,25 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
  */
 export interface IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm {
   /**
-   * A label query over a set of resources, in this case pods.
+   * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
    *
    * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#labelSelector
    */
   readonly labelSelector?: IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector;
+
+  /**
+   * MatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MatchLabelKeys and LabelSelector. Also, MatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#matchLabelKeys
+   */
+  readonly matchLabelKeys?: string[];
+
+  /**
+   * MismatchLabelKeys is a set of pod label keys to select which pods will be taken into consideration. The keys are used to lookup values from the incoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)` to select the group of existing pods which pods will be taken into consideration for the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming pod labels will be ignored. The default value is empty. The same key is forbidden to exist in both MismatchLabelKeys and LabelSelector. Also, MismatchLabelKeys cannot be set when LabelSelector isn't set. This is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.
+   *
+   * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTerm#mismatchLabelKeys
+   */
+  readonly mismatchLabelKeys?: string[];
 
   /**
    * A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
@@ -8674,6 +9044,8 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
   if (obj === undefined) { return undefined; }
   const result = {
     'labelSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector(obj.labelSelector),
+    'matchLabelKeys': obj.matchLabelKeys?.map(y => y),
+    'mismatchLabelKeys': obj.mismatchLabelKeys?.map(y => y),
     'namespaceSelector': toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermNamespaceSelector(obj.namespaceSelector),
     'namespaces': obj.namespaces?.map(y => y),
     'topologyKey': obj.topologyKey,
@@ -8684,7 +9056,7 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector
  */
@@ -8938,7 +9310,7 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector
  */
@@ -9102,7 +9474,7 @@ export function toJson_IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinity
 /* eslint-enable max-len, quote-props */
 
 /**
- * A label query over a set of resources, in this case pods.
+ * A label query over a set of resources, in this case pods. If it's null, this PodAffinityTerm matches with no Pods.
  *
  * @schema IssuerSpecAcmeSolversHttp01IngressPodTemplateSpecAffinityPodAntiAffinityPreferredDuringSchedulingIgnoredDuringExecutionPodAffinityTermLabelSelector
  */

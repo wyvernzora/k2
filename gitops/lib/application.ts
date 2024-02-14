@@ -1,4 +1,4 @@
-import * as argoproj from "~crds/argoproj.io";
+import * as argo from "~crds/argoproj.io";
 import { Construct } from "constructs";
 import { Lazy } from "cdk8s";
 import Debug from "debug";
@@ -17,9 +17,9 @@ const DefaultRevision: string = "main";
 type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
-type SyncPolicy = argoproj.ApplicationSpecSyncPolicy;
-type HelmOptions = argoproj.ApplicationSpecSourceHelm;
-type IgnoreDifferences = argoproj.ApplicationSpecIgnoreDifferences;
+type SyncPolicy = argo.ApplicationSpecSyncPolicy;
+type HelmOptions = argo.ApplicationSpecSourceHelm;
+type IgnoreDifferences = argo.ApplicationSpecIgnoreDifferences;
 
 export type ApplicationType = "cdk8s" | "helm" | "kustomize";
 
@@ -38,7 +38,7 @@ export interface ApplicationProps {
   readonly helm?: HelmOptions;
 }
 
-export class Application extends argoproj.Application {
+export class Application extends argo.Application {
   public syncWave: number = 0;
   public readonly name: string;
   public readonly type: ApplicationType;
