@@ -9,7 +9,7 @@ import {
 import { Size } from "cdk8s";
 
 export interface QBitTorrentDeploymentProps {
-  readonly volumes: K2Volumes<"config" | "anime" | "airing">;
+  readonly volumes: K2Volumes<"config" | "anime" | "airing" | "default">;
 }
 type Props = QBitTorrentDeploymentProps;
 
@@ -26,7 +26,12 @@ export class QBitTorrentDeployment extends Deployment {
   private *createVolumeMounts(
     volumes: Props["volumes"],
   ): IterableIterator<VolumeMount> {
-    yield volumes.config(this, "vol-config").mount(this, { path: "/config" });
+    yield volumes
+      .config(this, "vol-config")
+      .mount(this, { path: "/config" });
+    yield volumes
+      .default(this, "vol-default")
+      .mount(this, { path: "/downloads/default" });
     yield volumes
       .anime(this, "vol-anime")
       .mount(this, { path: "/downloads/anime" });

@@ -12,6 +12,9 @@ new QBitTorrentChart(app, "qbittorrent", {
     config: K2Volume.replicated({
       size: Size.gibibytes(4),
     }),
+    default: K2Volume.bulk({
+      path: "/mnt/data/downloads",
+    }),
     anime: K2Volume.bulk({
       path: "/mnt/data/media/anime/downloads",
     }),
