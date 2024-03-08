@@ -5,7 +5,7 @@ ARG IMAGE_REPOSITORY=ghcr.io/wyvernzora
 # renovate: datasource=docker depName=renovate/renovate versioning=docker
 ARG RENOVATE_VERSION=37
 # renovate: datasource=docker depName=koalaman/shellcheck-alpine versioning=docker
-ARG SHELLCHECK_VERSION=v0.9.0
+ARG SHELLCHECK_VERSION=v0.10.0
 
 ###############################################################################
 # Build & Test                                                                #
