@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   # Core
   - https://github.com/1Password/onepassword-operator/config/crd?ref=v1.8.1
-  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.10.4
+  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v2.10.5
   - https://github.com/rancher/system-upgrade-controller/releases/download/v0.13.4/crd.yaml
 
     # Network
