@@ -1,4 +1,4 @@
-import { Cpu, Deployment, Protocol, Volume } from "cdk8s-plus-27";
+import { Cpu, Deployment, Protocol, Volume } from "cdk8s-plus-28";
 import { BlockyConfig } from "./config";
 import { Construct } from "constructs";
 import { Size } from "cdk8s";

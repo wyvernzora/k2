@@ -5,7 +5,7 @@ import {
   Deployment,
   DeploymentStrategy,
   VolumeMount,
-} from "cdk8s-plus-27";
+} from "cdk8s-plus-28";
 import { Size } from "cdk8s";
 
 export interface QBitTorrentDeploymentProps {
@@ -26,9 +26,7 @@ export class QBitTorrentDeployment extends Deployment {
   private *createVolumeMounts(
     volumes: Props["volumes"],
   ): IterableIterator<VolumeMount> {
-    yield volumes
-      .config(this, "vol-config")
-      .mount(this, { path: "/config" });
+    yield volumes.config(this, "vol-config").mount(this, { path: "/config" });
     yield volumes
       .default(this, "vol-default")
       .mount(this, { path: "/downloads/default" });

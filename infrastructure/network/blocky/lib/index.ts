@@ -1,5 +1,5 @@
 import { Chart } from "cdk8s";
-import { Service, ServiceType } from "cdk8s-plus-27";
+import { Service, ServiceType } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { BlockyConfig } from "./config";
 import { BlockyDeployment } from "./deployment";

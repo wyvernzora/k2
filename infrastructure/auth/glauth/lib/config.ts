@@ -1,4 +1,4 @@
-import { ConfigMap } from "cdk8s-plus-27";
+import { ConfigMap } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 
 export interface GlauthConfigProps {

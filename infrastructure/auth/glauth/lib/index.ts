@@ -2,7 +2,7 @@ import { Chart } from "cdk8s";
 import { Construct } from "constructs";
 import { GlauthConfig } from "./config";
 import { GlauthDeployment } from "./deployment";
-import { Service } from "cdk8s-plus-27";
+import { Service } from "cdk8s-plus-28";
 import { GlauthUsers } from "./users";
 
 export class GlauthChart extends Chart {

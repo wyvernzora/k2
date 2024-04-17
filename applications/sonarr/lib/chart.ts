@@ -1,6 +1,6 @@
 import { Chart } from "cdk8s";
 import { Construct } from "constructs";
-import { Deployment, Ingress, IngressBackend, Service } from "cdk8s-plus-27";
+import { Deployment, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
 import { SonarrDeployment, SonarrDeploymentProps } from "./deployment";
 
 export interface SonarrChartProps {

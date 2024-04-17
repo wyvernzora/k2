@@ -1,5 +1,5 @@
 import { GlauthConfig } from "./config";
-import { Deployment, Protocol, Volume } from "cdk8s-plus-27";
+import { Deployment, Protocol, Volume } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { GlauthUsers } from "./users";
 

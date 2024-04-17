@@ -3,7 +3,7 @@ import {
   QBitTorrentDeploymentProps,
 } from "./deployment";
 import { Chart } from "cdk8s";
-import { Deployment, Ingress, IngressBackend, Service } from "cdk8s-plus-27";
+import { Deployment, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 
 export interface QBitTorrentChartProps {

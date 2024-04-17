@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "cdk8s": "^2.68.22",
-    "cdk8s-plus-27": "^2.7.70",
+    "cdk8s-plus-28": "^2.0.8",
     "debug": "^4.3.4",
     "fast-glob": "^3.3.2",
     "find-root": "^1.1.0",
@@ -25,9 +25,7 @@
   "eslintConfig": {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ],
+    "plugins": ["@typescript-eslint"],
     "extends": [
       "eslint:recommended",
       "plugin:@typescript-eslint/eslint-recommended",
@@ -37,13 +35,9 @@
     "rules": {
       "@typescript-eslint/no-namespace": "off"
     },
-    "ignorePatterns": [
-      "infrastructure/crds/*.ts",
-      "node_modules"
-    ]
+    "ignorePatterns": ["infrastructure/crds/*.ts", "node_modules"]
   },
-  "prettier": {
-  },
+  "prettier": {},
   "scripts": {
     "eslint": "eslint --ext .ts .",
     "prettier": "prettier '{cdklib,gitops}/**/*.ts' '**/*.yaml' '!**/templates/**/*.yaml'",

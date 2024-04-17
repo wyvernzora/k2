@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import { OnePasswordItem } from "~crds/onepassword.com";
-import { ISecret, Secret } from "cdk8s-plus-27";
+import { ISecret, Secret } from "cdk8s-plus-28";
 
 export class GlauthUsers extends OnePasswordItem {
   constructor(scope: Construct, id: string) {

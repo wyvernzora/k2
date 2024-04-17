@@ -8,7 +8,7 @@ import {
   Volume,
   VolumeMount,
   Workload,
-} from "cdk8s-plus-27";
+} from "cdk8s-plus-28";
 import { Construct, IConstruct } from "constructs";
 import { Size } from "cdk8s";
 

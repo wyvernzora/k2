@@ -3,7 +3,7 @@ import {
   Deployment,
   DeploymentStrategy,
   VolumeMount,
-} from "cdk8s-plus-27";
+} from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { K2Volume, K2Volumes } from "~lib";
 import { Size } from "cdk8s";
