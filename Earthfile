@@ -46,12 +46,7 @@ test-multiarch:
 # Ansible Playbooks                                                           #
 ###############################################################################
 ansible:
-    FROM willhallonline/ansible:2.15-alpine-3.18
-    COPY ansible .
-    RUN pip install --no-cache-dir botocore boto3 && \
-        ansible-galaxy install -r requirements.yml
-    VOLUME [ "/ansible/.ssh", "/ansible/.aws", "/ansible/inventory" ]
-    ENTRYPOINT [ "/ansible/entrypoint.sh" ]
+    FROM DOCKERFILE -f ./containers/ansible/Dockerfile .
     SAVE IMAGE $IMAGE_REPOSITORY/k2-ansible:dev
 
 ansible-multiarch:

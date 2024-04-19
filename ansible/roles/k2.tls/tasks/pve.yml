@@ -16,4 +16,9 @@
       template:
         src: proxmox.conf
         dest: /etc/nginx/conf.d/proxmox.conf
-      notify: restart and enable nginx service
+
+- name: restart and enable nginx service
+  service:
+    name: nginx
+    enabled: true
+    state: restarted

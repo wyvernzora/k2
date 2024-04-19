@@ -8,7 +8,7 @@ docker run --rm -it \
     -e AWS_SECRET_ACCESS_KEY="$(op read "$AWS_CREDENTIALS/secret access key")" \
     -e AWS_REGION="$(op read "$AWS_CREDENTIALS/default region")" \
     -e AWS_PROFILE \
+    -v $ROOT/../inventory:/ansible/inventory:ro \
     -v $HOME/.aws:/root/.aws:ro \
     -v $HOME/.ssh:/root/.ssh:ro \
-    -v $ROOT/../inventory:/ansible/inventory:ro \
     ghcr.io/wyvernzora/k2-ansible:dev "$@"
