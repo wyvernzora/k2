@@ -34,7 +34,7 @@ export class QBitTorrentDeployment extends Deployment {
       .anime(this, "vol-anime")
       .mount(this, { path: "/downloads/anime" });
     yield volumes
-      .anime(this, "vol-airing")
+      .airing(this, "vol-airing")
       .mount(this, { path: "/downloads/airing" });
   }
 
