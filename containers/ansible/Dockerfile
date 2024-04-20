@@ -1,4 +1,4 @@
-FROM willhallonline/ansible:2.15-alpine-3.18
+FROM willhallonline/ansible:2.16-alpine-3.18
 
 COPY ansible/requirements.yml .
 COPY containers/ansible/entrypoint.sh .
