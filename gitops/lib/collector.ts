@@ -34,7 +34,9 @@ export class Collector extends Construct {
   }
 
   private globApplications(): void {
-    const appFiles = fg.sync("**/k2-app.yaml", { cwd: this.root });
+    const appFiles = fg.sync(["**/k2-app.yaml", "!node_modules/**"], {
+      cwd: this.root,
+    });
     LOG(`found ${appFiles.length} applications`, appFiles);
     for (const appFile of appFiles) {
       const app = Application.fromAppFile(this, this.root, appFile);

@@ -2,6 +2,7 @@
   "name": "@wyvernzora/k2",
   "version": "1.0.0",
   "private": true,
+  "workspaces": ["packages/*", "gitops"],
   "dependencies": {
     "cdk8s": "^2.68.22",
     "cdk8s-plus-28": "^2.0.8",
@@ -11,6 +12,7 @@
     "yaml": "^2.3.4"
   },
   "devDependencies": {
+    "@tsconfig/recommended": "^1.0.6",
     "@types/debug": "^4.1.12",
     "@types/find-root": "^1.1.4",
     "@types/node": "^20.10.6",
@@ -18,7 +20,9 @@
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
+    "nx": "16.10.0",
     "prettier": "^3.2.4",
+    "require-resolve-cli": "^1.0.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
@@ -35,10 +39,11 @@
     "rules": {
       "@typescript-eslint/no-namespace": "off"
     },
-    "ignorePatterns": ["infrastructure/crds/*.ts", "node_modules"]
+    "ignorePatterns": ["**/dist/*.ts", "node_modules"]
   },
   "prettier": {},
   "scripts": {
+    "build": "nx run-many -t build",
     "eslint": "eslint --ext .ts .",
     "prettier": "prettier '{cdklib,gitops}/**/*.ts' '**/*.yaml' '!**/templates/**/*.yaml'",
     "lint:check": "npm run eslint && npm run prettier -- --check",

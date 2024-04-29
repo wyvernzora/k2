@@ -1,0 +1,26 @@
+{
+  "name": "@k2/crds",
+  "version": "1.0.0",
+  "private": true,
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.ts",
+    "./manifest": "./dist/manifest.k8s.yaml"
+  },
+  "scripts": {
+    "build": "/bin/bash build.sh",
+    "test": "echo TODO",
+    "clean": "rm -rf dist",
+    "lint": "npm run prettier -- --check",
+    "lint:fix": "npm run prettier -- --write",
+    "prettier": "prettier '**.{json,ya?ml}' '!dist/**'"
+  },
+  "dependencies": {
+    "cdk8s": "^2.68.22"
+  },
+  "devDependencies": {
+    "cdk8s-cli": "^2.198.107",
+    "prettier": "^3.2.4"
+  }
+}

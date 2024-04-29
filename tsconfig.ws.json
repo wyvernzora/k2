@@ -1,0 +1,19 @@
+{
+  "extends": "@tsconfig/recommended",
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["ES2020"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "declaration": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}

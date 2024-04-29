@@ -28,9 +28,10 @@ test-apps:
     FROM node:alpine
     WORKDIR /mnt
     COPY . .
-    RUN apk add --no-cache kustomize helm git && \
+    RUN apk add --no-cache kustomize helm git python3 && \
         npm install -g cdk8s-cli && \
-        npm install
+        npm install && \
+        npx nx run-many -t build
     RUN npm run lint:check && ls -la ./test
     RUN ./test/test-apps
 
@@ -56,22 +57,23 @@ ansible-multiarch:
 # Generate cdk8s constructs for imported CRDs                                 #
 ###############################################################################
 render-crd-manifests:
-    FROM alpine
+    FROM node:alpine
     WORKDIR /build
-    COPY infrastructure/crds/*.yaml .
-    RUN apk add --no-cache kustomize git && \
-        kustomize build . > crds.yaml
+    RUN apk add --no-cache kustomize git
+    COPY packages/crds .
+    RUN npm install && \
+        npm run build:yaml && \
+        cp dist/manifest.k8s.yaml crds.yaml
     SAVE ARTIFACT crds.yaml
 
 generate-crd-constructs:
     FROM node:alpine
     WORKDIR /build
-    RUN mkdir -p /output && \
-        npm install -g cdk8s-cli
-    COPY infrastructure/crds /output
-    COPY (+render-crd-manifests/crds.yaml) /build
-    RUN cdk8s import -l typescript -o /output crds.yaml
-    SAVE ARTIFACT /output AS LOCAL ./infrastructure/crds
+    RUN apk add --no-cache kustomize git
+    COPY packages/crds .
+    RUN npm install && \
+        npm run build
+    SAVE ARTIFACT dist AS LOCAL packages/crds/dist
 
 ###############################################################################
 # Kairos Cluster Init                                                         #

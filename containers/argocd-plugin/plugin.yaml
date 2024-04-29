@@ -7,8 +7,8 @@ spec:
   discover:
     fileName: cdk8s.*
   init:
-    command: ["npm", "ci"]
+    command: ["/bin/bash", "/home/argocd/k2/init.sh"]
   generate:
-    command: ["npx", "cdk8s-cli", "synth", "--stdout"]
+    command: ["/bin/bash", "/home/argocd/k2/generate.sh"]
   parameters:
     static: []

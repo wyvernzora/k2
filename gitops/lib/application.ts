@@ -1,4 +1,4 @@
-import * as argo from "~crds/argoproj.io";
+import * as argo from "@k2/crds/argoproj.io";
 import { Construct } from "constructs";
 import { Lazy } from "cdk8s";
 import Debug from "debug";
