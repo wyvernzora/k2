@@ -8,9 +8,12 @@ argo-cd:
         traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
       hostname: deploy.wyvernzora.io
   repoServer:
+    env:
+      - name: ARGOCD_GIT_MODULES_ENABLED
+        value: "false"
     extraContainers:
-      - name: cdk8s-plugin
-        image: ghcr.io/wyvernzora/argocd-cdk8s-plugin:v1.1.0
+      - name: k2-plugin
+        image: ghcr.io/wyvernzora/k2-argocd-plugin:latest
         command:
           - /var/run/argocd/argocd-cmp-server
         volumeMounts:
@@ -18,13 +21,13 @@ argo-cd:
             mountPath: /var/run/argocd
           - name: plugins
             mountPath: /home/argocd/cmp-server/plugins
-          - name: cdk8s-working-dir
+          - name: k2-working-dir
             mountPath: /tmp
         securityContext:
           runAsNonRoot: true
           runAsUser: 999
     volumes:
-      - name: cdk8s-working-dir
+      - name: k2-working-dir
         emptyDir: {}
   configs:
     params:
@@ -33,7 +36,7 @@ argo-cd:
       # Disable builtin auth and let Authelia handle it
       server.disable.auth: true
     cm:
-      statusbadge.enabled: "true"
+      statusbadge.enabled: true
       resource.customizations.health.argoproj.io_Application: |
         hs = {}
         hs.status = "Progressing"
