@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ConfigManagementPlugin
+metadata:
+  name: cdk8s
+spec:
+  version: v1.0
+  discover:
+    fileName: cdk8s.*
+  init:
+    command: ["npm", "ci"]
+  generate:
+    command: ["cdk8s", "synth", "--stdout"]
+  parameters:
+    static: []
