@@ -9,6 +9,6 @@ spec:
   init:
     command: ["npm", "ci"]
   generate:
-    command: ["cdk8s", "synth", "--stdout"]
+    command: ["npx", "cdk8s-cli", "synth", "--stdout"]
   parameters:
     static: []
