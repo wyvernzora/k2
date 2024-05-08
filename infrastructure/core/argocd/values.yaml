@@ -8,9 +8,6 @@ argo-cd:
         traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
       hostname: deploy.wyvernzora.io
   repoServer:
-    env:
-      - name: ARGOCD_GIT_MODULES_ENABLED
-        value: "false"
     extraContainers:
       - name: k2-plugin
         image: ghcr.io/wyvernzora/k2-argocd-plugin:latest
@@ -37,6 +34,7 @@ argo-cd:
       server.disable.auth: true
     cm:
       statusbadge.enabled: true
+      reposerver.enable.git.submodule: false
       resource.customizations.health.argoproj.io_Application: |
         hs = {}
         hs.status = "Progressing"
