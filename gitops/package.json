@@ -2,8 +2,11 @@
   "name": "@k2/root",
   "version": "1.0.0",
   "private": "true",
+  "exports": {
+    "./manifest": "./dist/app.k8s.yaml"
+  },
   "scripts": {
-    "build": "cdk8s synth && mv dist/k2-root.k8s.yaml dist/manifest.k8s.yaml",
+    "build": "cdk8s synth",
     "test": "echo TODO",
     "clean": "rm -rf dist",
     "lint": "npm run eslint && npm run prettier -- --check",
