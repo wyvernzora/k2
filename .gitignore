@@ -1,0 +1,10 @@
+.idea
+.vagrant
+.envrc
+*.code-workspace
+charts
+node_modules
+imports/
+dist
+tmp
+cdk.out
