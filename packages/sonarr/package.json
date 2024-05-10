@@ -1,0 +1,30 @@
+{
+  "name": "@k2/sonarr",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./manifest": "./dist/app.k8s.yaml"
+  },
+  "scripts": {
+    "build": "cdk8s synth",
+    "test": "echo TODO",
+    "clean": "rm -rf dist",
+    "lint": "npm run eslint && npm run prettier -- --check",
+    "lint:fix": "npm run eslint -- --fix && npm run prettier -- --write",
+    "eslint": "eslint --ext .ts src",
+    "prettier": "prettier 'src/**/*' '**.json'"
+  },
+  "dependencies": {
+    "@k2/cdk-lib": "^1.0.0",
+    "cdk8s": "^2.68.22",
+    "cdk8s-plus-28": "^2.0.8"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  }
+}

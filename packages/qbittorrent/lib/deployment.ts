@@ -1,49 +1,50 @@
+import { K2Volumes } from "@k2/cdk-lib";
+import { Construct } from "constructs";
 import {
   Cpu,
   Deployment,
   DeploymentStrategy,
   VolumeMount,
 } from "cdk8s-plus-28";
-import { Construct } from "constructs";
-import { K2Volume, K2Volumes } from "~lib";
 import { Size } from "cdk8s";
 
-export interface SonarrDeploymentProps {
-  readonly volumes: K2Volumes<"anime" | "config">;
+export interface QBitTorrentDeploymentProps {
+  readonly volumes: K2Volumes<"config" | "anime" | "airing" | "default">;
 }
-type Props = SonarrDeploymentProps;
+type Props = QBitTorrentDeploymentProps;
 
-export class SonarrDeployment extends Deployment {
+export class QBitTorrentDeployment extends Deployment {
   constructor(scope: Construct, id: string, { volumes }: Props) {
     super(scope, id, {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
     });
-
     const mounts = this.createVolumeMounts(volumes);
-    this.addSonarrContainer(mounts);
+    this.addQbitTorrentContainer(mounts);
   }
 
   private *createVolumeMounts(
     volumes: Props["volumes"],
-  ): Iterable<VolumeMount> {
+  ): IterableIterator<VolumeMount> {
     yield volumes.config(this, "vol-config").mount(this, { path: "/config" });
-    yield volumes.anime(this, "vol-anime").mount(this, { path: "/mnt/anime" });
-    yield K2Volume.ephemeral()(this, "vol-backups").mount(this, {
-      path: "/config/Backups",
-    });
-    yield K2Volume.ephemeral()(this, "vol-logs").mount(this, {
-      path: "/config/logs",
-    });
+    yield volumes
+      .default(this, "vol-default")
+      .mount(this, { path: "/downloads/default" });
+    yield volumes
+      .anime(this, "vol-anime")
+      .mount(this, { path: "/downloads/anime" });
+    yield volumes
+      .airing(this, "vol-airing")
+      .mount(this, { path: "/downloads/airing" });
   }
 
-  private addSonarrContainer(mounts: Iterable<VolumeMount>): void {
+  private addQbitTorrentContainer(mounts: Iterable<VolumeMount>): void {
     this.addContainer({
-      image: "quay.io/linuxserver.io/sonarr:4.0.1",
+      image: "ghcr.io/hotio/qbittorrent:release-4.6.3",
       ports: [
         {
           name: "http",
-          number: 8989,
+          number: 8080,
         },
       ],
       volumeMounts: [...mounts],
@@ -51,6 +52,7 @@ export class SonarrDeployment extends Deployment {
         PUID: { value: "3000" },
         PGID: { value: "2001" },
         TZ: { value: "America/Los_Angeles" },
+        WEBUI_PORTS: { value: "8080/tcp" },
       },
       securityContext: {
         ensureNonRoot: false,
@@ -59,14 +61,14 @@ export class SonarrDeployment extends Deployment {
       resources: {
         cpu: {
           request: Cpu.millis(100),
-          limit: Cpu.millis(2000),
+          limit: Cpu.millis(1000),
         },
         memory: {
           request: Size.gibibytes(0.5),
           limit: Size.gibibytes(4),
         },
         ephemeralStorage: {
-          limit: Size.gibibytes(10),
+          limit: Size.gibibytes(8),
         },
       },
     });

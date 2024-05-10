@@ -1,4 +1,4 @@
-import { K2Volumes } from "~lib";
+import { K2Volumes } from "@k2/cdk-lib";
 import { Construct } from "constructs";
 import {
   ConfigMap,

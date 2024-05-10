@@ -1,6 +1,6 @@
 import { App, Size, YamlOutputType } from "cdk8s";
 import { SonarrChart } from "./lib/chart";
-import { K2Volume } from "~lib";
+import { K2Volume } from "@k2/cdk-lib";
 
 const app = new App({
   yamlOutputType: YamlOutputType.FILE_PER_APP,
