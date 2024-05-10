@@ -1,0 +1,11 @@
+{
+  "name": "@k2/authelia",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./manifest": "./dist/manifest.k8s.yaml"
+  },
+  "scripts": {
+    "build": "mkdir -p dist && helm dependency build && helm template --release-name authelia --namespace k2-auth . > dist/manifest.k8s.yaml"
+  }
+}

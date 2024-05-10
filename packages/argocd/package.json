@@ -1,0 +1,11 @@
+{
+  "name": "@k2/argocd",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./manifest": "./dist/manifest.k8s.yaml"
+  },
+  "scripts": {
+    "build": "mkdir -p dist && helm dependency build && helm template --release-name argocd --namespace k2-core . > dist/manifest.k8s.yaml"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@k2/system-update",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./manifest": "./dist/manifest.k8s.yaml"
+  },
+  "scripts": {
+    "build": "mkdir -p dist && kubectl kustomize . > dist/manifest.k8s.yaml"
+  }
+}

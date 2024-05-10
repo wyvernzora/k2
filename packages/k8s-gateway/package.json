@@ -1,0 +1,11 @@
+{
+  "name": "@k2/k8s-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./manifest": "./dist/manifest.k8s.yaml"
+  },
+  "scripts": {
+    "build": "mkdir -p dist && helm dependency build && helm template --release-name k8s-gateway --namespace k2-network . > dist/manifest.k8s.yaml"
+  }
+}

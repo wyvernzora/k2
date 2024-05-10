@@ -1,0 +1,11 @@
+{
+  "name": "@k2/longhorn",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./manifest": "./dist/manifest.k8s.yaml"
+  },
+  "scripts": {
+    "build": "mkdir -p dist && helm dependency build && helm template --release-name longhorn --namespace k2-storage . > dist/manifest.k8s.yaml"
+  }
+}
