@@ -6,6 +6,6 @@
     "./manifest": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
-    "build": "mkdir -p dist && kubectl kustomize . > dist/manifest.k8s.yaml"
+    "build": "k2-kustomize"
   }
 }

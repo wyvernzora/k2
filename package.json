@@ -2,7 +2,7 @@
   "name": "@wyvernzora/k2",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*", "gitops"],
+  "workspaces": ["packages/*", "tools/*", "gitops"],
   "dependencies": {
     "cdk8s": "^2.68.22",
     "cdk8s-plus-28": "^2.0.8",
@@ -12,7 +12,6 @@
     "yaml": "^2.3.4"
   },
   "devDependencies": {
-    "@tsconfig/recommended": "^1.0.6",
     "@types/debug": "^4.1.12",
     "@types/find-root": "^1.1.4",
     "@types/node": "^20.10.6",

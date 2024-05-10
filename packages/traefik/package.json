@@ -6,6 +6,9 @@
     "./manifest": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
-    "build": "mkdir -p dist && helm dependency build && helm template --release-name traefik --namespace k2-network . > dist/manifest.k8s.yaml"
+    "build": "k2-helm-synth k2-network traefik"
+  },
+  "devDependencies": {
+    "@k2/build-tools": "^1.0.0"
   }
 }

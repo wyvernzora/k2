@@ -9,7 +9,7 @@
     "./manifest": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
-    "build": "/bin/bash build.sh",
+    "build": "k2-crd-codegen",
     "test": "echo TODO",
     "clean": "rm -rf dist",
     "lint": "npm run prettier -- --check",
@@ -20,7 +20,7 @@
     "cdk8s": "^2.68.22"
   },
   "devDependencies": {
-    "cdk8s-cli": "^2.198.107",
-    "prettier": "^3.2.4"
+    "prettier": "^3.2.4",
+    "@k2/build-tools": "^1.0.0"
   }
 }

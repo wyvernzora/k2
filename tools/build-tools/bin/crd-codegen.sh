@@ -4,14 +4,7 @@ set -e
 mkdir -p dist
 
 # Generate the full CRD manifest via Kustomize
-if command -v kustomize &> /dev/null; then
-    kustomize build . > dist/manifest.k8s.yaml
-elif command -v kubectl &> /dev/null; then
-    kubectl kustomize . > dist/manifest.k8s.yaml
-else
-    echo "Cannot find suitable kustomize command"
-    exit 1
-fi
+k2-kustomize . > dist/manifest.k8s.yaml
 
 # Generate cdk8s constructs for the CRDs
 cdk8s import -l typescript -o dist dist/manifest.k8s.yaml

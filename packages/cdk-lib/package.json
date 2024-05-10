@@ -14,16 +14,9 @@
     "prettier": "prettier 'src/**/*' '**.json'"
   },
   "dependencies": {
-    "cdk8s": "^2.68.22",
-    "cdk8s-plus-28": "^2.0.8",
     "@k2/crds": "^1.0.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.2.4",
-    "typescript": "^5.3.3"
+    "@k2/build-tools": "^1.0.0"
   }
 }

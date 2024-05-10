@@ -1,0 +1,24 @@
+{
+  "name": "@k2/build-tools",
+  "version": "1.0.0",
+  "private": true,
+  "bin": {
+    "k2-helm-synth": "bin/helm-synth.sh",
+    "k2-cdk8s-synth": "bin/cdk8s-synth.sh",
+    "k2-crd-codegen": "bin/crd-codegen.sh",
+    "k2-kustomize": "bin/kustomize.sh"
+  },
+  "exports": {
+    "./tsconfig": "./tsconfig.json"
+  },
+  "dependencies": {
+    "cdk8s-cli": "^2.198.107",
+    "@tsconfig/recommended": "^1.0.6",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  }
+}
