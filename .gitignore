@@ -9,3 +9,4 @@ dist
 tmp
 cdk.out
 .nx
+.DS_Store
