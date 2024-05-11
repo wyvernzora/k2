@@ -1,5 +1,5 @@
 {
-  "name": "@k2/system-update",
+  "name": "@k2/system-upgrade",
   "version": "1.0.0",
   "private": true,
   "exports": {

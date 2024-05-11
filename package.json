@@ -2,7 +2,12 @@
   "name": "@wyvernzora/k2",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*", "tools/*", "deploy", "gitops"],
+  "workspaces": [
+    "packages/*",
+    "tools/*",
+    "deploy",
+    "gitops"
+  ],
   "dependencies": {
     "cdk8s": "^2.68.22",
     "cdk8s-plus-28": "^2.0.8",
@@ -22,13 +27,16 @@
     "nx": "19.0.1",
     "prettier": "^3.2.4",
     "require-resolve-cli": "^1.0.0",
+    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
   "eslintConfig": {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "extends": [
       "eslint:recommended",
       "plugin:@typescript-eslint/eslint-recommended",
@@ -38,7 +46,10 @@
     "rules": {
       "@typescript-eslint/no-namespace": "off"
     },
-    "ignorePatterns": ["**/dist/*.ts", "node_modules"]
+    "ignorePatterns": [
+      "**/dist/*.ts",
+      "node_modules"
+    ]
   },
   "prettier": {},
   "scripts": {

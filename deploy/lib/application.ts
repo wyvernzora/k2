@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 import { Lazy } from "cdk8s";
 import Debug from "debug";
 import { dirname, resolve } from "path";
-import { readFileSync } from "fs";
+import { copyFileSync, mkdirSync, readFileSync } from "fs";
 import YAML from "yaml";
 import fg from "fast-glob";
 
@@ -12,7 +12,7 @@ const LOG = Debug("k2:app:application");
 const CoreNamespace: string = "k2-core";
 const DefaultProject: string = "default";
 const DefaultRepo: string = "https://github.com/wyvernzora/k2";
-const DefaultRevision: string = "main";
+const DefaultRevision: string = "deploy";
 
 type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
@@ -59,7 +59,7 @@ export class Application extends argo.Application {
         project: DefaultProject,
         source: {
           repoUrl: props.repo || DefaultRepo,
-          path: props.path,
+          path: props.name,
           targetRevision: props.revision || DefaultRevision,
           helm: buildHelmOptions(props),
         },
@@ -82,6 +82,7 @@ export class Application extends argo.Application {
     path: string,
   ): Application {
     const props = readApplicationProps(root, path);
+    copyApplicationManifest(root, props.name);
     return new Application(scope, props.name, props);
   }
 }
@@ -141,6 +142,13 @@ function readApplicationProps(root: string, path: string): ApplicationProps {
     path: dirname(path),
     type: determineApplicationType(dirname(abspath)),
   } as ApplicationProps;
+}
+
+function copyApplicationManifest(root: string, name: string): void {
+  const from = require.resolve(`@k2/${name}/manifest`);
+  const to = resolve(root, "deploy/dist", name);
+  mkdirSync(to, { recursive: true });
+  copyFileSync(from, resolve(to, "manifest.k8s.yaml"));
 }
 
 function determineApplicationType(path: string): ApplicationType {

@@ -1,7 +1,7 @@
 {
   "extends": "@k2/build-tools/tsconfig",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist"
   }
 }
