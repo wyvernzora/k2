@@ -13,7 +13,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/1password
+    path: 1password
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -46,7 +46,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/argocd
+    path: argocd
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -79,7 +79,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/authelia
+    path: authelia
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -110,7 +110,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: packages/blocky
+    path: blocky
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -143,7 +143,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/cert-manager
+    path: cert-manager
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -178,7 +178,7 @@ spec:
       kind: CustomResourceDefinition
   project: default
   source:
-    path: packages/crds
+    path: crds
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -206,7 +206,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: packages/glauth
+    path: glauth
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -239,7 +239,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/k8s-gateway
+    path: k8s-gateway
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -272,7 +272,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/kube-vip
+    path: kube-vip
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -305,7 +305,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/longhorn
+    path: longhorn
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -338,7 +338,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/metallb
+    path: metallb
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -369,7 +369,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: packages/plex
+    path: plex
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -400,7 +400,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: packages/qbittorrent
+    path: qbittorrent
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -433,7 +433,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/reflector
+    path: reflector
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -464,7 +464,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: packages/sonarr
+    path: sonarr
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -495,7 +495,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: packages/system-upgrade
+    path: system-upgrade
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -531,7 +531,7 @@ spec:
   source:
     helm:
       skipCrds: true
-    path: packages/traefik
+    path: traefik
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
