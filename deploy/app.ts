@@ -1,5 +1,5 @@
 import { App, Chart } from "cdk8s";
-import { Collector } from "./lib/collector";
+import { Collector } from "@k2/cdk-lib";
 import { dirname } from "path";
 import findRoot from "find-root";
 

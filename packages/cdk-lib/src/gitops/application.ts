@@ -61,7 +61,6 @@ export class Application extends argo.Application {
           repoUrl: props.repo || DefaultRepo,
           path: props.name,
           targetRevision: props.revision || DefaultRevision,
-          helm: buildHelmOptions(props),
         },
         destination: {
           server: "https://kubernetes.default.svc",
@@ -85,25 +84,6 @@ export class Application extends argo.Application {
     copyApplicationManifest(root, props.name);
     return new Application(scope, props.name, props);
   }
-}
-
-function buildHelmOptions(props: ApplicationProps): HelmOptions | undefined {
-  if (props.type !== "helm") {
-    LOG(
-      `application ${props.name} is not a helm application, skipping helm options`,
-    );
-    if (props.helm) {
-      throw new Error(
-        `helm options provided for non-helm application ${props.name}`,
-      );
-    }
-    return undefined;
-  }
-  const options: Mutable<HelmOptions> = {};
-  if (props.installCRDs !== true) {
-    options.skipCrds = true;
-  }
-  return { ...options, ...props.helm };
 }
 
 function buildSyncPolicy(props: ApplicationProps): SyncPolicy {
