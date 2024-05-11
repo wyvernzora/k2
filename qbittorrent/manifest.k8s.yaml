@@ -1,0 +1,146 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent-depl-c8e512a2
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: qbittorrent-depl-c8a5ef42
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: qbittorrent-depl-c8a5ef42
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PUID
+              value: "3000"
+            - name: PGID
+              value: "2001"
+            - name: TZ
+              value: America/Los_Angeles
+            - name: WEBUI_PORTS
+              value: 8080/tcp
+          image: ghcr.io/hotio/qbittorrent:release-4.6.3
+          imagePullPolicy: Always
+          name: main
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            limits:
+              cpu: 1000m
+              ephemeral-storage: 8Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-qbittorrent-depl-vol-config-pvc-c8d242b4
+            - mountPath: /downloads/default
+              name: blk-vol-default
+            - mountPath: /downloads/anime
+              name: blk-vol-anime
+            - mountPath: /downloads/airing
+              name: blk-vol-airing
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-qbittorrent-depl-vol-config-pvc-c8d242b4
+          persistentVolumeClaim:
+            claimName: qbittorrent-depl-vol-config-pvc-c8d242b4
+            readOnly: false
+        - name: blk-vol-default
+          nfs:
+            path: /mnt/data/downloads
+            server: 10.10.8.1
+        - name: blk-vol-anime
+          nfs:
+            path: /mnt/data/media/anime/downloads
+            server: 10.10.8.1
+        - name: blk-vol-airing
+          nfs:
+            path: /mnt/data/media/anime/airing
+            server: 10.10.8.1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-depl-vol-config-pvc-c8d242b4
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-depl-service-c8ce2c4c
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    cdk8s.io/metadata.addr: qbittorrent-depl-c8a5ef42
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+  name: qbittorrent-ingress-c8afb5a6
+spec:
+  rules:
+    - host: dl.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: qbittorrent-depl-service-c8ce2c4c
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix

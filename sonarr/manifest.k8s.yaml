@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr-depl-c8543044
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: sonarr-depl-c8000ef8
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: sonarr-depl-c8000ef8
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PUID
+              value: "3000"
+            - name: PGID
+              value: "2001"
+            - name: TZ
+              value: America/Los_Angeles
+          image: quay.io/linuxserver.io/sonarr:4.0.1
+          imagePullPolicy: Always
+          name: main
+          ports:
+            - containerPort: 8989
+              name: http
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 10Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-sonarr-depl-vol-config-pvc-c8d12b45
+            - mountPath: /mnt/anime
+              name: blk-vol-anime
+            - mountPath: /config/Backups
+              name: eph-vol-backups
+            - mountPath: /config/logs
+              name: eph-vol-logs
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-sonarr-depl-vol-config-pvc-c8d12b45
+          persistentVolumeClaim:
+            claimName: sonarr-depl-vol-config-pvc-c8d12b45
+            readOnly: false
+        - name: blk-vol-anime
+          nfs:
+            path: /mnt/data/media/anime/series
+            server: 10.10.8.1
+        - emptyDir: {}
+          name: eph-vol-backups
+        - emptyDir: {}
+          name: eph-vol-logs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-depl-vol-config-pvc-c8d12b45
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr-depl-service-c8df973c
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8989
+  selector:
+    cdk8s.io/metadata.addr: sonarr-depl-c8000ef8
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+  name: sonarr-ingress-c8e102c6
+spec:
+  rules:
+    - host: sonarr.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: sonarr-depl-service-c8df973c
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix

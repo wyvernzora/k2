@@ -1,0 +1,241 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex-depl-c894ec87
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: plex-depl-c8d675e7
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: plex-depl-c8d675e7
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PLEX_UID
+              value: "3000"
+            - name: PLEX_GID
+              value: "2001"
+            - name: TZ
+              value: America/Los_Angeles
+            - name: VERSION
+              value: docker
+            - name: ADVERTISE_IP
+              value: https://plex.wyvernzora.io
+          image: plexinc/pms-docker:1.40.2.8395-c67dce28e
+          imagePullPolicy: Always
+          name: plex-media-server
+          ports:
+            - containerPort: 32400
+              name: http-internal
+            - containerPort: 1900
+              name: dlna
+            - containerPort: 5353
+              name: mdns
+            - containerPort: 32410
+              name: gdm-32410
+            - containerPort: 32412
+              name: gdm-32412
+            - containerPort: 32413
+              name: gdm-32413
+            - containerPort: 32414
+              name: gdm-32414
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config/Library/Application Support/Plex Media Server
+              name: pvc-plex-depl-vol-config-pvc-c8c492a8
+            - mountPath: /anime/series
+              name: blk-vol-series
+            - mountPath: /anime/features
+              name: blk-vol-features
+            - mountPath: /anime/airing
+              name: blk-vol-airing
+        - image: nginx:latest
+          imagePullPolicy: Always
+          name: nginx
+          ports:
+            - containerPort: 80
+              name: http
+            - containerPort: 443
+              name: https
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /etc/nginx/ssl
+              name: secret-default-certificate
+            - mountPath: /etc/nginx/conf.d
+              name: configmap-plex-depl-nginx-conf-c80f27bb
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-plex-depl-vol-config-pvc-c8c492a8
+          persistentVolumeClaim:
+            claimName: plex-depl-vol-config-pvc-c8c492a8
+            readOnly: false
+        - name: blk-vol-series
+          nfs:
+            path: /mnt/data/media/anime/series
+            readOnly: true
+            server: 10.10.8.1
+        - name: blk-vol-features
+          nfs:
+            path: /mnt/data/media/anime/features
+            readOnly: true
+            server: 10.10.8.1
+        - name: blk-vol-airing
+          nfs:
+            path: /mnt/data/media/anime/airing
+            readOnly: true
+            server: 10.10.8.1
+        - name: secret-default-certificate
+          secret:
+            secretName: default-certificate
+        - configMap:
+            name: plex-depl-nginx-conf-c80f27bb
+          name: configmap-plex-depl-nginx-conf-c80f27bb
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-depl-vol-config-pvc-c8c492a8
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plex-depl-nginx-conf-c80f27bb
+data:
+  nginx.conf: |
+    # Redirect HTTP to HTTPS
+    server {
+        listen 80 default_server;
+        server_name _;
+
+        return 301 https://$host$request_uri;
+    }
+
+    # TLS termination for Plex Media Server
+    server {
+        listen 443 ssl http2 default_server;
+        server_name _;
+
+        # TLS Configuration
+        ssl_certificate /etc/nginx/ssl/tls.crt;
+        ssl_certificate_key /etc/nginx/ssl/tls.key;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+        ssl_prefer_server_ciphers on;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        # Strong security headers
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        add_header X-XSS-Protection "1; mode=block";
+
+        # Plex Media Server proxy
+        location / {
+            proxy_pass http://localhost:32400;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Websockets support for Plex
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+
+    }
+immutable: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    coredns.io/hostname: plex.wyvernzora.io
+  name: plex-depl-service-c8e1d3b8
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+    - name: https
+      port: 443
+    - name: dlna
+      port: 1900
+    - name: mdns
+      port: 5353
+    - name: gdm-32410
+      port: 32410
+    - name: gdm-32412
+      port: 32412
+    - name: gdm-32413
+      port: 32413
+    - name: gdm-32414
+      port: 32414
+  selector:
+    cdk8s.io/metadata.addr: plex-depl-c8d675e7
+  type: LoadBalancer
