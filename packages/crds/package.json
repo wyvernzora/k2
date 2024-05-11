@@ -9,7 +9,7 @@
     "./manifest": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-crd-codegen",
+    "build": "k2-synth-crds",
     "test": "echo TODO",
     "clean": "rm -rf dist",
     "lint": "npm run prettier -- --check",

@@ -6,6 +6,6 @@
     "./manifest": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-kustomize"
+    "build": "k2-synth-kustomize"
   }
 }

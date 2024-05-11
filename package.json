@@ -2,7 +2,7 @@
   "name": "@wyvernzora/k2",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*", "tools/*", "gitops"],
+  "workspaces": ["packages/*", "tools/*", "deploy", "gitops"],
   "dependencies": {
     "cdk8s": "^2.68.22",
     "cdk8s-plus-28": "^2.0.8",

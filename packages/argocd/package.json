@@ -6,7 +6,7 @@
     "./manifest": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-helm-synth k2-core argocd"
+    "build": "k2-synth-helm k2-core argocd"
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"

@@ -6,7 +6,7 @@
     "./manifest": "./dist/app.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-cdk8s-synth",
+    "build": "k2-synth-cdk8s",
     "test": "echo TODO",
     "clean": "rm -rf dist",
     "lint": "npm run eslint && npm run prettier -- --check",

@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "bin": {
-    "k2-helm-synth": "bin/helm-synth.sh",
-    "k2-cdk8s-synth": "bin/cdk8s-synth.sh",
-    "k2-crd-codegen": "bin/crd-codegen.sh",
-    "k2-kustomize": "bin/kustomize.sh"
+    "k2-synth-helm": "bin/synth/helm.sh",
+    "k2-synth-cdk8s": "bin/synth/cdk8s.sh",
+    "k2-synth-crds": "bin/synth/crds.sh",
+    "k2-synth-kustomize": "bin/synth/kustomize.sh"
   },
   "exports": {
     "./tsconfig": "./tsconfig.json"
