@@ -11,8 +11,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: 1password
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -44,8 +42,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: argocd
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -77,8 +73,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: authelia
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -141,8 +135,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: cert-manager
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -237,8 +229,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: k8s-gateway
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -270,8 +260,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: kube-vip
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -303,8 +291,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: longhorn
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -336,8 +322,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: metallb
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -431,8 +415,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    helm:
-      skipCrds: true
     path: reflector
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
@@ -529,8 +511,6 @@ spec:
       name: traefik-dashboard
   project: default
   source:
-    helm:
-      skipCrds: true
     path: traefik
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
