@@ -7,6 +7,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-auth
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -37,6 +38,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-core
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -97,6 +99,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-network
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -127,6 +130,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-network
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -157,6 +161,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-storage
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -187,6 +192,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-network
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -217,6 +223,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-core
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -247,6 +254,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-network
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -277,6 +285,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-core
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -307,6 +316,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-core
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -337,6 +347,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-network
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -367,6 +378,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-auth
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -397,6 +409,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: plex
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -427,6 +440,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: qbittorrent
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -457,6 +471,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: sonarr
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -487,6 +502,7 @@ metadata:
   namespace: k2-core
 spec:
   destination:
+    namespace: k2-core
     server: https://kubernetes.default.svc
   project: default
   source:
