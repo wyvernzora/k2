@@ -1,10 +1,10 @@
 {
   "name": "@k2/traefik",
+  "namespace": "k2-network",
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./app.k8s.yaml": "./dist/manifest.k8s.yaml",
-    "./crd": "@k2/crds/traefik.io"
+    "./app.k8s.yaml": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
     "build": "k2-synth-helm k2-network traefik"

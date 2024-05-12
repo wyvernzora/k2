@@ -1,5 +1,6 @@
 {
   "name": "@k2/system-upgrade",
+  "namespace": "k2-core",
   "version": "1.0.0",
   "private": true,
   "exports": {

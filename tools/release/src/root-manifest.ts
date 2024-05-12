@@ -39,6 +39,7 @@ export class RootApplication extends K2App {
         },
         destination: {
           server: "https://kubernetes.default.svc",
+          namespace: app.namespace,
         },
         syncPolicy: {
           syncOptions: [

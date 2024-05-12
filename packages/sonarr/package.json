@@ -1,5 +1,6 @@
 {
   "name": "@k2/sonarr",
+  "namespace": "sonarr",
   "version": "1.0.0",
   "private": true,
   "exports": {

@@ -22,6 +22,7 @@ const DEFAULT_OUTPUT_PATH = "deploy";
 
 export interface Artifacts {
   readonly name: string;
+  readonly namespace: string;
   readonly package: string;
   readonly exports: Set<string>;
   readonly hasManifests: boolean;
@@ -67,6 +68,7 @@ export class Collector {
     return {
       value: {
         name: getAppName(ws.package.name),
+        namespace: ws.package.namespace,
         package: ws.package.name,
         hasManifests: hasManifests,
         exports: exports,

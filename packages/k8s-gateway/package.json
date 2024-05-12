@@ -1,5 +1,6 @@
 {
   "name": "@k2/k8s-gateway",
+  "namespace": "k2-network",
   "version": "1.0.0",
   "private": true,
   "exports": {
