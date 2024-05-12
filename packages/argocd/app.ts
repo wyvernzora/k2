@@ -19,6 +19,10 @@ new HelmChart(app, "argocd", {
   namespace: "k2-core",
   chart: "helm!https://argoproj.github.io/argo-helm/argo-cd?version=6.8.0",
   values: {
+    crds: {
+      // CRDs are managed independently by @k2/crds package
+      install: false,
+    },
     secret: {
       createSecret: false,
     },
