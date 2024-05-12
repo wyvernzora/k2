@@ -1,59 +1,33 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-        "config:base"
-    ],
-    "lockFileMaintenance": {
-        "enabled": true,
-        "automerge": true
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automergeType": "branch",
+      "automerge": true
+    }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["(.*/|^)Earthfile$", "(.*/|^)Dockerfile"],
+      "matchStrings": [
+        "\\s*#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\s+ARG\\s+.+_VERSION=(?<currentValue>.*?)\\s"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
     },
-    "packageRules": [
-        {
-            "matchUpdateTypes": ["patch"],
-            "matchCurrentVersion": "!/^0/",
-            "automergeType": "branch",
-            "automerge": true
-        }
-    ],
-    "regexManagers": [
-        {
-            "fileMatch": [
-                "(.*/|^)Earthfile$",
-                "(.*/|^)Dockerfile"
-            ],
-            "matchStrings": [
-                "\\s*#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\s+ARG\\s+.+_VERSION=(?<currentValue>.*?)\\s"
-            ],
-            "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
-        },
-        {
-            "datasourceTemplate": "helm",
-            "fileMatch": [
-                "kairos/bootstrap/templates/.+$"
-            ],
-            "matchStrings": [
-                "{{\\/\\*\\s+renovate:\\s+depName=(?<depName>.*?)(\\s+repoUrl=(?<registryUrl>.*?))?\\s+\\*\/}}\n{{-\\s+\\$version\\s+:=\\s+\"(?<currentValue>.*?)\"\\s+-}}"
-            ]
-        },
-        {
-            "fileMatch": [
-                "(.*/|^)kustomization\\.ya?ml"
-            ],
-            "matchStrings": [
-                "\\s*https://github.com/(?<depName>[^/]+/[^/]+)/.+/?ref=(?<currentValue>.+)\\s*",
-                "\\s*https://github.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>.+)/.+\\s*"
-            ],
-            "datasourceTemplate": "github-releases",
-            "versioningTemplate": "semver"
-        },
-        {
-            "fileMatch": [
-                "(.*/|^)cdk8s\\.ya?ml"
-            ],
-            "matchStrings": [
-                "helm:(?<registryUrl>.+)/(?<depName>.+)@(?<currentValue>.+)"
-            ],
-            "datasourceTemplate": "helm"
-        }
-    ]
+    {
+      "fileMatch": ["(.*/|^)kustomization\\.ya?ml", "(.*/|^)app\\.ts"],
+      "matchStrings": [
+        ".*https://github.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>.+)/.+"
+      ],
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver"
+    }
+  ]
 }
