@@ -1,4 +1,0 @@
-name: blocky
-namespace: k2-network
-dependsOn:
-  - metallb

@@ -1,9 +1,0 @@
-name: traefik
-namespace: k2-network
-dependsOn:
-  - crds
-  - cert-manager
-  - metallb
-ignoreDifferences:
-  - kind: IngressRoute
-    name: traefik-dashboard

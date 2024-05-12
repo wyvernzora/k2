@@ -1,6 +1,0 @@
-name: qbittorrent
-namespace: qbittorrent
-dependsOn:
-  - metallb
-  - traefik
-  - longhorn

@@ -1,5 +1,0 @@
-name: cert-manager
-namespace: k2-core
-dependsOn:
-  - crds
-  - 1password

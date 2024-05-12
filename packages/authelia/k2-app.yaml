@@ -1,6 +1,0 @@
-name: authelia
-namespace: k2-auth
-dependsOn:
-  - 1password
-  - glauth
-  - traefik

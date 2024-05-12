@@ -1,4 +1,0 @@
-name: 1password
-namespace: k2-core
-dependsOn:
-  - crds

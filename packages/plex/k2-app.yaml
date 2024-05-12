@@ -1,6 +1,0 @@
-name: plex
-namespace: plex
-dependsOn:
-  - metallb
-  - traefik
-  - longhorn

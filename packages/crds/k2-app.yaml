@@ -1,7 +1,0 @@
-name: crds
-namespace: k2-core
-autoSync: false
-ignoreDifferences:
-  - kind: CustomResourceDefinition
-    jsonPointers:
-      - /metadata/annotations
