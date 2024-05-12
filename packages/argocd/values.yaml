@@ -7,25 +7,6 @@ argo-cd:
       annotations:
         traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
       hostname: deploy.wyvernzora.io
-  repoServer:
-    extraContainers:
-      - name: k2-plugin
-        image: ghcr.io/wyvernzora/k2-argocd-plugin:latest
-        command:
-          - /var/run/argocd/argocd-cmp-server
-        volumeMounts:
-          - name: var-files
-            mountPath: /var/run/argocd
-          - name: plugins
-            mountPath: /home/argocd/cmp-server/plugins
-          - name: k2-working-dir
-            mountPath: /tmp
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 999
-    volumes:
-      - name: k2-working-dir
-        emptyDir: {}
   configs:
     params:
       # Let ingress handle TLS termination

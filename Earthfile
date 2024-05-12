@@ -4,10 +4,6 @@ ansible:
     FROM DOCKERFILE -f containers/ansible/Dockerfile .
     SAVE IMAGE ghcr.io/wyvernzora/k2-ansible
 
-argocd-plugin:
-    FROM DOCKERFILE -f containers/argocd-plugin/Dockerfile .
-    SAVE IMAGE ghcr.io/wyvernzora/k2-argocd-plugin
-
 manifests:
     FROM DOCKERFILE -f containers/builder/Dockerfile .
     COPY . .
