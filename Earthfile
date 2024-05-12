@@ -8,4 +8,4 @@ manifests:
     FROM DOCKERFILE -f containers/builder/Dockerfile .
     COPY . .
     RUN npm ci && npm run build
-    SAVE ARTIFACT deploy/dist/* AS LOCAL deploy/dist/
+    SAVE ARTIFACT deploy/* AS LOCAL deploy/

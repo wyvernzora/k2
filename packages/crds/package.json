@@ -4,7 +4,6 @@
   "private": true,
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
     "./*": "./dist/*.ts",
     "./app.k8s.yaml": "./dist/manifest.k8s.yaml"
   },

@@ -10,3 +10,5 @@ tmp
 cdk.out
 .nx
 .DS_Store
+deploy/
+.tmp-earthly-out

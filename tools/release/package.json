@@ -1,26 +1,24 @@
 {
-  "name": "@k2/root",
+  "name": "@k2/release-tool",
   "version": "1.0.0",
-  "private": "true",
-  "exports": {
-    "./app.k8s.yaml": "./dist/app.k8s.yaml"
+  "private": true,
+  "bin": {
+    "k2-release": "bin/release.ts"
   },
   "scripts": {
-    "build": "cdk8s synth",
+    "build": "echo TODO",
     "test": "echo TODO",
     "clean": "rm -rf dist",
     "lint": "npm run eslint && npm run prettier -- --check",
     "lint:fix": "npm run eslint -- --fix && npm run prettier -- --write",
     "eslint": "eslint --ext .ts src",
-    "prettier": "prettier '**.{json,ya?ml}' '!dist/**'"
+    "prettier": "prettier 'src/**/*' '**.json'"
   },
   "dependencies": {
-    "@k2/crds": "1.0.0",
-    "@k2/cdk-lib": "1.0.0",
-    "cdk8s": "^2.68.22"
+    "@k2/argocd": "^1.0.0",
+    "find-workspaces": "^0.3.1"
   },
   "devDependencies": {
-    "cdk8s-cli": "^2.198.107",
-    "prettier": "^3.2.4"
+    "@k2/build-tools": "^1.0.0"
   }
 }

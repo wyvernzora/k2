@@ -43,7 +43,7 @@
   },
   "prettier": {},
   "scripts": {
-    "build": "nx run-many -t build",
+    "build": "nx run-many -t build && k2-release",
     "eslint": "eslint --ext .ts .",
     "prettier": "prettier '{apps,packages,tools}/**/*.ts' '**/*.yaml' '!**/templates/**/*.yaml'",
     "lint:check": "npm run eslint && npm run prettier -- --check",
