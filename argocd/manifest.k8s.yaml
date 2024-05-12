@@ -22445,20 +22445,6 @@ spec:
           runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
-      - command:
-        - /var/run/argocd/argocd-cmp-server
-        image: ghcr.io/wyvernzora/k2-argocd-plugin:latest
-        name: k2-plugin
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 999
-        volumeMounts:
-        - mountPath: /var/run/argocd
-          name: var-files
-        - mountPath: /home/argocd/cmp-server/plugins
-          name: plugins
-        - mountPath: /tmp
-          name: k2-working-dir
       initContainers:
       - command:
         - /bin/cp
@@ -22490,8 +22476,6 @@ spec:
                   app.kubernetes.io/name: argocd-repo-server
               topologyKey: kubernetes.io/hostname
       volumes:
-      - emptyDir: {}
-        name: k2-working-dir
       - name: helm-working-dir
         emptyDir: {}
       - name: plugins
