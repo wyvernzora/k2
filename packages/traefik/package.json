@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./manifest": "./dist/manifest.k8s.yaml"
+    "./app.k8s.yaml": "./dist/manifest.k8s.yaml",
+    "./crd": "@k2/crds/traefik.io"
   },
   "scripts": {
     "build": "k2-synth-helm k2-network traefik"
+  },
+  "dependencies": {
+    "@k2/crds": "^1.0.0"
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"

@@ -33,7 +33,7 @@
     {
       "fileMatch": [".*\\.ts"],
       "matchStrings": [
-        "helm!(?<registryUrl>.+)/(?<depName>[\\w-]+)\\?version=(?<currentValue>[\\w.]+)"
+        "helm:(?<registryUrl>.+)/(?<depName>[\\w-]+)@(?<currentValue>[\\w.]+)"
       ],
       "datasourceTemplate": "helm",
       "versioningTemplate": "helm"

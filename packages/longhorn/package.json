@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./manifest": "./dist/manifest.k8s.yaml"
+    "./app.k8s.yaml": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
     "build": "k2-synth-helm k2-storage longhorn"

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./manifest": "./dist/app.k8s.yaml"
+    "./app.k8s.yaml": "./dist/app.k8s.yaml",
+    "./crds.k8s.yaml": "./dist/crds.k8s.yaml"
   },
   "scripts": {
     "build": "k2-synth-cdk8s"

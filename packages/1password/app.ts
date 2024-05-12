@@ -22,8 +22,7 @@ const TOLERATE_CONTROL_PLANE = {
 const app = new K2App();
 new HelmChart(app, "1password", {
   namespace: "k2-core",
-  chart:
-    "helm!https://1password.github.io/connect-helm-charts/connect?version=1.15.0",
+  chart: "helm:https://1password.github.io/connect-helm-charts/connect@1.15.0",
   values: {
     connect: { ...TOLERATE_CONTROL_PLANE },
     operator: { create: true, ...TOLERATE_CONTROL_PLANE },

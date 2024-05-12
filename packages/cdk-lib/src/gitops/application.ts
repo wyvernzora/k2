@@ -118,7 +118,7 @@ function readApplicationProps(root: string, path: string): ApplicationProps {
 }
 
 function copyApplicationManifest(root: string, name: string): void {
-  const from = require.resolve(`@k2/${name}/manifest`);
+  const from = require.resolve(`@k2/${name}/app.k8s.yaml`);
   const to = resolve(root, "deploy/dist", name);
   mkdirSync(to, { recursive: true });
   copyFileSync(from, resolve(to, "manifest.k8s.yaml"));

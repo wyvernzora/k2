@@ -6,7 +6,7 @@
   "exports": {
     ".": "./dist/index.js",
     "./*": "./dist/*.ts",
-    "./manifest": "./dist/manifest.k8s.yaml"
+    "./app.k8s.yaml": "./dist/manifest.k8s.yaml"
   },
   "scripts": {
     "build": "k2-synth-crds",

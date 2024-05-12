@@ -16,13 +16,14 @@ export class HelmChartRef {
   readonly version?: string;
 
   constructor(value: string) {
-    if (!value.startsWith("helm!")) {
+    if (!value.startsWith("helm:")) {
       throw new Error(`HelmChartRef must start with 'helm!' marker`);
     }
     const url = new URL(value.substring(5));
     this.repo = `${url.protocol}//${url.host}${dirname(url.pathname)}`;
-    this.chart = `${basename(url.pathname)}`;
-    this.version = url.searchParams.get("version") || undefined;
+    const [chart, version] = basename(url.pathname).split("@");
+    this.chart = chart;
+    this.version = version;
   }
 }
 
@@ -47,6 +48,8 @@ export class HelmChart extends Chart {
       namespace: this.namespace,
       releaseName: name,
       values: props.values,
+      // Include CRDs so that K2 build process can handle them
+      helmFlags: ["--include-crds"],
       ...chartRef,
     });
   }
