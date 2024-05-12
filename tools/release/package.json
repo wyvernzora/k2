@@ -6,7 +6,6 @@
     "k2-release": "bin/release.ts"
   },
   "scripts": {
-    "build": "echo TODO",
     "test": "echo TODO",
     "clean": "rm -rf dist",
     "lint": "npm run eslint && npm run prettier -- --check",
