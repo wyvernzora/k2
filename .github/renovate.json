@@ -13,6 +13,7 @@
       "automerge": true
     }
   ],
+  "ignorePaths": ["**/node_modules/**", "**/cdk-lib/src/helm\\.ts"],
   "regexManagers": [
     {
       "fileMatch": ["(.*/|^)Earthfile$", "(.*/|^)Dockerfile"],
@@ -28,6 +29,14 @@
       ],
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "semver"
+    },
+    {
+      "fileMatch": [".*\\.ts"],
+      "matchStrings": [
+        "helm!(?<registryUrl>.+)/(?<depName>[\\w-]+)\\?version=(?<currentValue>[\\w.]+)"
+      ],
+      "datasourceTemplate": "helm",
+      "versioningTemplate": "helm"
     }
   ]
 }

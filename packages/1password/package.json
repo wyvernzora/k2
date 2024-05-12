@@ -13,13 +13,5 @@
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"
-  },
-  "helm": {
-    "repos": [
-      {
-        "name": "1password",
-        "url": "https://1password.github.io/connect-helm-charts"
-      }
-    ]
   }
 }
