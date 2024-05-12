@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import { OnePasswordItem } from "@k2/crds/onepassword.com";
+import { OnePasswordItem } from "@k2/1password/crds";
 import { ISecret, Secret } from "cdk8s-plus-28";
 
 export class GlauthUsers extends OnePasswordItem {

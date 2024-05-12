@@ -29,7 +29,7 @@ export class HelmChartRef {
 
 export interface HelmChartProps extends ChartProps {
   readonly chart: HelmChartRef | string;
-  readonly values: HelmProps["values"];
+  readonly values?: HelmProps["values"];
 }
 
 /**

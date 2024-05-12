@@ -1,4 +1,4 @@
-import { Application } from "@k2/argocd";
+import { Application } from "@k2/argocd/crds";
 import { K2App } from "@k2/cdk-lib";
 import { Collector, Artifacts } from "./collector";
 import { Chart } from "cdk8s";

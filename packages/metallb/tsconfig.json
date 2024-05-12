@@ -1,0 +1,3 @@
+{
+  "extends": "@k2/build-tools/tsconfig"
+}

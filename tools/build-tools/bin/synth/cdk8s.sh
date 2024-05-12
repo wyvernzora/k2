@@ -1,13 +1,9 @@
 #!/bin/sh
 set -e
 
-# Add helm repos if any are requested
-jq -r '.helm.repos // [] | .[] | [.name, .url] | @tsv' package.json |
-while IFS=$'\t' read -r name url; do
-    helm repo add "$name" "$url"
-done
+ENTRYPOINT="${1:-"app.ts"}"
 
-ts-node app.ts
+ts-node "$ENTRYPOINT"
 
 # Split CRDs out into a separate manifest for independent management
 yq eval 'select(.kind == "CustomResourceDefinition")' dist/app.k8s.yaml > dist/crds.k8s.yaml

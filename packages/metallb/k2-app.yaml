@@ -1,4 +1,0 @@
-name: metallb
-namespace: k2-network
-dependsOn:
-  - crds
