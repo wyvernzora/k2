@@ -188,37 +188,6 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-  name: metallb
-  namespace: k2-core
-spec:
-  destination:
-    namespace: k2-network
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: metallb
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 10m
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
   name: reflector
   namespace: k2-core
 spec:
@@ -374,15 +343,15 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
-  name: glauth
+  name: metallb
   namespace: k2-core
 spec:
   destination:
-    namespace: k2-auth
+    namespace: k2-network
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: glauth
+    path: metallb
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -507,6 +476,37 @@ spec:
   project: default
   source:
     path: system-upgrade
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
+      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  name: glauth
+  namespace: k2-core
+spec:
+  destination:
+    namespace: k2-auth
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: glauth
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
