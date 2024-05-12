@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
 
-cdk8s synth
+ts-node app.ts

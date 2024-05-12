@@ -5,7 +5,6 @@ import Debug from "debug";
 import { dirname, resolve } from "path";
 import { copyFileSync, mkdirSync, readFileSync } from "fs";
 import YAML from "yaml";
-import fg from "fast-glob";
 
 const LOG = Debug("k2:app:application");
 
@@ -21,10 +20,7 @@ type SyncPolicy = argo.ApplicationSpecSyncPolicy;
 type HelmOptions = argo.ApplicationSpecSourceHelm;
 type IgnoreDifferences = argo.ApplicationSpecIgnoreDifferences;
 
-export type ApplicationType = "cdk8s" | "helm" | "kustomize";
-
 export interface ApplicationProps {
-  readonly type: ApplicationType;
   readonly name: string;
   readonly namespace: string;
   readonly repo?: string;
@@ -41,7 +37,6 @@ export interface ApplicationProps {
 export class Application extends argo.Application {
   public syncWave: number = 0;
   public readonly name: string;
-  public readonly type: ApplicationType;
   public readonly dependsOn: Array<string>;
 
   constructor(scope: Construct, id: string, props: ApplicationProps) {
@@ -71,7 +66,6 @@ export class Application extends argo.Application {
       },
     });
     this.name = props.name;
-    this.type = props.type;
     this.dependsOn = props.dependsOn || [];
   }
 
@@ -120,7 +114,6 @@ function readApplicationProps(root: string, path: string): ApplicationProps {
   return {
     ...YAML.parse(data),
     path: dirname(path),
-    type: determineApplicationType(dirname(abspath)),
   } as ApplicationProps;
 }
 
@@ -129,20 +122,4 @@ function copyApplicationManifest(root: string, name: string): void {
   const to = resolve(root, "deploy/dist", name);
   mkdirSync(to, { recursive: true });
   copyFileSync(from, resolve(to, "manifest.k8s.yaml"));
-}
-
-function determineApplicationType(path: string): ApplicationType {
-  if (fg.sync("cdk8s.{yaml,yml,json}", { cwd: path }).length > 0) {
-    return "cdk8s";
-  }
-  if (fg.sync("Chart.{yaml,yml}", { cwd: path }).length > 0) {
-    return "helm";
-  }
-  if (
-    fg.sync(["Kustomization", "kustomization.{yaml,yml}"], { cwd: path })
-      .length > 0
-  ) {
-    return "kustomize";
-  }
-  throw new Error(`unable to determine application type for ${path}`);
 }

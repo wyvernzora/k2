@@ -40,7 +40,7 @@ export class Collector extends Construct {
     LOG(`found ${appFiles.length} applications`, appFiles);
     for (const appFile of appFiles) {
       const app = Application.fromAppFile(this, this.root, appFile);
-      LOG(`adding ${app.name} of type ${app.type} from ${appFile}`);
+      LOG(`adding ${app.name} from ${appFile}`);
       this.addApplication(app);
     }
   }
