@@ -157,38 +157,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
-  name: crds
-  namespace: k2-core
-spec:
-  destination:
-    namespace: k2-core
-    server: https://kubernetes.default.svc
-  ignoreDifferences:
-    - jsonPointers:
-        - /metadata/annotations
-      kind: CustomResourceDefinition
-  project: default
-  source:
-    path: crds
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 10m
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
     argocd.argoproj.io/sync-wave: "3"
   name: glauth
   namespace: k2-core
@@ -518,6 +486,38 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    retry:
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
+      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  name: crds
+  namespace: k2-core
+spec:
+  destination:
+    namespace: k2-core
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - jsonPointers:
+        - /metadata/annotations
+      kind: CustomResourceDefinition
+  project: default
+  source:
+    path: crds
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
     retry:
       backoff:
         duration: 30s
