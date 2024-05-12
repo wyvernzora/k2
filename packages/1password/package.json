@@ -3,12 +3,24 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./manifest": "./dist/manifest.k8s.yaml"
+    "./manifest": "./dist/app.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-synth-helm k2-core 1password"
+    "prebuild": "helm repo add 1password https://1password.github.io/connect-helm-charts",
+    "build": "k2-synth-cdk8s"
+  },
+  "dependencies": {
+    "@k2/cdk-lib": "^1.0.0"
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"
+  },
+  "helm": {
+    "repos": [
+      {
+        "name": "1password",
+        "url": "https://1password.github.io/connect-helm-charts"
+      }
+    ]
   }
 }
