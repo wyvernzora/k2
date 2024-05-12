@@ -10,5 +10,13 @@
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"
+  },
+  "helm": {
+    "repos": [
+      {
+        "name": "emberstack",
+        "url": "https://emberstack.github.io/helm-charts"
+      }
+    ]
   }
 }

@@ -10,5 +10,13 @@
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"
+  },
+  "helm": {
+    "repos": [
+      {
+        "name": "metallb",
+        "url": "https://metallb.github.io/metallb"
+      }
+    ]
   }
 }

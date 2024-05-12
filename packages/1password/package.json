@@ -6,7 +6,6 @@
     "./manifest": "./dist/app.k8s.yaml"
   },
   "scripts": {
-    "prebuild": "helm repo add 1password https://1password.github.io/connect-helm-charts",
     "build": "k2-synth-cdk8s"
   },
   "dependencies": {
