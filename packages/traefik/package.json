@@ -4,23 +4,19 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./app.k8s.yaml": "./dist/manifest.k8s.yaml"
+    "./crds": "./dist/traefik.io.ts",
+    "./app.k8s.yaml": "./dist/app.k8s.yaml",
+    "./crds.k8s.yaml": "./dist/crds.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-synth-helm k2-network traefik"
+    "prebuild": "k2-synth-cdk8s bootstrap.ts",
+    "build": "k2-synth-cdk8s"
   },
   "dependencies": {
-    "@k2/crds": "^1.0.0"
+    "@k2/cert-manager": "^1.0.0",
+    "@k2/cdk-lib": "^1.0.0"
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"
-  },
-  "helm": {
-    "repos": [
-      {
-        "name": "traefik",
-        "url": "https://traefik.github.io/charts"
-      }
-    ]
   }
 }

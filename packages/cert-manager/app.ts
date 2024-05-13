@@ -25,6 +25,9 @@ const credentials = new OnePasswordItem(chart, "aws-credentials", {
  * Cluster issues using Let's Encrypt and AWS Route53 DNS01 challenge
  */
 new ClusterIssuer(chart, "letsencrypt-prod", {
+  metadata: {
+    name: "letsencrypt-prod",
+  },
   spec: {
     acme: {
       email: "wyvernzora+letsencrypt@gmail.com",
