@@ -1,6 +1,0 @@
-longhorn:
-  ingress:
-    enabled: true
-    host: lh.wyvernzora.io
-    annotations:
-      traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
