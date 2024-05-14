@@ -4,20 +4,15 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./app.k8s.yaml": "./dist/manifest.k8s.yaml"
+    "./app.k8s.yaml": "./dist/app.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-synth-helm k2-network kube-vip"
+    "build": "k2-synth-cdk8s"
+  },
+  "dependencies": {
+    "@k2/cdk-lib": "^1.0.0"
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"
-  },
-  "helm": {
-    "repos": [
-      {
-        "name": "kube-vip",
-        "url": "https://kube-vip.github.io/helm-charts"
-      }
-    ]
   }
 }
