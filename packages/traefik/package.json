@@ -1,6 +1,5 @@
 {
   "name": "@k2/traefik",
-  "namespace": "k2-network",
   "version": "1.0.0",
   "private": true,
   "exports": {
@@ -17,5 +16,8 @@
   },
   "devDependencies": {
     "@k2/build": "^1.0.0"
+  },
+  "deploy": {
+    "namespace": "k2-network"
   }
 }

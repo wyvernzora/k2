@@ -1,6 +1,5 @@
 {
   "name": "@k2/longhorn",
-  "namespace": "k2-storage",
   "version": "1.0.0",
   "private": true,
   "exports": {
@@ -16,5 +15,8 @@
   },
   "devDependencies": {
     "@k2/build": "^1.0.0"
+  },
+  "deploy": {
+    "namespace": "k2-storage"
   }
 }

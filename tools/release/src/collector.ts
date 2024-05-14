@@ -8,6 +8,7 @@ import { copyFile, mkdir } from "fs/promises";
 import { resolve } from "path";
 import { Node, toposort } from "./toposort";
 import debug from "debug";
+import { DeployOptions } from "./deploy-options";
 
 const LOG = debug("k2:release");
 
@@ -26,6 +27,7 @@ export interface Artifacts {
   readonly package: string;
   readonly exports: Set<string>;
   readonly hasManifests: boolean;
+  readonly deployOptions: DeployOptions;
 }
 
 export interface CollectorProps {
@@ -72,6 +74,7 @@ export class Collector {
         package: ws.package.name,
         hasManifests: hasManifests,
         exports: exports,
+        deployOptions: ws.package.deploy || {},
       },
       get id() {
         return ws.package.name;

@@ -1,7 +1,9 @@
 {
   "name": "@k2/1password",
-  "namespace": "k2-core",
   "version": "1.0.0",
+  "deploy": {
+    "namespace": "k2-core"
+  },
   "private": true,
   "exports": {
     "./crds": "./dist/onepassword.com.ts",

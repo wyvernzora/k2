@@ -1,6 +1,5 @@
 {
   "name": "@k2/metallb",
-  "namespace": "k2-network",
   "version": "1.0.0",
   "private": true,
   "exports": {
@@ -22,6 +21,16 @@
       {
         "name": "metallb",
         "url": "https://metallb.github.io/metallb"
+      }
+    ]
+  },
+  "deploy": {
+    "namespace": "k2-network",
+    "ignoreDifferences": [
+      {
+        "group": "apiextensions.k8s.io",
+        "kind": "CustomResourceDefinition",
+        "jsonPointers": ["/spec/conversion/webhook/clientConfig/caBundle"]
       }
     ]
   }

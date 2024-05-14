@@ -2,6 +2,7 @@ import { Application } from "@k2/argocd/crds";
 import { K2App } from "@k2/cdk-lib";
 import { Collector, Artifacts } from "./collector";
 import { Chart } from "cdk8s";
+import { DefaultDeployOptions } from "./deploy-options";
 
 export class RootApplication extends K2App {
   private readonly chart: Chart;
@@ -23,6 +24,11 @@ export class RootApplication extends K2App {
   }
 
   private createApplication(wave: number, app: Artifacts) {
+    const options = {
+      ...DefaultDeployOptions,
+      ...app.deployOptions,
+    };
+
     new Application(this.chart, `${app.name}`, {
       metadata: {
         name: app.name,
@@ -39,8 +45,9 @@ export class RootApplication extends K2App {
         },
         destination: {
           server: "https://kubernetes.default.svc",
-          namespace: app.namespace,
+          namespace: options.namespace,
         },
+        ignoreDifferences: [...options.ignoreDifferences!],
         syncPolicy: {
           syncOptions: [
             "CreateNamespace=true",
@@ -49,7 +56,7 @@ export class RootApplication extends K2App {
           ],
           automated: {
             prune: true,
-            selfHeal: true,
+            selfHeal: options.autoSync,
           },
           retry: {
             limit: 10,
