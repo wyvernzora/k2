@@ -2,37 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
-  name: crds
-  namespace: k2-core
-spec:
-  destination:
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: crds
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 10m
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: 1password
   namespace: k2-core
 spec:
@@ -63,7 +33,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: blocky
   namespace: k2-core
 spec:
@@ -94,7 +64,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: k8s-gateway
   namespace: k2-core
 spec:
@@ -125,7 +95,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: kube-vip
   namespace: k2-core
 spec:
@@ -156,38 +126,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
-  name: longhorn
-  namespace: k2-core
-spec:
-  destination:
-    namespace: k2-storage
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: longhorn
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 10m
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: metallb
   namespace: k2-core
 spec:
@@ -218,7 +157,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: plex
   namespace: k2-core
 spec:
@@ -249,38 +188,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
-  name: qbittorrent
-  namespace: k2-core
-spec:
-  destination:
-    namespace: qbittorrent
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: qbittorrent
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 10m
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: reflector
   namespace: k2-core
 spec:
@@ -311,38 +219,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
-  name: sonarr
-  namespace: k2-core
-spec:
-  destination:
-    namespace: sonarr
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: sonarr
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 10m
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "2"
   name: system-upgrade
   namespace: k2-core
 spec:
@@ -373,7 +250,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-wave: "3"
   name: cert-manager
   namespace: k2-core
 spec:
@@ -404,7 +281,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-wave: "3"
   name: glauth
   namespace: k2-core
 spec:
@@ -435,7 +312,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "4"
   name: traefik
   namespace: k2-core
 spec:
@@ -445,6 +322,37 @@ spec:
   project: default
   source:
     path: traefik
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
+      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  name: authelia
+  namespace: k2-core
+spec:
+  destination:
+    namespace: k2-auth
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: authelia
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -498,15 +406,77 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "6"
-  name: authelia
+  name: longhorn
   namespace: k2-core
 spec:
   destination:
-    namespace: k2-auth
+    namespace: k2-storage
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: authelia
+    path: longhorn
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
+      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  name: qbittorrent
+  namespace: k2-core
+spec:
+  destination:
+    namespace: qbittorrent
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: qbittorrent
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 10m
+      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  name: sonarr
+  namespace: k2-core
+spec:
+  destination:
+    namespace: sonarr
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: sonarr
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
