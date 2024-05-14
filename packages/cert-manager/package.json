@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
+    ".": "./lib/index.ts",
     "./crds": "./dist/cert-manager.io.ts",
     "./app.k8s.yaml": "./dist/app.k8s.yaml",
     "./crds.k8s.yaml": "./dist/crds.k8s.yaml"

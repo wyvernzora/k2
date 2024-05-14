@@ -1,8 +1,19 @@
 import { K2App, HelmChart } from "@k2/cdk-lib";
-import { OnePasswordItem } from "@k2/1password/crds";
-import { ClusterIssuer } from "@k2/cert-manager/crds";
+import { K2Secret } from "@k2/1password";
+import { K2Issuer, K2Certificate } from "@k2/cert-manager";
 
 const app = new K2App();
+
+// Reflector chart to copy secrets across namespaces
+new HelmChart(app, "reflector", {
+  namespace: "k2-core",
+  chart: "helm:https://emberstack.github.io/helm-charts/reflector@7.1.262",
+  values: {
+    priorityClassName: "system-cluster-critical",
+  },
+});
+
+// Cert Manager chart
 const chart = new HelmChart(app, "cert-manager", {
   namespace: "k2-core",
   chart: "helm:https://charts.jetstack.io/cert-manager@v1.14.5",
@@ -12,51 +23,17 @@ const chart = new HelmChart(app, "cert-manager", {
 });
 
 /**
- * AWS credentials for Route53 access
+ * Cluster issues using Let's Encrypt and AWS Route53 DNS01 challenge
  */
-const credentials = new OnePasswordItem(chart, "aws-credentials", {
-  spec: {
-    itemPath:
-      "vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/hxitqr6xcco7g2ne3n7m6kkoqa",
-  },
+const issuer = new K2Issuer(chart, "issuer", {
+  credentials: new K2Secret(chart, "aws-credentials", {
+    itemId: "hxitqr6xcco7g2ne3n7m6kkoqa",
+  }),
 });
 
 /**
- * Cluster issues using Let's Encrypt and AWS Route53 DNS01 challenge
+ * Default certificate instance
  */
-new ClusterIssuer(chart, "letsencrypt-prod", {
-  metadata: {
-    name: "letsencrypt-prod",
-  },
-  spec: {
-    acme: {
-      email: "wyvernzora+letsencrypt@gmail.com",
-      privateKeySecretRef: {
-        name: "letsencrypt-prod-privkey",
-      },
-      server: "https://acme-v02.api.letsencrypt.org/directory",
-      solvers: [
-        {
-          selector: {
-            dnsZones: ["wyvernzora.io"],
-          },
-          dns01: {
-            route53: {
-              region: "us-west-2",
-              accessKeyIdSecretRef: {
-                name: credentials.name,
-                key: "access-key-id",
-              },
-              secretAccessKeySecretRef: {
-                name: credentials.name,
-                key: "secret-access-key",
-              },
-            },
-          },
-        },
-      ],
-    },
-  },
-});
+new K2Certificate(chart, "cert", { issuer });
 
 app.synth();

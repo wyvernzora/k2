@@ -1,5 +1,5 @@
 import { K2App, HelmChart } from "@k2/cdk-lib";
-import { Certificate } from "@k2/cert-manager/crds";
+import { K2Certificate } from "@k2/cert-manager";
 import { TlsStore } from "@k2/traefik/crds";
 
 const TOLERATE_CONTROL_PLANE = {
@@ -62,31 +62,6 @@ const chart = new HelmChart(app, "traefik", {
 });
 
 /**
- * Default TLS Certificate
- */
-new Certificate(chart, "default-certificate", {
-  spec: {
-    commonName: "*.wyvernzora.io",
-    dnsNames: ["*.wyvernzora.io"],
-    issuerRef: {
-      kind: "ClusterIssuer",
-      name: "letsencrypt-prod",
-    },
-    secretName: "default-certificate",
-    secretTemplate: {
-      annotations: {
-        "reflector.v1.k8s.emberstack.com/reflection-allowed": "true",
-        "reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces":
-          "k2-auth,plex",
-        "reflector.v1.k8s.emberstack.com/reflection-auto-enabled": "true",
-        "reflector.v1.k8s.emberstack.com/reflection-auto-namespace":
-          "k2-auth,plex",
-      },
-    },
-  },
-});
-
-/**
  * Default TLS Store
  */
 new TlsStore(chart, "default", {
@@ -95,7 +70,7 @@ new TlsStore(chart, "default", {
   },
   spec: {
     defaultCertificate: {
-      secretName: "default-certificate",
+      secretName: K2Certificate.Name,
     },
   },
 });
