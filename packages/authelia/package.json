@@ -8,7 +8,7 @@
     "./app.k8s.yaml": "./dist/app.k8s.yaml"
   },
   "scripts": {
-    "build": "k2-synth-cdk8s"
+    "build": "k2-build"
   },
   "dependencies": {
     "@k2/cdk-lib": "^1.0.0",
@@ -16,6 +16,6 @@
     "@k2/traefik": "^1.0.0"
   },
   "devDependencies": {
-    "@k2/build-tools": "^1.0.0"
+    "@k2/build": "^1.0.0"
   }
 }

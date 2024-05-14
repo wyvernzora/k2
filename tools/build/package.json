@@ -1,12 +1,9 @@
 {
-  "name": "@k2/build-tools",
+  "name": "@k2/build",
   "version": "1.0.0",
   "private": true,
   "bin": {
-    "k2-synth-helm": "bin/synth/helm.sh",
-    "k2-synth-cdk8s": "bin/synth/cdk8s.sh",
-    "k2-synth-crds": "bin/synth/crds.sh",
-    "k2-synth-kustomize": "bin/synth/kustomize.sh"
+    "k2-build": "bin/build.sh"
   },
   "exports": {
     "./tsconfig": "./tsconfig.json"

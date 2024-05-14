@@ -1,5 +1,5 @@
 {
-  "extends": "@k2/build-tools/tsconfig",
+  "extends": "@k2/build/tsconfig",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "dist"
