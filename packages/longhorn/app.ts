@@ -1,4 +1,5 @@
 import { K2App, HelmChart } from "@k2/cdk-lib";
+import * as authelia from "@k2/authelia";
 
 const app = new K2App();
 new HelmChart(app, "longhorn", {
@@ -9,8 +10,7 @@ new HelmChart(app, "longhorn", {
       enabled: true,
       host: "lh.wyvernzora.io",
       annotations: {
-        "traefik.ingress.kubernetes.io/router.middlewares":
-          "k2-auth-authelia@kubernetescrd",
+        ...authelia.MiddlewareAnnotation,
       },
     },
   },

@@ -11,7 +11,8 @@
     "build": "k2-synth-cdk8s"
   },
   "dependencies": {
-    "@k2/cdk-lib": "^1.0.0"
+    "@k2/cdk-lib": "^1.0.0",
+    "@k2/authelia": "^1.0.0"
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@k2/cdk-lib": "^1.0.0",
+    "@k2/authelia": "^1.0.0",
     "cdk8s": "^2.68.22",
     "cdk8s-plus-28": "^2.0.8"
   },

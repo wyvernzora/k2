@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@k2/cdk-lib": "^1.0.0",
-    "@k2/traefik": "^1.0.0"
+    "@k2/traefik": "^1.0.0",
+    "@k2/authelia": "^1.0.0"
   },
   "devDependencies": {
     "@k2/build-tools": "^1.0.0"

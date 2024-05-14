@@ -2,6 +2,7 @@ import { Chart } from "cdk8s";
 import { Construct } from "constructs";
 import { Deployment, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
 import { SonarrDeployment, SonarrDeploymentProps } from "./deployment";
+import { AuthenticatedIngress } from "@k2/authelia";
 
 export interface SonarrChartProps {
   readonly host: string;
@@ -25,13 +26,7 @@ export class SonarrChart extends Chart {
         },
       ],
     });
-    this.ingress = new Ingress(this, "ingress", {
-      metadata: {
-        annotations: {
-          "traefik.ingress.kubernetes.io/router.middlewares":
-            "k2-auth-authelia@kubernetescrd",
-        },
-      },
+    this.ingress = new AuthenticatedIngress(this, "ingress", {
       rules: [
         {
           host: props.host,
