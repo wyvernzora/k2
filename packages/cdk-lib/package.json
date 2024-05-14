@@ -14,7 +14,6 @@
     "prettier": "prettier 'src/**/*' '**.json'"
   },
   "dependencies": {
-    "@k2/crds": "^1.0.0",
     "common-tags": "^1.8.2"
   },
   "devDependencies": {
