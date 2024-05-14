@@ -1,5 +1,0 @@
-k8s-gateway:
-  domain: wyvernzora.io
-  replicaCount: 3
-  service:
-    type: ClusterIP
