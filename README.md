@@ -1,7 +1,7 @@
 <div align="center">
     <br>
     <br>
-    <img width="182" src=".github/assets/k2.png">
+    <img width="256" src=".github/assets/k2.png">
     <h1 align="center">K2</h1>
 </div>
 
@@ -16,9 +16,11 @@
 # Ansible
 
 ### Why containers?
+
 Repeatability. I have previously encountered issues setting up Ansible on my local machine, then making sure that its version is just right, then gathering all the dependencies and making sure their versions are just right. With containers everything is bundled in. If it works now, it will continue working down the line, just a `docker run` away.
 
 ### Ansible Roles
+
 | Role                                           | Description                                                   |
 | ---------------------------------------------- | ------------------------------------------------------------- |
 | [`k2.fish`](ansible/roles/k2.fish)             | Set up Fish shell just the way I like it                      |
