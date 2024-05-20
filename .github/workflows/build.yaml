@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    concurrency:
+      group: build-manifests
+      cancel-in-progress: true
     steps:
       - name: Setup earthly
         uses: earthly/actions-setup@v1
@@ -25,3 +28,4 @@ jobs:
           BRANCH: deploy
           FOLDER: deploy
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_EMPTY_COMMITS: true
