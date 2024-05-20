@@ -5,7 +5,7 @@ import { basename, dirname } from "path";
 /**
  * Represents a reference to a Helm chart, including its repository and version.
  * Created from a reference string that looks like the following:
- *   helm!https://github.com/example/repo/chart-name?version=1.2.3
+ *   helm:https://github.com/example/repo/chart-name@1.2.3
  * The rationale for introducing this is to make it easier for dependency management
  * tools such as Renovate detect and update Helm chart references in what are normally
  * considered source code files.
@@ -17,7 +17,7 @@ export class HelmChartRef {
 
   constructor(value: string) {
     if (!value.startsWith("helm:")) {
-      throw new Error(`HelmChartRef must start with 'helm!' marker`);
+      throw new Error(`HelmChartRef must start with 'helm:' marker`);
     }
     const url = new URL(value.substring(5));
     this.repo = `${url.protocol}//${url.host}${dirname(url.pathname)}`;
