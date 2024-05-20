@@ -16,11 +16,7 @@ export class ConfigMap extends base.ConfigMap {
 
   private computeChecksum(): string {
     const data = stringify(this.data);
-    console.log(data);
-
     const binary = stringify(this.binaryData);
-    console.log(binary);
-
     return hash("sha256", `${data}${binary}`, "hex");
   }
 
