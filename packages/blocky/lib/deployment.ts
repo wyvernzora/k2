@@ -11,6 +11,7 @@ export interface BlockyDeploymentProps {
 export class BlockyDeployment extends Deployment {
   constructor(scope: Construct, id: string, props: BlockyDeploymentProps) {
     super(scope, id, { replicas: props.replicas });
+    props.config.addChecksumTo(this);
     const configVolume = Volume.fromConfigMap(this, "config", props.config);
     this.addBlockyContainer(configVolume);
   }
