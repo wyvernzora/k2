@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import { Chart, ChartProps, Helm, HelmProps } from "cdk8s";
+import * as base from "cdk8s";
 import { basename, dirname } from "path";
 
 /**
@@ -27,30 +27,70 @@ export class HelmChartRef {
   }
 }
 
-export interface HelmChartProps extends ChartProps {
+export interface HelmProps {
+  /**
+   * Reference to a Helm chart.
+   * Must be a {@link HelmChartRef} or a string that can be made into one.
+   */
   readonly chart: HelmChartRef | string;
-  readonly values?: HelmProps["values"];
+  /**
+   * Namespace to deploy the Helm chart to.
+   * @default undefined
+   */
+  readonly namespace?: string;
+  /**
+   * Values to supply to the helm chart, if any.
+   * @default undefined
+   */
+  readonly values?: base.HelmProps["values"];
+  /**
+   * If true, the helm chart will include CRDs.
+   * @default true
+   */
+  readonly includeCRD?: boolean;
 }
 
 /**
- * HelmChart synthesizes a chart specified by HelmChartRef.
+ * Extended version of the Helm construct that uses the special Helm chart reference
+ * string as input. See {@link HelmChartRef}
  */
-export class HelmChart extends Chart {
-  readonly helm: Helm;
-  constructor(scope: Construct, name: string, props: HelmChartProps) {
-    super(scope, name, props);
-    const chartRef =
+export class Helm extends base.Helm {
+  constructor(scope: Construct, name: string, props: HelmProps) {
+    const chart =
       typeof props.chart === "string"
         ? new HelmChartRef(props.chart)
         : props.chart;
 
-    this.helm = new Helm(this, "helm", {
-      namespace: this.namespace,
+    super(scope, name, {
+      namespace: props.namespace,
       releaseName: name,
       values: props.values,
-      // Include CRDs so that K2 build process can handle them
-      helmFlags: ["--include-crds"],
-      ...chartRef,
+      helmFlags: Helm.buildFlags(props),
+      ...chart,
+    });
+  }
+
+  private static buildFlags(props: HelmProps): string[] {
+    const result = [];
+    if (props.includeCRD !== false) {
+      result.push("--include-crds");
+    }
+    return result;
+  }
+}
+
+export interface HelmChartProps extends base.ChartProps, HelmProps {}
+
+/**
+ * HelmChart synthesizes a Chart specified by HelmChartRef.
+ */
+export class HelmChart extends base.Chart {
+  readonly helm: Helm;
+  constructor(scope: Construct, name: string, props: HelmChartProps) {
+    super(scope, name, props);
+    this.helm = new Helm(this, name, {
+      namespace: this.namespace,
+      ...props,
     });
   }
 }
