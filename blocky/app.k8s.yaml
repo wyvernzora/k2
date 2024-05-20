@@ -39,6 +39,8 @@ immutable: false
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    checksum/config: 667f4f3b8d8f4e95a8a741c743a516ed808cc67f8987ca6dbdd188f5ea7b2df3
   name: blocky-depl-c878fc6f
 spec:
   minReadySeconds: 0
