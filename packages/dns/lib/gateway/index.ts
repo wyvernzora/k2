@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import { ServiceType } from "cdk8s-plus-28";
-import { Helm, NodeAffinity, Toleration } from "@k2/cdk-lib";
+import { Helm } from "@k2/cdk-lib";
 
 export interface K8sGatewayProps {
   /**
@@ -31,11 +31,6 @@ export class K8sGateway extends Helm {
         service: {
           type: ServiceType.CLUSTER_IP,
         },
-        affinity: NodeAffinity.PREFER_CONTROL_PLANE,
-        tolerations: [
-          ...Toleration.ALLOW_CONTROL_PLANE,
-          ...Toleration.ALLOW_CRITICAL_ADDONS_ONLY,
-        ],
       },
     });
   }
