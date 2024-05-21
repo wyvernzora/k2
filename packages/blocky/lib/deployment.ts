@@ -2,6 +2,7 @@ import { Cpu, Deployment, Protocol, Volume } from "cdk8s-plus-28";
 import { BlockyConfig } from "./config";
 import { Construct } from "constructs";
 import { Size } from "cdk8s";
+import { oci } from "@k2/cdk-lib";
 
 export interface BlockyDeploymentProps {
   readonly replicas: number;
@@ -19,7 +20,7 @@ export class BlockyDeployment extends Deployment {
   private addBlockyContainer(config: Volume): void {
     this.addContainer({
       name: "blocky",
-      image: "ghcr.io/0xerr0r/blocky",
+      image: oci`ghcr.io/0xerr0r/blocky:v0.23`,
       ports: [
         {
           name: "dns-udp",

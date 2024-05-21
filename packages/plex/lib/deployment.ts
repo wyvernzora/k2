@@ -1,4 +1,4 @@
-import { K2Volumes } from "@k2/cdk-lib";
+import { K2Volumes, oci } from "@k2/cdk-lib";
 import { Construct } from "constructs";
 import {
   ConfigMap,
@@ -45,7 +45,7 @@ export class PlexDeployment extends Deployment {
   private addPlexContainer(props: Props): void {
     this.addContainer({
       name: "plex-media-server",
-      image: "plexinc/pms-docker:1.40.2.8395-c67dce28e",
+      image: oci`plexinc/pms-docker:1.40.2.8395-c67dce28e`,
       ports: [
         {
           name: "http-internal",

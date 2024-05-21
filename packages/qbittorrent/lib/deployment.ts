@@ -1,4 +1,4 @@
-import { K2Volumes } from "@k2/cdk-lib";
+import { K2Volumes, oci } from "@k2/cdk-lib";
 import { Construct } from "constructs";
 import {
   Cpu,
@@ -40,7 +40,7 @@ export class QBitTorrentDeployment extends Deployment {
 
   private addQbitTorrentContainer(mounts: Iterable<VolumeMount>): void {
     this.addContainer({
-      image: "ghcr.io/hotio/qbittorrent:release-4.6.3",
+      image: oci`ghcr.io/hotio/qbittorrent:release-4.6.3`,
       ports: [
         {
           name: "http",

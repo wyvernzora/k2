@@ -37,6 +37,12 @@
       ],
       "datasourceTemplate": "helm",
       "versioningTemplate": "helm"
+    },
+    {
+      "fileMatch": [".*\\.ts"],
+      "matchStrings": ["oci`(?<depName>.+):(?<currentValue>.+)`"],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ]
 }

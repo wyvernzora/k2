@@ -5,7 +5,7 @@ import {
   VolumeMount,
 } from "cdk8s-plus-28";
 import { Construct } from "constructs";
-import { K2Volume, K2Volumes } from "@k2/cdk-lib";
+import { K2Volume, K2Volumes, oci } from "@k2/cdk-lib";
 import { Size } from "cdk8s";
 
 export interface SonarrDeploymentProps {
@@ -39,7 +39,7 @@ export class SonarrDeployment extends Deployment {
 
   private addSonarrContainer(mounts: Iterable<VolumeMount>): void {
     this.addContainer({
-      image: "quay.io/linuxserver.io/sonarr:4.0.1",
+      image: oci`quay.io/linuxserver.io/sonarr:4.0.1`,
       ports: [
         {
           name: "http",

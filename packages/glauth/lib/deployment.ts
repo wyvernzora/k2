@@ -2,6 +2,7 @@ import { GlauthConfig } from "./config";
 import { Deployment, Protocol, Volume } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { GlauthUsers } from "./users";
+import { oci } from "@k2/cdk-lib";
 
 export interface GlauthDeploymentProps {
   readonly config: GlauthConfig;
@@ -19,7 +20,7 @@ export class GlauthDeployment extends Deployment {
   private addGlauthContainer(config: Volume, users: Volume): void {
     this.addContainer({
       name: "glauth",
-      image: "glauth/glauth:v2.3.0",
+      image: oci`glauth/glauth:v2.3.0`,
       command: ["/app/glauth", "-c", "/app/conf.d/"],
       securityContext: {
         ensureNonRoot: false,

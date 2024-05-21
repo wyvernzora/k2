@@ -1,4 +1,5 @@
 export * from "./app";
-export * from "./helm";
-export * from "./volume";
 export * from "./config-map";
+export * from "./helm";
+export * from "./oci";
+export * from "./volume";
