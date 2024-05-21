@@ -1,7 +1,7 @@
-import { K2App } from "@k2/cdk-lib";
+import { App } from "@k2/cdk-lib";
 import { Chart, Include } from "cdk8s";
 
-const app = new K2App();
+const app = new App();
 new (class extends Chart {
   constructor() {
     super(app, "suc", {

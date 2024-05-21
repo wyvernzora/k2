@@ -1,8 +1,8 @@
-import { K2App, HelmChart } from "@k2/cdk-lib";
+import { App, HelmChart } from "@k2/cdk-lib";
 import { K2Secret } from "@k2/1password";
 import { K2Issuer, K2Certificate } from "@k2/cert-manager";
 
-const app = new K2App();
+const app = new App();
 
 // Reflector chart to copy secrets across namespaces
 new HelmChart(app, "reflector", {

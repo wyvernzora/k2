@@ -1,10 +1,10 @@
 import { Application } from "@k2/argocd/crds";
-import { K2App } from "@k2/cdk-lib";
+import { App } from "@k2/cdk-lib";
 import { Collector, Artifacts } from "./collector";
 import { Chart } from "cdk8s";
 import { DefaultDeployOptions } from "./deploy-options";
 
-export class RootApplication extends K2App {
+export class RootApplication extends App {
   private readonly chart: Chart;
 
   constructor(collector: Collector) {

@@ -1,4 +1,4 @@
-import { K2App, HelmChart } from "@k2/cdk-lib";
+import { App, HelmChart } from "@k2/cdk-lib";
 
 const TOLERATE_CONTROL_PLANE = {
   tolerations: [
@@ -19,7 +19,7 @@ const TOLERATE_CONTROL_PLANE = {
   ],
 };
 
-const app = new K2App();
+const app = new App();
 new HelmChart(app, "1password", {
   namespace: "k2-core",
   chart: "helm:https://1password.github.io/connect-helm-charts/connect@1.15.0",

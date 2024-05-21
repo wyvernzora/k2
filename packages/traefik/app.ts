@@ -1,4 +1,4 @@
-import { K2App, HelmChart } from "@k2/cdk-lib";
+import { App, HelmChart } from "@k2/cdk-lib";
 import { K2Certificate } from "@k2/cert-manager";
 import { TlsStore } from "@k2/traefik/crds";
 
@@ -21,7 +21,7 @@ const TOLERATE_CONTROL_PLANE = {
   ],
 };
 
-const app = new K2App();
+const app = new App();
 const chart = new HelmChart(app, "traefik", {
   namespace: "k2-network",
   chart: "helm:https://traefik.github.io/charts/traefik@28.0.0",

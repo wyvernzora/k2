@@ -1,10 +1,8 @@
-import { App, Size, YamlOutputType } from "cdk8s";
+import { Size } from "cdk8s";
 import { SonarrChart } from "./lib/chart";
-import { K2Volume } from "@k2/cdk-lib";
+import { App, K2Volume } from "@k2/cdk-lib";
 
-const app = new App({
-  yamlOutputType: YamlOutputType.FILE_PER_APP,
-});
+const app = new App();
 
 new SonarrChart(app, "sonarr", {
   host: "sonarr.wyvernzora.io",

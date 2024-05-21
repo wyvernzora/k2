@@ -1,7 +1,7 @@
-import { K2App, HelmChart } from "@k2/cdk-lib";
+import { App, HelmChart } from "@k2/cdk-lib";
 import * as authelia from "@k2/authelia";
 
-const app = new K2App();
+const app = new App();
 new HelmChart(app, "longhorn", {
   namespace: "k2-storage",
   chart: "helm:https://charts.longhorn.io/longhorn@1.6.1",

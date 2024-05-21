@@ -1,8 +1,8 @@
-import { K2App, HelmChart } from "@k2/cdk-lib";
+import { App, HelmChart } from "@k2/cdk-lib";
 import { OnePasswordItem } from "@k2/1password/crds";
 import { Middleware } from "@k2/traefik/crds";
 
-const app = new K2App();
+const app = new App();
 const chart = new HelmChart(app, "authelia", {
   namespace: "k2-auth",
   chart: "helm:https://charts.authelia.com/authelia@0.8.58",
