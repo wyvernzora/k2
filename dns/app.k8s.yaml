@@ -132,7 +132,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: d4e60666aa9717dccbca12cd7f7547e442d4c24941087e866a6af21c7b1db7c7
+        checksum/config: 4e41ae97e17fa2a1fc02a8387822e83bdb091ac4d1f06b85bab372d67172e9db
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
@@ -140,18 +140,6 @@ spec:
         app.kubernetes.io/version: 0.4.0
         helm.sh/chart: k8s-gateway-2.4.0
     spec:
-      affinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
-              matchExpressions:
-                - key: node-role.kubernetes.io/control-plane
-                  operator: Exists
-            weight: 1
-          - preference:
-              matchExpressions:
-                - key: node-role.kubernetes.io/master
-                  operator: Exists
-            weight: 1
       containers:
         - args:
             - -conf
@@ -191,15 +179,6 @@ spec:
             - mountPath: /etc/coredns
               name: config-volume
       serviceAccountName: k8s-gateway
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
-        - key: CriticalAddonsOnly
-          operator: Exists
       volumes:
         - configMap:
             items:
