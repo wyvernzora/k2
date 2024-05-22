@@ -3,6 +3,1235 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
+  name: accesscontrolpolicies.hub.traefik.io
+  namespace: k2-network
+spec:
+  group: hub.traefik.io
+  names:
+    kind: AccessControlPolicy
+    listKind: AccessControlPolicyList
+    plural: accesscontrolpolicies
+    singular: accesscontrolpolicy
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: AccessControlPolicy defines an access control policy.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: AccessControlPolicySpec configures an access control policy.
+              properties:
+                apiKey:
+                  description: AccessControlPolicyAPIKey configure an APIKey control policy.
+                  properties:
+                    forwardHeaders:
+                      additionalProperties:
+                        type: string
+                      description: ForwardHeaders instructs the middleware to forward key metadata as header values upon successful authentication.
+                      type: object
+                    keySource:
+                      description: KeySource defines how to extract API keys from requests.
+                      properties:
+                        cookie:
+                          description: Cookie is the name of a cookie.
+                          type: string
+                        header:
+                          description: Header is the name of a header.
+                          type: string
+                        headerAuthScheme:
+                          description: |-
+                            HeaderAuthScheme sets an optional auth scheme when Header is set to "Authorization".
+                            If set, this scheme is removed from the token, and all requests not including it are dropped.
+                          type: string
+                        query:
+                          description: Query is the name of a query parameter.
+                          type: string
+                      type: object
+                    keys:
+                      description: Keys define the set of authorized keys to access a protected resource.
+                      items:
+                        description: AccessControlPolicyAPIKeyKey defines an API key.
+                        properties:
+                          id:
+                            description: ID is the unique identifier of the key.
+                            type: string
+                          metadata:
+                            additionalProperties:
+                              type: string
+                            description: Metadata holds arbitrary metadata for this key, can be used by ForwardHeaders.
+                            type: object
+                          value:
+                            description: Value is the SHAKE-256 hash (using 64 bytes) of the API key.
+                            type: string
+                        required:
+                          - id
+                          - value
+                        type: object
+                      type: array
+                  required:
+                    - keySource
+                  type: object
+                basicAuth:
+                  description: AccessControlPolicyBasicAuth holds the HTTP basic authentication configuration.
+                  properties:
+                    forwardUsernameHeader:
+                      type: string
+                    realm:
+                      type: string
+                    stripAuthorizationHeader:
+                      type: boolean
+                    users:
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                jwt:
+                  description: AccessControlPolicyJWT configures a JWT access control policy.
+                  properties:
+                    claims:
+                      type: string
+                    forwardHeaders:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    jwksFile:
+                      type: string
+                    jwksUrl:
+                      type: string
+                    publicKey:
+                      type: string
+                    signingSecret:
+                      type: string
+                    signingSecretBase64Encoded:
+                      type: boolean
+                    stripAuthorizationHeader:
+                      type: boolean
+                    tokenQueryKey:
+                      type: string
+                  type: object
+                oAuthIntro:
+                  description: AccessControlOAuthIntro configures an OAuth 2.0 Token Introspection access control policy.
+                  properties:
+                    claims:
+                      type: string
+                    clientConfig:
+                      description: AccessControlOAuthIntroClientConfig configures the OAuth 2.0 client for issuing token introspection requests.
+                      properties:
+                        headers:
+                          additionalProperties:
+                            type: string
+                          description: Headers to set when sending requests to the Authorization Server.
+                          type: object
+                        maxRetries:
+                          default: 3
+                          description: MaxRetries defines the number of retries for introspection requests.
+                          type: integer
+                        timeoutSeconds:
+                          default: 5
+                          description: TimeoutSeconds configures the maximum amount of seconds to wait before giving up on requests.
+                          type: integer
+                        tls:
+                          description: TLS configures TLS communication with the Authorization Server.
+                          properties:
+                            ca:
+                              description: CA sets the CA bundle used to sign the Authorization Server certificate.
+                              type: string
+                            insecureSkipVerify:
+                              description: |-
+                                InsecureSkipVerify skips the Authorization Server certificate validation.
+                                For testing purposes only, do not use in production.
+                              type: boolean
+                          type: object
+                        tokenTypeHint:
+                          description: |-
+                            TokenTypeHint is a hint to pass to the Authorization Server.
+                            See https://tools.ietf.org/html/rfc7662#section-2.1 for more information.
+                          type: string
+                        url:
+                          description: URL of the Authorization Server.
+                          type: string
+                      required:
+                        - url
+                      type: object
+                    forwardHeaders:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    tokenSource:
+                      description: |-
+                        TokenSource describes how to extract tokens from HTTP requests.
+                        If multiple sources are set, the order is the following: header > query > cookie.
+                      properties:
+                        cookie:
+                          description: Cookie is the name of a cookie.
+                          type: string
+                        header:
+                          description: Header is the name of a header.
+                          type: string
+                        headerAuthScheme:
+                          description: |-
+                            HeaderAuthScheme sets an optional auth scheme when Header is set to "Authorization".
+                            If set, this scheme is removed from the token, and all requests not including it are dropped.
+                          type: string
+                        query:
+                          description: Query is the name of a query parameter.
+                          type: string
+                      type: object
+                  required:
+                    - clientConfig
+                    - tokenSource
+                  type: object
+                oidc:
+                  description: AccessControlPolicyOIDC holds the OIDC authentication configuration.
+                  properties:
+                    authParams:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    claims:
+                      type: string
+                    clientId:
+                      type: string
+                    disableAuthRedirectionPaths:
+                      items:
+                        type: string
+                      type: array
+                    forwardHeaders:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    issuer:
+                      type: string
+                    logoutUrl:
+                      type: string
+                    redirectUrl:
+                      type: string
+                    scopes:
+                      items:
+                        type: string
+                      type: array
+                    secret:
+                      description: |-
+                        SecretReference represents a Secret Reference. It has enough information to retrieve secret
+                        in any namespace
+                      properties:
+                        name:
+                          description: name is unique within a namespace to reference a secret resource.
+                          type: string
+                        namespace:
+                          description: namespace defines the space within which the secret name must be unique.
+                          type: string
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    session:
+                      description: Session holds session configuration.
+                      properties:
+                        domain:
+                          type: string
+                        path:
+                          type: string
+                        refresh:
+                          type: boolean
+                        sameSite:
+                          type: string
+                        secure:
+                          type: boolean
+                      type: object
+                    stateCookie:
+                      description: StateCookie holds state cookie configuration.
+                      properties:
+                        domain:
+                          type: string
+                        path:
+                          type: string
+                        sameSite:
+                          type: string
+                        secure:
+                          type: boolean
+                      type: object
+                  type: object
+                oidcGoogle:
+                  description: AccessControlPolicyOIDCGoogle holds the Google OIDC authentication configuration.
+                  properties:
+                    authParams:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    clientId:
+                      type: string
+                    emails:
+                      description: Emails are the allowed emails to connect.
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                    forwardHeaders:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    logoutUrl:
+                      type: string
+                    redirectUrl:
+                      type: string
+                    secret:
+                      description: |-
+                        SecretReference represents a Secret Reference. It has enough information to retrieve secret
+                        in any namespace
+                      properties:
+                        name:
+                          description: name is unique within a namespace to reference a secret resource.
+                          type: string
+                        namespace:
+                          description: namespace defines the space within which the secret name must be unique.
+                          type: string
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    session:
+                      description: Session holds session configuration.
+                      properties:
+                        domain:
+                          type: string
+                        path:
+                          type: string
+                        refresh:
+                          type: boolean
+                        sameSite:
+                          type: string
+                        secure:
+                          type: boolean
+                      type: object
+                    stateCookie:
+                      description: StateCookie holds state cookie configuration.
+                      properties:
+                        domain:
+                          type: string
+                        path:
+                          type: string
+                        sameSite:
+                          type: string
+                        secure:
+                          type: boolean
+                      type: object
+                  type: object
+              type: object
+            status:
+              description: The current status of this access control policy.
+              properties:
+                specHash:
+                  type: string
+                syncedAt:
+                  format: date-time
+                  type: string
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: apiaccesses.hub.traefik.io
+  namespace: k2-network
+spec:
+  group: hub.traefik.io
+  names:
+    kind: APIAccess
+    listKind: APIAccessList
+    plural: apiaccesses
+    singular: apiaccess
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: APIAccess defines who can access to a set of APIs.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: The desired behavior of this APIAccess.
+              properties:
+                apiSelector:
+                  description: |-
+                    APISelector selects the APIs that will be accessible to the configured audience.
+                    Multiple APIAccesses can select the same set of APIs.
+                    This field is optional and follows standard label selector semantics.
+                    An empty APISelector matches any API.
+                  properties:
+                    matchExpressions:
+                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                      items:
+                        description: |-
+                          A label selector requirement is a selector that contains values, a key, and an operator that
+                          relates the key and values.
+                        properties:
+                          key:
+                            description: key is the label key that the selector applies to.
+                            type: string
+                          operator:
+                            description: |-
+                              operator represents a key's relationship to a set of values.
+                              Valid operators are In, NotIn, Exists and DoesNotExist.
+                            type: string
+                          values:
+                            description: |-
+                              values is an array of string values. If the operator is In or NotIn,
+                              the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                              the values array must be empty. This array is replaced during a strategic
+                              merge patch.
+                            items:
+                              type: string
+                            type: array
+                        required:
+                          - key
+                          - operator
+                        type: object
+                      type: array
+                    matchLabels:
+                      additionalProperties:
+                        type: string
+                      description: |-
+                        matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                        map is equivalent to an element of matchExpressions, whose key field is "key", the
+                        operator is "In", and the values array contains only "value". The requirements are ANDed.
+                      type: object
+                  type: object
+                  x-kubernetes-map-type: atomic
+                apis:
+                  description: |-
+                    APIs defines a set of APIs that will be accessible to the configured audience.
+                    Multiple APIAccesses can select the same APIs.
+                    When combined with APISelector, this set of APIs is appended to the matching APIs.
+                  items:
+                    description: APIReference references an API.
+                    properties:
+                      name:
+                        description: Name of the API.
+                        maxLength: 253
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  maxItems: 100
+                  type: array
+                  x-kubernetes-validations:
+                    - message: duplicated apis
+                      rule: self.all(x, self.exists_one(y, x.name == y.name))
+                everyone:
+                  description: Everyone indicates that all users will have access to the selected APIs.
+                  type: boolean
+                groups:
+                  description: Groups are the consumer groups that will gain access to the selected APIs.
+                  items:
+                    type: string
+                  type: array
+                operationFilter:
+                  description: |-
+                    OperationFilter specifies the allowed operations on APIs and APIVersions.
+                    If not set, all operations are available.
+                    An empty OperationFilter prohibits all operations.
+                  properties:
+                    include:
+                      description: Include defines the names of OperationSets that will be accessible.
+                      items:
+                        type: string
+                      maxItems: 100
+                      type: array
+                  type: object
+              type: object
+              x-kubernetes-validations:
+                - message: groups and everyone are mutually exclusive
+                  rule: "(has(self.everyone) && has(self.groups)) ? !(self.everyone && self.groups.size() > 0) : true"
+            status:
+              description: The current status of this APIAccess.
+              properties:
+                hash:
+                  description: Hash is a hash representing the APIAccess.
+                  type: string
+                syncedAt:
+                  format: date-time
+                  type: string
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: apiportals.hub.traefik.io
+  namespace: k2-network
+spec:
+  group: hub.traefik.io
+  names:
+    kind: APIPortal
+    listKind: APIPortalList
+    plural: apiportals
+    singular: apiportal
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: APIPortal defines a developer portal for accessing the documentation of APIs.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: The desired behavior of this APIPortal.
+              properties:
+                description:
+                  description: Description of the APIPortal.
+                  type: string
+                title:
+                  description: Title is the public facing name of the APIPortal.
+                  type: string
+                trustedUrls:
+                  description: TrustedURLs are the urls that are trusted by the OAuth 2.0 authorization server.
+                  items:
+                    type: string
+                  maxItems: 1
+                  minItems: 1
+                  type: array
+                  x-kubernetes-validations:
+                    - message: must be a valid URLs
+                      rule: self.all(x, isURL(x))
+                ui:
+                  description: UI holds the UI customization options.
+                  properties:
+                    logoUrl:
+                      description: LogoURL is the public URL of the logo.
+                      type: string
+                  type: object
+              required:
+                - trustedUrls
+              type: object
+            status:
+              description: The current status of this APIPortal.
+              properties:
+                hash:
+                  description: Hash is a hash representing the APIPortal.
+                  type: string
+                oidc:
+                  description: OIDC is the OIDC configuration for accessing the exposed APIPortal WebUI.
+                  properties:
+                    clientId:
+                      description: ClientID is the OIDC ClientID for accessing the exposed APIPortal WebUI.
+                      type: string
+                    issuer:
+                      description: Issuer is the OIDC issuer for accessing the exposed APIPortal WebUI.
+                      type: string
+                    secretName:
+                      description: SecretName is the name of the secret containing the OIDC ClientSecret for accessing the exposed APIPortal WebUI.
+                      type: string
+                  type: object
+                syncedAt:
+                  format: date-time
+                  type: string
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: apiratelimits.hub.traefik.io
+  namespace: k2-network
+spec:
+  group: hub.traefik.io
+  names:
+    kind: APIRateLimit
+    listKind: APIRateLimitList
+    plural: apiratelimits
+    singular: apiratelimit
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: APIRateLimit defines how group of consumers are rate limited on a set of APIs.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: The desired behavior of this APIRateLimit.
+              properties:
+                apiSelector:
+                  description: |-
+                    APISelector selects the APIs that will be rate limited.
+                    Multiple APIRateLimits can select the same set of APIs.
+                    This field is optional and follows standard label selector semantics.
+                    An empty APISelector matches any API.
+                  properties:
+                    matchExpressions:
+                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                      items:
+                        description: |-
+                          A label selector requirement is a selector that contains values, a key, and an operator that
+                          relates the key and values.
+                        properties:
+                          key:
+                            description: key is the label key that the selector applies to.
+                            type: string
+                          operator:
+                            description: |-
+                              operator represents a key's relationship to a set of values.
+                              Valid operators are In, NotIn, Exists and DoesNotExist.
+                            type: string
+                          values:
+                            description: |-
+                              values is an array of string values. If the operator is In or NotIn,
+                              the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                              the values array must be empty. This array is replaced during a strategic
+                              merge patch.
+                            items:
+                              type: string
+                            type: array
+                        required:
+                          - key
+                          - operator
+                        type: object
+                      type: array
+                    matchLabels:
+                      additionalProperties:
+                        type: string
+                      description: |-
+                        matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                        map is equivalent to an element of matchExpressions, whose key field is "key", the
+                        operator is "In", and the values array contains only "value". The requirements are ANDed.
+                      type: object
+                  type: object
+                  x-kubernetes-map-type: atomic
+                apis:
+                  description: |-
+                    APIs defines a set of APIs that will be rate limited.
+                    Multiple APIRateLimits can select the same APIs.
+                    When combined with APISelector, this set of APIs is appended to the matching APIs.
+                  items:
+                    description: APIReference references an API.
+                    properties:
+                      name:
+                        description: Name of the API.
+                        maxLength: 253
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  maxItems: 100
+                  type: array
+                  x-kubernetes-validations:
+                    - message: duplicated apis
+                      rule: self.all(x, self.exists_one(y, x.name == y.name))
+                everyone:
+                  description: |-
+                    Everyone indicates that all users will, by default, be rate limited with this configuration.
+                    If an APIRateLimit explicitly target a group, the default rate limit will be ignored.
+                  type: boolean
+                groups:
+                  description: |-
+                    Groups are the consumer groups that will be rate limited.
+                    Multiple APIRateLimits can target the same set of consumer groups, the most restrictive one applies.
+                    When a consumer belongs to multiple groups, the least restrictive APIRateLimit applies.
+                  items:
+                    type: string
+                  type: array
+                limit:
+                  description: Limit is the maximum number of token in the bucket.
+                  type: integer
+                  x-kubernetes-validations:
+                    - message: must be a positive number
+                      rule: self >= 0
+                period:
+                  description: Period is the unit of time for the Limit.
+                  format: duration
+                  type: string
+                  x-kubernetes-validations:
+                    - message: must be between 1s and 1h
+                      rule: self >= duration('1s') && self <= duration('1h')
+                strategy:
+                  description: |-
+                    Strategy defines how the bucket state will be synchronized between the different Traefik Hub instances.
+                    It can be, either "local" or "distributed".
+                  enum:
+                    - local
+                    - distributed
+                  type: string
+              required:
+                - limit
+              type: object
+              x-kubernetes-validations:
+                - message: groups and everyone are mutually exclusive
+                  rule: "(has(self.everyone) && has(self.groups)) ? !(self.everyone && self.groups.size() > 0) : true"
+            status:
+              description: The current status of this APIRateLimit.
+              properties:
+                hash:
+                  description: Hash is a hash representing the APIRateLimit.
+                  type: string
+                syncedAt:
+                  format: date-time
+                  type: string
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: apis.hub.traefik.io
+  namespace: k2-network
+spec:
+  group: hub.traefik.io
+  names:
+    kind: API
+    listKind: APIList
+    plural: apis
+    singular: api
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: |-
+            API defines an HTTP interface that is exposed to external clients. It specifies the supported versions
+            and provides instructions for accessing its documentation. Once instantiated, an API object is associated
+            with an Ingress, IngressRoute, or HTTPRoute resource, enabling the exposure of the described API to the outside world.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: APISpec describes the API.
+              properties:
+                openApiSpec:
+                  description: OpenAPISpec defines the API contract as an OpenAPI specification.
+                  properties:
+                    operationSets:
+                      description: OperationSets defines the sets of operations to be referenced for granular filtering in APIAccesses.
+                      items:
+                        description: |-
+                          OperationSet gives a name to a set of matching OpenAPI operations.
+                          This set of operations can then be referenced for granular filtering in APIAccesses.
+                        properties:
+                          matchers:
+                            description: Matchers defines a list of alternative rules for matching OpenAPI operations.
+                            items:
+                              description: OperationMatcher defines criteria for matching an OpenAPI operation.
+                              minProperties: 1
+                              properties:
+                                methods:
+                                  description: Methods specifies the HTTP methods to be included for selection.
+                                  items:
+                                    type: string
+                                  maxItems: 10
+                                  type: array
+                                path:
+                                  description: Path specifies the exact path of the operations to select.
+                                  maxLength: 255
+                                  type: string
+                                  x-kubernetes-validations:
+                                    - message: must start with a '/'
+                                      rule: self.startsWith('/')
+                                    - message: cannot contains '../'
+                                      rule: '!self.matches(r"""(\/\.\.\/)|(\/\.\.$)""")'
+                                pathPrefix:
+                                  description: PathPrefix specifies the path prefix of the operations to select.
+                                  maxLength: 255
+                                  type: string
+                                  x-kubernetes-validations:
+                                    - message: must start with a '/'
+                                      rule: self.startsWith('/')
+                                    - message: cannot contains '../'
+                                      rule: '!self.matches(r"""(\/\.\.\/)|(\/\.\.$)""")'
+                                pathRegex:
+                                  description: PathRegex specifies a regular expression pattern for matching operations based on their paths.
+                                  type: string
+                              type: object
+                              x-kubernetes-validations:
+                                - message: path, pathPrefix and pathRegex are mutually exclusive
+                                  rule: "[has(self.path), has(self.pathPrefix), has(self.pathRegex)].filter(x, x).size() <= 1"
+                            maxItems: 100
+                            minItems: 1
+                            type: array
+                          name:
+                            description: Name is the name of the OperationSet to reference in APIAccesses.
+                            maxLength: 253
+                            type: string
+                        required:
+                          - matchers
+                          - name
+                        type: object
+                      maxItems: 100
+                      type: array
+                    override:
+                      description: Override holds data used to override OpenAPI specification.
+                      properties:
+                        servers:
+                          items:
+                            properties:
+                              url:
+                                type: string
+                                x-kubernetes-validations:
+                                  - message: must be a valid URL
+                                    rule: isURL(self)
+                            required:
+                              - url
+                            type: object
+                          maxItems: 100
+                          minItems: 1
+                          type: array
+                      required:
+                        - servers
+                      type: object
+                    path:
+                      description: |-
+                        Path specifies the endpoint path within the Kubernetes Service where the OpenAPI specification can be obtained.
+                        The Service queried is determined by the associated Ingress, IngressRoute, or HTTPRoute resource to which the API is attached.
+                        It's important to note that this option is incompatible if the Ingress or IngressRoute specifies multiple backend services.
+                        The Path must be accessible via a GET request method and should serve a YAML or JSON document containing the OpenAPI specification.
+                      maxLength: 255
+                      type: string
+                      x-kubernetes-validations:
+                        - message: must start with a '/'
+                          rule: self.startsWith('/')
+                        - message: cannot contains '../'
+                          rule: '!self.matches(r"""(\/\.\.\/)|(\/\.\.$)""")'
+                    url:
+                      description: |-
+                        URL is a Traefik Hub agent accessible URL for obtaining the OpenAPI specification.
+                        The URL must be accessible via a GET request method and should serve a YAML or JSON document containing the OpenAPI specification.
+                      type: string
+                      x-kubernetes-validations:
+                        - message: must be a valid URL
+                          rule: isURL(self)
+                  type: object
+                  x-kubernetes-validations:
+                    - message: path or url must be defined
+                      rule: has(self.path) || has(self.url)
+                versions:
+                  description: Versions are the different APIVersions available.
+                  items:
+                    description: APIVersionRef references an APIVersion.
+                    properties:
+                      name:
+                        description: Name of the APIVersion.
+                        maxLength: 253
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  maxItems: 100
+                  minItems: 1
+                  type: array
+              type: object
+            status:
+              description: The current status of this API.
+              properties:
+                hash:
+                  description: Hash is a hash representing the API.
+                  type: string
+                syncedAt:
+                  format: date-time
+                  type: string
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: apiversions.hub.traefik.io
+  namespace: k2-network
+spec:
+  group: hub.traefik.io
+  names:
+    kind: APIVersion
+    listKind: APIVersionList
+    plural: apiversions
+    singular: apiversion
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .spec.title
+          name: Title
+          type: string
+        - jsonPath: .spec.release
+          name: Release
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: APIVersion defines a version of an API.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: The desired behavior of this APIVersion.
+              properties:
+                openApiSpec:
+                  description: OpenAPISpec defines the API contract as an OpenAPI specification.
+                  properties:
+                    operationSets:
+                      description: OperationSets defines the sets of operations to be referenced for granular filtering in APIAccesses.
+                      items:
+                        description: |-
+                          OperationSet gives a name to a set of matching OpenAPI operations.
+                          This set of operations can then be referenced for granular filtering in APIAccesses.
+                        properties:
+                          matchers:
+                            description: Matchers defines a list of alternative rules for matching OpenAPI operations.
+                            items:
+                              description: OperationMatcher defines criteria for matching an OpenAPI operation.
+                              minProperties: 1
+                              properties:
+                                methods:
+                                  description: Methods specifies the HTTP methods to be included for selection.
+                                  items:
+                                    type: string
+                                  maxItems: 10
+                                  type: array
+                                path:
+                                  description: Path specifies the exact path of the operations to select.
+                                  maxLength: 255
+                                  type: string
+                                  x-kubernetes-validations:
+                                    - message: must start with a '/'
+                                      rule: self.startsWith('/')
+                                    - message: cannot contains '../'
+                                      rule: '!self.matches(r"""(\/\.\.\/)|(\/\.\.$)""")'
+                                pathPrefix:
+                                  description: PathPrefix specifies the path prefix of the operations to select.
+                                  maxLength: 255
+                                  type: string
+                                  x-kubernetes-validations:
+                                    - message: must start with a '/'
+                                      rule: self.startsWith('/')
+                                    - message: cannot contains '../'
+                                      rule: '!self.matches(r"""(\/\.\.\/)|(\/\.\.$)""")'
+                                pathRegex:
+                                  description: PathRegex specifies a regular expression pattern for matching operations based on their paths.
+                                  type: string
+                              type: object
+                              x-kubernetes-validations:
+                                - message: path, pathPrefix and pathRegex are mutually exclusive
+                                  rule: "[has(self.path), has(self.pathPrefix), has(self.pathRegex)].filter(x, x).size() <= 1"
+                            maxItems: 100
+                            minItems: 1
+                            type: array
+                          name:
+                            description: Name is the name of the OperationSet to reference in APIAccesses.
+                            maxLength: 253
+                            type: string
+                        required:
+                          - matchers
+                          - name
+                        type: object
+                      maxItems: 100
+                      type: array
+                    override:
+                      description: Override holds data used to override OpenAPI specification.
+                      properties:
+                        servers:
+                          items:
+                            properties:
+                              url:
+                                type: string
+                                x-kubernetes-validations:
+                                  - message: must be a valid URL
+                                    rule: isURL(self)
+                            required:
+                              - url
+                            type: object
+                          maxItems: 100
+                          minItems: 1
+                          type: array
+                      required:
+                        - servers
+                      type: object
+                    path:
+                      description: |-
+                        Path specifies the endpoint path within the Kubernetes Service where the OpenAPI specification can be obtained.
+                        The Service queried is determined by the associated Ingress, IngressRoute, or HTTPRoute resource to which the API is attached.
+                        It's important to note that this option is incompatible if the Ingress or IngressRoute specifies multiple backend services.
+                        The Path must be accessible via a GET request method and should serve a YAML or JSON document containing the OpenAPI specification.
+                      maxLength: 255
+                      type: string
+                      x-kubernetes-validations:
+                        - message: must start with a '/'
+                          rule: self.startsWith('/')
+                        - message: cannot contains '../'
+                          rule: '!self.matches(r"""(\/\.\.\/)|(\/\.\.$)""")'
+                    url:
+                      description: |-
+                        URL is a Traefik Hub agent accessible URL for obtaining the OpenAPI specification.
+                        The URL must be accessible via a GET request method and should serve a YAML or JSON document containing the OpenAPI specification.
+                      type: string
+                      x-kubernetes-validations:
+                        - message: must be a valid URL
+                          rule: isURL(self)
+                  type: object
+                  x-kubernetes-validations:
+                    - message: path or url must be defined
+                      rule: has(self.path) || has(self.url)
+                release:
+                  description: |-
+                    Release is the version number of the API.
+                    This value must follow the SemVer format: https://semver.org/
+                  maxLength: 100
+                  type: string
+                  x-kubernetes-validations:
+                    - message: must be a valid semver version
+                      rule: self.matches(r"""^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$""")
+                title:
+                  description: Title is the public facing name of the APIVersion.
+                  type: string
+              required:
+                - release
+              type: object
+            status:
+              description: The current status of this APIVersion.
+              properties:
+                hash:
+                  description: Hash is a hash representing the APIVersion.
+                  type: string
+                syncedAt:
+                  format: date-time
+                  type: string
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: edgeingresses.hub.traefik.io
+  namespace: k2-network
+spec:
+  group: hub.traefik.io
+  names:
+    kind: EdgeIngress
+    listKind: EdgeIngressList
+    plural: edgeingresses
+    singular: edgeingress
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .spec.service.name
+          name: Service
+          type: string
+        - jsonPath: .spec.service.port
+          name: Port
+          type: string
+        - jsonPath: .spec.acp.name
+          name: ACP
+          priority: 1
+          type: string
+        - jsonPath: .status.urls
+          name: URLs
+          type: string
+        - jsonPath: .status.connection
+          name: Connection
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: EdgeIngress defines an edge ingress.
+          properties:
+            apiVersion:
+              description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+              type: string
+            kind:
+              description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: The desired behavior of this edge ingress.
+              properties:
+                acp:
+                  description: EdgeIngressACP configures the ACP to use on the Ingress.
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                customDomains:
+                  description: CustomDomains are the custom domains for accessing the exposed service.
+                  items:
+                    type: string
+                  type: array
+                service:
+                  description: EdgeIngressService configures the service to exposed on the edge.
+                  properties:
+                    name:
+                      type: string
+                    port:
+                      type: integer
+                  required:
+                    - name
+                    - port
+                  type: object
+              required:
+                - service
+              type: object
+            status:
+              description: The current status of this edge ingress.
+              properties:
+                connection:
+                  description: Connection is the status of the underlying connection to the edge.
+                  type: string
+                customDomains:
+                  description: CustomDomains are the custom domains for accessing the exposed service.
+                  items:
+                    type: string
+                  type: array
+                domain:
+                  description: Domain is the Domain for accessing the exposed service.
+                  type: string
+                specHash:
+                  description: SpecHash is a hash representing the EdgeIngressSpec
+                  type: string
+                syncedAt:
+                  format: date-time
+                  type: string
+                urls:
+                  description: URLs is the list of coma separated URL for accessing the exposed service.
+                  type: string
+                version:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: ingressroutes.traefik.io
   namespace: k2-network
 spec:

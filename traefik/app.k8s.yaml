@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.0.0
+    helm.sh/chart: traefik-28.1.0
   name: traefik
   namespace: k2-network
 ---
@@ -16,7 +16,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.0.0
+    helm.sh/chart: traefik-28.1.0
   name: traefik-k2-network
   namespace: k2-network
 rules:
@@ -62,11 +62,11 @@ rules:
       - ingressrouteudps
       - middlewares
       - middlewaretcps
+      - serverstransports
+      - serverstransporttcps
       - tlsoptions
       - tlsstores
       - traefikservices
-      - serverstransports
-      - serverstransporttcps
     verbs:
       - get
       - list
@@ -79,7 +79,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.0.0
+    helm.sh/chart: traefik-28.1.0
   name: traefik-k2-network
   namespace: k2-network
 roleRef:
@@ -98,7 +98,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.0.0
+    helm.sh/chart: traefik-28.1.0
   name: traefik
   namespace: k2-network
 spec:
@@ -124,7 +124,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.0.0
+    helm.sh/chart: traefik-28.1.0
   name: traefik
   namespace: k2-network
 spec:
@@ -149,7 +149,7 @@ spec:
         app.kubernetes.io/instance: traefik-k2-network
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: traefik
-        helm.sh/chart: traefik-28.0.0
+        helm.sh/chart: traefik-28.1.0
     spec:
       containers:
         - args:
@@ -258,7 +258,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.0.0
+    helm.sh/chart: traefik-28.1.0
   name: traefik
   namespace: k2-network
 spec:
@@ -271,7 +271,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.0.0
+    helm.sh/chart: traefik-28.1.0
   name: traefik-dashboard
   namespace: k2-network
 spec:
