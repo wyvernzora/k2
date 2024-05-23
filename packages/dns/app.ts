@@ -13,7 +13,7 @@ const blockingGroup = new BlockingGroup({
 const clientGroup = new ClientGroup({
   name: "default",
   blockingGroups: [blockingGroup],
-  upstream: ["1.1.1.1"],
+  upstream: ["10.10.1.1"],
 });
 
 // Custom DNS
