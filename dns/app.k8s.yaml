@@ -199,7 +199,7 @@ data:
     upstreams:
       groups:
         default:
-          - 1.1.1.1
+          - 10.10.1.1
     blocking:
       whiteLists:
         default: []
@@ -233,7 +233,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 1934719a7bede82fccba2c9cc5da67c90f8e79b5b38babb692663c12be6ea87e
+    checksum/config: 6e570205c90b2570b5f52230042462d0f0479db9aed2534d504141fc86edf227
   name: dns-blocky-depl-c826f1d8
   namespace: k2-network
 spec:
