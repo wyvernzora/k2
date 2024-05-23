@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "renovate/*"]
   pull_request:
     branches: ["main"]
 jobs:
@@ -22,7 +22,7 @@ jobs:
         run: earthly +manifests
       - name: Push to deploy branch
         uses: s0/git-publish-subdir-action@v2.6.0
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           REPO: self
           BRANCH: deploy
