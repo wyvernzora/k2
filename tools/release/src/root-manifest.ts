@@ -47,7 +47,7 @@ export class RootApplication extends App {
           server: "https://kubernetes.default.svc",
           namespace: options.namespace,
         },
-        ignoreDifferences: [...options.ignoreDifferences!],
+        ignoreDifferences: undefinedIfEmpty(...options.ignoreDifferences!),
         syncPolicy: {
           syncOptions: [
             "CreateNamespace=true",
@@ -70,4 +70,11 @@ export class RootApplication extends App {
       },
     });
   }
+}
+
+function undefinedIfEmpty<T>(...values: T[]): T[] | undefined {
+  if (values.length === 0) {
+    return undefined;
+  }
+  return values;
 }
