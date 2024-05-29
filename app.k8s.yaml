@@ -9,7 +9,6 @@ spec:
   destination:
     namespace: k2-core
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: 1password
@@ -41,7 +40,6 @@ spec:
   destination:
     namespace: k2-network
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: dns
@@ -73,7 +71,6 @@ spec:
   destination:
     namespace: k2-network
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: kube-vip
@@ -141,7 +138,6 @@ spec:
   destination:
     namespace: plex
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: plex
@@ -173,7 +169,6 @@ spec:
   destination:
     namespace: k2-core
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: system-upgrade
@@ -205,7 +200,6 @@ spec:
   destination:
     namespace: k2-core
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: cert-manager
@@ -237,7 +231,6 @@ spec:
   destination:
     namespace: k2-auth
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: glauth
@@ -269,7 +262,6 @@ spec:
   destination:
     namespace: k2-network
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: traefik
@@ -301,7 +293,6 @@ spec:
   destination:
     namespace: k2-auth
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: authelia
@@ -333,7 +324,6 @@ spec:
   destination:
     namespace: k2-core
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: argocd
@@ -365,7 +355,6 @@ spec:
   destination:
     namespace: k2-storage
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: longhorn
@@ -397,7 +386,6 @@ spec:
   destination:
     namespace: qbittorrent
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: qbittorrent
@@ -429,7 +417,6 @@ spec:
   destination:
     namespace: sonarr
     server: https://kubernetes.default.svc
-  ignoreDifferences: []
   project: default
   source:
     path: sonarr
