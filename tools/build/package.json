@@ -13,7 +13,7 @@
     "@tsconfig/recommended": "^1.0.6",
     "@typescript-eslint/eslint-plugin": "^8.0.0-alpha",
     "@typescript-eslint/parser": "^8.0.0-alpha",
-    "eslint": "^8.56.0",
+    "eslint": "^9.3.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.2.4",
     "typescript": "^5.3.3"
