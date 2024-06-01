@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.1.0
+    helm.sh/chart: traefik-28.2.0
   name: traefik
   namespace: k2-network
 ---
@@ -16,7 +16,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.1.0
+    helm.sh/chart: traefik-28.2.0
   name: traefik-k2-network
   namespace: k2-network
 rules:
@@ -79,7 +79,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.1.0
+    helm.sh/chart: traefik-28.2.0
   name: traefik-k2-network
   namespace: k2-network
 roleRef:
@@ -98,7 +98,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.1.0
+    helm.sh/chart: traefik-28.2.0
   name: traefik
   namespace: k2-network
 spec:
@@ -124,7 +124,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.1.0
+    helm.sh/chart: traefik-28.2.0
   name: traefik
   namespace: k2-network
 spec:
@@ -149,7 +149,7 @@ spec:
         app.kubernetes.io/instance: traefik-k2-network
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: traefik
-        helm.sh/chart: traefik-28.1.0
+        helm.sh/chart: traefik-28.2.0
     spec:
       containers:
         - args:
@@ -178,7 +178,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: docker.io/traefik:v3.0.0
+          image: docker.io/traefik:v3.0.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -228,7 +228,6 @@ spec:
       hostNetwork: false
       priorityClassName: system-cluster-critical
       securityContext:
-        fsGroupChangePolicy: OnRootMismatch
         runAsGroup: 65532
         runAsNonRoot: true
         runAsUser: 65532
@@ -258,7 +257,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.1.0
+    helm.sh/chart: traefik-28.2.0
   name: traefik
   namespace: k2-network
 spec:
@@ -267,11 +266,13 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
+  annotations:
+    kubernetes.io/ingress.class: traefik
   labels:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-28.1.0
+    helm.sh/chart: traefik-28.2.0
   name: traefik-dashboard
   namespace: k2-network
 spec:
