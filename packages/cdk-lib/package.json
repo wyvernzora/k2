@@ -2,10 +2,9 @@
   "name": "@k2/cdk-lib",
   "version": "1.0.0",
   "private": "true",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noEmit",
     "test": "echo TODO",
     "clean": "rm -rf dist",
     "lint": "npm run eslint && npm run prettier -- --check",
