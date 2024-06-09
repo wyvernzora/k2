@@ -2,11 +2,15 @@
   "name": "@wyvernzora/k2",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*", "tools/*"],
+  "workspaces": [
+    "packages/*",
+    "tools/*"
+  ],
   "dependencies": {
     "cdk8s": "^2.68.22",
     "cdk8s-plus-28": "^2.0.8",
     "debug": "^4.3.4",
+    "dedent-js": "^1.0.1",
     "fast-glob": "^3.3.2",
     "find-root": "^1.1.0",
     "yaml": "^2.3.4"
@@ -29,7 +33,9 @@
   "eslintConfig": {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "extends": [
       "eslint:recommended",
       "plugin:@typescript-eslint/eslint-recommended",
@@ -39,7 +45,10 @@
     "rules": {
       "@typescript-eslint/no-namespace": "off"
     },
-    "ignorePatterns": ["**/dist/*.ts", "node_modules"]
+    "ignorePatterns": [
+      "**/dist/*.ts",
+      "node_modules"
+    ]
   },
   "prettier": {},
   "scripts": {
