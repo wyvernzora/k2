@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
     app.kubernetes.io/version: v0.8.0
-    helm.sh/chart: kube-vip-0.6.0
+    helm.sh/chart: kube-vip-0.6.1
   name: kube-vip
   namespace: k2-network
 ---
@@ -49,7 +49,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
     app.kubernetes.io/version: v0.8.0
-    helm.sh/chart: kube-vip-0.6.0
+    helm.sh/chart: kube-vip-0.6.1
   name: kube-vip
   namespace: k2-network
 roleRef:
