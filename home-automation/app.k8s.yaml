@@ -1,0 +1,395 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-automation-mosquitto-conf-c8192ca3
+  namespace: home-automation
+data:
+  mosquitto.conf: |-
+    listener 1883
+    allow_anonymous true
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest stdout
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/conf: b5e731fabda9412b07efda2e1bd7a2104d1950c71d15af473d97fe8583e388ba
+  name: home-automation-mosquitto-depl-c8f86ff8
+  namespace: home-automation
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: home-automation-mosquitto-depl-c87ba16f
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: home-automation-mosquitto-depl-c87ba16f
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: eclipse-mosquitto:2.0.18
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - mosquitto_sub
+                - -t
+                - $$SYS/#
+                - -C
+                - "1"
+                - -W
+                - "5"
+            failureThreshold: 3
+          name: mosquitto
+          ports:
+            - containerPort: 1883
+              name: mqtt
+          readinessProbe:
+            exec:
+              command:
+                - mosquitto_sub
+                - -t
+                - $$SYS/#
+                - -C
+                - "1"
+                - -W
+                - "5"
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /mosquitto/data
+              name: pvc-home-automation-mosquitto-depl-vol-data-pvc-c806cfab
+            - mountPath: /mosquitto/log
+              name: eph-vol-logs
+            - mountPath: /mosquitto/config/mosquitto.conf
+              name: configmap-home-automation-mosquitto-conf-c8192ca3
+              subPath: mosquitto.conf
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-home-automation-mosquitto-depl-vol-data-pvc-c806cfab
+          persistentVolumeClaim:
+            claimName: home-automation-mosquitto-depl-vol-data-pvc-c806cfab
+            readOnly: false
+        - emptyDir: {}
+          name: eph-vol-logs
+        - configMap:
+            name: home-automation-mosquitto-conf-c8192ca3
+          name: configmap-home-automation-mosquitto-conf-c8192ca3
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-automation-mosquitto-depl-vol-data-pvc-c806cfab
+  namespace: home-automation
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: home-automation-mosquitto-depl-net-policy-c8837602
+  namespace: home-automation
+spec:
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home-automation
+          podSelector:
+            matchLabels:
+              cdk8s.io/metadata.addr: home-automation-zigbee2mqtt-depl-c8124576
+      ports: []
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: home-automation
+          podSelector:
+            matchLabels:
+              cdk8s.io/metadata.addr: home-automation-home-assistant-depl-c80e458f
+      ports: []
+  podSelector:
+    matchLabels:
+      cdk8s.io/metadata.addr: home-automation-mosquitto-depl-c87ba16f
+  policyTypes:
+    - Ingress
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: home-automation-mosquitto-depl-service-c8786f6b
+  namespace: home-automation
+spec:
+  externalIPs: []
+  ports:
+    - name: mqtt
+      port: 1883
+      targetPort: 1883
+  selector:
+    cdk8s.io/metadata.addr: home-automation-mosquitto-depl-c87ba16f
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-automation-zigbee2mqtt-conf-c8700bb5
+  namespace: home-automation
+data:
+  configuration.yaml: |
+    frontend: true
+    mqtt:
+      base_topic: zigbee2mqtt
+      server: mqtt://home-automation-mosquitto-depl-service-c8786f6b.home-automation.svc.cluster.local
+    serial:
+      port: tcp://10.10.229.62:6638
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/conf: d6637b74c4c7c41b1e804565ddaf59e8ecbd4281cb430049cc70061757e050c8
+  name: home-automation-zigbee2mqtt-depl-c81c7252
+  namespace: home-automation
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: home-automation-zigbee2mqtt-depl-c8124576
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: home-automation-zigbee2mqtt-depl-c8124576
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: koenkk/zigbee2mqtt:1.38.0
+          imagePullPolicy: Always
+          name: zigbee2mqtt
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /app/data
+              name: pvc-home-automation-zigbee2mqtt-depl-vol-data-pvc-c81229cb
+            - mountPath: /app/data/configuration.yaml
+              name: configmap-home-automation-zigbee2mqtt-conf-c8700bb5
+              subPath: configuration.yaml
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-home-automation-zigbee2mqtt-depl-vol-data-pvc-c81229cb
+          persistentVolumeClaim:
+            claimName: home-automation-zigbee2mqtt-depl-vol-data-pvc-c81229cb
+            readOnly: false
+        - configMap:
+            name: home-automation-zigbee2mqtt-conf-c8700bb5
+          name: configmap-home-automation-zigbee2mqtt-conf-c8700bb5
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-automation-zigbee2mqtt-depl-vol-data-pvc-c81229cb
+  namespace: home-automation
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: home-automation-zigbee2mqtt-depl-service-c8b516cd
+  namespace: home-automation
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    cdk8s.io/metadata.addr: home-automation-zigbee2mqtt-depl-c8124576
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-automation-home-assistant-conf-c8124870
+  namespace: home-automation
+data:
+  configuration.yaml: |-
+    # Loads default set of integrations. Do not remove.
+    default_config:
+
+    # Allow reverse proxy
+    http:
+      use_x_forwarded_for: true
+      trusted_proxies:
+        - 10.42.0.0/16
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/conf: 1c5c45e3764d1c45e040dde3d19ff4b2c7686ef4b7d9303477bdc21ddf404449
+  name: home-automation-home-assistant-depl-c822e115
+  namespace: home-automation
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: home-automation-home-assistant-depl-c80e458f
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: home-automation-home-assistant-depl-c80e458f
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: linuxserver/homeassistant:2024.6.1
+          imagePullPolicy: Always
+          name: home-assistant
+          ports:
+            - containerPort: 8123
+              name: http
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
+            - mountPath: /config/configuration.yaml
+              name: configmap-home-automation-home-assistant-conf-c8124870
+              subPath: configuration.yaml
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
+          persistentVolumeClaim:
+            claimName: home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
+            readOnly: false
+        - configMap:
+            name: home-automation-home-assistant-conf-c8124870
+          name: configmap-home-automation-home-assistant-conf-c8124870
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
+  namespace: home-automation
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: home-automation-home-assistant-depl-service-c856cc0e
+  namespace: home-automation
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8123
+  selector:
+    cdk8s.io/metadata.addr: home-automation-home-assistant-depl-c80e458f
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: home-automation-ingress-c8e235c6
+  namespace: home-automation
+spec:
+  rules:
+    - host: ha.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: home-automation-home-assistant-depl-service-c856cc0e
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
