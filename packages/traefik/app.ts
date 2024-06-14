@@ -24,7 +24,7 @@ const TOLERATE_CONTROL_PLANE = {
 const app = new App();
 const chart = new HelmChart(app, "traefik", {
   namespace: "k2-network",
-  chart: "helm:https://traefik.github.io/charts/traefik@28.2.0",
+  chart: "helm:https://traefik.github.io/charts/traefik@28.3.0",
   values: {
     podAnnotations: {
       "prometheus.io/port": "8082",
