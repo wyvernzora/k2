@@ -22,7 +22,7 @@ export class HomeAssistantDeployment extends Deployment {
   private addHomeAssistantContainer(props: Props) {
     this.addContainer({
       name: "home-assistant",
-      image: oci`linuxserver/homeassistant:2024.6.2`,
+      image: oci`linuxserver/homeassistant:2024.6.3`,
       ports: [
         {
           name: "http",
