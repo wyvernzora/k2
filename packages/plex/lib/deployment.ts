@@ -45,7 +45,7 @@ export class PlexDeployment extends Deployment {
   private addPlexContainer(props: Props): void {
     this.addContainer({
       name: "plex-media-server",
-      image: oci`plexinc/pms-docker:1.40.3.8555-c67dce28e`,
+      image: oci`plexinc/pms-docker:1.40.3.8555-fef15d30c`,
       ports: [
         {
           name: "http-internal",
