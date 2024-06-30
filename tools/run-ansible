@@ -11,4 +11,4 @@ docker run --rm -it \
     -v $ROOT/../config/inventory:/ansible/inventory:ro \
     -v $HOME/.aws:/root/.aws:ro \
     -v $HOME/.ssh:/root/.ssh:ro \
-    ghcr.io/wyvernzora/k2-ansible:dev "$@"
+    ghcr.io/wyvernzora/k2-ansible:latest "$@"
