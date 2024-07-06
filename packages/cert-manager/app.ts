@@ -7,7 +7,7 @@ const app = new App();
 // Reflector chart to copy secrets across namespaces
 new HelmChart(app, "reflector", {
   namespace: "k2-core",
-  chart: "helm:https://emberstack.github.io/helm-charts/reflector@7.1.262",
+  chart: "helm:https://emberstack.github.io/helm-charts/reflector@7.1.288",
   values: {
     priorityClassName: "system-cluster-critical",
   },
