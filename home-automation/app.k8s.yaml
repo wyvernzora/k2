@@ -392,6 +392,7 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
             runAsNonRoot: false
+            runAsUser: 0
           volumeMounts:
             - mountPath: /config
               name: pvc-home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
