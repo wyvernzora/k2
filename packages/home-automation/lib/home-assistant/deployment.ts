@@ -1,5 +1,10 @@
 import { K2Volumes, oci } from "@k2/cdk-lib";
-import { Deployment, DeploymentStrategy, Volume } from "cdk8s-plus-28";
+import {
+  Deployment,
+  DeploymentStrategy,
+  Volume,
+  VolumeMount,
+} from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { HomeAssistantConfig } from "./config";
 
@@ -15,11 +20,15 @@ export class HomeAssistantDeployment extends Deployment {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
     });
-    this.addHomeAssistantContainer(props);
+    const dataVolume = props.volumes.config(this, "vol-conf").mount(this, {
+      path: "/config",
+    });
+    this.addHomeAssistantContainer(dataVolume);
+    this.addInitConfigContainer(props, dataVolume);
     props.config.addChecksumTo(this);
   }
 
-  private addHomeAssistantContainer(props: Props) {
+  private addHomeAssistantContainer(dataVolume: VolumeMount) {
     this.addContainer({
       name: "home-assistant",
       image: oci`linuxserver/homeassistant:2024.7.1`,
@@ -29,20 +38,31 @@ export class HomeAssistantDeployment extends Deployment {
           number: 8123,
         },
       ],
-      volumeMounts: [
-        props.volumes.config(this, "vol-conf").mount(this, {
-          path: "/config",
-        }),
-        {
-          volume: Volume.fromConfigMap(this, "vol-conf-yaml", props.config),
-          path: "/config/configuration.yaml",
-          subPath: "configuration.yaml",
-        },
-      ],
+      volumeMounts: [dataVolume],
       securityContext: {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
+    });
+  }
+
+  private addInitConfigContainer(props: Props, dataVolume: VolumeMount) {
+    this.addInitContainer({
+      name: "setup-config",
+      image: oci`mikefarah/yq:4`,
+      command: ["/bin/sh", "-c"],
+      args: ["/bin/sh /init/init.sh"],
+      securityContext: {
+        ensureNonRoot: false,
+        user: 0,
+      },
+      volumeMounts: [
+        dataVolume,
+        {
+          volume: Volume.fromConfigMap(this, "vol-init", props.config),
+          path: "/init",
+        },
+      ],
     });
   }
 }
