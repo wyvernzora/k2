@@ -1,0 +1,247 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-qbit-depl-c81776b5
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PUID
+              value: "3000"
+            - name: PGID
+              value: "2001"
+            - name: TZ
+              value: America/Los_Angeles
+            - name: WEBUI_PORTS
+              value: 8080/tcp
+          image: lscr.io/linuxserver/qbittorrent:4.6.5
+          imagePullPolicy: Always
+          name: qbittorrent
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            limits:
+              cpu: 1000m
+              ephemeral-storage: 8Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /downloads/default
+              name: blk-vol-default
+            - mountPath: /downloads/anime
+              name: blk-vol-anime
+            - mountPath: /downloads/airing
+              name: blk-vol-airing
+            - mountPath: /config
+              name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
+              subPath: qbittorrent
+        - env:
+            - name: FLOOD_OPTION_AUTH
+              value: none
+            - name: FLOOD_OPTION_QBURL
+              value: http://127.0.0.1:8080
+            - name: FLOOD_OPTION_QBUSER
+              value: dummy
+            - name: FLOOD_OPTION_QBPASS
+              value: dummy
+            - name: FLOOD_OPTION_RUNDIR
+              value: /config
+            - name: FLOOD_OPTION_ALLOWEDPATH
+              value: /downloads
+          image: jesec/flood:4.8.2
+          imagePullPolicy: Always
+          name: floodui
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsGroup: 2001
+            runAsNonRoot: true
+            runAsUser: 3000
+          volumeMounts:
+            - mountPath: /downloads/default
+              name: blk-vol-default
+            - mountPath: /downloads/anime
+              name: blk-vol-anime
+            - mountPath: /downloads/airing
+              name: blk-vol-airing
+            - mountPath: /config
+              name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
+              subPath: flood
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      initContainers:
+        - command:
+            - sh
+            - /init/init.sh
+          image: busybox
+          imagePullPolicy: Always
+          name: init-appdata
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
+            - mountPath: /init
+              name: configmap-media-qbit-depl-cm-init-c82356b0
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: blk-vol-default
+          nfs:
+            path: /mnt/data/downloads
+            server: 10.10.8.1
+        - name: blk-vol-anime
+          nfs:
+            path: /mnt/data/media/anime/downloads
+            server: 10.10.8.1
+        - name: blk-vol-airing
+          nfs:
+            path: /mnt/data/media/anime/airing
+            server: 10.10.8.1
+        - name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
+          persistentVolumeClaim:
+            claimName: media-qbit-depl-vol-appdata-pvc-c865d717
+            readOnly: false
+        - configMap:
+            name: media-qbit-depl-cm-init-c82356b0
+          name: configmap-media-qbit-depl-cm-init-c82356b0
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-qbit-depl-vol-appdata-pvc-c865d717
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: media-qbit-depl-cm-init-c82356b0
+data:
+  init.sh: |-
+    #!/bin/sh
+    set -exv
+
+    # Create config directories
+    mkdir -p /config/qbittorrent
+    mkdir -p /config/flood
+
+    # Initialize default qBittorrent configuration
+    if [ ! -f "/config/qbittorrent/qBittorrent/qBittorrent.conf" ]; then
+      echo "qBittorrent configuration not found; initializing a default one"
+      mkdir -p /config/qbittorrent/qBittorrent
+      cp /init/qbittorrent.conf /config/qbittorrent/qBittorrent/qBittorrent.conf
+    fi
+
+    # Set up permissions
+    chown -R 3000:2001 /config
+  qbittorrent.conf: |-
+    [Preferences]
+    WebUI\Address=127.0.0.1
+    WebUI\Port=8080
+    WebUI\HostHeaderValidation=false
+    WebUI\LocalHostAuth=false
+immutable: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: media-qbit-depl-service-c85796f8
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 3000
+  selector:
+    cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+  name: media-qbit-ingr-c86a809e
+spec:
+  rules:
+    - host: dl2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: media-qbit-depl-service-c85796f8
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
