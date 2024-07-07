@@ -50,7 +50,10 @@
       "node_modules"
     ]
   },
-  "prettier": {},
+  "prettier": {
+    "arrowParens": "avoid",
+    "printWidth": 120
+  },
   "scripts": {
     "build": "nx run-many -t build && k2-release",
     "eslint": "eslint --ext .ts .",

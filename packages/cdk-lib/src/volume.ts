@@ -54,10 +54,7 @@ export type K2Volumes<Name extends string = string> = Record<Name, K2Volume>;
  * K2MaterializedVolume is a K2Volume that has been turned into an actual Volume
  * construct within the constructs tree.
  */
-export abstract class K2MaterializedVolume
-  extends Construct
-  implements IStorage
-{
+export abstract class K2MaterializedVolume extends Construct implements IStorage {
   public abstract asVolume(): Volume;
 
   /**
@@ -137,9 +134,7 @@ export class K2ReplicatedVolume extends K2MaterializedVolume {
     super(scope, id);
     this.pvc = new PersistentVolumeClaim(this, `pvc`, {
       storageClassName: K2ReplicatedVolume.STORAGE_CLASS,
-      accessModes: props.accessModes || [
-        PersistentVolumeAccessMode.READ_WRITE_ONCE,
-      ],
+      accessModes: props.accessModes || [PersistentVolumeAccessMode.READ_WRITE_ONCE],
       storage: props.size,
     });
     this.volume = Volume.fromPersistentVolumeClaim(this, `vol`, this.pvc);
@@ -186,9 +181,7 @@ export class K2BulkVolume extends K2MaterializedVolume {
 
   protected configure(workload: Workload): void {
     // Prefer scheduling in the same zone as storage server
-    const labeledNode = new LabeledNode([
-      NodeLabelQuery.is("topology.kubernetes.io/zone", K2BulkVolume.NAS_ZONE),
-    ]);
+    const labeledNode = new LabeledNode([NodeLabelQuery.is("topology.kubernetes.io/zone", K2BulkVolume.NAS_ZONE)]);
     workload.scheduling.attract(labeledNode);
   }
 }
