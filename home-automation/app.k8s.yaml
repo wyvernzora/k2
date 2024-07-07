@@ -373,7 +373,7 @@ spec:
       hostNetwork: false
       initContainers:
         - args:
-            - /bin/sh /mnt/init/init.sh
+            - /bin/sh /init/init.sh
           command:
             - /bin/sh
             - -c
