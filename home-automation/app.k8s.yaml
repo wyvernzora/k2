@@ -277,18 +277,59 @@ data:
     # Loads default set of integrations. Do not remove.
     default_config:
 
+    # Load frontend themes from the themes folder
+    frontend:
+      themes: !include_dir_merge_named themes
+
+    http: !include http.yaml
+    automation: !include automations.yaml
+    script: !include scripts.yaml
+    scene: !include scenes.yaml
+  http.yaml: |-
     # Allow reverse proxy
-    http:
-      use_x_forwarded_for: true
-      trusted_proxies:
-        - 10.42.0.0/16
+    use_x_forwarded_for: true
+    trusted_proxies:
+      - 10.42.0.0/16
+  init.sh: |-
+    #!/bin/bash
+
+    # Initialize configuration if not present
+    if [ ! -f "/config/configuration.yaml" ]; then
+      echo "Configuration file not found, copying from templates"
+      cp /init/configuration.yaml /config/configuration.yaml
+    fi
+
+    # Copy over the HTTP configuration file
+    if [ ! -f "/config/http.yaml" ]; then
+      echo "HTTP file not found, copying from templates"
+      cp /init/http.yaml /config/http.yaml
+    fi
+
+    # Check if the automations file exists
+    if [ ! -f /config/automations.yaml ]; then
+      echo "Automations file not found, creating a new one"
+      touch /config/automations.yaml
+      echo "[]" >> /config/automations.yaml
+    fi
+
+    # Check if the scripts file exists
+    if [ ! -f /config/scripts.yaml ]; then
+      echo "Scripts file not found, creating a new one"
+      touch /config/scripts.yaml
+    fi
+
+    # Check if the scenes file exists
+    if [ ! -f /config/scenes.yaml ]; then
+      echo "Scenes file not found, creating a new one"
+      touch /config/scenes.yaml
+    fi
 immutable: false
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/conf: 1c5c45e3764d1c45e040dde3d19ff4b2c7686ef4b7d9303477bdc21ddf404449
+    checksum/conf: 3d6f3460908ce81d05d903aab773d23df15024d0c308cba40cfae866dae8dfb5
   name: home-automation-home-assistant-depl-c822e115
   namespace: home-automation
 spec:
@@ -328,11 +369,34 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: pvc-home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
-            - mountPath: /config/configuration.yaml
-              name: configmap-home-automation-home-assistant-conf-c8124870
-              subPath: configuration.yaml
       dnsPolicy: ClusterFirst
       hostNetwork: false
+      initContainers:
+        - args:
+            - /bin/sh /mnt/init/init.sh
+          command:
+            - /bin/sh
+            - -c
+          image: mikefarah/yq:4
+          imagePullPolicy: Always
+          name: setup-config
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
+            - mountPath: /init
+              name: configmap-home-automation-home-assistant-conf-c8124870
       restartPolicy: Always
       securityContext:
         fsGroupChangePolicy: Always
