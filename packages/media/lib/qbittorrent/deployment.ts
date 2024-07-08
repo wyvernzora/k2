@@ -1,6 +1,6 @@
 import { K2MaterializedVolume, K2Volumes, oci } from "@k2/cdk-lib";
 import { Size } from "cdk8s";
-import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Volume, VolumeMount } from "cdk8s-plus-28";
+import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Probe, Volume, VolumeMount } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import dedent from "dedent-js";
 
@@ -85,6 +85,8 @@ export class QBitTorrentDeployment extends Deployment {
           limit: Size.gibibytes(8),
         },
       },
+      liveness: Probe.fromCommand(["wget", "-qO", "/dev/null", "http://127.0.0.1:8080"]),
+      readiness: Probe.fromCommand(["wget", "-qO", "/dev/null", "http://127.0.0.1:8080"]),
     });
   }
 
@@ -118,6 +120,8 @@ export class QBitTorrentDeployment extends Deployment {
         group: PGID,
         readOnlyRootFilesystem: false,
       },
+      liveness: Probe.fromHttpGet("/", { port: 3000 }),
+      readiness: Probe.fromHttpGet("/", { port: 3000 }),
     });
   }
 
