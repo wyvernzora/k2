@@ -49,21 +49,25 @@ spec:
           image: lscr.io/linuxserver/qbittorrent:4.6.5
           imagePullPolicy: Always
           livenessProbe:
+            exec:
+              command:
+                - wget
+                - -qO
+                - /dev/null
+                - http://127.0.0.1:8080
             failureThreshold: 3
-            httpGet:
-              path: /
-              port: 8080
-              scheme: HTTP
           name: qbittorrent
           ports:
             - containerPort: 8080
               name: http
           readinessProbe:
+            exec:
+              command:
+                - wget
+                - -qO
+                - /dev/null
+                - http://127.0.0.1:8080
             failureThreshold: 3
-            httpGet:
-              path: /
-              port: 8080
-              scheme: HTTP
           resources:
             limits:
               cpu: 1000m
