@@ -48,10 +48,22 @@ spec:
               value: 8080/tcp
           image: lscr.io/linuxserver/qbittorrent:4.6.5
           imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
           name: qbittorrent
           ports:
             - containerPort: 8080
               name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
           resources:
             limits:
               cpu: 1000m
@@ -90,10 +102,22 @@ spec:
               value: /downloads
           image: jesec/flood:4.8.2
           imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 3000
+              scheme: HTTP
           name: floodui
           ports:
             - containerPort: 3000
               name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 3000
+              scheme: HTTP
           resources:
             limits:
               cpu: 1500m
