@@ -1,13 +1,6 @@
 import { K2Volumes, oci } from "@k2/cdk-lib";
 import { Construct } from "constructs";
-import {
-  ConfigMap,
-  Deployment,
-  DeploymentStrategy,
-  Secret,
-  VolumeMount,
-  Volume,
-} from "cdk8s-plus-28";
+import { ConfigMap, Deployment, DeploymentStrategy, Secret, VolumeMount, Volume } from "cdk8s-plus-28";
 import { join } from "path";
 
 const PLEX_ROOT = "/config/Library/Application Support/Plex Media Server";
@@ -27,25 +20,17 @@ export class PlexDeployment extends Deployment {
     this.addNginxContainer();
   }
 
-  private *createVolumeMounts(
-    volumes: Props["volumes"],
-  ): Iterable<VolumeMount> {
+  private *createVolumeMounts(volumes: Props["volumes"]): Iterable<VolumeMount> {
     yield volumes.config(this, "vol-config").mount(this, { path: PLEX_ROOT });
-    yield volumes
-      .series(this, "vol-series")
-      .mount(this, { path: "/anime/series" });
-    yield volumes
-      .features(this, "vol-features")
-      .mount(this, { path: "/anime/features" });
-    yield volumes
-      .airing(this, "vol-airing")
-      .mount(this, { path: "/anime/airing" });
+    yield volumes.series(this, "vol-series").mount(this, { path: "/anime/series" });
+    yield volumes.features(this, "vol-features").mount(this, { path: "/anime/features" });
+    yield volumes.airing(this, "vol-airing").mount(this, { path: "/anime/airing" });
   }
 
   private addPlexContainer(props: Props): void {
     this.addContainer({
       name: "plex-media-server",
-      image: oci`plexinc/pms-docker:1.40.3.8555-fef15d30c`,
+      image: oci`plexinc/pms-docker:1.40.4.8679-424562606`,
       ports: [
         {
           name: "http-internal",
@@ -59,7 +44,7 @@ export class PlexDeployment extends Deployment {
           name: "mdns",
           number: 5353,
         },
-        ...[32410, 32412, 32413, 32414].map((number) => ({
+        ...[32410, 32412, 32413, 32414].map(number => ({
           name: `gdm-${number}`,
           number,
         })),
@@ -80,11 +65,7 @@ export class PlexDeployment extends Deployment {
   }
 
   private addNginxContainer(): void {
-    const certSecret = Secret.fromSecretName(
-      this,
-      "plex-cert",
-      "default-certificate",
-    );
+    const certSecret = Secret.fromSecretName(this, "plex-cert", "default-certificate");
     const config = new ConfigMap(this, "nginx-conf");
     config.addFile(join(__dirname, "../config/nginx.conf"));
 
