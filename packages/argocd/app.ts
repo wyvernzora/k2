@@ -18,7 +18,7 @@ const AppHealthCustomization = `
 const app = new App();
 new HelmChart(app, "argocd", {
   namespace: "k2-core",
-  chart: "helm:https://argoproj.github.io/argo-helm/argo-cd@7.3.5",
+  chart: "helm:https://argoproj.github.io/argo-helm/argo-cd@7.3.6",
   values: {
     secret: {
       createSecret: false,
