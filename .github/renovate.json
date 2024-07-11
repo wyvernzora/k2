@@ -11,6 +11,10 @@
       "matchCurrentVersion": "!/^0/",
       "automergeType": "branch",
       "automerge": true
+    },
+    {
+      "matchDepNames": ["plexinc/pms-docker"],
+      "extractVersion": "(?<version>\\d+\\.\\d+\\.\\d+)\\.\\d{4}-.*"
     }
   ],
   "ignorePaths": ["**/node_modules/**", "**/cdk-lib/src/helm\\.ts"],
@@ -24,17 +28,13 @@
     },
     {
       "fileMatch": ["(.*/|^)kustomization\\.ya?ml", "(.*/|^)app\\.ts"],
-      "matchStrings": [
-        ".*https://github.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>.+)/.+"
-      ],
+      "matchStrings": [".*https://github.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>.+)/.+"],
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "semver"
     },
     {
       "fileMatch": [".*\\.ts"],
-      "matchStrings": [
-        "helm:(?<registryUrl>.+)/(?<depName>[\\w-]+)@(?<currentValue>[\\w.]+)"
-      ],
+      "matchStrings": ["helm:(?<registryUrl>.+)/(?<depName>[\\w-]+)@(?<currentValue>[\\w.]+)"],
       "datasourceTemplate": "helm",
       "versioningTemplate": "helm"
     },
