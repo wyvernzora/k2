@@ -6,8 +6,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-controller
   namespace: k2-network
 ---
@@ -19,8 +19,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-speaker
   namespace: k2-network
 ---
@@ -31,8 +31,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-webhook-cert
   namespace: k2-network
 ---
@@ -43,8 +43,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-excludel2
   namespace: k2-network
 data:
@@ -72,8 +72,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-frr-startup
   namespace: k2-network
 data:
@@ -161,7 +161,7 @@ data:
   frr.conf: |
     ! This file gets overriden the first time the speaker renders a config.
     ! So anything configured here is only temporary.
-    frr version 7.5.1
+    frr version 8.0
     frr defaults traditional
     hostname Router
     line vty
@@ -176,8 +176,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb:controller
   namespace: k2-network
 rules:
@@ -266,8 +266,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb:speaker
   namespace: k2-network
 rules:
@@ -312,8 +312,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb:controller
   namespace: k2-network
 roleRef:
@@ -332,8 +332,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb:speaker
   namespace: k2-network
 roleRef:
@@ -352,8 +352,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-pod-lister
   namespace: k2-network
 rules:
@@ -363,6 +363,7 @@ rules:
       - pods
     verbs:
       - list
+      - get
   - apiGroups:
       - ""
     resources:
@@ -435,8 +436,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-controller
   namespace: k2-network
 rules:
@@ -530,8 +531,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-pod-lister
   namespace: k2-network
 roleRef:
@@ -549,8 +550,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-controller
   namespace: k2-network
 roleRef:
@@ -568,8 +569,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-webhook-service
   namespace: k2-network
 spec:
@@ -589,8 +590,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-speaker
   namespace: k2-network
 spec:
@@ -635,7 +636,11 @@ spec:
               value: /etc/frr_reloader/reloader.pid
             - name: METALLB_BGP_TYPE
               value: frr
-          image: quay.io/metallb/speaker:v0.14.5
+            - name: METALLB_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          image: quay.io/metallb/speaker:v0.14.7
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -693,7 +698,7 @@ spec:
           env:
             - name: TINI_SUBREAPER
               value: "true"
-          image: quay.io/frrouting/frr:9.0.2
+          image: quay.io/frrouting/frr:9.1.0
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -724,7 +729,7 @@ spec:
               name: frr-conf
         - command:
             - /etc/frr_reloader/frr-reloader.sh
-          image: quay.io/frrouting/frr:9.0.2
+          image: quay.io/frrouting/frr:9.1.0
           name: reloader
           volumeMounts:
             - mountPath: /var/run/frr
@@ -737,7 +742,10 @@ spec:
             - --metrics-port=7473
           command:
             - /etc/frr_metrics/frr-metrics
-          image: quay.io/frrouting/frr:9.0.2
+          env:
+            - name: VTYSH_HISTFILE
+              value: /dev/null
+          image: quay.io/frrouting/frr:9.1.0
           name: frr-metrics
           ports:
             - containerPort: 7473
@@ -755,7 +763,7 @@ spec:
             - /bin/sh
             - -c
             - cp -rLf /tmp/frr/* /etc/frr/
-          image: quay.io/frrouting/frr:9.0.2
+          image: quay.io/frrouting/frr:9.1.0
           name: cp-frr-files
           securityContext:
             runAsGroup: 101
@@ -766,19 +774,19 @@ spec:
             - mountPath: /etc/frr
               name: frr-conf
         - command:
-            - /bin/sh
-            - -c
-            - cp -f /frr-reloader.sh /etc/frr_reloader/
-          image: quay.io/metallb/speaker:v0.14.5
+            - /cp-tool
+            - /frr-reloader.sh
+            - /etc/frr_reloader/frr-reloader.sh
+          image: quay.io/metallb/speaker:v0.14.7
           name: cp-reloader
           volumeMounts:
             - mountPath: /etc/frr_reloader
               name: reloader
         - command:
-            - /bin/sh
-            - -c
-            - cp -f /frr-metrics /etc/frr_metrics/
-          image: quay.io/metallb/speaker:v0.14.5
+            - /cp-tool
+            - /frr-metrics
+            - /etc/frr_metrics/frr-metrics
+          image: quay.io/metallb/speaker:v0.14.7
           name: cp-metrics
           volumeMounts:
             - mountPath: /etc/frr_metrics
@@ -826,8 +834,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-controller
   namespace: k2-network
 spec:
@@ -857,7 +865,7 @@ spec:
               value: metallb-controller
             - name: METALLB_BGP_TYPE
               value: frr
-          image: quay.io/metallb/controller:v0.14.5
+          image: quay.io/metallb/controller:v0.14.7
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -914,8 +922,8 @@ metadata:
     app.kubernetes.io/instance: metallb
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: metallb
-    app.kubernetes.io/version: v0.14.5
-    helm.sh/chart: metallb-0.14.5
+    app.kubernetes.io/version: v0.14.7
+    helm.sh/chart: metallb-0.14.7
   name: metallb-webhook-configuration
   namespace: k2-network
 webhooks:
