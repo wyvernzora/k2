@@ -4,7 +4,7 @@ import { IpAddressPool, L2Advertisement } from "@k2/metallb/crds";
 const app = new App();
 const chart = new HelmChart(app, "metallb", {
   namespace: "k2-network",
-  chart: "helm:https://metallb.github.io/metallb/metallb@0.14.7",
+  chart: "helm:https://metallb.github.io/metallb/metallb@0.14.8",
 });
 
 /**
