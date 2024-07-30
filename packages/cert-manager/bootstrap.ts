@@ -7,7 +7,7 @@ import { App, HelmChart } from "@k2/cdk-lib";
 const app = new App();
 new HelmChart(app, "cert-manager", {
   namespace: "k2-core",
-  chart: "helm:https://charts.jetstack.io/cert-manager@v1.15.1",
+  chart: "helm:https://charts.jetstack.io/cert-manager@v1.15.2",
   values: {
     installCRDs: true,
   },

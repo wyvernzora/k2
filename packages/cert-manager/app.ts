@@ -16,7 +16,7 @@ new HelmChart(app, "reflector", {
 // Cert Manager chart
 const chart = new HelmChart(app, "cert-manager", {
   namespace: "k2-core",
-  chart: "helm:https://charts.jetstack.io/cert-manager@v1.15.1",
+  chart: "helm:https://charts.jetstack.io/cert-manager@v1.15.2",
   values: {
     installCRDs: true,
   },
