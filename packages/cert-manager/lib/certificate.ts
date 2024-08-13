@@ -2,7 +2,7 @@ import { Certificate, ClusterIssuer, Issuer } from "@k2/cert-manager/crds";
 import { Construct } from "constructs";
 
 const COMMON_NAME = "*.wyvernzora.io";
-const NAMESPACES = "k2-auth,K2-network,plex";
+const NAMESPACES = "k2-auth,k2-network,plex";
 
 export interface ReplicatedCertificateProps {
   readonly issuer: Issuer | ClusterIssuer;
