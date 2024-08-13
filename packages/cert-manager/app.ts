@@ -19,6 +19,7 @@ const chart = new HelmChart(app, "cert-manager", {
   chart: "helm:https://charts.jetstack.io/cert-manager@v1.15.2",
   values: {
     installCRDs: true,
+    extraArgs: ["--controllers=*"],
   },
 });
 
