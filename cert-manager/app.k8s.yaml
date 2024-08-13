@@ -1393,6 +1393,7 @@ spec:
             - --cluster-resource-namespace=$(POD_NAMESPACE)
             - --leader-election-namespace=kube-system
             - --acme-http01-solver-image=quay.io/jetstack/cert-manager-acmesolver:v1.15.2
+            - --controllers=*,certificatesigningrequests-issuer-acme
             - --max-concurrent-challenges=60
           env:
             - name: POD_NAMESPACE
