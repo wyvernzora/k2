@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-29.0.1
+    helm.sh/chart: traefik-30.0.2
   name: traefik
   namespace: k2-network
 automountServiceAccountToken: false
@@ -17,10 +17,18 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-29.0.1
+    helm.sh/chart: traefik-30.0.2
   name: traefik-k2-network
   namespace: k2-network
 rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups:
       - extensions
       - networking.k8s.io
@@ -34,10 +42,16 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - endpoints
       - services
     verbs:
       - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
       - list
       - watch
   - apiGroups:
@@ -80,7 +94,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-29.0.1
+    helm.sh/chart: traefik-30.0.2
   name: traefik-k2-network
   namespace: k2-network
 roleRef:
@@ -99,7 +113,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-29.0.1
+    helm.sh/chart: traefik-30.0.2
   name: traefik
   namespace: k2-network
 spec:
@@ -125,7 +139,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-29.0.1
+    helm.sh/chart: traefik-30.0.2
   name: traefik
   namespace: k2-network
 spec:
@@ -150,7 +164,7 @@ spec:
         app.kubernetes.io/instance: traefik-k2-network
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: traefik
-        helm.sh/chart: traefik-29.0.1
+        helm.sh/chart: traefik-30.0.2
     spec:
       automountServiceAccountToken: true
       containers:
@@ -180,7 +194,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: docker.io/traefik:v3.0.4
+          image: docker.io/traefik:v3.1.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -259,7 +273,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-29.0.1
+    helm.sh/chart: traefik-30.0.2
   name: traefik
   namespace: k2-network
 spec:
@@ -272,7 +286,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-29.0.1
+    helm.sh/chart: traefik-30.0.2
   name: traefik-dashboard
   namespace: k2-network
 spec:
