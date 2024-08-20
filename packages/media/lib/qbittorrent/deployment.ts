@@ -48,7 +48,7 @@ export class QBitTorrentDeployment extends Deployment {
   private addQbitTorrentContainer(appdata: K2MaterializedVolume, mounts: VolumeMount[]) {
     this.addContainer({
       name: "qbittorrent",
-      image: oci`lscr.io/linuxserver/qbittorrent:4.6.5`,
+      image: oci`lscr.io/linuxserver/qbittorrent:4.6.6`,
       ports: [
         {
           name: "http",
