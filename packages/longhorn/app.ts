@@ -4,7 +4,7 @@ import * as authelia from "@k2/authelia";
 const app = new App();
 new HelmChart(app, "longhorn", {
   namespace: "k2-storage",
-  chart: "helm:https://charts.longhorn.io/longhorn@1.6.2",
+  chart: "helm:https://charts.longhorn.io/longhorn@1.7.0",
   values: {
     ingress: {
       enabled: true,
