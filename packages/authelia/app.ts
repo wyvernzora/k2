@@ -5,7 +5,7 @@ import { Middleware } from "@k2/traefik/crds";
 const app = new App();
 const chart = new HelmChart(app, "authelia", {
   namespace: "k2-auth",
-  chart: "helm:https://charts.authelia.com/authelia@0.8.58",
+  chart: "helm:https://charts.authelia.com/authelia@0.9.5",
   values: {
     domain: "wyvernzora.io",
     ingress: {
@@ -30,7 +30,6 @@ const chart = new HelmChart(app, "authelia", {
       ],
     },
     configMap: {
-      default_redirection_url: "https://h.wyvernzora.io",
       authentication_backend: {
         ldap: {
           enabled: true,
@@ -42,8 +41,7 @@ const chart = new HelmChart(app, "authelia", {
           base_dn: "dc=wyvernzora,dc=io",
           user: "cn=authelia,dc=wyvernzora,dc=io",
           additional_users_dn: "ou=users",
-          users_filter:
-            "(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=posixAccount))",
+          users_filter: "(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=posixAccount))",
           additional_groups_dn: "ou=groups",
           groups_filter: "(&(memberUid={username})(objectClass=posixGroup))",
         },
@@ -58,6 +56,13 @@ const chart = new HelmChart(app, "authelia", {
         ],
       },
       session: {
+        cookies: [
+          {
+            domain: "wyvernzora.io",
+            subdomain: "auth",
+            default_redirection_url: "https://h.wyvernzora.io",
+          },
+        ],
         redis: {
           enabled: false,
         },
@@ -95,8 +100,7 @@ new OnePasswordItem(chart, "secret", {
     name: "authelia",
   },
   spec: {
-    itemPath:
-      "vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/ejfcz3g4s6wsr2jtct6hs3alxi",
+    itemPath: "vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/ejfcz3g4s6wsr2jtct6hs3alxi",
   },
 });
 
@@ -109,14 +113,8 @@ new Middleware(chart, "middleware", {
   },
   spec: {
     forwardAuth: {
-      address:
-        "http://authelia.k2-auth.svc.cluster.local/api/verify?rd=https%3A%2F%2Fauth.wyvernzora.io%2F",
-      authResponseHeaders: [
-        "Remote-User",
-        "Remote-Groups",
-        "Remote-Email",
-        "Remote-Name",
-      ],
+      address: "http://authelia.k2-auth.svc.cluster.local/api/verify?rd=https%3A%2F%2Fauth.wyvernzora.io%2F",
+      authResponseHeaders: ["Remote-User", "Remote-Groups", "Remote-Email", "Remote-Name"],
     },
   },
 });
