@@ -22,7 +22,7 @@ export class Zigbee2MqttDeployment extends Deployment {
   private addZigbee2MqttContainer(props: Props) {
     this.addContainer({
       name: "zigbee2mqtt",
-      image: oci`koenkk/zigbee2mqtt:1.40.0`,
+      image: oci`koenkk/zigbee2mqtt:1.40.1`,
       ports: [
         {
           name: "http",
