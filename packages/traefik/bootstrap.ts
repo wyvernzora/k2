@@ -7,6 +7,6 @@ import { App, HelmChart } from "@k2/cdk-lib";
 const app = new App();
 new HelmChart(app, "traefik", {
   namespace: "k2-network",
-  chart: "helm:https://traefik.github.io/charts/traefik@31.0.0",
+  chart: "helm:https://traefik.github.io/charts/traefik@32.1.1",
 });
 app.synth();
