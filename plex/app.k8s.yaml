@@ -48,7 +48,7 @@ spec:
               value: docker
             - name: ADVERTISE_IP
               value: https://plex.wyvernzora.io
-          image: plexinc/pms-docker:1.40.4.8679-424562606
+          image: plexinc/pms-docker:1.41.1.9057-af5eaea7a
           imagePullPolicy: Always
           name: plex-media-server
           ports:
