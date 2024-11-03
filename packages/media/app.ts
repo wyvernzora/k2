@@ -6,7 +6,7 @@ const app = new App();
 
 new Media(app, "media", {
   qbitTorrent: {
-    host: "dl2.wyvernzora.io",
+    host: "dl.wyvernzora.io",
     volumes: {
       appdata: K2Volume.replicated({ size: Size.gibibytes(4) }),
     },
