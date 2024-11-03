@@ -15,10 +15,7 @@ new Media(app, "media", {
         path: "/mnt/data/downloads",
       }),
       anime: K2Volume.bulk({
-        path: "/mnt/data/media/anime/downloads",
-      }),
-      airing: K2Volume.bulk({
-        path: "/mnt/data/media/anime/airing",
+        path: "/mnt/data/media/anime",
       }),
     },
   },
