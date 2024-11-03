@@ -30,11 +30,6 @@ spec:
                     operator: In
                     values:
                       - roxy
-              - matchExpressions:
-                  - key: topology.kubernetes.io/zone
-                    operator: In
-                    values:
-                      - roxy
       automountServiceAccountToken: false
       containers:
         - env:
@@ -86,8 +81,6 @@ spec:
               name: blk-vol-default
             - mountPath: /downloads/anime
               name: blk-vol-anime
-            - mountPath: /downloads/airing
-              name: blk-vol-airing
             - mountPath: /config
               name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
               subPath: qbittorrent
@@ -141,8 +134,6 @@ spec:
               name: blk-vol-default
             - mountPath: /downloads/anime
               name: blk-vol-anime
-            - mountPath: /downloads/airing
-              name: blk-vol-airing
             - mountPath: /config
               name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
               subPath: flood
@@ -185,11 +176,7 @@ spec:
             server: 10.10.8.1
         - name: blk-vol-anime
           nfs:
-            path: /mnt/data/media/anime/downloads
-            server: 10.10.8.1
-        - name: blk-vol-airing
-          nfs:
-            path: /mnt/data/media/anime/airing
+            path: /mnt/data/media/anime
             server: 10.10.8.1
         - name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
           persistentVolumeClaim:
