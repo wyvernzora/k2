@@ -263,7 +263,7 @@ metadata:
   name: media-qbit-ingr-c86a809e
 spec:
   rules:
-    - host: dl2.wyvernzora.io
+    - host: dl.wyvernzora.io
       http:
         paths:
           - backend:
