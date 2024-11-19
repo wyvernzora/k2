@@ -87,9 +87,6 @@ const chart = new HelmChart(app, "authelia", {
         },
       },
     },
-    secret: {
-      existingSecret: "authelia",
-    },
   },
 });
 
