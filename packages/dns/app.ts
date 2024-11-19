@@ -6,9 +6,7 @@ const app = new App();
 // Default client group and its blocking config
 const blockingGroup = new BlockingGroup({
   name: "default",
-  blacklists: [
-    "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
-  ],
+  blacklists: ["https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"],
 });
 const clientGroup = new ClientGroup({
   name: "default",
@@ -26,6 +24,12 @@ const customDns = new CustomDns({
     pve: ["10.10.7.254"],
     rumi: ["10.10.8.1"],
     k8s: ["10.10.8.2"],
+    ha: ["10.10.12.1"],
+    auth: ["10.10.12.1"],
+    deploy: ["10.10.12.1"],
+    dl: ["10.10.12.1"],
+    sonarr: ["10.10.12.1"],
+    plex: ["10.10.12.2"],
   },
 });
 
