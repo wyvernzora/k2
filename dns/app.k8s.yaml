@@ -22,7 +22,7 @@ metadata:
   name: k8s-gateway
   namespace: k2-network
 data:
-  Corefile: ".:1053 {\n    k8s_gateway wyvernzora.io {\n      apex k8s-gateway.k2-network\n      ttl 300\n      resources Ingress\n    }\n    log\n    errors\n    health { \n      lameduck 5s\n    }\n    ready\n    prometheus 0.0.0.0:9153\n    forward . /etc/resolv.conf\n    loop\n    reload\n    loadbalance\n}"
+  Corefile: ".:1053 {\n    k8s_gateway wyvernzora.io {\n      apex k8s-gateway.k2-network\n      ttl 300\n    }\n    log\n    errors\n    health { \n      lameduck 5s\n    }\n    ready\n    prometheus 0.0.0.0:9153\n    forward . /etc/resolv.conf\n    loop\n    reload\n    loadbalance\n}"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -132,7 +132,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 901f3aae963c11d40708598c229af4173bbd09b794cdc455ee8f27e94bfc08a1
+        checksum/config: 4e41ae97e17fa2a1fc02a8387822e83bdb091ac4d1f06b85bab372d67172e9db
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
