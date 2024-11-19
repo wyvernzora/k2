@@ -12,6 +12,7 @@ const chart = new HelmChart(app, "authelia", {
       enabled: true,
       tls: {
         enabled: true,
+        secret: "default-certificate",
       },
     },
     pod: {
