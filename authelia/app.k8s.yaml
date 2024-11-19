@@ -336,7 +336,7 @@ spec:
   tls:
     - hosts:
         - auth.wyvernzora.io
-      secretName: authelia-tls
+      secretName: default-certificate
 ---
 apiVersion: onepassword.com/v1
 kind: OnePasswordItem
