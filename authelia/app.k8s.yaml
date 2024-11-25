@@ -10,10 +10,10 @@ metadata:
   name: authelia
   namespace: k2-auth
 data:
-  authentication.ldap.password.txt: aTM5MHd0TVU4bmNDa0NzMzZobWJJWDFYZlhpM29XOVFQRWxNN0JqS3laalVYT3BWbzFOUEVrYVNPT0dLeXRwSG5VbjJkeXBhVGgxRmk5NndKbmdUTFlUWGdteElKYWtGb1BVUDZLYXJYUmtyQ3VGQ1V5QzBLMWJScllnRGswbDE=
-  identity_validation.reset_password.jwt.hmac.key: TFl0S05kYkRtTUlVcUhXeThEVnRFYnVvbWNRS3IzcVdzOWJMYzNDNTFJd0EwemdScVk2UTBCcWlLemJQMDFLWXhycWZaM0RaY2huSWI3TENOVU55QmYzOXkwcHNYN2pvVDg5YWx5RUpWd043aXp4Z0x4UFZodnZzWG5YTk1hWWM=
-  session.encryption.key: RUVkRzZhRHpPVEh3TEo0c3pEMmJacHBsbDFkdmhWNEEyWWRuZHRTVVJlTXFubjd1dHZaWlluZ1RBOXo1cGFncHE0ejRCUG81Vlh6dGpNQmQ5bEFFdHU2VmJvcGZHV3NDdjhJOU93QmNBenVPWEg1MHJ0bjVSbFpUYzdhNlNjZzU=
-  storage.encryption.key: SnhFOWg0VXgweTBuMnJtOXdrand4UkxhVzRtUjk3UVY4T0NQSTFTeGtmbHJPNUZGa1RpeWw2OWZKTGFyeDhsRGtQNVJEekhDc3hZRUF3SWthdWRzaVQ2RzNEN2l6dkIwZVk0SUxVRnByZmpMRWVZUHJMZDcyMElzSTk2c25PeEs=
+  authentication.ldap.password.txt: Y2VDbHVsaGt6Z2EwNEpDb2VSZDdkeFRWVUVHVHJYSHdnTDBFZGltY0ZSUlc4N2dpV0ZxSDZ6elEwWkdLYW80UUZyOVJ2TklmZmx5YVNkSEpEcTAweUp3VlNQR3hWQXpIRU9JOGdXZTg5RkJFWkl4NXZ2VkFkRlRzaHYwQURCNlc=
+  identity_validation.reset_password.jwt.hmac.key: RGo0dEFkdFRpYjhITmN0OWk5SUg0OEc1SXNmeDd2b2JjRHM5dWhvQURzMnpHT3RYNGp3anllZld2UXNMVndKOGlEc1BFMm11aWxnMVdBdHhVWG5rbEZqRlpxY1BaN1NEWXhSaElmYlBSWjZrVHczbldhOWxKSm9vY1FpQWJGZlg=
+  session.encryption.key: aHdyb1YyOFhlakJFUnJleWlhY2ZRQ2hsZHNxMnFGQTR3eTBlTU9vQ1hsU0JhblpJbVVkeWk3eHJmajFXb0lBWTh4TGFpeUVBWndHM1lvYTNaWnZwODdmSlFuUDd3bUVUTGdvQUtPTkkxaFpCcllqWFNWQzAzRDlBd0NWVHFPVEY=
+  storage.encryption.key: aFlFNUljeGVpVTBBeFZib216R3FMVXA1V3hKSmtMNmlSNU1vWXVnbUJKQzlMallzTGtUQUN2M1ZGT0t4WjNZSzJtOHZSUVBUaEFqNGRtWGVydnYyTUpWenpUY1dTdFJDTnRwUzExVGxQS2Fmd2lMS0xzbVVHRFhJUGhUMGMzNTc=
 type: Opaque
 ---
 apiVersion: v1
@@ -223,7 +223,7 @@ spec:
     metadata:
       annotations:
         authelia.com/checksum-config: 771b621c71908aaf6bd1c38a91a42c94015bd3b11546e1fa328e1176e14c267f
-        authelia.com/checksum-secret: b121ac0b792267e4403bfa7c169f379d22459592babe9817e101a1175ebb2e50
+        authelia.com/checksum-secret: 38072bec4c49de62e4c0caef91d1c7f6b9b575ce1330f95c5f6e44e097904125
       labels:
         app.kubernetes.io/instance: authelia
         app.kubernetes.io/managed-by: Helm
