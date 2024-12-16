@@ -34,17 +34,14 @@ const chart = new HelmChart(app, "authelia", {
       authentication_backend: {
         ldap: {
           enabled: true,
-          implementation: "custom",
-          url: "ldap://glauth.k2-auth.svc.cluster.local",
+          implementation: "glauth",
+          address: "ldap://glauth.k2-auth.svc.cluster.local",
           tls: {
             server_name: "ldap.wyvernzora.io",
           },
           base_dn: "dc=wyvernzora,dc=io",
-          user: "cn=authelia,dc=wyvernzora,dc=io",
           additional_users_dn: "ou=users",
-          users_filter: "(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=posixAccount))",
-          additional_groups_dn: "ou=groups",
-          groups_filter: "(&(memberUid={username})(objectClass=posixGroup))",
+          user: "cn=authelia,dc=wyvernzora,dc=io",
         },
       },
       access_control: {
