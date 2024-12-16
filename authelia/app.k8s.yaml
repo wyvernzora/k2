@@ -220,6 +220,8 @@ spec:
           env:
             - name: AUTHELIA_SERVER_DISABLE_HEALTHCHECK
               value: "true"
+            - name: AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE
+              value: /secrets/internal/identity_validation.reset_password.jwt.hmac.key
             - name: AUTHELIA_SESSION_SECRET_FILE
               value: /secrets/internal/session.encryption.key
             - name: AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE
@@ -294,6 +296,8 @@ spec:
         - name: secrets
           secret:
             items:
+              - key: identity_validation.reset_password.jwt.hmac.key
+                path: identity_validation.reset_password.jwt.hmac.key
               - key: session.encryption.key
                 path: session.encryption.key
               - key: authentication.ldap.password.txt
