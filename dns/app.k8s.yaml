@@ -226,6 +226,7 @@ data:
         dl.wyvernzora.io: 10.10.12.1
         sonarr.wyvernzora.io: 10.10.12.1
         plex.wyvernzora.io: 10.10.12.2
+        k2.wyvernzora.io: 10.10.12.1
     conditional:
       fallbackUpstream: true
       mapping:
@@ -239,7 +240,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 2c5a8ea4b1fd7d08f687d12ce78ebd69c2db4bde656b96795aa11da5648369fb
+    checksum/config: 64d6b25da464cd0fd53ca87dbf0963fc130620ede677e30d54d61d99ec018341
   name: dns-blocky-depl-c826f1d8
   namespace: k2-network
 spec:
