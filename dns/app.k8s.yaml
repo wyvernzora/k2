@@ -220,13 +220,6 @@ data:
         pve.wyvernzora.io: 10.10.7.254
         rumi.wyvernzora.io: 10.10.8.1
         k8s.wyvernzora.io: 10.10.8.2
-        ha.wyvernzora.io: 10.10.12.1
-        auth.wyvernzora.io: 10.10.12.1
-        deploy.wyvernzora.io: 10.10.12.1
-        dl.wyvernzora.io: 10.10.12.1
-        sonarr.wyvernzora.io: 10.10.12.1
-        plex.wyvernzora.io: 10.10.12.2
-        k2.wyvernzora.io: 10.10.12.1
     conditional:
       fallbackUpstream: true
       mapping:
@@ -240,7 +233,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 64d6b25da464cd0fd53ca87dbf0963fc130620ede677e30d54d61d99ec018341
+    checksum/config: 6e570205c90b2570b5f52230042462d0f0479db9aed2534d504141fc86edf227
   name: dns-blocky-depl-c826f1d8
   namespace: k2-network
 spec:
