@@ -28,6 +28,7 @@ new HelmChart(app, "argocd", {
         enabled: true,
         annotations: {
           ...authelia.MiddlewareAnnotation,
+          "traefik.ingress.kubernetes.io/router.tls": "true",
         },
         hostname: "deploy.wyvernzora.io",
       },
@@ -42,8 +43,7 @@ new HelmChart(app, "argocd", {
       cm: {
         "statusbadge.enabled": true,
         "reposerver.enable.git.submodule": false,
-        "resource.customizations.health.argoproj.io_Application":
-          AppHealthCustomization,
+        "resource.customizations.health.argoproj.io_Application": AppHealthCustomization,
       },
     },
   },
