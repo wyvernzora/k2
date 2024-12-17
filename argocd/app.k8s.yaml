@@ -2835,6 +2835,7 @@ kind: Ingress
 metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+    traefik.ingress.kubernetes.io/router.tls: "true"
   labels:
     app.kubernetes.io/component: server
     app.kubernetes.io/instance: argocd
