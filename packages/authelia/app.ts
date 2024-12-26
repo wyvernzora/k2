@@ -111,7 +111,8 @@ new Middleware(chart, "middleware", {
   },
   spec: {
     forwardAuth: {
-      address: "http://authelia.k2-auth.svc.cluster.local/api/verify?rd=https%3A%2F%2Fauth.wyvernzora.io%2F",
+      address:
+        "http://authelia.k2-auth.svc.cluster.local/api/authz/forward-auth?rd=https%3A%2F%2Fauth.wyvernzora.io%2F",
       authResponseHeaders: ["Remote-User", "Remote-Groups", "Remote-Email", "Remote-Name"],
     },
   },
