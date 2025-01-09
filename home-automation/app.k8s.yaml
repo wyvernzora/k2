@@ -198,7 +198,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: koenkk/zigbee2mqtt:1.42.0
+        - image: koenkk/zigbee2mqtt:2.0.0
           imagePullPolicy: Always
           name: zigbee2mqtt
           ports:
@@ -348,7 +348,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: linuxserver/homeassistant:2024.12.5
+        - image: linuxserver/homeassistant:2025.1.1
           imagePullPolicy: Always
           name: home-assistant
           ports:
