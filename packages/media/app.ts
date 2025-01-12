@@ -27,6 +27,17 @@ new Media(app, "media", {
       }),
     },
   },
+  sonarr: {
+    url: "https://media.wyvernzora.io/sonarr",
+    volumes: {
+      appdata: K2Volume.replicated({
+        size: Size.gibibytes(4),
+      }),
+      anime: K2Volume.bulk({
+        path: "/mnt/data/media/anime/series",
+      }),
+    },
+  },
 });
 
 app.synth();
