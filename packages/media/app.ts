@@ -19,6 +19,14 @@ new Media(app, "media", {
       }),
     },
   },
+  prowlarr: {
+    host: "prowlarr.wyvernzora.io",
+    volumes: {
+      appdata: K2Volume.replicated({
+        size: Size.gibibytes(16),
+      }),
+    },
+  },
 });
 
 app.synth();
