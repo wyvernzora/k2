@@ -167,7 +167,8 @@ metadata:
   namespace: home-automation
 data:
   configuration.yaml: |
-    frontend: true
+    frontend:
+      enabled: true
     mqtt:
       base_topic: zigbee2mqtt
       server: mqtt://home-automation-mosquitto-depl-service-c8786f6b.home-automation.svc.cluster.local
@@ -179,7 +180,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/conf: d6637b74c4c7c41b1e804565ddaf59e8ecbd4281cb430049cc70061757e050c8
+    checksum/conf: 7e07481fbaea2d36fc679f72a1b83cab3ea40be9831f1570f8750117438d4db8
   name: home-automation-zigbee2mqtt-depl-c81c7252
   namespace: home-automation
 spec:
