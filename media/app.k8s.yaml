@@ -480,7 +480,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 16Gi
+      storage: 4Gi
   storageClassName: longhorn
   volumeMode: Filesystem
 ---
@@ -502,10 +502,10 @@ kind: Ingress
 metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
-  name: media-prowlarr-ingr-c8054ab3
+  name: media-prowlarr-ingress-c8f444b5
 spec:
   rules:
-    - host: prowlarr.wyvernzora.io
+    - host: media.wyvernzora.io
       http:
         paths:
           - backend:
@@ -513,5 +513,5 @@ spec:
                 name: media-prowlarr-depl-service-c8a1d3e0
                 port:
                   number: 80
-            path: /
+            path: /prowlarr
             pathType: Prefix
