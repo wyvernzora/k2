@@ -363,12 +363,25 @@ immutable: false
 apiVersion: v1
 kind: Service
 metadata:
-  name: media-qbit-depl-service-c85796f8
+  name: flood
 spec:
   externalIPs: []
   ports:
     - port: 80
       targetPort: 3000
+  selector:
+    cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8080
   selector:
     cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
   type: ClusterIP
@@ -386,7 +399,7 @@ spec:
         paths:
           - backend:
               service:
-                name: media-qbit-depl-service-c85796f8
+                name: flood
                 port:
                   number: 80
             path: /
