@@ -11,21 +11,27 @@ export interface QBitTorrentProps {
 
 export class QBitTorrent extends Construct {
   readonly deployment: Deployment;
-  readonly service: Service;
+  readonly floodService: Service;
+  readonly qbittorrentService: Service;
   readonly ingress: Ingress;
 
   constructor(scope: Construct, id: string, props: QBitTorrentProps) {
     super(scope, id);
 
     this.deployment = new QBitTorrentDeployment(this, "depl", props);
-    this.service = this.deployment.exposeViaService({
+    this.floodService = this.deployment.exposeViaService({
+      name: "flood",
       ports: [{ port: 80, targetPort: 3000 }],
+    });
+    this.qbittorrentService = this.deployment.exposeViaService({
+      name: "qbittorrent",
+      ports: [{ port: 80, targetPort: 8080 }],
     });
     this.ingress = new AuthenticatedIngress(this, "ingr", {
       rules: [
         {
           host: props.host,
-          backend: IngressBackend.fromService(this.service),
+          backend: IngressBackend.fromService(this.floodService),
         },
       ],
     });
