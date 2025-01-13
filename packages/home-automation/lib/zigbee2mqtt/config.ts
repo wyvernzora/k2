@@ -18,7 +18,9 @@ export class Zigbee2MqttConfig extends ConfigMap {
 
   private renderZigbee2MqttConfig(props: Props) {
     return stringify({
-      frontend: true,
+      frontend: {
+        enabled: true,
+      },
       mqtt: {
         base_topic: "zigbee2mqtt",
         server: `mqtt://${props.mosquitto.hostname}`,
