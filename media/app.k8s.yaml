@@ -456,7 +456,7 @@ spec:
             runAsNonRoot: false
           volumeMounts:
             - mountPath: /config
-              name: eph-vol-appdata
+              name: pvc-media-prowlarr-depl-vol-appdata-pvc-c88a3d31
       dnsPolicy: ClusterFirst
       hostNetwork: false
       restartPolicy: Always
@@ -466,8 +466,23 @@ spec:
       setHostnameAsFQDN: false
       terminationGracePeriodSeconds: 30
       volumes:
-        - emptyDir: {}
-          name: eph-vol-appdata
+        - name: pvc-media-prowlarr-depl-vol-appdata-pvc-c88a3d31
+          persistentVolumeClaim:
+            claimName: media-prowlarr-depl-vol-appdata-pvc-c88a3d31
+            readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-prowlarr-depl-vol-appdata-pvc-c88a3d31
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: Service
