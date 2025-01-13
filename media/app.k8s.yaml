@@ -487,7 +487,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: media-prowlarr-depl-service-c8a1d3e0
+  name: prowlarr
 spec:
   externalIPs: []
   ports:
@@ -510,7 +510,7 @@ spec:
         paths:
           - backend:
               service:
-                name: media-prowlarr-depl-service-c8a1d3e0
+                name: prowlarr
                 port:
                   number: 80
             path: /prowlarr
