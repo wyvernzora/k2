@@ -1,10 +1,10 @@
 import { ProwlarrDeployment, ProwlarrDeploymentProps } from "./deployment";
-import { Deployment, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
+import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { AuthenticatedIngress } from "@k2/authelia";
 
 export interface ProwlarrProps {
-  readonly host: string;
+  readonly url: string;
   readonly volumes: ProwlarrDeploymentProps["volumes"];
 }
 
@@ -15,14 +15,20 @@ export class Prowlarr extends Construct {
 
   constructor(scope: Construct, id: string, props: ProwlarrProps) {
     super(scope, id);
+
+    const { hostname, pathname } = new URL(props.url);
+
     this.deployment = new ProwlarrDeployment(this, "depl", props);
     this.service = this.deployment.exposeViaService({
+      name: "prowlarr", // Need to explicitly name this for integration with other apps
       ports: [{ port: 80, targetPort: 9696 }],
     });
-    this.ingress = new AuthenticatedIngress(this, "ingr", {
+    this.ingress = new AuthenticatedIngress(this, "ingress", {
       rules: [
         {
-          host: props.host,
+          host: hostname,
+          path: pathname,
+          pathType: HttpIngressPathType.PREFIX,
           backend: IngressBackend.fromService(this.service),
         },
       ],

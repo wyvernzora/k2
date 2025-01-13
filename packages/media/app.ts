@@ -20,10 +20,10 @@ new Media(app, "media", {
     },
   },
   prowlarr: {
-    host: "prowlarr.wyvernzora.io",
+    url: "https://media.wyvernzora.io/prowlarr",
     volumes: {
       appdata: K2Volume.replicated({
-        size: Size.gibibytes(16),
+        size: Size.gibibytes(4),
       }),
     },
   },
