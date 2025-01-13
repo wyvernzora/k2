@@ -1,3 +1,199 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: media-sonarr-init-config-c85346d0
+data:
+  config.xml: |-
+    <Config>
+      <LogLevel>info</LogLevel>
+
+      <Port>8989</Port>
+      <BindAddress>*</BindAddress>
+      <UrlBase>/sonarr</UrlBase>
+
+      <AuthenticationMethod>Basic</AuthenticationMethod>
+      <AuthenticationRequired>Required</AuthenticationRequired>
+
+      <EnableSsl>False</EnableSsl>
+      <SslPort>9898</SslPort>
+      <UpdateMechanism>Docker</UpdateMechanism>
+      <LaunchBrowser>True</LaunchBrowser>
+      <Branch>main</Branch>
+      <InstanceName>Sonarr</InstanceName>
+      <SslCertPath></SslCertPath>
+      <SslCertPassword></SslCertPassword>
+    </Config>
+  init.sh: |-
+    #!/bin/bash
+    set -e
+    CONFIG_PATH="/config/config.xml"
+    INIT_CONFIG_PATH="/init/config.xml"
+
+    if [ ! -f "$CONFIG_PATH" ]; then
+      echo "Configuration file not found, copying from template"
+      cp "$INIT_CONFIG_PATH" "$CONFIG_PATH"
+    fi
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-sonarr-depl-c87d4ea4
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: media-sonarr-depl-c8f329fb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: media-sonarr-depl-c8f329fb
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PUID
+              value: "3000"
+            - name: PGID
+              value: "2001"
+            - name: TZ
+              value: America/Los_Angeles
+          image: quay.io/linuxserver.io/sonarr:4.0.12
+          imagePullPolicy: Always
+          name: main
+          ports:
+            - containerPort: 8989
+              name: http
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 10Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-media-sonarr-depl-vol-appdata-pvc-c844ea8d
+            - mountPath: /mnt/anime
+              name: blk-vol-anime
+            - mountPath: /config/Backups
+              name: eph-vol-backups
+            - mountPath: /config/logs
+              name: eph-vol-logs
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      initContainers:
+        - args:
+            - /bin/sh /init/init.sh
+          command:
+            - /bin/sh
+            - -c
+          image: linuxserver/yq:3.4.3
+          imagePullPolicy: Always
+          name: setup-config
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /init
+              name: configmap-media-sonarr-init-config-c85346d0
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-media-sonarr-depl-vol-appdata-pvc-c844ea8d
+          persistentVolumeClaim:
+            claimName: media-sonarr-depl-vol-appdata-pvc-c844ea8d
+            readOnly: false
+        - name: blk-vol-anime
+          nfs:
+            path: /mnt/data/media/anime/series
+            server: 10.10.8.1
+        - emptyDir: {}
+          name: eph-vol-backups
+        - emptyDir: {}
+          name: eph-vol-logs
+        - configMap:
+            name: media-sonarr-init-config-c85346d0
+          name: configmap-media-sonarr-init-config-c85346d0
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-sonarr-depl-vol-appdata-pvc-c844ea8d
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8989
+  selector:
+    cdk8s.io/metadata.addr: media-sonarr-depl-c8f329fb
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+  name: media-sonarr-ingress-c8028a46
+spec:
+  rules:
+    - host: media.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: sonarr
+                port:
+                  number: 80
+            path: /sonarr
+            pathType: Prefix
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
