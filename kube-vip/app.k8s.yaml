@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
     app.kubernetes.io/version: v0.8.4
-    helm.sh/chart: kube-vip-0.6.4
+    helm.sh/chart: kube-vip-0.6.5
   name: kube-vip
   namespace: k2-network
 ---
@@ -49,7 +49,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
     app.kubernetes.io/version: v0.8.4
-    helm.sh/chart: kube-vip-0.6.4
+    helm.sh/chart: kube-vip-0.6.5
   name: kube-vip
   namespace: k2-network
 roleRef:
@@ -126,6 +126,8 @@ spec:
               add:
                 - NET_ADMIN
                 - NET_RAW
+              drop:
+                - ALL
       hostNetwork: true
       serviceAccountName: kube-vip
       tolerations:
