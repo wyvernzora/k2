@@ -258,7 +258,7 @@ spec:
         - env:
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/0xerr0r/blocky:v0.24
+          image: ghcr.io/0xerr0r/blocky:v0.25
           imagePullPolicy: Always
           name: blocky
           ports:
