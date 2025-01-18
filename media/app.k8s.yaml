@@ -167,10 +167,26 @@ spec:
               value: America/Los_Angeles
           image: linuxserver/kavita:0.8.4
           imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - wget
+                - -qO
+                - /dev/null
+                - http://127.0.0.1:5000
+            failureThreshold: 3
           name: kavita
           ports:
             - containerPort: 5000
               name: http
+          readinessProbe:
+            exec:
+              command:
+                - wget
+                - -qO
+                - /dev/null
+                - http://127.0.0.1:5000
+            failureThreshold: 3
           resources:
             limits:
               cpu: 2000m
