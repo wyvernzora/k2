@@ -132,6 +132,129 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: media-kavita-depl-c89cc182
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: media-kavita-depl-c8d9faa4
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: media-kavita-depl-c8d9faa4
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PUID
+              value: "3000"
+            - name: PGID
+              value: "2001"
+            - name: TZ
+              value: America/Los_Angeles
+          image: linuxserver/kavita:0.8.4
+          imagePullPolicy: Always
+          name: kavita
+          ports:
+            - containerPort: 5000
+              name: http
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 10Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-media-kavita-depl-vol-appdata-pvc-c8a8ac1e
+            - mountPath: /library
+              name: blk-vol-library
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-media-kavita-depl-vol-appdata-pvc-c8a8ac1e
+          persistentVolumeClaim:
+            claimName: media-kavita-depl-vol-appdata-pvc-c8a8ac1e
+            readOnly: false
+        - name: blk-vol-library
+          nfs:
+            path: /mnt/data/media/manga/library
+            server: 10.10.8.1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-kavita-depl-vol-appdata-pvc-c8a8ac1e
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kavita
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 5000
+  selector:
+    cdk8s.io/metadata.addr: media-kavita-depl-c8d9faa4
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+  name: media-kavita-ingress-c8169fbf
+spec:
+  rules:
+    - host: media.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: kavita
+                port:
+                  number: 80
+            path: /kavita
+            pathType: Prefix
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: media-qbit-depl-c81776b5
 spec:
   minReadySeconds: 0
