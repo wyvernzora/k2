@@ -12,6 +12,12 @@ import {
 import { Construct, IConstruct } from "constructs";
 import { Size } from "cdk8s";
 
+// Props type that has a volumes property defined on it
+export interface PropsWithVolumes<VolumeNames extends string> {
+  volumes: K2Volumes<VolumeNames>;
+}
+export type VolumesOf<PV extends PropsWithVolumes<string>> = PV["volumes"];
+
 /**
  * K2Volume represents a piece of mountable storage within the K2 cluster.
  * While it creates vanilla Kubernetes volumes under the hood, there are multiple

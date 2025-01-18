@@ -38,6 +38,17 @@ new Media(app, "media", {
       }),
     },
   },
+  kavita: {
+    url: "https://media.wyvernzora.io/kavita",
+    volumes: {
+      appdata: K2Volume.replicated({
+        size: Size.gibibytes(1),
+      }),
+      library: K2Volume.bulk({
+        path: "/mnt/data/media/manga/library",
+      }),
+    },
+  },
 });
 
 app.synth();
