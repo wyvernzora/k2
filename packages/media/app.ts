@@ -31,7 +31,7 @@ new Media(app, "media", {
     url: "https://media.wyvernzora.io/sonarr",
     volumes: {
       appdata: K2Volume.replicated({
-        size: Size.gibibytes(4),
+        size: Size.gibibytes(8),
       }),
       anime: K2Volume.bulk({
         path: "/mnt/data/media/anime/series",
