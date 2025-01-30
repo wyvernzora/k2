@@ -1,4 +1,4 @@
-FROM willhallonline/ansible:2.17-alpine-3.18
+FROM willhallonline/ansible:2.18-alpine-3.18
 
 COPY ansible /ansible
 COPY containers/ansible/entrypoint.sh /ansible/entrypoint.sh
