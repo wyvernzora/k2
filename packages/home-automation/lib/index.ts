@@ -3,8 +3,9 @@ import { Chart } from "cdk8s";
 import { Mosquitto, MosquittoProps } from "./mosquitto";
 import { Zigbee2Mqtt, Zigbee2MqttProps } from "./zigbee2mqtt";
 import { HomeAssistantDeploymentProps } from "./home-assistant/deployment";
-import { Ingress, IngressBackend } from "cdk8s-plus-28";
+import { HttpIngressPathType, Ingress, IngressBackend } from "cdk8s-plus-28";
 import { HomeAssistant } from "./home-assistant";
+import { AuthenticatedIngress } from "@k2/authelia";
 
 export interface HomeAutomationProps {
   readonly namespace?: string;
@@ -37,11 +38,17 @@ export class HomeAutomation extends Chart {
       mosquitto: this.mosquitto,
       volumes: props.volumes?.homeAssistant,
     });
-    this.ingress = new Ingress(this, "ingress", {
+    this.ingress = new AuthenticatedIngress(this, "ingress", {
       rules: [
         {
           host: props.hostname,
           backend: IngressBackend.fromService(this.homeAssistant.service),
+        },
+        {
+          host: props.hostname,
+          path: "/z2m",
+          pathType: HttpIngressPathType.PREFIX,
+          backend: IngressBackend.fromService(this.zigbee2mqtt.service),
         },
       ],
     });
