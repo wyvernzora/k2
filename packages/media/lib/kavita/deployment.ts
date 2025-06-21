@@ -20,7 +20,7 @@ export class KavitaDeployment extends Deployment {
   private addKavitaContainer(props: Props) {
     this.addContainer({
       name: "kavita",
-      image: oci`linuxserver/kavita:0.8.4`,
+      image: oci`linuxserver/kavita:0.8.6`,
       ports: [
         {
           name: "http",
