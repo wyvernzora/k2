@@ -175,20 +175,23 @@ data:
     serial:
       port: tcp://10.10.229.62:6638
   init.sh: |-
-    #!/bin/bash
+    #!/bin/sh
 
     # Initialize configuration if not present
     if [ ! -f "/app/data/configuration.yaml" ]; then
       echo "Configuration file not found, copying from templates"
       cp /init/configuration.yaml /app/data/configuration.yaml
     fi
+
+    echo "== Configuration file contents =="
+    cat /app/data/configuration.yaml
 immutable: false
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/conf: 00860e055d4abc0163dec4f5680994a2403624d8730647a4b0a512ad5ba61d1a
+    checksum/conf: 79d84c4102374dc1b4215537cd3b90b26d48b6250fdfd374577189ad594a02fc
   name: home-automation-zigbee2mqtt-depl-c81c7252
   namespace: home-automation
 spec:
