@@ -483,6 +483,8 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
   name: home-automation-ingress-c8e235c6
   namespace: home-automation
 spec:
@@ -496,4 +498,11 @@ spec:
                 port:
                   number: 80
             path: /
+            pathType: Prefix
+          - backend:
+              service:
+                name: home-automation-zigbee2mqtt-depl-service-c8b516cd
+                port:
+                  number: 80
+            path: /z2m
             pathType: Prefix
