@@ -174,13 +174,21 @@ data:
       server: mqtt://home-automation-mosquitto-depl-service-c8786f6b.home-automation.svc.cluster.local
     serial:
       port: tcp://10.10.229.62:6638
+  init.sh: |-
+    #!/bin/bash
+
+    # Initialize configuration if not present
+    if [ ! -f "/app/data/configuration.yaml" ]; then
+      echo "Configuration file not found, copying from templates"
+      cp /init/configuration.yaml /app/data/configuration.yaml
+    fi
 immutable: false
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/conf: 7e07481fbaea2d36fc679f72a1b83cab3ea40be9831f1570f8750117438d4db8
+    checksum/conf: 00860e055d4abc0163dec4f5680994a2403624d8730647a4b0a512ad5ba61d1a
   name: home-automation-zigbee2mqtt-depl-c81c7252
   namespace: home-automation
 spec:
@@ -220,11 +228,35 @@ spec:
           volumeMounts:
             - mountPath: /app/data
               name: pvc-home-automation-zigbee2mqtt-depl-vol-data-pvc-c81229cb
-            - mountPath: /app/data/configuration.yaml
-              name: configmap-home-automation-zigbee2mqtt-conf-c8700bb5
-              subPath: configuration.yaml
       dnsPolicy: ClusterFirst
       hostNetwork: false
+      initContainers:
+        - args:
+            - /bin/sh /init/init.sh
+          command:
+            - /bin/sh
+            - -c
+          image: mikefarah/yq:4
+          imagePullPolicy: Always
+          name: setup-config
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /app/data
+              name: pvc-home-automation-zigbee2mqtt-depl-vol-data-pvc-c81229cb
+            - mountPath: /init
+              name: configmap-home-automation-zigbee2mqtt-conf-c8700bb5
       restartPolicy: Always
       securityContext:
         fsGroupChangePolicy: Always
