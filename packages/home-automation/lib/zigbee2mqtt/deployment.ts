@@ -1,6 +1,6 @@
 import { K2Volumes, oci } from "@k2/cdk-lib";
 import { Construct } from "constructs";
-import { Deployment, DeploymentStrategy, Volume } from "cdk8s-plus-28";
+import { Deployment, DeploymentStrategy, Volume, VolumeMount } from "cdk8s-plus-28";
 import { Zigbee2MqttConfig } from "./config";
 
 export interface Zigbee2MqttDeploymentProps {
@@ -15,33 +15,48 @@ export class Zigbee2MqttDeployment extends Deployment {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
     });
+    const dataVolume = props.volumes.data(this, "vol-data").mount(this, {
+      path: "/app/data",
+    });
+    this.addInitConfigContainer(props, dataVolume);
+    this.addZigbee2MqttContainer(dataVolume);
     props.config.addChecksumTo(this);
-    this.addZigbee2MqttContainer(props);
   }
 
-  private addZigbee2MqttContainer(props: Props) {
+  private addZigbee2MqttContainer(dataVolume: VolumeMount) {
     this.addContainer({
       name: "zigbee2mqtt",
-      image: oci`koenkk/zigbee2mqtt:2.4.0`,
+      image: oci`koenkk/zigbee2mqtt:2.0.0`,
       ports: [
         {
           name: "http",
           number: 8080,
         },
       ],
-      volumeMounts: [
-        props.volumes.data(this, "vol-data").mount(this, {
-          path: "/app/data",
-        }),
-        {
-          volume: Volume.fromConfigMap(this, "vol-conf", props.config),
-          path: "/app/data/configuration.yaml",
-          subPath: "configuration.yaml",
-        },
-      ],
+      volumeMounts: [dataVolume],
       securityContext: {
         ensureNonRoot: false,
       },
+    });
+  }
+
+  private addInitConfigContainer(props: Props, dataVolume: VolumeMount) {
+    this.addInitContainer({
+      name: "setup-config",
+      image: oci`bash:latest`,
+      command: ["bash", "-c"],
+      args: ["bash /init/init.sh"],
+      securityContext: {
+        ensureNonRoot: false,
+        user: 0,
+      },
+      volumeMounts: [
+        dataVolume,
+        {
+          volume: Volume.fromConfigMap(this, "vol-init", props.config),
+          path: "/init",
+        },
+      ],
     });
   }
 }
