@@ -210,7 +210,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: koenkk/zigbee2mqtt:2.4.0
+        - image: koenkk/zigbee2mqtt:2.0.0
           imagePullPolicy: Always
           name: zigbee2mqtt
           ports:
@@ -235,11 +235,11 @@ spec:
       hostNetwork: false
       initContainers:
         - args:
-            - /bin/sh /init/init.sh
+            - bash /init/init.sh
           command:
-            - /bin/sh
+            - bash
             - -c
-          image: mikefarah/yq:4
+          image: bash:latest
           imagePullPolicy: Always
           name: setup-config
           resources:
