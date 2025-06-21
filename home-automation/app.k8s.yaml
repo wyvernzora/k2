@@ -174,10 +174,12 @@ data:
       server: mqtt://home-automation-mosquitto-depl-service-c8786f6b.home-automation.svc.cluster.local
     serial:
       port: tcp://10.10.229.62:6638
+      adapter: zstack
   init.sh: |-
     #!/bin/sh
 
     # Initialize configuration if not present
+    rm /app//data/configuration.yaml
     if [ ! -s "/app/data/configuration.yaml" ]; then
       echo "Configuration file not found, copying from templates"
       cp /init/configuration.yaml /app/data/configuration.yaml
@@ -192,7 +194,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/conf: 280bc608223b28a5a4957a9d539745c135adcf3bdae47e481d369acfb6054ce0
+    checksum/conf: 387418fb2b4654eb2703a2c1569136635d8a6fec9ad7def6db3f16933bf48c2f
   name: home-automation-zigbee2mqtt-depl-c81c7252
   namespace: home-automation
 spec:
