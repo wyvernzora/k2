@@ -20,7 +20,7 @@ export class GlauthDeployment extends Deployment {
   private addGlauthContainer(config: Volume, users: Volume): void {
     this.addContainer({
       name: "glauth",
-      image: oci`glauth/glauth:v2.3.2`,
+      image: oci`glauth/glauth:v2.4.0`,
       command: ["/app/glauth", "-c", "/app/conf.d/"],
       securityContext: {
         ensureNonRoot: false,
