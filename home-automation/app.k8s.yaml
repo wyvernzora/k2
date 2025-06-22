@@ -169,6 +169,7 @@ data:
   configuration.yaml: |
     frontend:
       enabled: true
+      url: https://ha.wyvernzora.io/z2m
     mqtt:
       base_topic: zigbee2mqtt
       server: mqtt://home-automation-mosquitto-depl-service-c8786f6b.home-automation.svc.cluster.local
@@ -194,7 +195,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/conf: 387418fb2b4654eb2703a2c1569136635d8a6fec9ad7def6db3f16933bf48c2f
+    checksum/conf: 214ac16192cb3fbc725c7de45ca86acecb3a5a096866d1254eea6808432f0942
   name: home-automation-zigbee2mqtt-depl-c81c7252
   namespace: home-automation
 spec:
