@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 7.1.288
-    helm.sh/chart: reflector-7.1.288
+    app.kubernetes.io/version: 9.1.11
+    helm.sh/chart: reflector-9.1.11
   name: reflector
   namespace: k2-core
 ---
@@ -17,8 +17,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 7.1.288
-    helm.sh/chart: reflector-7.1.288
+    app.kubernetes.io/version: 9.1.11
+    helm.sh/chart: reflector-9.1.11
   name: reflector
   namespace: k2-core
 rules:
@@ -44,8 +44,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 7.1.288
-    helm.sh/chart: reflector-7.1.288
+    app.kubernetes.io/version: 9.1.11
+    helm.sh/chart: reflector-9.1.11
   name: reflector
   namespace: k2-core
 roleRef:
@@ -64,8 +64,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 7.1.288
-    helm.sh/chart: reflector-7.1.288
+    app.kubernetes.io/version: 9.1.11
+    helm.sh/chart: reflector-9.1.11
   name: reflector
   namespace: k2-core
 spec:
@@ -86,41 +86,48 @@ spec:
               value: Information
             - name: ES_Reflector__Watcher__Timeout
               value: ""
-            - name: ES_Reflector__Kubernetes__SkipTlsVerify
+            - name: ES_Ignite__KubernetesClient__SkipTlsVerify
               value: "false"
-          image: emberstack/kubernetes-reflector:7.1.288
+          image: docker.io/emberstack/kubernetes-reflector:9.1.11
           imagePullPolicy: IfNotPresent
           livenessProbe:
+            failureThreshold: 5
             httpGet:
-              path: /healthz
+              path: /health/live
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 10
           name: reflector
           ports:
-            - containerPort: 25080
+            - containerPort: 8080
               name: http
               protocol: TCP
           readinessProbe:
+            failureThreshold: 5
             httpGet:
-              path: /healthz
+              path: /health/ready
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 10
           resources: {}
           securityContext:
             capabilities:
               drop:
                 - ALL
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
             runAsNonRoot: true
             runAsUser: 1000
           startupProbe:
-            failureThreshold: 10
+            failureThreshold: 5
             httpGet:
-              path: /healthz
+              path: /health/ready
               port: http
-            periodSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 10
+          volumeMounts: []
       priorityClassName: system-cluster-critical
       securityContext:
         fsGroup: 2000
