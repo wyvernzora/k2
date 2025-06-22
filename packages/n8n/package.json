@@ -1,0 +1,26 @@
+{
+  "name": "@k2/n8n",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./app.k8s.yaml": "./dist/app.k8s.yaml"
+  },
+  "scripts": {
+    "build": "k2-build",
+    "test": "echo TODO",
+    "clean": "rm -rf dist",
+    "lint": "npm run eslint && npm run prettier -- --check",
+    "lint:fix": "npm run eslint -- --fix && npm run prettier -- --write",
+    "eslint": "eslint --ext .ts src",
+    "prettier": "prettier 'src/**/*' '**.json'"
+  },
+  "dependencies": {
+    "@k2/cdk-lib": "^1.0.0"
+  },
+  "devDependencies": {
+    "@k2/build": "^1.0.0"
+  },
+  "deploy": {
+    "namespace": "n8n"
+  }
+}
