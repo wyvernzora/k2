@@ -6,6 +6,7 @@ import { Mosquitto } from "../mosquitto";
 import { K2Volume, K2Volumes } from "@k2/cdk-lib";
 
 export interface Zigbee2MqttProps {
+  readonly url: string;
   readonly mosquitto: Mosquitto;
   readonly coordinator: string;
   readonly volumes?: Partial<K2Volumes<"data">>;

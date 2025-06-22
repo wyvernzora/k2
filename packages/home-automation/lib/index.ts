@@ -30,6 +30,7 @@ export class HomeAutomation extends Chart {
       volumes: props.volumes?.mosquitto,
     });
     this.zigbee2mqtt = new Zigbee2Mqtt(this, "zigbee2mqtt", {
+      url: `https://${props.hostname}/z2m`,
       mosquitto: this.mosquitto,
       coordinator: props.coordinator,
       volumes: props.volumes?.zigbee2mqtt,

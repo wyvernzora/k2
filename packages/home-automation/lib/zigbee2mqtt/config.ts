@@ -5,6 +5,7 @@ import { Mosquitto } from "../mosquitto";
 import dedent from "dedent-js";
 
 export interface Zigbee2MqttConfigProps {
+  readonly url: string;
   readonly coordinator: string;
   readonly mosquitto: Mosquitto;
 }
@@ -39,6 +40,7 @@ export class Zigbee2MqttConfig extends ConfigMap {
     return stringify({
       frontend: {
         enabled: true,
+        url: props.url,
       },
       mqtt: {
         base_topic: "zigbee2mqtt",
