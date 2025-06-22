@@ -36,7 +36,7 @@ export class SonarrDeployment extends Deployment {
 
   private addSonarrContainer(mounts: Iterable<VolumeMount>): void {
     this.addContainer({
-      image: oci`quay.io/linuxserver.io/sonarr:4.0.12`,
+      image: oci`quay.io/linuxserver.io/sonarr:4.0.15`,
       ports: [
         {
           name: "http",
