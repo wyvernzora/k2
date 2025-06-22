@@ -135,8 +135,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cainjector
   namespace: k2-core
 automountServiceAccountToken: true
@@ -150,8 +150,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager
   namespace: k2-core
 automountServiceAccountToken: true
@@ -165,8 +165,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook
   namespace: k2-core
 automountServiceAccountToken: true
@@ -180,8 +180,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cainjector
   namespace: k2-core
 rules:
@@ -251,8 +251,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-issuers
   namespace: k2-core
 rules:
@@ -300,8 +300,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-clusterissuers
   namespace: k2-core
 rules:
@@ -349,8 +349,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-certificates
   namespace: k2-core
 rules:
@@ -421,8 +421,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-orders
   namespace: k2-core
 rules:
@@ -490,9 +490,9 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
-  name: cert-manager-controller-challenges
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
+  name: cert-manager-http01-controller-challenges
   namespace: k2-core
 rules:
   - apiGroups:
@@ -536,6 +536,12 @@ rules:
       - create
       - patch
   - apiGroups:
+      - acme.cert-manager.io
+    resources:
+      - challenges/finalizers
+    verbs:
+      - update
+  - apiGroups:
       - ""
     resources:
       - pods
@@ -574,6 +580,61 @@ rules:
       - routes/custom-host
     verbs:
       - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: cert-manager
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: cert-manager
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
+  name: cert-manager-dns01-controller-challenges
+  namespace: k2-core
+rules:
+  - apiGroups:
+      - acme.cert-manager.io
+    resources:
+      - challenges
+      - challenges/status
+    verbs:
+      - update
+      - patch
+  - apiGroups:
+      - acme.cert-manager.io
+    resources:
+      - challenges
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - cert-manager.io
+    resources:
+      - issuers
+      - clusterissuers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
   - apiGroups:
       - acme.cert-manager.io
     resources:
@@ -598,8 +659,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-ingress-shim
   namespace: k2-core
 rules:
@@ -670,8 +731,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
   name: cert-manager-cluster-view
   namespace: k2-core
@@ -694,8 +755,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
@@ -732,8 +793,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
   name: cert-manager-edit
@@ -778,8 +839,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-approve:cert-manager-io
   namespace: k2-core
 rules:
@@ -802,8 +863,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-certificatesigningrequests
   namespace: k2-core
 rules:
@@ -848,8 +909,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook:subjectaccessreviews
   namespace: k2-core
 rules:
@@ -869,8 +930,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cainjector
   namespace: k2-core
 roleRef:
@@ -891,8 +952,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-issuers
   namespace: k2-core
 roleRef:
@@ -913,8 +974,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-clusterissuers
   namespace: k2-core
 roleRef:
@@ -935,8 +996,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-certificates
   namespace: k2-core
 roleRef:
@@ -957,8 +1018,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-orders
   namespace: k2-core
 roleRef:
@@ -979,14 +1040,14 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
-  name: cert-manager-controller-challenges
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
+  name: cert-manager-http01-controller-challenges
   namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cert-manager-controller-challenges
+  name: cert-manager-http01-controller-challenges
 subjects:
   - kind: ServiceAccount
     name: cert-manager
@@ -1001,8 +1062,30 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
+  name: cert-manager-dns01-controller-challenges
+  namespace: k2-core
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-dns01-controller-challenges
+subjects:
+  - kind: ServiceAccount
+    name: cert-manager
+    namespace: k2-core
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: cert-manager
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: cert-manager
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-ingress-shim
   namespace: k2-core
 roleRef:
@@ -1023,8 +1106,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-approve:cert-manager-io
   namespace: k2-core
 roleRef:
@@ -1045,8 +1128,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-controller-certificatesigningrequests
   namespace: k2-core
 roleRef:
@@ -1067,8 +1150,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook:subjectaccessreviews
   namespace: k2-core
 roleRef:
@@ -1089,8 +1172,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cainjector:leaderelection
   namespace: kube-system
 rules:
@@ -1121,8 +1204,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager:leaderelection
   namespace: kube-system
 rules:
@@ -1152,8 +1235,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-tokenrequest
   namespace: k2-core
 rules:
@@ -1175,8 +1258,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook:dynamic-serving
   namespace: k2-core
 rules:
@@ -1207,8 +1290,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cainjector:leaderelection
   namespace: kube-system
 roleRef:
@@ -1229,8 +1312,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager:leaderelection
   namespace: kube-system
 roleRef:
@@ -1251,8 +1334,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cert-manager-tokenrequest
   namespace: k2-core
 roleRef:
@@ -1273,8 +1356,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook:dynamic-serving
   namespace: k2-core
 roleRef:
@@ -1295,8 +1378,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cainjector
   namespace: k2-core
 spec:
@@ -1319,8 +1402,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager
   namespace: k2-core
 spec:
@@ -1328,7 +1411,7 @@ spec:
     - name: tcp-prometheus-servicemonitor
       port: 9402
       protocol: TCP
-      targetPort: 9402
+      targetPort: http-metrics
   selector:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: cert-manager
@@ -1344,8 +1427,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook
   namespace: k2-core
 spec:
@@ -1373,8 +1456,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-cainjector
   namespace: k2-core
 spec:
@@ -1396,8 +1479,8 @@ spec:
         app.kubernetes.io/instance: cert-manager
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: cainjector
-        app.kubernetes.io/version: v1.16.3
-        helm.sh/chart: cert-manager-v1.16.3
+        app.kubernetes.io/version: v1.18.1
+        helm.sh/chart: cert-manager-v1.18.1
     spec:
       containers:
         - args:
@@ -1408,7 +1491,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: quay.io/jetstack/cert-manager-cainjector:v1.16.3
+          image: quay.io/jetstack/cert-manager-cainjector:v1.18.1
           imagePullPolicy: IfNotPresent
           name: cert-manager-cainjector
           ports:
@@ -1439,8 +1522,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager
   namespace: k2-core
 spec:
@@ -1462,15 +1545,15 @@ spec:
         app.kubernetes.io/instance: cert-manager
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: cert-manager
-        app.kubernetes.io/version: v1.16.3
-        helm.sh/chart: cert-manager-v1.16.3
+        app.kubernetes.io/version: v1.18.1
+        helm.sh/chart: cert-manager-v1.18.1
     spec:
       containers:
         - args:
             - --v=2
             - --cluster-resource-namespace=$(POD_NAMESPACE)
             - --leader-election-namespace=kube-system
-            - --acme-http01-solver-image=quay.io/jetstack/cert-manager-acmesolver:v1.16.3
+            - --acme-http01-solver-image=quay.io/jetstack/cert-manager-acmesolver:v1.18.1
             - --controllers=*
             - --max-concurrent-challenges=60
           env:
@@ -1478,7 +1561,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: quay.io/jetstack/cert-manager-controller:v1.16.3
+          image: quay.io/jetstack/cert-manager-controller:v1.18.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 8
@@ -1522,8 +1605,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook
   namespace: k2-core
 spec:
@@ -1545,8 +1628,8 @@ spec:
         app.kubernetes.io/instance: cert-manager
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: webhook
-        app.kubernetes.io/version: v1.16.3
-        helm.sh/chart: cert-manager-v1.16.3
+        app.kubernetes.io/version: v1.18.1
+        helm.sh/chart: cert-manager-v1.18.1
     spec:
       containers:
         - args:
@@ -1562,13 +1645,13 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: quay.io/jetstack/cert-manager-webhook:v1.16.3
+          image: quay.io/jetstack/cert-manager-webhook:v1.18.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
             httpGet:
               path: /livez
-              port: 6080
+              port: healthcheck
               scheme: HTTP
             initialDelaySeconds: 60
             periodSeconds: 10
@@ -1589,7 +1672,7 @@ spec:
             failureThreshold: 3
             httpGet:
               path: /healthz
-              port: 6080
+              port: healthcheck
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -1621,8 +1704,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook
   namespace: k2-core
 webhooks:
@@ -1659,8 +1742,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-webhook
   namespace: k2-core
 webhooks:
@@ -1707,8 +1790,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: startupapicheck
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-startupapicheck
   namespace: k2-core
 automountServiceAccountToken: true
@@ -1726,8 +1809,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: startupapicheck
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-startupapicheck:create-cert
   namespace: k2-core
 rules:
@@ -1751,8 +1834,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: startupapicheck
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-startupapicheck:create-cert
   namespace: k2-core
 roleRef:
@@ -1777,8 +1860,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: startupapicheck
-    app.kubernetes.io/version: v1.16.3
-    helm.sh/chart: cert-manager-v1.16.3
+    app.kubernetes.io/version: v1.18.1
+    helm.sh/chart: cert-manager-v1.18.1
   name: cert-manager-startupapicheck
   namespace: k2-core
 spec:
@@ -1791,8 +1874,8 @@ spec:
         app.kubernetes.io/instance: cert-manager
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: startupapicheck
-        app.kubernetes.io/version: v1.16.3
-        helm.sh/chart: cert-manager-v1.16.3
+        app.kubernetes.io/version: v1.18.1
+        helm.sh/chart: cert-manager-v1.18.1
     spec:
       containers:
         - args:
@@ -1805,7 +1888,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-          image: quay.io/jetstack/cert-manager-startupapicheck:v1.16.3
+          image: quay.io/jetstack/cert-manager-startupapicheck:v1.18.1
           imagePullPolicy: IfNotPresent
           name: cert-manager-startupapicheck
           securityContext:
