@@ -93,7 +93,7 @@ export class QBitTorrentDeployment extends Deployment {
   private addFloodUiContainer(appdata: K2MaterializedVolume, mounts: VolumeMount[]) {
     this.addContainer({
       name: "floodui",
-      image: oci`jesec/flood:4.9.3`,
+      image: oci`jesec/flood:4.9.5`,
       ports: [
         {
           name: "http",
