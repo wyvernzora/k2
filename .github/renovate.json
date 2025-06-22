@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base"],
+  "extends": ["config:recommended"],
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true
@@ -18,28 +18,39 @@
     }
   ],
   "ignorePaths": ["**/node_modules/**", "**/cdk-lib/src/helm\\.ts"],
-  "regexManagers": [
+  "customManagers": [
     {
-      "fileMatch": ["(.*/|^)Earthfile$", "(.*/|^)Dockerfile"],
+      "customType": "regex",
+      "managerFilePatterns": ["/(.*/|^)Earthfile$/", "/(.*/|^)Dockerfile/"],
       "matchStrings": [
         "\\s*#\\s*renovate:\\s*datasource=(?<datasource>.*?)\\s+depName=(?<depName>.*?)(\\s+versioning=(?<versioning>.*?))?\\s+ARG\\s+.+_VERSION=(?<currentValue>.*?)\\s"
       ],
       "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}"
     },
     {
-      "fileMatch": ["(.*/|^)kustomization\\.ya?ml", "(.*/|^)app\\.ts"],
-      "matchStrings": [".*https://github.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>.+)/.+"],
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(.*/|^)kustomization\\.ya?ml/",
+        "/(.*/|^)app\\.ts/"
+      ],
+      "matchStrings": [
+        ".*https://github.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>.+)/.+"
+      ],
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "semver"
     },
     {
-      "fileMatch": [".*\\.ts"],
-      "matchStrings": ["helm:(?<registryUrl>.+)/(?<depName>[\\w-]+)@(?<currentValue>[\\w.]+)"],
+      "customType": "regex",
+      "managerFilePatterns": ["/.*\\.ts/"],
+      "matchStrings": [
+        "helm:(?<registryUrl>.+)/(?<depName>[\\w-]+)@(?<currentValue>[\\w.]+)"
+      ],
       "datasourceTemplate": "helm",
       "versioningTemplate": "helm"
     },
     {
-      "fileMatch": [".*\\.ts"],
+      "customType": "regex",
+      "managerFilePatterns": ["/.*\\.ts/"],
       "matchStrings": ["oci`(?<depName>.+):(?<currentValue>.+)`"],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
