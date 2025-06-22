@@ -9775,7 +9775,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: accesscontrolpolicies.hub.traefik.io
   namespace: k2-network
 spec:
@@ -10124,7 +10124,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: aiservices.hub.traefik.io
   namespace: k2-network
 spec:
@@ -10181,15 +10181,25 @@ spec:
                           type: number
                       type: object
                     token:
-                      type: string
-                  required:
-                    - token
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
                   type: object
                 azureOpenai:
                   description: AzureOpenAI configures AzureOpenAI.
                   properties:
-                    apiKey:
-                      type: string
+                    apiKeySecret:
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
                     baseUrl:
                       type: string
                     deploymentName:
@@ -10211,7 +10221,6 @@ spec:
                           type: number
                       type: object
                   required:
-                    - apiKey
                     - baseUrl
                     - deploymentName
                   type: object
@@ -10259,15 +10268,55 @@ spec:
                           type: number
                       type: object
                     token:
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
+                  type: object
+                deepSeek:
+                  description: DeepSeek configures DeepSeek.
+                  properties:
+                    baseUrl:
                       type: string
-                  required:
-                    - token
+                    model:
+                      type: string
+                    params:
+                      description: Params holds the LLM hyperparameters.
+                      properties:
+                        frequencyPenalty:
+                          type: number
+                        maxTokens:
+                          type: integer
+                        presencePenalty:
+                          type: number
+                        temperature:
+                          type: number
+                        topP:
+                          type: number
+                      type: object
+                    token:
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
                   type: object
                 gemini:
                   description: Gemini configures Gemini backend.
                   properties:
                     apiKey:
-                      type: string
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
                     model:
                       type: string
                     params:
@@ -10284,14 +10333,18 @@ spec:
                         topP:
                           type: number
                       type: object
-                  required:
-                    - apiKey
                   type: object
                 mistral:
                   description: Mistral configures Mistral AI backend.
                   properties:
                     apiKey:
-                      type: string
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
                     model:
                       type: string
                     params:
@@ -10308,8 +10361,6 @@ spec:
                         topP:
                           type: number
                       type: object
-                  required:
-                    - apiKey
                   type: object
                 ollama:
                   description: Ollama configures Ollama backend.
@@ -10338,6 +10389,8 @@ spec:
                 openai:
                   description: OpenAI configures OpenAI.
                   properties:
+                    baseUrl:
+                      type: string
                     model:
                       type: string
                     params:
@@ -10355,9 +10408,43 @@ spec:
                           type: number
                       type: object
                     token:
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
+                  type: object
+                qWen:
+                  description: QWen configures QWen.
+                  properties:
+                    baseUrl:
                       type: string
-                  required:
-                    - token
+                    model:
+                      type: string
+                    params:
+                      description: Params holds the LLM hyperparameters.
+                      properties:
+                        frequencyPenalty:
+                          type: number
+                        maxTokens:
+                          type: integer
+                        presencePenalty:
+                          type: number
+                        temperature:
+                          type: number
+                        topP:
+                          type: number
+                      type: object
+                    token:
+                      description: SecretReference references a kubernetes secret.
+                      properties:
+                        secretName:
+                          type: string
+                      required:
+                        - secretName
+                      type: object
                   type: object
               type: object
           type: object
@@ -10368,7 +10455,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apiaccesses.hub.traefik.io
   namespace: k2-network
 spec:
@@ -10467,11 +10554,13 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                         required:
                           - key
                           - operator
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     matchLabels:
                       additionalProperties:
                         type: string
@@ -10553,7 +10642,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apibundles.hub.traefik.io
   namespace: k2-network
 spec:
@@ -10621,11 +10710,13 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                         required:
                           - key
                           - operator
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     matchLabels:
                       additionalProperties:
                         type: string
@@ -10656,6 +10747,10 @@ spec:
                   x-kubernetes-validations:
                     - message: duplicated apis
                       rule: self.all(x, self.exists_one(y, x.name == y.name))
+                title:
+                  description: Title is the human-readable name of the APIBundle that will be used on the portal.
+                  maxLength: 253
+                  type: string
               type: object
             status:
               description: The current status of this APIBundle.
@@ -10677,7 +10772,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apicatalogitems.hub.traefik.io
   namespace: k2-network
 spec:
@@ -10777,11 +10872,13 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                         required:
                           - key
                           - operator
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     matchLabels:
                       additionalProperties:
                         type: string
@@ -10857,7 +10954,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apiplans.hub.traefik.io
   namespace: k2-network
 spec:
@@ -10961,7 +11058,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apiportals.hub.traefik.io
   namespace: k2-network
 spec:
@@ -11086,7 +11183,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apiratelimits.hub.traefik.io
   namespace: k2-network
 spec:
@@ -11154,11 +11251,13 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                         required:
                           - key
                           - operator
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     matchLabels:
                       additionalProperties:
                         type: string
@@ -11249,7 +11348,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apis.hub.traefik.io
   namespace: k2-network
 spec:
@@ -11289,6 +11388,48 @@ spec:
             spec:
               description: APISpec describes the API.
               properties:
+                cors:
+                  description: Cors defines the Cross-Origin Resource Sharing configuration.
+                  properties:
+                    addVaryHeader:
+                      description: AddVaryHeader defines whether the Vary header is automatically added/updated when the AllowOriginsList is set.
+                      type: boolean
+                    allowCredentials:
+                      description: AllowCredentials defines whether the request can include user credentials.
+                      type: boolean
+                    allowHeadersList:
+                      description: AllowHeadersList defines the Access-Control-Request-Headers values sent in preflight response.
+                      items:
+                        type: string
+                      type: array
+                    allowMethodsList:
+                      description: AllowMethodsList defines the Access-Control-Request-Method values sent in preflight response.
+                      items:
+                        type: string
+                      type: array
+                    allowOriginListRegex:
+                      description: AllowOriginListRegex is a list of allowable origins written following the Regular Expression syntax (https://golang.org/pkg/regexp/).
+                      items:
+                        type: string
+                      type: array
+                    allowOriginsList:
+                      description: AllowOriginsList is a list of allowable origins. Can also be a wildcard origin "*".
+                      items:
+                        type: string
+                      type: array
+                    exposeHeadersList:
+                      description: ExposeHeadersList defines the Access-Control-Expose-Headers values sent in preflight response.
+                      items:
+                        type: string
+                      type: array
+                    maxAge:
+                      description: MaxAge defines the time that a preflight request may be cached.
+                      format: int64
+                      type: integer
+                  type: object
+                description:
+                  description: Description explains what the API does.
+                  type: string
                 openApiSpec:
                   description: OpenAPISpec defines the API contract as an OpenAPI specification.
                   properties:
@@ -11399,6 +11540,10 @@ spec:
                   x-kubernetes-validations:
                     - message: path or url must be defined
                       rule: has(self.path) || has(self.url)
+                title:
+                  description: Title is the human-readable name of the API that will be used on the portal.
+                  maxLength: 253
+                  type: string
                 versions:
                   description: Versions are the different APIVersions available.
                   items:
@@ -11435,7 +11580,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: apiversions.hub.traefik.io
   namespace: k2-network
 spec:
@@ -11479,6 +11624,48 @@ spec:
             spec:
               description: The desired behavior of this APIVersion.
               properties:
+                cors:
+                  description: Cors defines the Cross-Origin Resource Sharing configuration.
+                  properties:
+                    addVaryHeader:
+                      description: AddVaryHeader defines whether the Vary header is automatically added/updated when the AllowOriginsList is set.
+                      type: boolean
+                    allowCredentials:
+                      description: AllowCredentials defines whether the request can include user credentials.
+                      type: boolean
+                    allowHeadersList:
+                      description: AllowHeadersList defines the Access-Control-Request-Headers values sent in preflight response.
+                      items:
+                        type: string
+                      type: array
+                    allowMethodsList:
+                      description: AllowMethodsList defines the Access-Control-Request-Method values sent in preflight response.
+                      items:
+                        type: string
+                      type: array
+                    allowOriginListRegex:
+                      description: AllowOriginListRegex is a list of allowable origins written following the Regular Expression syntax (https://golang.org/pkg/regexp/).
+                      items:
+                        type: string
+                      type: array
+                    allowOriginsList:
+                      description: AllowOriginsList is a list of allowable origins. Can also be a wildcard origin "*".
+                      items:
+                        type: string
+                      type: array
+                    exposeHeadersList:
+                      description: ExposeHeadersList defines the Access-Control-Expose-Headers values sent in preflight response.
+                      items:
+                        type: string
+                      type: array
+                    maxAge:
+                      description: MaxAge defines the time that a preflight request may be cached.
+                      format: int64
+                      type: integer
+                  type: object
+                description:
+                  description: Description explains what the APIVersion does.
+                  type: string
                 openApiSpec:
                   description: OpenAPISpec defines the API contract as an OpenAPI specification.
                   properties:
@@ -11625,7 +11812,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
   name: managedsubscriptions.hub.traefik.io
   namespace: k2-network
 spec:
@@ -11724,11 +11911,13 @@ spec:
                             items:
                               type: string
                             type: array
+                            x-kubernetes-list-type: atomic
                         required:
                           - key
                           - operator
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     matchLabels:
                       additionalProperties:
                         type: string
@@ -11804,6 +11993,7 @@ spec:
                     - message: must be a positive number
                       rule: self >= 0
               required:
+                - apiPlan
                 - applications
               type: object
             status:
@@ -12990,6 +13180,11 @@ spec:
                     forwardBody:
                       description: ForwardBody defines whether to send the request body to the authentication server.
                       type: boolean
+                    headerField:
+                      description: |-
+                        HeaderField defines a header field to store the authenticated user.
+                        More info: https://doc.traefik.io/traefik/v3.3/middlewares/http/forwardauth/#headerfield
+                      type: string
                     maxBodySize:
                       description: MaxBodySize defines the maximum body size in bytes allowed to be forwarded to the authentication server.
                       format: int64
