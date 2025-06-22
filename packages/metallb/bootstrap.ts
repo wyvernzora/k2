@@ -7,6 +7,6 @@ import { App, HelmChart } from "@k2/cdk-lib";
 const app = new App();
 new HelmChart(app, "metallb", {
   namespace: "k2-network",
-  chart: "helm:https://metallb.github.io/metallb/metallb@0.14.9",
+  chart: "helm:https://metallb.github.io/metallb/metallb@0.15.2",
 });
 app.synth();
