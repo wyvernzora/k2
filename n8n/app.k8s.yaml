@@ -22,6 +22,8 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: N8N_PORT
+              value: "5678"
             - name: GENERIC_TIMEZONE
               value: America/Los_Angeles
             - name: TZ
@@ -64,8 +66,10 @@ spec:
       hostNetwork: false
       restartPolicy: Always
       securityContext:
+        fsGroup: 1000
         fsGroupChangePolicy: Always
         runAsNonRoot: true
+        runAsUser: 1000
       setHostnameAsFQDN: false
       terminationGracePeriodSeconds: 30
       volumes:
