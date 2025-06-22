@@ -24,6 +24,8 @@ spec:
         - env:
             - name: N8N_PORT
               value: "5678"
+            - name: N8N_USER_MANAGEMENT_ENABLED
+              value: "false"
             - name: GENERIC_TIMEZONE
               value: America/Los_Angeles
             - name: TZ
