@@ -8,7 +8,7 @@ new (class extends Chart {
       namespace: "k2-core",
     });
     new Include(this, "incl", {
-      url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.14.2/system-upgrade-controller.yaml",
+      url: "https://github.com/rancher/system-upgrade-controller/releases/download/v0.15.2/system-upgrade-controller.yaml",
     });
   }
 })();
