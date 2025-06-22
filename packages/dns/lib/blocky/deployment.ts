@@ -20,7 +20,7 @@ export class BlockyDeployment extends Deployment {
   private addBlockyContainer(config: Volume): void {
     this.addContainer({
       name: "blocky",
-      image: oci`ghcr.io/0xerr0r/blocky:v0.25`,
+      image: oci`ghcr.io/0xerr0r/blocky:v0.26`,
       ports: [
         {
           name: "dns-udp",
