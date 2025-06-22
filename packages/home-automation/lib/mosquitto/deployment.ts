@@ -33,7 +33,7 @@ export class MosquittoDeployment extends Deployment {
   private addMosquittoContainer(props: Props): void {
     this.addContainer({
       name: "mosquitto",
-      image: oci`eclipse-mosquitto:2.0.20`,
+      image: oci`eclipse-mosquitto:2.0.21`,
       ports: [
         {
           name: "mqtt",
