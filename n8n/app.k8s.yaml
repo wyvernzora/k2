@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-depl-c8f2cd03
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: n8n-depl-c8fb3fe6
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: n8n-depl-c8fb3fe6
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: GENERIC_TIMEZONE
+              value: America/Los_Angeles
+            - name: TZ
+              value: America/Los_Angeles
+          image: n8nio/n8n:1.99.1
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 5678
+              scheme: HTTP
+          name: n8n
+          ports:
+            - containerPort: 5678
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 5678
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 10Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /home/node/.n8n
+              name: pvc-n8n-depl-vol-appdata-pvc-c86b6999
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-n8n-depl-vol-appdata-pvc-c86b6999
+          persistentVolumeClaim:
+            claimName: n8n-depl-vol-appdata-pvc-c86b6999
+            readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-depl-vol-appdata-pvc-c86b6999
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 16Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 5678
+  selector:
+    cdk8s.io/metadata.addr: n8n-depl-c8fb3fe6
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+  name: n8n-ingress-c8d604fd
+spec:
+  rules:
+    - host: n8n.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: n8n
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
