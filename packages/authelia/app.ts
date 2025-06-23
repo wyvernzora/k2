@@ -5,7 +5,7 @@ import { Middleware } from "@k2/traefik/crds";
 const app = new App();
 const chart = new HelmChart(app, "authelia", {
   namespace: "k2-auth",
-  chart: "helm:https://charts.authelia.com/authelia@0.9.14",
+  chart: "helm:https://charts.authelia.com/authelia@0.10.21",
   values: {
     domain: "wyvernzora.io",
     ingress: {
@@ -31,6 +31,11 @@ const chart = new HelmChart(app, "authelia", {
       ],
     },
     configMap: {
+      definitions: {
+        network: {
+          private: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
+        },
+      },
       authentication_backend: {
         ldap: {
           enabled: true,
@@ -46,12 +51,6 @@ const chart = new HelmChart(app, "authelia", {
       },
       access_control: {
         default_policy: "one_factor",
-        networks: [
-          {
-            name: "private",
-            networks: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
-          },
-        ],
       },
       session: {
         cookies: [
