@@ -5,21 +5,21 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.38.16
-    helm.sh/chart: authelia-0.9.14
+    app.kubernetes.io/version: 4.39.4
+    helm.sh/chart: authelia-0.10.21
   name: authelia
   namespace: k2-auth
 data:
   configuration.yaml: |
     ---
-    # yaml-language-server: $schema=https://www.authelia.com/schemas/v4.38/json-schema/configuration.json
+    # yaml-language-server: $schema=https://www.authelia.com/schemas/v4.39/json-schema/configuration.json
     theme: 'light'
     default_2fa_method: ''
     server:
       address: 'tcp://0.0.0.0:9091/'
       asset_path: ''
       headers:
-        csp_template: ''
+        csp_template: ""
       buffers:
         read: 4096
         write: 4096
@@ -45,6 +45,12 @@ data:
     telemetry:
       metrics:
         enabled: false
+    definitions:
+      network:
+        private:
+        - '10.0.0.0/8'
+        - '172.16.0.0/12'
+        - '192.168.0.0/16'
     identity_validation:
       elevated_session:
         code_lifespan: '5 minutes'
@@ -71,10 +77,26 @@ data:
         - 30
     webauthn:
       disable: false
+      enable_passkey_login: false
       display_name: 'Authelia'
       attestation_conveyance_preference: 'indirect'
-      user_verification: 'preferred'
       timeout: '60 seconds'
+      filtering:
+        permitted_aaguids: []
+        prohibited_aaguids: []
+        prohibit_backup_eligibility: false
+      selection_criteria:
+        attachment: ''
+        discoverability: 'preferred'
+        user_verification: 'preferred'
+      metadata:
+        enabled: false
+        validate_trust_anchor: true
+        validate_entry: true
+        validate_entry_permit_zero_aaguid: false
+        validate_status: true
+        validate_status_permitted: []
+        validate_status_prohibited: []
     ntp:
       address: 'udp://time.cloudflare.com:123'
       version: 4
@@ -85,6 +107,8 @@ data:
       password_reset:
         disable: false
         custom_url: ''
+      password_change:
+        disable: false
       ldap:
         implementation: 'glauth'
         address: 'ldap://glauth.k2-auth.svc.cluster.local'
@@ -95,9 +119,15 @@ data:
           skip_verify: false
           minimum_version: 'TLS1.2'
           maximum_version: 'TLS1.3'
+        pooling:
+          enable: false
+          count: 5
+          retries: 2
+          timeout: '10 seconds'
         base_dn: 'dc=wyvernzora,dc=io'
         additional_users_dn: 'ou=users'
         additional_groups_dn: 'OU=Groups'
+        group_search_mode: 'filter'
         permit_referrals: false
         permit_unauthenticated_bind: false
         permit_feature_detection_failure: false
@@ -106,6 +136,24 @@ data:
           distinguished_name: ''
           username: ''
           display_name: ''
+          family_name: ''
+          given_name: ''
+          middle_name: ''
+          nickname: ''
+          gender: ''
+          birthdate: ''
+          website: ''
+          profile: ''
+          picture: ''
+          zoneinfo: ''
+          locale: ''
+          phone_number: ''
+          phone_extension: ''
+          street_address: ''
+          locality: ''
+          region: ''
+          postal_code: ''
+          country: ''
           mail:  ''
           member_of:  ''
           group_name:  ''
@@ -132,6 +180,8 @@ data:
           authelia_url: 'https://auth.wyvernzora.io'
           default_redirection_url: 'https://h.wyvernzora.io'
     regulation:
+      modes:
+      - 'user'
       max_retries: 3
       find_time: '2 minutes'
       ban_time: '5 minutes'
@@ -144,12 +194,6 @@ data:
         filename: '/var/authelia/notifications.log'
     access_control:
       default_policy: 'one_factor'
-      networks:
-        - name: private
-          networks:
-            - '10.0.0.0/8'
-            - '172.16.0.0/12'
-            - '192.168.0.0/16'
     ...
 ---
 apiVersion: v1
@@ -159,8 +203,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.38.16
-    helm.sh/chart: authelia-0.9.14
+    app.kubernetes.io/version: 4.39.4
+    helm.sh/chart: authelia-0.10.21
   name: authelia
   namespace: k2-auth
 spec:
@@ -182,8 +226,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.38.16
-    helm.sh/chart: authelia-0.9.14
+    app.kubernetes.io/version: 4.39.4
+    helm.sh/chart: authelia-0.10.21
   name: authelia
   namespace: k2-auth
 spec:
@@ -202,13 +246,13 @@ spec:
   template:
     metadata:
       annotations:
-        authelia.com/checksum-config: 1cff138deaf8f06f405d0de9bdfe9321cdfce2d3a0d5b03ab50455b538cd5bb7
+        authelia.com/checksum-config: 235ac992bd4cac611c4d83fdddddaaf7a1e0444b4446643ed6403ded384493e2
       labels:
         app.kubernetes.io/instance: authelia
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: authelia
-        app.kubernetes.io/version: 4.38.16
-        helm.sh/chart: authelia-0.9.14
+        app.kubernetes.io/version: 4.39.4
+        helm.sh/chart: authelia-0.10.21
     spec:
       affinity:
         nodeAffinity: {}
@@ -232,7 +276,7 @@ spec:
               value: /configuration.yaml
             - name: X_AUTHELIA_CONFIG_FILTERS
               value: template
-          image: ghcr.io/authelia/authelia:4.38.16
+          image: ghcr.io/authelia/authelia:4.39.4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
@@ -315,8 +359,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.38.16
-    helm.sh/chart: authelia-0.9.14
+    app.kubernetes.io/version: 4.39.4
+    helm.sh/chart: authelia-0.10.21
   name: authelia
   namespace: k2-auth
 spec:
