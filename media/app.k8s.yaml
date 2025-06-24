@@ -663,3 +663,153 @@ spec:
                   number: 80
             path: /prowlarr
             pathType: Prefix
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-shoko-depl-c839b1f2
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: media-shoko-depl-c8fa8ac3
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: media-shoko-depl-c8fa8ac3
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PUID
+              value: "3000"
+            - name: PGID
+              value: "2001"
+            - name: TZ
+              value: America/Los_Angeles
+          image: ghcr.io/shokoanime/server:5.1.0
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - wget
+                - -qO
+                - /dev/null
+                - http://127.0.0.1:8111
+            failureThreshold: 3
+          name: shoko-server
+          ports:
+            - containerPort: 8111
+              name: http
+          readinessProbe:
+            exec:
+              command:
+                - wget
+                - -qO
+                - /dev/null
+                - http://127.0.0.1:8111
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 1000m
+              ephemeral-storage: 8Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /home/shoko/.shoko
+              name: pvc-media-shoko-depl-vol-appdata-pvc-c88f1b20
+            - mountPath: /mnt/series
+              name: blk-vol-series
+            - mountPath: /mnt/features
+              name: blk-vol-features
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-media-shoko-depl-vol-appdata-pvc-c88f1b20
+          persistentVolumeClaim:
+            claimName: media-shoko-depl-vol-appdata-pvc-c88f1b20
+            readOnly: false
+        - name: blk-vol-series
+          nfs:
+            path: /mnt/data/media/anime/series
+            server: 10.10.8.1
+        - name: blk-vol-features
+          nfs:
+            path: /mnt/data/media/anime/features
+            server: 10.10.8.1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-shoko-depl-vol-appdata-pvc-c88f1b20
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shoko
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8111
+  selector:
+    cdk8s.io/metadata.addr: media-shoko-depl-c8fa8ac3
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+  name: media-shoko-ingr-c8cadad1
+spec:
+  rules:
+    - host: shoko.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: shoko
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
