@@ -705,7 +705,7 @@ spec:
               value: "2001"
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/shokoanime/server:5.1.0
+          image: ghcr.io/shokoanime/server:v5.1.0
           imagePullPolicy: Always
           livenessProbe:
             exec:
