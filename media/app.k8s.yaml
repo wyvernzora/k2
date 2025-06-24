@@ -708,25 +708,25 @@ spec:
           image: ghcr.io/shokoanime/server:v5.1.0
           imagePullPolicy: Always
           livenessProbe:
-            exec:
-              command:
-                - wget
-                - -qO
-                - /dev/null
-                - http://127.0.0.1:8111
             failureThreshold: 3
+            httpGet:
+              path: /
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
           name: shoko-server
           ports:
             - containerPort: 8111
               name: http
           readinessProbe:
-            exec:
-              command:
-                - wget
-                - -qO
-                - /dev/null
-                - http://127.0.0.1:8111
             failureThreshold: 3
+            httpGet:
+              path: /
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             limits:
               cpu: 1000m
