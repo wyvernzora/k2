@@ -5,7 +5,7 @@ import { Middleware } from "@k2/traefik/crds";
 const app = new App();
 const chart = new HelmChart(app, "authelia", {
   namespace: "k2-auth",
-  chart: "helm:https://charts.authelia.com/authelia@0.10.22",
+  chart: "helm:https://charts.authelia.com/authelia@0.10.34",
   values: {
     domain: "wyvernzora.io",
     ingress: {
