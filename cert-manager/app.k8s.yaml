@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 9.1.14
-    helm.sh/chart: reflector-9.1.14
+    app.kubernetes.io/version: 9.1.15
+    helm.sh/chart: reflector-9.1.15
   name: reflector
   namespace: k2-core
 ---
@@ -17,8 +17,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 9.1.14
-    helm.sh/chart: reflector-9.1.14
+    app.kubernetes.io/version: 9.1.15
+    helm.sh/chart: reflector-9.1.15
   name: reflector
   namespace: k2-core
 rules:
@@ -44,8 +44,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 9.1.14
-    helm.sh/chart: reflector-9.1.14
+    app.kubernetes.io/version: 9.1.15
+    helm.sh/chart: reflector-9.1.15
   name: reflector
   namespace: k2-core
 roleRef:
@@ -64,8 +64,8 @@ metadata:
     app.kubernetes.io/instance: reflector
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 9.1.14
-    helm.sh/chart: reflector-9.1.14
+    app.kubernetes.io/version: 9.1.15
+    helm.sh/chart: reflector-9.1.15
   name: reflector
   namespace: k2-core
 spec:
@@ -88,7 +88,7 @@ spec:
               value: ""
             - name: ES_Ignite__KubernetesClient__SkipTlsVerify
               value: "false"
-          image: docker.io/emberstack/kubernetes-reflector:9.1.14
+          image: docker.io/emberstack/kubernetes-reflector:9.1.15
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
