@@ -8,8 +8,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.18.1
-    helm.sh/chart: cert-manager-v1.18.1
+    app.kubernetes.io/version: v1.18.2
+    helm.sh/chart: cert-manager-v1.18.2
   name: certificaterequests.cert-manager.io
   namespace: k2-core
 spec:
@@ -325,8 +325,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.18.1
-    helm.sh/chart: cert-manager-v1.18.1
+    app.kubernetes.io/version: v1.18.2
+    helm.sh/chart: cert-manager-v1.18.2
   name: certificates.cert-manager.io
   namespace: k2-core
 spec:
@@ -1118,8 +1118,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.18.1
-    helm.sh/chart: cert-manager-v1.18.1
+    app.kubernetes.io/version: v1.18.2
+    helm.sh/chart: cert-manager-v1.18.2
   name: challenges.acme.cert-manager.io
   namespace: k2-core
 spec:
@@ -4324,8 +4324,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.18.1
-    helm.sh/chart: cert-manager-v1.18.1
+    app.kubernetes.io/version: v1.18.2
+    helm.sh/chart: cert-manager-v1.18.2
   name: clusterissuers.cert-manager.io
   namespace: k2-core
 spec:
@@ -8063,8 +8063,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.18.1
-    helm.sh/chart: cert-manager-v1.18.1
+    app.kubernetes.io/version: v1.18.2
+    helm.sh/chart: cert-manager-v1.18.2
   name: issuers.cert-manager.io
   namespace: k2-core
 spec:
@@ -11801,8 +11801,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.18.1
-    helm.sh/chart: cert-manager-v1.18.1
+    app.kubernetes.io/version: v1.18.2
+    helm.sh/chart: cert-manager-v1.18.2
   name: orders.acme.cert-manager.io
   namespace: k2-core
 spec:
