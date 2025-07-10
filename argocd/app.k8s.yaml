@@ -138,6 +138,7 @@ data:
   exec.enabled: "false"
   reposerver.enable.git.submodule: "false"
   resource.customizations.health.argoproj.io_Application: |2-
+
       hs = {}
       hs.status = "Progressing"
       hs.message = ""
