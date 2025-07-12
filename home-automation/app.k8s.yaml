@@ -35,7 +35,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: eclipse-mosquitto:2.0.21
+        - image: eclipse-mosquitto:2.0.22
           imagePullPolicy: Always
           livenessProbe:
             exec:
