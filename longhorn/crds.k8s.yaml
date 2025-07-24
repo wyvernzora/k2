@@ -7,8 +7,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: backingimagedatasources.longhorn.io
   namespace: k2-storage
@@ -195,8 +195,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: backingimagemanagers.longhorn.io
   namespace: k2-storage
@@ -392,8 +392,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: backingimages.longhorn.io
   namespace: k2-storage
@@ -623,8 +623,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: backupbackingimages.longhorn.io
   namespace: k2-storage
@@ -787,8 +787,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: backups.longhorn.io
   namespace: k2-storage
@@ -1022,8 +1022,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: backuptargets.longhorn.io
   namespace: k2-storage
@@ -1222,8 +1222,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: backupvolumes.longhorn.io
   namespace: k2-storage
@@ -1415,8 +1415,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: engineimages.longhorn.io
   namespace: k2-storage
@@ -1441,7 +1441,6 @@ spec:
     shortNames:
       - lhei
     singular: engineimage
-  preserveUnknownFields: false
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
@@ -1630,8 +1629,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: engines.longhorn.io
   namespace: k2-storage
@@ -1644,7 +1643,6 @@ spec:
     shortNames:
       - lhe
     singular: engine
-  preserveUnknownFields: false
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
@@ -2031,8 +2029,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: instancemanagers.longhorn.io
   namespace: k2-storage
@@ -2045,7 +2043,6 @@ spec:
     shortNames:
       - lhim
     singular: instancemanager
-  preserveUnknownFields: false
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
@@ -2381,8 +2378,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: nodes.longhorn.io
   namespace: k2-storage
@@ -2407,7 +2404,6 @@ spec:
     shortNames:
       - lhn
     singular: node
-  preserveUnknownFields: false
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
@@ -2666,8 +2662,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: orphans.longhorn.io
   namespace: k2-storage
@@ -2785,8 +2781,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: recurringjobs.longhorn.io
   namespace: k2-storage
@@ -2984,8 +2980,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: replicas.longhorn.io
   namespace: k2-storage
@@ -2998,7 +2994,6 @@ spec:
     shortNames:
       - lhr
     singular: replica
-  preserveUnknownFields: false
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
@@ -3272,8 +3267,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: settings.longhorn.io
   namespace: k2-storage
@@ -3286,7 +3281,6 @@ spec:
     shortNames:
       - lhs
     singular: setting
-  preserveUnknownFields: false
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
@@ -3393,8 +3387,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: sharemanagers.longhorn.io
   namespace: k2-storage
@@ -3523,8 +3517,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: snapshots.longhorn.io
   namespace: k2-storage
@@ -3656,8 +3650,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: supportbundles.longhorn.io
   namespace: k2-storage
@@ -3788,8 +3782,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: systembackups.longhorn.io
   namespace: k2-storage
@@ -3924,8 +3918,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: systemrestores.longhorn.io
   namespace: k2-storage
@@ -4033,8 +4027,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: volumeattachments.longhorn.io
   namespace: k2-storage
@@ -4174,8 +4168,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.9.0
-    helm.sh/chart: longhorn-1.9.0
+    app.kubernetes.io/version: v1.9.1
+    helm.sh/chart: longhorn-1.9.1
     longhorn-manager: ""
   name: volumes.longhorn.io
   namespace: k2-storage
@@ -4200,7 +4194,6 @@ spec:
     shortNames:
       - lhv
     singular: volume
-  preserveUnknownFields: false
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
