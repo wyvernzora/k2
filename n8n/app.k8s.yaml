@@ -61,6 +61,32 @@ spec:
           volumeMounts:
             - mountPath: /home/node/.n8n
               name: pvc-n8n-depl-vol-appdata-pvc-c86b6999
+        - env:
+            - name: LUNCHMONEY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: credential
+                  name: n8n-depl-lm-token-c86ce486
+            - name: BIND_ADDRESS
+              value: 127.0.0.1
+          image: ghcr.io/wyvernzora/lunchmoney-mcp-server:dev
+          imagePullPolicy: Always
+          name: lunchmoney-mcp
+          ports:
+            - containerPort: 3000
+              name: mcp
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
       dnsPolicy: ClusterFirst
       hostNetwork: false
       restartPolicy: Always
@@ -89,6 +115,13 @@ spec:
       storage: 16Gi
   storageClassName: longhorn
   volumeMode: Filesystem
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: n8n-depl-lm-token-c86ce486
+spec:
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/3hzvddfjcii34wz2ej6g4zbwf4
 ---
 apiVersion: v1
 kind: Service
