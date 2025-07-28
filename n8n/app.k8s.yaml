@@ -67,8 +67,6 @@ spec:
                 secretKeyRef:
                   key: credential
                   name: n8n-depl-lm-token-c86ce486
-            - name: BIND_ADDRESS
-              value: 127.0.0.1
           image: ghcr.io/wyvernzora/lunchmoney-mcp-server:dev
           imagePullPolicy: Always
           name: lunchmoney-mcp
