@@ -1,5 +1,6 @@
 import { OnePasswordItem } from "@k2/1password/crds";
 import { ApiObjectMetadata } from "cdk8s";
+import { ISecret, Secret } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 
 const VAULT_ID = "zfsyjjcwge4w4gw6dh4zaqndhq";
@@ -15,6 +16,8 @@ export interface K2SecretProps {
  * dedicated 1Password vault for isolation.
  */
 export class K2Secret extends OnePasswordItem {
+  public readonly secret: ISecret;
+
   constructor(scope: Construct, id: string, props: K2SecretProps) {
     super(scope, id, {
       metadata: props.metadata,
@@ -22,5 +25,6 @@ export class K2Secret extends OnePasswordItem {
         itemPath: `vaults/${VAULT_ID}/items/${props.itemId}`,
       },
     });
+    this.secret = Secret.fromSecretName(this, "secret", this.name);
   }
 }
