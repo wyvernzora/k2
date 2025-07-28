@@ -15,7 +15,8 @@
     "prettier": "prettier 'src/**/*' '**.json'"
   },
   "dependencies": {
-    "@k2/cdk-lib": "^1.0.0"
+    "@k2/cdk-lib": "^1.0.0",
+    "@k2/1password": "*"
   },
   "devDependencies": {
     "@k2/build": "^1.0.0"

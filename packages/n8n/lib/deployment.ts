@@ -1,6 +1,7 @@
-import { Cpu, Deployment, DeploymentStrategy, Probe } from "cdk8s-plus-28";
+import { Cpu, Deployment, DeploymentStrategy, EnvValue, Probe } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { K2Volumes, oci } from "@k2/cdk-lib";
+import { K2Secret } from "@k2/1password";
 import {} from "cdk8s-plus-28/lib/imports/k8s";
 import { Size } from "cdk8s";
 
@@ -20,6 +21,7 @@ export class N8NDeployment extends Deployment {
       strategy: DeploymentStrategy.recreate(),
     });
     this.addN8NContainer(props);
+    this.addLunchMoneyMCPContainer();
   }
 
   private addN8NContainer(props: Props): void {
@@ -58,6 +60,28 @@ export class N8NDeployment extends Deployment {
       },
       liveness: Probe.fromHttpGet("/", { port: 5678 }),
       readiness: Probe.fromHttpGet("/", { port: 5678 }),
+    });
+  }
+
+  private addLunchMoneyMCPContainer(): void {
+    const token = new K2Secret(this, "lm-token", {
+      itemId: "3hzvddfjcii34wz2ej6g4zbwf4",
+    });
+    this.addContainer({
+      name: "lunchmoney-mcp",
+      image: oci`ghcr.io/wyvernzora/lunchmoney-mcp-server:dev`,
+      ports: [
+        {
+          name: "mcp",
+          number: 3000,
+        },
+      ],
+      envVariables: {
+        LUNCHMONEY_TOKEN: EnvValue.fromSecretValue({
+          secret: token.secret,
+          key: "credential",
+        }),
+      },
     });
   }
 }
