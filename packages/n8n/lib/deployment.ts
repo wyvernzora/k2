@@ -1,4 +1,4 @@
-import { Cpu, Deployment, DeploymentStrategy, EnvValue, Probe } from "cdk8s-plus-28";
+import { Cpu, Deployment, DeploymentStrategy, EnvValue, ImagePullPolicy, Probe } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import { K2Volumes, oci } from "@k2/cdk-lib";
 import { K2Secret } from "@k2/1password";
@@ -64,12 +64,16 @@ export class N8NDeployment extends Deployment {
   }
 
   private addLunchMoneyMCPContainer(): void {
-    const token = new K2Secret(this, "lm-token", {
+    const lmToken = new K2Secret(this, "lm-token", {
       itemId: "3hzvddfjcii34wz2ej6g4zbwf4",
     });
+    const kbToken = new K2Secret(this, "kb-token", {
+      itemId: "r7qpb5ljzxj76pwlojnmfswlre",
+    });
     this.addContainer({
-      name: "lunchmoney-mcp",
-      image: oci`ghcr.io/wyvernzora/lunchmoney-mcp-server:dev`,
+      name: "personal-finance-mcp",
+      image: oci`ghcr.io/wyvernzora/personal-finance-mcp:edge`,
+      imagePullPolicy: ImagePullPolicy.ALWAYS,
       ports: [
         {
           name: "mcp",
@@ -78,8 +82,20 @@ export class N8NDeployment extends Deployment {
       ],
       envVariables: {
         LUNCHMONEY_TOKEN: EnvValue.fromSecretValue({
-          secret: token.secret,
+          secret: lmToken.secret,
           key: "credential",
+        }),
+        KUBERA_API_KEY: EnvValue.fromSecretValue({
+          secret: kbToken.secret,
+          key: "key",
+        }),
+        KUBERA_API_SECRET: EnvValue.fromSecretValue({
+          secret: kbToken.secret,
+          key: "secret",
+        }),
+        KUBERA_PORTFOLIO_ID: EnvValue.fromSecretValue({
+          secret: kbToken.secret,
+          key: "portfolioId",
         }),
       },
     });
