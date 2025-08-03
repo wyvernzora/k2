@@ -84,7 +84,7 @@ spec:
                   name: n8n-depl-kb-token-c87948cc
           image: ghcr.io/wyvernzora/personal-finance-mcp:edge
           imagePullPolicy: Always
-          name: lunchmoney-mcp
+          name: personal-finance-mcp
           ports:
             - containerPort: 3000
               name: mcp
