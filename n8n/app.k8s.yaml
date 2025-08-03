@@ -67,7 +67,22 @@ spec:
                 secretKeyRef:
                   key: credential
                   name: n8n-depl-lm-token-c86ce486
-          image: ghcr.io/wyvernzora/lunchmoney-mcp-server:dev
+            - name: KUBERA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: key
+                  name: n8n-depl-kb-token-c87948cc
+            - name: KUBERA_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: secret
+                  name: n8n-depl-kb-token-c87948cc
+            - name: KUBERA_PORTFOLIO_ID
+              valueFrom:
+                secretKeyRef:
+                  key: portfolioId
+                  name: n8n-depl-kb-token-c87948cc
+          image: ghcr.io/wyvernzora/personal-finance-mcp:edge
           imagePullPolicy: Always
           name: lunchmoney-mcp
           ports:
@@ -120,6 +135,13 @@ metadata:
   name: n8n-depl-lm-token-c86ce486
 spec:
   itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/3hzvddfjcii34wz2ej6g4zbwf4
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: n8n-depl-kb-token-c87948cc
+spec:
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/r7qpb5ljzxj76pwlojnmfswlre
 ---
 apiVersion: v1
 kind: Service
