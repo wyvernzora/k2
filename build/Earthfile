@@ -1,0 +1,19 @@
+VERSION 0.8
+FROM node:alpine
+
+image:
+    # Enable community repo and install packages needed for build
+    RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+    RUN apk update && apk add --no-cache bash curl git jq helm yq
+    RUN npm install -g cdk8s-cli
+
+    # Bundle in the build scripts
+    COPY ./scripts /scripts
+
+    # Set up user and workdir
+    RUN adduser -D builder
+    USER builder
+    WORKDIR /app
+
+    # Save image for further use
+    SAVE IMAGE ghcr.io/wyvernzora/k2-build:latest
