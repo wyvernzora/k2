@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "paths": {
       "@k2/cdk-lib": ["cdk-lib"],
+      "@k2/cdk-lib/v3": ["cdk-lib/v3"],
       "@k2/*": ["apps/*"]
     },
     "target": "es2020",
