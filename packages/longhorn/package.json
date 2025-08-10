@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./crds": "./dist/longhorn.io.ts",
+    "./crds": "./crds/longhorn.io.ts",
     "./app.k8s.yaml": "./dist/app.k8s.yaml",
     "./crds.k8s.yaml": "./dist/crds.k8s.yaml"
   },

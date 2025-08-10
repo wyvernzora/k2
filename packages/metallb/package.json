@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./crds": "./dist/metallb.io.ts",
+    "./crds": "./crds/metallb.io.ts",
     "./app.k8s.yaml": "./dist/app.k8s.yaml",
     "./crds.k8s.yaml": "./dist/crds.k8s.yaml"
   },
@@ -30,7 +30,9 @@
       {
         "group": "apiextensions.k8s.io",
         "kind": "CustomResourceDefinition",
-        "jsonPointers": ["/spec/conversion/webhook/clientConfig/caBundle"]
+        "jsonPointers": [
+          "/spec/conversion/webhook/clientConfig/caBundle"
+        ]
       }
     ]
   }

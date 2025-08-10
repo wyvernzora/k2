@@ -10,7 +10,7 @@ build-image:
 manifests:
     FROM ghcr.io/wyvernzora/k2-build:latest
     COPY . .
-    RUN npm ci && npm run build
+    RUN /scripts/v2/synthesize-app-manifests.sh
     SAVE ARTIFACT deploy AS LOCAL deploy
 
 diff:

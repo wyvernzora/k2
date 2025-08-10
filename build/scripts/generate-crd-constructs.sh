@@ -14,4 +14,4 @@ OUTPUT_DIR="$APP_PATH/crds"
 shift
 
 # Import CRDs using cdk8s
-cdk8s -l typescript -o "$OUTPUT_DIR" "$APP_PATH/crds/crds.k8s.yaml"
+cdk8s import -l typescript -o "$OUTPUT_DIR" "$APP_PATH/crds/crds.k8s.yaml"
