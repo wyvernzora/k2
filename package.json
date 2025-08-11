@@ -2,21 +2,20 @@
   "name": "@wyvernzora/k2",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "cdk-lib",
-    "packages/*",
-    "tools/*"
-  ],
   "dependencies": {
     "cdk8s": "^2.68.22",
     "cdk8s-plus-28": "^2.0.8",
+    "common-tags": "^1.8.2",
     "debug": "^4.3.4",
     "dedent-js": "^1.0.1",
     "fast-glob": "^3.3.2",
     "find-root": "^1.1.0",
+    "json-stable-stringify": "^1.3.0",
     "yaml": "^2.3.4"
   },
   "devDependencies": {
+    "@tsconfig/recommended": "^1.0.10",
+    "@types/common-tags": "^1.8.4",
     "@types/debug": "^4.1.12",
     "@types/find-root": "^1.1.4",
     "@types/node": "^22.0.0",
@@ -56,7 +55,6 @@
     "printWidth": 120
   },
   "scripts": {
-    "build": "nx run-many -t build && k2-release",
     "eslint": "eslint --ext .ts .",
     "prettier": "prettier '{apps,packages,tools}/**/*.ts' '**/*.yaml' '!**/templates/**/*.yaml'",
     "lint:check": "npm run eslint && npm run prettier -- --check",

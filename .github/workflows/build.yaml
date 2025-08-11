@@ -13,10 +13,10 @@ on:
 jobs:
   # 1) Detect changes such that we can work out which build steps need to run
   detect-changes:
-    name: Detect changes to determine which build steps to run
+    name: Detect changes
     runs-on: ubuntu-latest
     outputs:
-      run-k2-build: ${{ steps.filter.outputs.build == 'true' || steps.filter.outputs.workflows == 'true' }}
+      run-k2-build: ${{ steps.filter.outputs.run-k2-build }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -25,16 +25,13 @@ jobs:
         id: filter
         with:
           filters: |
-            build:
+            run-k2-build:
               - 'build/**'
-            workflows:
+              - 'Earthfile'
               - '.github/workflows/**'
-      - name: Debug filter outputs
-        if: always()
+      - name: Debug filter output
         run: |
-          echo "filter.build     = '${{ steps.filter.outputs.build }}'"
-          echo "filter.workflows = '${{ steps.filter.outputs.workflows }}'"
-          echo "job.run-k2-build = '${{ needs.detect-changes.outputs.run-k2-build }}'"
+          echo "STEP-LEVEL run-k2-build = ${{ steps.filter.outputs.run-k2-build }}"
 
   # 2) Build and push the k2-build image, if anything changed
   k2-build:
@@ -45,6 +42,8 @@ jobs:
     concurrency:
       group: k2-build-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      BUILDER_IMAGE_REPO: ghcr.io/wyvernzora/k2-build
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -55,6 +54,9 @@ jobs:
         with:
           image: tonistiigi/binfmt:latest
           platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to ghcr.io
         uses: docker/login-action@v3
@@ -72,31 +74,30 @@ jobs:
       - name: Tag & push to GHCR
         shell: bash
         run: |
-          REPO=ghcr.io/wyvernzora/k2-build
-          # manually enumerate your tags
           TAGS=(
             "${{ github.sha }}"
             "${{ github.ref_name }}"
             "latest"
           )
           for tag in "${TAGS[@]}"; do
-            echo "Pushing ${REPO}:${tag}"
-            docker tag "${REPO}:latest" "${REPO}:${tag}"
-            docker push "${REPO}:${tag}"
+            echo "Pushing ${BUILDER_IMAGE_REPO}:${tag}"
+            docker tag "${BUILDER_IMAGE_REPO}:latest" "${BUILDER_IMAGE_REPO}:${tag}"
+            docker push "${BUILDER_IMAGE_REPO}:${tag}"
           done
 
   # 3) Build Kubernetes deployment manifests
   manifests:
-    name: Build Kubernetes deployment manifests
+    name: Build k8s deployment manifests
     needs: k2-build
     if: always()
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     concurrency:
       group: build-manifests-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
       - name: Login to ghcr.io
         uses: docker/login-action@v3
         with:
@@ -106,9 +107,6 @@ jobs:
 
       - name: Setup earthly
         uses: earthly/actions-setup@v1
-
-      - name: Checkout source code
-        uses: actions/checkout@v4
 
       - name: Run manifest build
         run: earthly +manifests

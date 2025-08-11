@@ -4,8 +4,13 @@ ansible:
     FROM DOCKERFILE -f containers/ansible/Dockerfile .
     SAVE IMAGE ghcr.io/wyvernzora/k2-ansible
 
+build-image-base:
+    ARG TAG="latest"
+    FROM ./build+image
+    SAVE IMAGE ghcr.io/wyvernzora/k2-build:${TAG}
+
 build-image:
-    BUILD --platform=linux/amd64 --platform=linux/arm64 ./build+image
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +build-image-base
 
 for-all:
     ARG TARGET="no-op"
@@ -20,14 +25,16 @@ crd-constructs:
     BUILD +for-all --TARGET="crd-constructs"
 
 manifests:
+    ARG TAG="latest"
     BUILD +crd-constructs
-    FROM ghcr.io/wyvernzora/k2-build:latest
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
     COPY . .
     RUN /scripts/v2/synthesize-app-manifests.sh
     SAVE ARTIFACT deploy AS LOCAL deploy
 
 diff:
-    FROM ghcr.io/wyvernzora/k2-build:latest
+    ARG TAG="latest"
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
     RUN git clone --no-checkout -b deploy --single-branch --depth 2 https://github.com/wyvernzora/k2
     COPY (+manifests/deploy) k2/
     RUN (cd k2 && git add . && git diff --cached origin/deploy) | tee deploy.diff

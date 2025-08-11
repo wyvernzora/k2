@@ -3,9 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@k2/cdk-lib": ["cdk-lib"],
+      "@k2/cdk-lib": ["cdk-lib/src"],
       "@k2/cdk-lib/v3": ["cdk-lib/v3"],
-      "@k2/*": ["apps/*"]
+      "@k2/*": ["packages/*"]
     },
     "target": "es2020",
     "lib": ["ES2020"],

@@ -5,7 +5,6 @@ set -e
 APPS_DIR="packages"
 DEPLOY_DIR="deploy"
 
-# Synth package
 synth_app() {
     local APP="$1"
     local APPROOT="$APPS_DIR/$APP"
@@ -15,7 +14,9 @@ synth_app() {
         echo "Synthesizing manifest for $APP"
 
         # Synth app CDK
-        npx -y ts-node "app.ts"
+        npx -y ts-node \
+            -r tsconfig-paths/register \
+            "deploy/index.ts"
         if [ ! -f "dist/app.k8s.yaml" ]; then
             echo "error: CDK synth did not produce expected output" 1>&2
             exit 1
@@ -26,13 +27,31 @@ synth_app() {
     )
 }
 
+collect_manifests() {
+    local APP="$1"
+    local APP_SRC="$APPS_DIR/$APP"
+    local APP_OUT="$DEPLOY_DIR/$APP"
+
+    mkdir -p "$APP_OUT"
+    cp "$APP_SRC/dist/app.k8s.yaml" "$APP_OUT/app.k8s.yaml"
+    local CRD_MANIFEST_SRC="$APP_SRC/crds/crds.k8s.yaml"
+    if [ -f "$CRD_MANIFEST_SRC" ]; then
+        cp "$CRD_MANIFEST_SRC" "$APP_OUT/crds.k8s.yaml"
+    fi
+}
+
 # Install NPM dependencies
 npm ci
 
 # Synthesize deployment manifests for each application
 for app in "$APPS_DIR"/*/; do
-    synth_app "$(basename $app)"
+    APP_NAME="$(basename $app)"
+    synth_app "$APP_NAME"
+    collect_manifests "$APP_NAME"
 done
 
-# Run release process
-npx -y '@k2/release'
+# Collect all ArgoCD manifests
+# yq sorting is funky so making a detour through json/jq
+yq eval-all -o=json packages/*/argocd.k8s.yaml |\
+jq -s 'sort_by((.metadata.annotations["argocd.argoproj.io/sync-wave"] // "0" | tonumber), .metadata.name) | .[]' |\
+yq -p=json > "$DEPLOY_DIR/app.k8s.yaml"
