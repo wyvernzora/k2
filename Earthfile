@@ -7,7 +7,20 @@ ansible:
 build-image:
     BUILD --platform=linux/amd64 --platform=linux/arm64 ./build+image
 
+for-all:
+    ARG TARGET="no-op"
+    LOCALLY
+    WAIT
+        FOR dir IN $(ls -d packages/* 2>/dev/null)
+            BUILD "./$dir+$TARGET"
+        END
+    END
+
+crd-constructs:
+    BUILD +for-all --TARGET="crd-constructs"
+
 manifests:
+    BUILD +crd-constructs
     FROM ghcr.io/wyvernzora/k2-build:latest
     COPY . .
     RUN /scripts/v2/synthesize-app-manifests.sh

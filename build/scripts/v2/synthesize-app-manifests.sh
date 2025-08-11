@@ -5,24 +5,6 @@ set -e
 APPS_DIR="packages"
 DEPLOY_DIR="deploy"
 
-# Import CRDs
-import_crds() {
-    local APP="$1"
-    local APPROOT="$APPS_DIR/$APP"
-    (
-        cd "$APPROOT"
-        mkdir -p "dist"
-
-        if [ -f "crds/crds.k8s.yaml" ]; then
-            echo "Importing CRD for $APP"
-            # Import CRDs
-            npx cdk8s import -l typescript -o "crds" "crds/crds.k8s.yaml"
-            # Copy CRD manifest from CRDs
-            cp "crds/crds.k8s.yaml" "dist/crds.k8s.yaml"
-        fi
-    )
-}
-
 # Synth package
 synth_app() {
     local APP="$1"
@@ -46,11 +28,6 @@ synth_app() {
 
 # Install NPM dependencies
 npm ci
-
-# Generate CRD constructs for each application
-for app in "$APPS_DIR"/*/; do
-    import_crds "$(basename $app)"
-done
 
 # Synthesize deployment manifests for each application
 for app in "$APPS_DIR"/*/; do
