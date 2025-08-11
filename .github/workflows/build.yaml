@@ -1,12 +1,95 @@
 name: Build
+
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
-    branches: ["main", "renovate/*"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
+
 jobs:
-  build-manifests:
+  # 1) Detect changes such that we can work out which build steps need to run
+  detect-changes:
+    name: Detect changes to determine which build steps to run
+    runs-on: ubuntu-latest
+    outputs:
+      run-k2-build: ${{ steps.filter.outputs.build == 'true' || steps.filter.outputs.workflows == 'true' }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            build:
+              - 'build/**'
+            workflows:
+              - '.github/workflows/**'
+      - name: Debug filter outputs
+        if: always()
+        run: |
+          echo "filter.build     = '${{ steps.filter.outputs.build }}'"
+          echo "filter.workflows = '${{ steps.filter.outputs.workflows }}'"
+          echo "job.run-k2-build = '${{ needs.detect-changes.outputs.run-k2-build }}'"
+
+  # 2) Build and push the k2-build image, if anything changed
+  k2-build:
+    name: Build k2-build image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.run-k2-build == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: k2-build-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: all
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup earthly
+        uses: earthly/actions-setup@v1
+
+      - name: Build the k2-build image
+        run: earthly +build-image
+
+      - name: Tag & push to GHCR
+        shell: bash
+        run: |
+          REPO=ghcr.io/wyvernzora/k2-build
+          # manually enumerate your tags
+          TAGS=(
+            "${{ github.sha }}"
+            "${{ github.ref_name }}"
+            "latest"
+          )
+          for tag in "${TAGS[@]}"; do
+            echo "Pushing ${REPO}:${tag}"
+            docker tag "${REPO}:latest" "${REPO}:${tag}"
+            docker push "${REPO}:${tag}"
+          done
+
+  # 3) Build Kubernetes deployment manifests
+  manifests:
     name: Build Kubernetes deployment manifests
+    needs: k2-build
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -14,12 +97,22 @@ jobs:
       group: build-manifests-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup earthly
         uses: earthly/actions-setup@v1
+
       - name: Checkout source code
         uses: actions/checkout@v4
+
       - name: Run manifest build
         run: earthly +manifests
+
       - name: Push to deploy branch
         uses: s0/git-publish-subdir-action@v2.6.0
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -5,7 +5,7 @@ ansible:
     SAVE IMAGE ghcr.io/wyvernzora/k2-ansible
 
 build-image:
-    BUILD ./build+image
+    BUILD --platform=linux/amd64 --platform=linux/arm64 ./build+image
 
 manifests:
     FROM ghcr.io/wyvernzora/k2-build:latest
