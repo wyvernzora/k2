@@ -31,7 +31,7 @@ export class HomeAssistantDeployment extends Deployment {
   private addHomeAssistantContainer(dataVolume: VolumeMount) {
     this.addContainer({
       name: "home-assistant",
-      image: oci`linuxserver/homeassistant:2025.6.3`,
+      image: oci`linuxserver/homeassistant:2025.8.1`,
       ports: [
         {
           name: "http",
