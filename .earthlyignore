@@ -3,3 +3,4 @@
 charts
 dist
 node_modules
+.tmp-earthly-out

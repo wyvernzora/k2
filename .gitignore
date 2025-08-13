@@ -43,6 +43,7 @@ coverage/
 # Other files to ignore
 .nx
 *.tsbuildinfo
+.tmp-earthly-out
 
 # k8s manifest output destination
 /deploy/

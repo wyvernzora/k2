@@ -28,6 +28,8 @@ manifests:
     ARG TAG="latest"
     BUILD +crd-constructs
     FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    COPY package.json package-lock.json ./
+    RUN npm ci --progress
     COPY . .
     RUN /scripts/v2/synthesize-app-manifests.sh
     SAVE ARTIFACT deploy AS LOCAL deploy
