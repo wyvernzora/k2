@@ -2,7 +2,7 @@
 set -e
 
 # Constants
-APPS_DIR="packages"
+APPS_DIR="apps"
 DEPLOY_DIR="deploy"
 
 synth_app() {

@@ -16,7 +16,7 @@ for-all:
     ARG TARGET="no-op"
     LOCALLY
     WAIT
-        FOR dir IN $(ls -d packages/* 2>/dev/null)
+        FOR dir IN $(ls -d apps/* 2>/dev/null)
             BUILD "./$dir+$TARGET"
         END
     END
@@ -26,11 +26,15 @@ crd-constructs:
 
 manifests:
     ARG TAG="latest"
-    BUILD +crd-constructs
     FROM ghcr.io/wyvernzora/k2-build:${TAG}
+
+    # Cache NPM dependencies as part of the image
     COPY package.json package-lock.json ./
-    RUN npm ci --progress
+    RUN npm ci
+
+    # Copy the data
     COPY . .
+    BUILD +crd-constructs
     RUN /scripts/v2/synthesize-app-manifests.sh
     SAVE ARTIFACT deploy AS LOCAL deploy
 
