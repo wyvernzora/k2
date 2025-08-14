@@ -71,25 +71,26 @@ jobs:
       - name: Build the k2-build image
         run: earthly +build-image
 
-      - name: Tag & push to GHCR
+      - name: Tag & push :sha
         shell: bash
         run: |
-          TAGS=(
-            "${{ github.sha }}"
-            "${{ github.ref_name }}"
-            "latest"
-          )
-          for tag in "${TAGS[@]}"; do
-            echo "Pushing ${BUILDER_IMAGE_REPO}:${tag}"
-            docker tag "${BUILDER_IMAGE_REPO}:latest" "${BUILDER_IMAGE_REPO}:${tag}"
-            docker push "${BUILDER_IMAGE_REPO}:${tag}"
-          done
+          SHA=${GITHUB_SHA:0:7}
+          echo "Pushing ${BUILDER_IMAGE_REPO}:$SHA"
+          docker tag "${BUILDER_IMAGE_REPO}:latest" "${BUILDER_IMAGE_REPO}:$SHA"
+          docker push "${BUILDER_IMAGE_REPO}:$SHA"
+
+      - name: Tag & push :latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          echo "Pushing ${BUILDER_IMAGE_REPO}:latest"
+          docker push "${BUILDER_IMAGE_REPO}:latest"
 
   # 3) Build Kubernetes deployment manifests
   manifests:
     name: Build k8s deployment manifests
     needs: k2-build
-    if: always()
+    if: always() && !failure() && !cancelled()
     runs-on: ubuntu-latest
     concurrency:
       group: build-manifests-${{ github.ref }}
@@ -109,7 +110,20 @@ jobs:
         uses: earthly/actions-setup@v1
 
       - name: Run manifest build
-        run: earthly +manifests
+        env:
+          RUN_K2_BUILD: ${{ needs.k2-build.result == 'success' }}
+        run: |
+          TAG_OPT=""
+          SHORT_SHA=${GITHUB_SHA:0:7}
+
+          # On PR builds where the k2-build image changed, use the short-SHA
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$RUN_K2_BUILD" = "true" ]; then
+            echo "⚙️  Using custom build-image TAG=${SHORT_SHA} for PR test"
+            TAG_OPT="--TAG=$SHORT_SHA"
+          fi
+
+          earthly +crd-constructs $TAG_OPT
+          earthly +k8s-manifests $TAG_OPT
 
       - name: Push to deploy branch
         uses: s0/git-publish-subdir-action@v2.6.0

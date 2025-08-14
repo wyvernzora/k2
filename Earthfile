@@ -1,47 +1,64 @@
 VERSION 0.8
+ARG TAG="latest"
 
-ansible:
-    FROM DOCKERFILE -f containers/ansible/Dockerfile .
-    SAVE IMAGE ghcr.io/wyvernzora/k2-ansible
+#
+# +build-image: Creates the base image for all cdk8s builds
+#
+build-image:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +build-image-base
+
+#
+# +crd-constructs: Generates TypeScript cdk8s constructs for each app based on its CRD manifest
+#
+crd-constructs:
+    ARG TAG="latest"
+    LOCALLY
+    WAIT
+        FOR dir IN $(ls -d apps/* 2>/dev/null)
+            BUILD "./$dir+crd-constructs" --TAG=$TAG
+        END
+    END
+
+#
+# +app-manifests: Generates k8s deployment manifests
+#
+k8s-manifests:
+    ARG TAG="latest"
+    ARG APP_ROOT
+    FROM +npm-install --TAG=$TAG
+    COPY . .
+    WAIT
+        FOR APP_ROOT IN $(ls -d apps/* 2>/dev/null)
+            RUN /scripts/synthesize-app-manifests.sh "$APP_ROOT"
+        END
+    END
+    RUN /scripts/synthesize-argocd-manifest.sh
+    SAVE ARTIFACT deploy/* AS LOCAL deploy/
+
+#
+# +diff: Generates a diff of deployment manifests against current remote HEAD
+#
+diff:
+    ARG TAG="latest"
+    BUILD +k8s-manifests
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    RUN git clone --no-checkout -b deploy --single-branch --depth 2 https://github.com/wyvernzora/k2
+    COPY deploy/ k2/
+    RUN (cd k2 && git add . && git diff --cached origin/deploy) | tee deploy.diff
+    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
+
 
 build-image-base:
     ARG TAG="latest"
     FROM ./build+image
     SAVE IMAGE ghcr.io/wyvernzora/k2-build:${TAG}
 
-build-image:
-    BUILD --platform=linux/amd64 --platform=linux/arm64 +build-image-base
-
-for-all:
-    ARG TARGET="no-op"
-    LOCALLY
-    WAIT
-        FOR dir IN $(ls -d apps/* 2>/dev/null)
-            BUILD "./$dir+$TARGET"
-        END
-    END
-
-crd-constructs:
-    BUILD +for-all --TARGET="crd-constructs"
-
-manifests:
+npm-install:
     ARG TAG="latest"
     FROM ghcr.io/wyvernzora/k2-build:${TAG}
-
-    # Cache NPM dependencies as part of the image
     COPY package.json package-lock.json ./
     RUN npm ci
 
-    # Copy the data
-    COPY . .
-    BUILD +crd-constructs
-    RUN /scripts/v2/synthesize-app-manifests.sh
-    SAVE ARTIFACT deploy AS LOCAL deploy
-
-diff:
-    ARG TAG="latest"
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
-    RUN git clone --no-checkout -b deploy --single-branch --depth 2 https://github.com/wyvernzora/k2
-    COPY (+manifests/deploy) k2/
-    RUN (cd k2 && git add . && git diff --cached origin/deploy) | tee deploy.diff
-    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
+ansible:
+    FROM DOCKERFILE -f containers/ansible/Dockerfile .
+    SAVE IMAGE ghcr.io/wyvernzora/k2-ansible
