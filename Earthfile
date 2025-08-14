@@ -35,19 +35,6 @@ k8s-manifests:
     RUN /scripts/synthesize-argocd-manifest.sh
     SAVE ARTIFACT deploy/* AS LOCAL deploy/
 
-#
-# +diff: Generates a diff of deployment manifests against current remote HEAD
-#
-diff:
-    ARG TAG="latest"
-    BUILD +k8s-manifests
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
-    RUN git clone --no-checkout -b deploy --single-branch --depth 2 https://github.com/wyvernzora/k2
-    COPY deploy/ k2/
-    RUN (cd k2 && git add . && git diff --cached origin/deploy) | tee deploy.diff
-    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
-
-
 build-image-base:
     ARG TAG="latest"
     FROM ./build+image

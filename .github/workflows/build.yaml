@@ -125,6 +125,31 @@ jobs:
           earthly +crd-constructs $TAG_OPT
           earthly +k8s-manifests $TAG_OPT
 
+      - name: Determine if there are changes to deploy
+        if: github.event_name == 'pull_request'
+        id: diff
+        run: |
+          git fetch --depth 1 origin deploy
+          if git diff --quiet origin/deploy -- deploy; then
+            echo "no_changes=true" >> $GITHUB_OUTPUT
+            echo "✅ No changes in deploy/, safe to auto-merge."
+          else
+            echo "no_changes=false" >> $GITHUB_OUTPUT
+            echo "🚨 Found changes in deploy/, skipping auto-merge."
+          fi
+
+      - name: Auto-merge PR
+        if: github.event_name == 'pull_request' && steps.diff.outputs.no_changes == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              merge_method: 'rebase'
+            });
+
       - name: Push to deploy branch
         uses: s0/git-publish-subdir-action@v2.6.0
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
