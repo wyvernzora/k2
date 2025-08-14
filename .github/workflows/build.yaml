@@ -140,7 +140,7 @@ jobs:
 
       - name: Auto-merge PR
         if: github.event_name == 'pull_request' && steps.diff.outputs.no_changes == 'true'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             await github.pulls.merge({
