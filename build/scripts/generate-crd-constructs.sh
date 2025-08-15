@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Disable cdk8s update banner
+cdk8s --version > $HOME/.cdk8s-cli.version
+
 # Ensure that at least one argument is provided
 if [ "$#" -lt 1 ]; then
   echo "Usage: $0 <app-path> [additional-helm-template-args]"

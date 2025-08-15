@@ -12,11 +12,11 @@ build-image:
 #
 crd-constructs:
     ARG TAG="latest"
-    LOCALLY
-    WAIT
-        FOR dir IN $(ls -d apps/* 2>/dev/null)
-            BUILD "./$dir+crd-constructs" --TAG=$TAG
-        END
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    COPY . .
+    FOR APP_ROOT IN $(ls -d apps/*/crds/crds.k8s.yaml 2>/dev/null | sed 's#/crds/crds.k8s.yaml$##')
+        RUN /scripts/generate-crd-constructs.sh "$APP_ROOT"
+        SAVE ARTIFACT $APP_ROOT/crds/*.ts AS LOCAL $APP_ROOT/crds/
     END
 
 #
@@ -27,10 +27,8 @@ k8s-manifests:
     ARG APP_ROOT
     FROM +npm-install --TAG=$TAG
     COPY . .
-    WAIT
-        FOR APP_ROOT IN $(ls -d apps/* 2>/dev/null)
-            RUN /scripts/synthesize-app-manifests.sh "$APP_ROOT"
-        END
+    FOR APP_ROOT IN $(ls -d apps/* 2>/dev/null)
+        RUN /scripts/synthesize-app-manifests.sh "$APP_ROOT"
     END
     RUN /scripts/synthesize-argocd-manifest.sh
     SAVE ARTIFACT deploy/* AS LOCAL deploy/
@@ -46,7 +44,6 @@ diff:
     COPY deploy/ k2/
     RUN (cd k2 && git add . && git diff --cached origin/deploy) | tee deploy.diff
     SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
-
 
 build-image-base:
     ARG TAG="latest"
