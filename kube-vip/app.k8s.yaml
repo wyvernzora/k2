@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
     app.kubernetes.io/version: v0.9.1
-    helm.sh/chart: kube-vip-0.7.1
+    helm.sh/chart: kube-vip-0.8.0
   name: kube-vip
   namespace: k2-network
 ---
@@ -21,16 +21,29 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - services
       - services/status
-      - nodes
+    verbs:
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - services
       - endpoints
-      - pods
     verbs:
       - list
       - get
       - watch
       - update
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - get
+      - watch
+      - update
+      - patch
   - apiGroups:
       - coordination.k8s.io
     resources:
@@ -41,6 +54,21 @@ rules:
       - watch
       - update
       - create
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - get
+      - watch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -50,7 +78,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
     app.kubernetes.io/version: v0.9.1
-    helm.sh/chart: kube-vip-0.7.1
+    helm.sh/chart: kube-vip-0.8.0
   name: kube-vip
   namespace: k2-network
 roleRef:
