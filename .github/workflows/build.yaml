@@ -9,6 +9,9 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  schedule:
+    - cron: "0 3 * * 0" # every Sunday 03:00 UTC
+  workflow_dispatch:
 
 jobs:
   # 1) Detect changes such that we can work out which build steps need to run
@@ -37,7 +40,10 @@ jobs:
   k2-build:
     name: Build k2-build image
     needs: detect-changes
-    if: needs.detect-changes.outputs.run-k2-build == 'true'
+    # run when any of the following:
+    #  • this is a schedule build (to refresh build image deps)
+    #  • detect-changes said “true” (to rebuild image in response to pushed changes)
+    if: github.event_name == 'schedule' || needs.detect-changes.outputs.run-k2-build == 'true'
     runs-on: ubuntu-latest
     concurrency:
       group: k2-build-${{ github.ref }}
