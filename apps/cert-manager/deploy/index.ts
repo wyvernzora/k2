@@ -1,8 +1,8 @@
 import { App, HelmChart } from "@k2/cdk-lib";
-import { K2Secret } from "@k2/1password";
+import * as OnePassword from "@k2/1password";
 import { K2Issuer, K2Certificate } from "@k2/cert-manager";
 
-const app = new App();
+const app = new App(OnePassword.withDefaultVault());
 
 // Reflector chart to copy secrets across namespaces
 new HelmChart(app, "reflector", {
@@ -27,7 +27,7 @@ const chart = new HelmChart(app, "cert-manager", {
  * Cluster issues using Let's Encrypt and AWS Route53 DNS01 challenge
  */
 const issuer = new K2Issuer(chart, "issuer", {
-  credentials: new K2Secret(chart, "aws-credentials", {
+  credentials: new OnePassword.K2Secret(chart, "aws-credentials", {
     itemId: "hxitqr6xcco7g2ne3n7m6kkoqa",
   }),
 });

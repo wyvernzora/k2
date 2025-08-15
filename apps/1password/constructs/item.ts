@@ -2,8 +2,7 @@ import { OnePasswordItem } from "../crds/onepassword.com";
 import { ApiObjectMetadata } from "cdk8s";
 import { ISecret, Secret } from "cdk8s-plus-28";
 import { Construct } from "constructs";
-
-const VAULT_ID = "zfsyjjcwge4w4gw6dh4zaqndhq";
+import { VaultContext } from "./context";
 
 export interface K2SecretProps {
   readonly metadata?: ApiObjectMetadata;
@@ -19,10 +18,11 @@ export class K2Secret extends OnePasswordItem {
   public readonly secret: ISecret;
 
   constructor(scope: Construct, id: string, props: K2SecretProps) {
+    const ctx = VaultContext.of(scope);
     super(scope, id, {
       metadata: props.metadata,
       spec: {
-        itemPath: `vaults/${VAULT_ID}/items/${props.itemId}`,
+        itemPath: `vaults/${ctx.vaultId}/items/${props.itemId}`,
       },
     });
     this.secret = Secret.fromSecretName(this, "secret", this.name);

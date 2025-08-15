@@ -2,7 +2,8 @@ import { App, HelmChart } from "@k2/cdk-lib";
 import * as OnePassword from "@k2/1password";
 import * as Traefik from "@k2/traefik";
 
-const app = new App();
+const app = new App(OnePassword.withDefaultVault());
+
 const chart = new HelmChart(app, "authelia", {
   namespace: "k2-auth",
   chart: "helm:https://charts.authelia.com/authelia@0.10.22",
