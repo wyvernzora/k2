@@ -2,6 +2,12 @@ VERSION 0.8
 ARG TAG="latest"
 
 #
+# +ansible-images: Creates the ansible playbook image
+#
+ansible-image:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +ansible-image-base
+
+#
 # +build-image: Creates the base image for all cdk8s builds
 #
 build-image:
@@ -33,29 +39,18 @@ k8s-manifests:
     RUN /scripts/synthesize-argocd-manifest.sh
     SAVE ARTIFACT deploy/* AS LOCAL deploy/
 
-#
-# +diff: Generates a diff of deployment manifests against current remote HEAD
-#
-diff:
-    ARG TAG="latest"
-    BUILD +k8s-manifests
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
-    RUN git clone --no-checkout -b deploy --single-branch --depth 2 https://github.com/wyvernzora/k2
-    COPY deploy/ k2/
-    RUN (cd k2 && git add . && git diff --cached origin/deploy) | tee deploy.diff
-    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
-
 build-image-base:
     ARG TAG="latest"
     FROM ./build+image
     SAVE IMAGE ghcr.io/wyvernzora/k2-build:${TAG}
+
+ansible-image-base:
+    ARG TAG="latest"
+    FROM ./ansible+image
+    SAVE IMAGE ghcr.io/wyvernzora/k2-ansible:${TAG}
 
 npm-install:
     ARG TAG="latest"
     FROM ghcr.io/wyvernzora/k2-build:${TAG}
     COPY package.json package-lock.json ./
     RUN npm ci
-
-ansible:
-    FROM DOCKERFILE -f containers/ansible/Dockerfile .
-    SAVE IMAGE ghcr.io/wyvernzora/k2-ansible
