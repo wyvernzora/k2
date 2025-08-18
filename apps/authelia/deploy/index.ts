@@ -6,9 +6,8 @@ const app = new App(OnePassword.withDefaultVault());
 
 const chart = new HelmChart(app, "authelia", {
   namespace: "k2-auth",
-  chart: "helm:https://charts.authelia.com/authelia@0.10.22",
+  chart: "helm:https://charts.authelia.com/authelia@0.10.42",
   values: {
-    domain: "wyvernzora.io",
     ingress: {
       enabled: true,
       tls: {
