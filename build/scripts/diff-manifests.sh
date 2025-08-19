@@ -27,10 +27,29 @@ comm -12 /tmp/local.txt /tmp/remote.txt > /tmp/common.txt
 sed 's/^/+/' /tmp/only-local.txt
 sed 's/^/+/' /tmp/only-remote.txt
 
-# 4) for each file present in both, invoke dyff on that pair:
+# 3) build exclude patterns
+excludes=()
+DYFFIGNORE=".dyffignore"
+if [[ -f "$DYFFIGNORE" ]]; then
+    while IFS= read -r ptr; do
+    # skip empty lines & comments
+    [[ -z "$ptr" || "$ptr" =~ ^# ]] && continue
+
+    # ensure it starts with a slash (JSON Pointer)
+    [[ "$ptr" != /* ]] && ptr="/$ptr"
+
+    excludes+=( "--exclude" "$ptr" )
+    done < "$DYFFIGNORE"
+fi
+
+# 5) for each file present in both, invoke dyff on that pair:
 while IFS= read -r file; do
     set +e
-    diff_output=$(dyff between -ibs "$TMPDIR/$file" "./deploy/$file")
+    diff_output=$(
+        dyff between -ibs "${excludes[@]}" \
+        "$TMPDIR/$file" \
+        "./deploy/$file"
+    )
     rc=$?
     set -e
     # dyff returns 1 if differences were found, 0 if none, 2 on error
