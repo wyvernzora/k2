@@ -115,7 +115,7 @@ jobs:
       - name: Setup earthly
         uses: earthly/actions-setup@v1
 
-      - name: Run manifest build
+      - name: Run manifest build & diff
         env:
           RUN_K2_BUILD: ${{ needs.k2-build.result == 'success' }}
         run: |
@@ -130,6 +130,13 @@ jobs:
 
           earthly +crd-constructs $TAG_OPT
           earthly +k8s-manifests $TAG_OPT
+          earthly +diff-manifests $TAG_OPT
+
+      - name: Upload deploy.diff
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.sha }}
+          path: deploy.diff
 
       - name: Push to deploy branch
         uses: s0/git-publish-subdir-action@v2.6.0

@@ -1,0 +1,170 @@
+name: PR Diff/Merge
+
+on:
+  workflow_run:
+    workflows:
+      - Build
+    types:
+      - completed
+
+permissions:
+  actions: read # to list workflow runs/artifacts
+  contents: write # for auto-merge
+  pull-requests: write # for auto-merge
+  issues: write # for commenting
+
+jobs:
+  merge-or-comment:
+    if: github.event.check_suite.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔎 Find PR for this SHA
+        uses: jwalton/gh-find-current-pr@v1
+        id: pr
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sha: ${{ github.event.check_suite.head_sha }}
+
+      - name: 🛂 Guard PR conditions
+        id: guard
+        shell: bash
+        run: |
+          echo "has_pr=false" >> "$GITHUB_OUTPUT"
+          echo "enable_merge=false" >> "$GITHUB_OUTPUT"
+
+          if [ -z "${{ steps.pr.outputs.number }}" ]; then
+            echo "⚠️  No PR found → skipping job."
+            exit 0
+          fi
+          echo "has_pr=true" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ steps.pr.outputs.headRepoFork }}" = "true" ]; then
+            echo "⛳ PR from fork → will comment but NOT enable auto-merge."
+            exit 0
+          fi
+
+          echo "enable_merge=true" >> "$GITHUB_OUTPUT"
+          echo "✅ PR OK → continuing."
+
+      - name: 📥 Download artifact for this commit
+        if: steps.guard.outputs.has_pr == 'true'
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          commit: ${{ github.event.check_suite.head_sha }}
+          workflow_conclusion: success
+          path: artifacts
+
+      - name: 🔗 Find producing run & artifact links
+        if: steps.guard.outputs.has_pr == 'true'
+        id: runlink
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const {owner, repo} = context.repo;
+            const sha = context.payload.check_suite.head_sha;
+            const {data:{workflow_runs}} = await github.rest.actions.listWorkflowRunsForRepo({
+              owner, repo, head_sha: sha, per_page: 20, status: 'success'
+            });
+            if (!workflow_runs.length) return;
+            const run = workflow_runs[0];
+            core.setOutput('run_url', run.html_url);
+            core.setOutput('artifacts_url', run.html_url + '#artifacts');
+            const {data:{artifacts}} = await github.rest.actions.listWorkflowRunArtifacts({
+              owner, repo, run_id: run.id, per_page: 100
+            });
+            const candidate = artifacts.find(a => a.name === sha) ||
+                              artifacts.find(a => /deploy/i.test(a.name)) ||
+                              artifacts[0];
+            if (candidate) {
+              core.setOutput('artifact_name', candidate.name);
+              core.setOutput('artifact_download_url', candidate.archive_download_url);
+            }
+
+      - name: 🧮 Check diff & build sticky comment (with truncation)
+        if: steps.guard.outputs.has_pr == 'true'
+        id: diff
+        shell: bash
+        env:
+          RUN_URL: ${{ steps.runlink.outputs.run_url }}
+          ART_URL: ${{ steps.runlink.outputs.artifacts_url }}
+          ART_DL: ${{ steps.runlink.outputs.artifact_download_url }}
+          ART_NAME: ${{ steps.runlink.outputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          FILE="artifacts/${{ github.event.check_suite.head_sha }}/deploy.diff"
+          [ -f "$FILE" ] || FILE="$(find artifacts -type f -name deploy.diff | head -n1 || true)"
+
+          TS="$(date -u +'%Y-%m-%d %H:%M:%SZ')"
+          SHA="${{ github.event.check_suite.head_sha }}"
+          MAX=56000
+
+          : > comment-body.md
+
+          footer() {
+            echo
+            echo "_Generated on ${TS} for commit \`${SHA}\`._"
+            if [ -n "${RUN_URL:-}" ]; then
+              echo
+              printf "[View workflow run](%s)" "${RUN_URL}"
+              [ -n "${ART_URL:-}" ] && printf " · [Artifacts](%s)" "${ART_URL}"
+              [ -n "${ART_DL:-}" ]  && printf " · [Download %s](%s)" "${ART_NAME:-artifact}.zip" "${ART_DL}"
+              echo
+            fi
+          }
+
+          if [ -z "${FILE:-}" ]; then
+            echo "merge=false" >> "$GITHUB_OUTPUT"
+            echo "❌ No deploy.diff artifact found."
+            {
+              echo "## ⚠️ Could not find \`deploy.diff\` artifact"
+              footer
+            } >> comment-body.md
+            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -s "$FILE" ]; then
+            echo "merge=false" >> "$GITHUB_OUTPUT"
+            echo "file=$FILE" >> "$GITHUB_OUTPUT"
+            echo "📝 Non-empty diff → will comment."
+            {
+              echo "## 📝 deploy.diff"
+              echo
+              echo '```diff'
+              if [ "$(wc -c < "$FILE")" -gt "$MAX" ]; then
+                head -c "$MAX" "$FILE"
+                echo
+                echo "..."
+              else
+                cat "$FILE"
+              fi
+              echo '```'
+              footer
+            } >> comment-body.md
+            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
+          else
+            echo "merge=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Empty diff → enabling auto-merge."
+            {
+              echo "## ✅ No manifest changes — enabling auto-merge"
+              footer
+            } >> comment-body.md
+            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 💬 Sticky PR comment
+        if: steps.guard.outputs.has_pr == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.pr.outputs.number }}
+          header: deploy-diff
+          path: ${{ steps.diff.outputs.comment_body }}
+
+      - name: 🔁 Enable auto-merge (rebase)
+        if: steps.guard.outputs.has_pr == 'true' && steps.guard.outputs.enable_merge == 'true' && steps.diff.outputs.merge == 'true'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ steps.pr.outputs.number }}
+          merge-method: rebase
+          token: ${{ secrets.GITHUB_TOKEN }}

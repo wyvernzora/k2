@@ -39,6 +39,19 @@ k8s-manifests:
     RUN /scripts/synthesize-argocd-manifest.sh
     SAVE ARTIFACT deploy/* AS LOCAL deploy/
 
+#
+# +diff-manifests: diff your newly-built deploy/ against the remote 'deploy' branch
+#
+diff-manifests:
+    ARG TAG="latest"
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    COPY ./build/scripts /scripts
+    COPY ./deploy ./deploy
+    COPY .dyffignore .dyffignore
+    RUN /scripts/diff-manifests.sh https://github.com/wyvernzora/k2.git > deploy.diff
+    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
+
+
 build-image-base:
     ARG TAG="latest"
     FROM ./build+image
@@ -54,12 +67,3 @@ npm-install:
     FROM ghcr.io/wyvernzora/k2-build:${TAG}
     COPY package.json package-lock.json ./
     RUN npm ci
-
-# +diff-manifests: diff your newly-built deploy/ against the remote 'deploy' branch
-diff-manifests:
-    ARG TAG="latest"
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
-    COPY ./build/scripts /scripts
-    COPY ./deploy ./deploy
-    RUN /scripts/diff-manifests.sh https://github.com/wyvernzora/k2.git > deploy.diff
-    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
