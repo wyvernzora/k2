@@ -48,7 +48,7 @@ jobs:
 
       - name: 📥 Download artifact for this commit
         if: steps.guard.outputs.has_pr == 'true'
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v11
         with:
           commit: ${{ github.event.check_suite.head_sha }}
           workflow_conclusion: success
