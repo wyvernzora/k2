@@ -1,8 +1,10 @@
-name: Build
+name: 🏗️ Build
 
 permissions:
   contents: write
   packages: write
+  pull-requests: write
+  issues: write
 
 on:
   push:
@@ -13,17 +15,21 @@ on:
     - cron: "0 3 * * 0" # every Sunday 03:00 UTC
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # 1) Detect changes such that we can work out which build steps need to run
   detect-changes:
-    name: Detect changes
+    name: 🔍 Detect changes
     runs-on: ubuntu-latest
     outputs:
       run-k2-build: ${{ steps.filter.outputs.run-k2-build }}
     steps:
-      - name: Checkout source code
+      - name: 📥 Checkout source code
         uses: actions/checkout@v5
-      - name: Detect changes
+      - name: 🔍 Detect changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -32,52 +38,49 @@ jobs:
               - 'build/**'
               - 'Earthfile'
               - '.github/workflows/**'
-      - name: Debug filter output
+      - name: 🐛 Debug filter output
         run: |
           echo "STEP-LEVEL run-k2-build = ${{ steps.filter.outputs.run-k2-build }}"
 
   # 2) Build and push the k2-build image, if anything changed
   k2-build:
-    name: Build k2-build image
+    name: 🐳 Build k2-build image
     needs: detect-changes
     # run when any of the following:
     #  • this is a schedule build (to refresh build image deps)
     #  • detect-changes said “true” (to rebuild image in response to pushed changes)
     if: github.event_name == 'schedule' || needs.detect-changes.outputs.run-k2-build == 'true'
     runs-on: ubuntu-latest
-    concurrency:
-      group: k2-build-${{ github.ref }}
-      cancel-in-progress: true
     env:
       BUILDER_IMAGE_REPO: ghcr.io/wyvernzora/k2-build
     steps:
-      - name: Checkout source code
+      - name: 📥 Checkout source code
         uses: actions/checkout@v5
 
-      - name: Set up QEMU
+      - name: ⚙️ Set up QEMU
         id: qemu
         uses: docker/setup-qemu-action@v3
         with:
           image: tonistiigi/binfmt:latest
           platforms: all
 
-      - name: Set up Docker Buildx
+      - name: 🛠️ Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to ghcr.io
+      - name: 🔐 Login to ghcr.io
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup earthly
+      - name: 🌍 Setup earthly
         uses: earthly/actions-setup@v1
 
-      - name: Build the k2-build image
+      - name: 🏗️ Build the k2-build image
         run: earthly +build-image
 
-      - name: Tag & push :sha
+      - name: 🏷️ Tag & push :sha
         shell: bash
         run: |
           SHA=${GITHUB_SHA:0:7}
@@ -85,7 +88,7 @@ jobs:
           docker tag "${BUILDER_IMAGE_REPO}:latest" "${BUILDER_IMAGE_REPO}:$SHA"
           docker push "${BUILDER_IMAGE_REPO}:$SHA"
 
-      - name: Tag & push :latest
+      - name: 🏷️ Tag & push :latest
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
@@ -94,28 +97,25 @@ jobs:
 
   # 3) Build Kubernetes deployment manifests
   manifests:
-    name: Build k8s deployment manifests
+    name: 📜 Build k8s deployment manifests
     needs: k2-build
     if: always() && !failure() && !cancelled()
     runs-on: ubuntu-latest
-    concurrency:
-      group: build-manifests-${{ github.ref }}
-      cancel-in-progress: true
     steps:
-      - name: Checkout source code
+      - name: 📥 Checkout source code
         uses: actions/checkout@v5
 
-      - name: Login to ghcr.io
+      - name: 🔐 Login to ghcr.io
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup earthly
+      - name: 🌍 Setup earthly
         uses: earthly/actions-setup@v1
 
-      - name: Run manifest build
+      - name: ⚙️ Run manifest build & diff
         env:
           RUN_K2_BUILD: ${{ needs.k2-build.result == 'success' }}
         run: |
@@ -130,13 +130,144 @@ jobs:
 
           earthly +crd-constructs $TAG_OPT
           earthly +k8s-manifests $TAG_OPT
+          earthly +diff-manifests $TAG_OPT
 
-      - name: Push to deploy branch
+      - name: 📦 Upload deploy.diff
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-diff
+          path: deploy.diff
+          if-no-files-found: error
+
+      - name: 📦 Upload k8s manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-manifests
+          path: ./deploy
+          if-no-files-found: error
+          retention-days: 7
+
+  # 4) Handle PR lifecycle
+  pr-lifecycle:
+    name: 🔁 Handle PR lifecycle
+    needs: manifests
+    if: github.event_name == 'pull_request' && !failure() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download deploy.diff
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-diff
+          path: artifacts
+
+      - name: 🛂 Guard PR conditions
+        id: guard
+        shell: bash
+        run: |
+          echo "enable_merge=false" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event.pull_request.head.repo.fork }}" = "true" ]; then
+            echo "⛳ PR from fork → will comment but NOT enable auto-merge."
+            exit 0
+          fi
+
+          echo "enable_merge=true" >> "$GITHUB_OUTPUT"
+          echo "✅ PR OK → continuing."
+
+      - name: 🧮 Check diff & build sticky comment (with truncation + footer)
+        id: diff
+        shell: bash
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ART_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          FILE="artifacts/deploy.diff"
+          TS="$(date -u +'%Y-%m-%d %H:%M:%SZ')"
+          SHA="${HEAD_SHA}"
+          MAX=56000  # leave room for headers/links/fences
+
+          : > comment-body.md
+
+          footer() {
+            echo
+            echo "_Generated on ${TS} for commit \`${SHA}\`._"
+            echo "[View workflow run](${RUN_URL}) · [Artifacts](${ART_URL})"
+          }
+
+          if [ ! -f "$FILE" ]; then
+            echo "merge=false" >> "$GITHUB_OUTPUT"
+            echo "❌ No deploy.diff artifact found."
+            {
+              echo "## ⚠️ Could not find \`deploy.diff\` artifact"
+              footer
+            } >> comment-body.md
+            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -s "$FILE" ]; then
+            echo "merge=false" >> "$GITHUB_OUTPUT"
+            echo "file=$FILE" >> "$GITHUB_OUTPUT"
+            echo "📝 Non-empty diff → will comment."
+            {
+              echo "## 📝 deploy.diff"
+              echo
+              echo '```diff'
+              if [ "$(wc -c < "$FILE")" -gt "$MAX" ]; then
+                head -c "$MAX" "$FILE"
+                echo
+                echo "..."
+              else
+                cat "$FILE"
+              fi
+              echo '```'
+              footer
+            } >> comment-body.md
+            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
+          else
+            echo "merge=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Empty diff → enabling auto-merge."
+            {
+              echo "## ✅ No manifest changes — enabling auto-merge"
+              footer
+            } >> comment-body.md
+            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 💬 Sticky PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ github.event.pull_request.number }}
+          header: deploy-diff
+          path: ${{ steps.diff.outputs.comment_body }}
+
+      - name: 🔁 Enable auto-merge (rebase)
+        if: steps.guard.outputs.enable_merge == 'true' && steps.diff.outputs.merge == 'true'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: rebase
+          token: ${{ secrets.GITHUB_TOKEN }} # repo must allow auto-merge
+
+  # 5) Push manifests to deploy branch if push to main
+  deploy:
+    name: 🚀 Deploy k8s manifests
+    needs: manifests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !failure() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Download k8s manifests
+        uses: actions/download-artifact@v4
+        with:
+          name: k8s-manifests
+          path: artifacts
+
+      - name: 🚢 Push to deploy branch
         uses: s0/git-publish-subdir-action@v2.6.0
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           REPO: self
           BRANCH: deploy
-          FOLDER: deploy
+          FOLDER: artifacts
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_EMPTY_COMMITS: true

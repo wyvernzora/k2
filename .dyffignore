@@ -1,0 +1,4 @@
+/metadata/labels/app.kubernetes.io/version
+/metadata/labels/helm.sh/chart
+/spec/template/metadata/labels/app.kubernetes.io/version
+/spec/template/metadata/labels/helm.sh/chart
