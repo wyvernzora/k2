@@ -54,3 +54,12 @@ npm-install:
     FROM ghcr.io/wyvernzora/k2-build:${TAG}
     COPY package.json package-lock.json ./
     RUN npm ci
+
+# +diff-manifests: diff your newly-built deploy/ against the remote 'deploy' branch
+diff-manifests:
+    ARG TAG="latest"
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    COPY ./build/scripts /scripts
+    COPY ./deploy ./deploy
+    RUN /scripts/diff-manifests.sh https://github.com/wyvernzora/k2.git > deploy.diff
+    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff

@@ -7,6 +7,10 @@ image:
     RUN apk update && apk add --no-cache bash curl git jq helm yq-go
     RUN npm install -g cdk8s-cli
 
+    # Install things not in package registries
+    COPY ./provision /provision
+    RUN /provision/install-dyff.sh
+
     # Bundle in the build scripts
     COPY ./scripts /scripts
 
