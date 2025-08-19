@@ -155,7 +155,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download deploy.diff
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: deploy-diff
           path: artifacts
@@ -258,7 +258,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download k8s manifests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: k8s-manifests
           path: artifacts
