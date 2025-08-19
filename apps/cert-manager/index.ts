@@ -7,8 +7,8 @@ export const crd = {
 };
 
 /* Export higher level constructs */
-export * from "./constructs/issuer";
-export * from "./constructs/certificate";
+export * from "./lib/issuer";
+export * from "./lib/certificate";
 
 /* Export deployment chart factory */
 export * from "./deploy";

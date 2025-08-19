@@ -1,5 +1,5 @@
 import { App, K2Volume } from "@k2/cdk-lib";
-import { Media } from "../constructs";
+import { Media } from "../components";
 import { Size } from "cdk8s";
 
 const app = new App();

@@ -67,7 +67,7 @@ export class PlexDeployment extends Deployment {
   private addNginxContainer(): void {
     const certSecret = Secret.fromSecretName(this, "plex-cert", "default-certificate");
     const config = new ConfigMap(this, "nginx-conf");
-    config.addFile(join(__dirname, "../config/nginx.conf"));
+    config.addFile(join(__dirname, "./config/nginx.conf"));
 
     this.addContainer({
       name: "nginx",

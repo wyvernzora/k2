@@ -1,5 +1,5 @@
 import { App } from "@k2/cdk-lib";
-import { BlockingGroup, ClientGroup, CustomDns, Dns } from "../constructs";
+import { BlockingGroup, ClientGroup, CustomDns, Dns } from "../components";
 
 const app = new App();
 

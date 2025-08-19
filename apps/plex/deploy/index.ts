@@ -1,5 +1,5 @@
 import { Size } from "cdk8s";
-import { PlexChart } from "../constructs/chart";
+import { PlexChart } from "../components/plex/chart";
 import { App, K2Volume } from "@k2/cdk-lib";
 
 const app = new App();

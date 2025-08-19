@@ -1,5 +1,5 @@
 import { App, K2Volume } from "@k2/cdk-lib";
-import { HomeAutomation } from "../constructs";
+import { HomeAutomation } from "../components";
 import { Size } from "cdk8s";
 
 const app = new App();

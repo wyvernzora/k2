@@ -5,8 +5,8 @@ export const crd = {
 };
 
 /* Export higher level constructs */
-export * from "./constructs/item";
-export * from "./constructs/context";
+export * from "./lib/item";
+export * from "./lib/context";
 
 /* Export deployment chart factory */
 export * from "./deploy";

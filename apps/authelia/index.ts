@@ -2,7 +2,7 @@
 // No CRDs
 
 /* Export higher level constructs */
-export * from "./constructs/ingress";
+export * from "./lib/ingress";
 
 /* Export deployment chart factory */
 export * from "./deploy";

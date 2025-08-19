@@ -1,6 +1,6 @@
 import { App, K2Volume } from "@k2/cdk-lib";
 import * as OnePassword from "@k2/1password";
-import { N8N } from "../constructs";
+import { N8N } from "../components/n8n";
 import { Size } from "cdk8s";
 
 const app = new App(OnePassword.withDefaultVault());
