@@ -1,11 +1,18 @@
 import * as base from "cdk8s";
 import { YamlOutputType } from "cdk8s";
-import { Construct } from "constructs";
+import { dirname } from "path";
+import { mkdir, writeFile } from "fs/promises";
 
 export class App extends base.App {
   constructor(...options: Array<AppOptionFunc>) {
     super({ yamlOutputType: YamlOutputType.FILE_PER_APP });
     options.forEach(opt => opt(this));
+  }
+
+  async synthToFile(path: string): Promise<void> {
+    const output = this.synthYaml();
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, output, "utf8");
   }
 }
 
@@ -20,36 +27,8 @@ export function defineAppExports<
   T extends {
     createAppResources: AppResourceFunc;
     createArgoCdResources: ArgoCDResourceFunc;
-    crds: object;
+    crds?: object;
   },
 >(m: T): T {
   return m;
-}
-
-/**
- * Abstract context value that can be passed down the CDK construct tree.
- */
-export abstract class Context {
-  protected abstract get ContextKey(): string;
-
-  /**
-   * @returns the instance of the context object from CDK construct context.
-   */
-  public static of<C extends { new (...args: any[]): Context }>(this: C, construct: Construct): InstanceType<C> {
-    const key = (this.prototype as any).ContextKey;
-    return construct.node.getContext(key) as InstanceType<C>;
-  }
-
-  /**
-   * @returns an AppOptionFunc that attaches the context object to the CDK construct context.
-   */
-  public static with<C extends { new (...args: any[]): Context }>(
-    this: C,
-    ...args: ConstructorParameters<C>
-  ): AppOptionFunc {
-    return app => {
-      const inst = new this(...args);
-      app.node.setContext(inst.ContextKey, inst);
-    };
-  }
 }

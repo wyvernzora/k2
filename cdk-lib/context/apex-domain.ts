@@ -1,0 +1,11 @@
+import { Context } from ".";
+
+export class ApexDomainContext extends Context {
+  get ContextKey() {
+    return "@k2/cdk-lib:apex-domain";
+  }
+
+  constructor(public readonly domain: string) {
+    super();
+  }
+}

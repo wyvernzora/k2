@@ -11,9 +11,6 @@ image:
     COPY ./provision /provision
     RUN /provision/install-dyff.sh
 
-    # Bundle in the build scripts
-    COPY ./scripts /scripts
-
     # Set up user and workdir
     RUN adduser -D builder
     USER builder
