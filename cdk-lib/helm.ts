@@ -43,11 +43,6 @@ export interface HelmProps {
    * @default undefined
    */
   readonly values?: base.HelmProps["values"];
-  /**
-   * If true, the helm chart will include CRDs.
-   * @default true
-   */
-  readonly includeCRD?: boolean;
 }
 
 /**
@@ -56,26 +51,15 @@ export interface HelmProps {
  */
 export class Helm extends base.Helm {
   constructor(scope: Construct, name: string, props: HelmProps) {
-    const chart =
-      typeof props.chart === "string"
-        ? new HelmChartRef(props.chart)
-        : props.chart;
+    const chart = typeof props.chart === "string" ? new HelmChartRef(props.chart) : props.chart;
 
     super(scope, name, {
       namespace: props.namespace,
       releaseName: name,
       values: props.values,
-      helmFlags: Helm.buildFlags(props),
+      helmFlags: ["--skip-crds"],
       ...chart,
     });
-  }
-
-  private static buildFlags(props: HelmProps): string[] {
-    const result = [];
-    if (props.includeCRD !== false) {
-      result.push("--include-crds");
-    }
-    return result;
   }
 }
 
@@ -92,5 +76,14 @@ export class HelmChart extends base.Chart {
       namespace: this.namespace,
       ...props,
     });
+    this.removeCustomResourceDefinitions();
+  }
+
+  removeCustomResourceDefinitions(): void {
+    for (const child of this.helm.node.children) {
+      if (base.ApiObject.isApiObject(child) && child.kind === "CustomResourceDefinition") {
+        this.helm.node.tryRemoveChild(child.node.id);
+      }
+    }
   }
 }
