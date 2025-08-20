@@ -11,7 +11,6 @@ export * from "./lib/issuer";
 export * from "./lib/certificate";
 
 /* Export deployment chart factory */
-export * from "./deploy";
 
 /* Export ArgoCD application factory */
 // TODO

@@ -9,7 +9,6 @@ export * from "./lib/item";
 export * from "./lib/context";
 
 /* Export deployment chart factory */
-export * from "./deploy";
 
 /* Export ArgoCD application factory */
 // TODO

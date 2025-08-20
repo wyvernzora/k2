@@ -13,7 +13,6 @@ export const crd = {
 // No constructs
 
 /* Export deployment chart factory */
-export * from "./deploy";
 
 /* Export ArgoCD application factory */
 // TODO
