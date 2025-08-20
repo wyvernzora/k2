@@ -1,3 +1,0 @@
-[submodule "config"]
-	path = .private
-	url = git@github.com:wyvernzora/k2-config.git
