@@ -35,9 +35,10 @@ jobs:
         with:
           filters: |
             run-k2-build:
-              - 'build/**'
               - 'Earthfile'
               - '.github/workflows/**'
+              - 'build/Earthfile'
+              - 'build/provision/**'
       - name: 🐛 Debug filter output
         run: |
           echo "STEP-LEVEL run-k2-build = ${{ steps.filter.outputs.run-k2-build }}"
@@ -184,7 +185,7 @@ jobs:
           set -euo pipefail
           FILE="artifacts/deploy.diff"
           TS="$(date -u +'%Y-%m-%d %H:%M:%SZ')"
-          SHA="${HEAD_SHA}"
+          SHA="${HEAD_SHA:0:8}"
           MAX=56000  # leave room for headers/links/fences
 
           : > comment-body.md
