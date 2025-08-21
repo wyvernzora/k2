@@ -23,10 +23,7 @@ export class BlockyConfig extends ConfigMap {
       },
       upstreams: renderUpstreams(props.clientGroups),
       blocking: renderBlocking(props.clientGroups),
-      customDNS: renderCustomDns(
-        props.customDns || CustomDns.empty(),
-        props.apexDomain,
-      ),
+      customDNS: renderCustomDns(props.customDns || CustomDns.empty(), props.apexDomain),
     };
 
     this.addData(
@@ -36,7 +33,7 @@ export class BlockyConfig extends ConfigMap {
         conditional: {
           fallbackUpstream: true,
           mapping: {
-            "wyvernzora.io": "k8s-gateway.k2-network.svc.cluster.local",
+            "wyvernzora.io": "k8s-gateway.dns.svc.cluster.local",
           },
         },
         ports: {
@@ -72,7 +69,7 @@ function renderBlocking(clientGroups: ClientGroup[]) {
       }
     }
     // Add client to blocking group mappings
-    clientGroupsBlock[cg.name] = cg.blockingGroups.map((bg) => bg.name);
+    clientGroupsBlock[cg.name] = cg.blockingGroups.map(bg => bg.name);
   }
   return { whiteLists, blackLists, clientGroupsBlock };
 }
