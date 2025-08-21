@@ -1,7 +1,7 @@
+import { ApexDomainContext } from "cdk-lib/context";
 import { Certificate, ClusterIssuer, Issuer } from "../crds/cert-manager.io";
 import { Construct } from "constructs";
 
-const COMMON_NAME = "*.wyvernzora.io";
 const NAMESPACES = "k2-auth,k2-network,plex";
 
 export interface ReplicatedCertificateProps {
@@ -22,13 +22,14 @@ export class K2Certificate extends Certificate {
   public static readonly Name = "default-certificate";
 
   constructor(scope: Construct, id: string, props: ReplicatedCertificateProps) {
+    const { domain } = ApexDomainContext.of(scope);
     super(scope, id, {
       metadata: {
         name: K2Certificate.Name,
       },
       spec: {
-        commonName: COMMON_NAME,
-        dnsNames: [COMMON_NAME],
+        commonName: `*.${domain}`,
+        dnsNames: [`*.${domain}`],
         issuerRef: {
           kind: props.issuer.kind,
           name: props.issuer.name,
