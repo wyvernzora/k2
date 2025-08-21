@@ -9,7 +9,7 @@ export class Reflector extends HelmChart {
   constructor(scope: Construct, name: string, props: ReflectorProps) {
     super(scope, name, {
       namespace: props.namespace,
-      chart: "helm:https://emberstack.github.io/helm-charts/reflector@9.1.25",
+      chart: "helm:https://emberstack.github.io/helm-charts/reflector@9.1.26",
       values: {
         priorityClassName: "system-cluster-critical",
       },
