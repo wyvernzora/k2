@@ -3,18 +3,14 @@ import { ServiceType } from "cdk8s-plus-28";
 import { Helm } from "@k2/cdk-lib";
 
 export interface K8sGatewayProps {
-  /**
-   * Namespace to deploy the k8s_gateway chart into
-   */
-  readonly namespace?: string;
-  /**
-   * Number of replicas to schedule.
-   */
+  // Number of replicas to schedule.
   readonly replicas?: number;
-  /**
-   * Apex domain for exposed services.
-   */
+
+  // Apex domain for exposed services.
   readonly apexDomain: string;
+
+  // Namespace that the gateway is deployed to
+  readonly namespace: string;
 }
 
 /**
