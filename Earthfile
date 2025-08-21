@@ -53,16 +53,17 @@ k8s-manifests:
         -r ts-node/register \
         -r tsconfig-paths/register \
         build/scripts/synthesize-manifests.ts
-    SAVE ARTIFACT deploy/* AS LOCAL deploy/
+    SAVE ARTIFACT deploy AS LOCAL deploy
 
 #
 # +diff-manifests: diff your newly-built deploy/ against the remote 'deploy' branch
 #
 diff-manifests:
-    FROM +npm-install
+    ARG TAG="latest"
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
     COPY . .
-    RUN build/scripts/diff-manifests.sh https://github.com/wyvernzora/k2.git > deploy.diff
-    SAVE ARTIFACT deploy.diff AS LOCAL deploy.diff
+    RUN build/scripts/diff-manifests.sh https://github.com/wyvernzora/k2.git > deploy-diff.md
+    SAVE ARTIFACT deploy-diff.md AS LOCAL deploy-diff.md
 
 npm-install:
     ARG TAG="latest"

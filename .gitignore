@@ -48,6 +48,7 @@ coverage/
 # k8s manifest output destination
 /deploy/
 deploy.diff
+deploy-diff.md
 
 # Helm dependency management artifacts
 # Chart versions are always fully pinned so lock file is not necessary
