@@ -137,20 +137,19 @@ data:
   application.sync.impersonation.enabled: "false"
   exec.enabled: "false"
   reposerver.enable.git.submodule: "false"
-  resource.customizations.health.argoproj.io_Application: |2-
-
-      hs = {}
-      hs.status = "Progressing"
-      hs.message = ""
-      if obj.status ~= nil then
-      if obj.status.health ~= nil then
-          hs.status = obj.status.health.status
-              if obj.status.health.message ~= nil then
-                  hs.message = obj.status.health.message
-              end
-      end
-      end
-      return hs
+  resource.customizations.health.argoproj.io_Application: |-
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil then
+    if obj.status.health ~= nil then
+        hs.status = obj.status.health.status
+            if obj.status.health.message ~= nil then
+                hs.message = obj.status.health.message
+            end
+    end
+    end
+    return hs
   resource.customizations.ignoreResourceUpdates.ConfigMap: |
     jqPathExpressions:
       # Ignore the cluster-autoscaler status
@@ -1612,7 +1611,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: b023ea59262694e7f55a5bd44e464b703282ff1446655fc319b65ef12f3ef702
+        checksum/cm: 7545093ec7892d5650a69ec9fb7fc4d65ccc3f1b6a0145e38553f7fca3af5dcf
         checksum/cmd-params: 1e87b6435e7ad5cd30926cb78efe1aec5f1415db8825ed7a2752f4cad1a137fe
       labels:
         app.kubernetes.io/component: repo-server
@@ -2006,7 +2005,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: b023ea59262694e7f55a5bd44e464b703282ff1446655fc319b65ef12f3ef702
+        checksum/cm: 7545093ec7892d5650a69ec9fb7fc4d65ccc3f1b6a0145e38553f7fca3af5dcf
         checksum/cmd-params: 1e87b6435e7ad5cd30926cb78efe1aec5f1415db8825ed7a2752f4cad1a137fe
       labels:
         app.kubernetes.io/component: server
@@ -2703,7 +2702,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: b023ea59262694e7f55a5bd44e464b703282ff1446655fc319b65ef12f3ef702
+        checksum/cm: 7545093ec7892d5650a69ec9fb7fc4d65ccc3f1b6a0145e38553f7fca3af5dcf
         checksum/cmd-params: 1e87b6435e7ad5cd30926cb78efe1aec5f1415db8825ed7a2752f4cad1a137fe
       labels:
         app.kubernetes.io/component: application-controller

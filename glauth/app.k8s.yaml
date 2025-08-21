@@ -3,7 +3,41 @@ kind: ConfigMap
 metadata:
   name: glauth-config-c8503900
 data:
-  config.cfg: "\n[ldap]\n    enabled = true\n    listen = \"0.0.0.0:389\"\n[ldaps]\n    enabled = false\n[backend]\n    datastore = \"config\"\n    baseDN = \"dc=wyvernzora,dc=io\"\n[behaviors]\n    IgnoreCapabilities = false\n    LimitFailedBinds = true\n    NumberOfFailedBinds = 3\n    PeriodOfFailedBinds = 10\n    BlockFailedBindsFor = 60\n    PruneSourceTableEvery = 600\n    PruneSourcesOlderThan = 600\n        "
+  config.cfg: "
+
+    [ldap]
+
+    \    enabled = true
+
+    \    listen = \"0.0.0.0:389\"
+
+    [ldaps]
+
+    \    enabled = false
+
+    [backend]
+
+    \    datastore = \"config\"
+
+    \    baseDN = \"dc=wyvernzora,dc=io\"
+
+    [behaviors]
+
+    \    IgnoreCapabilities = false
+
+    \    LimitFailedBinds = true
+
+    \    NumberOfFailedBinds = 3
+
+    \    PeriodOfFailedBinds = 10
+
+    \    BlockFailedBindsFor = 60
+
+    \    PruneSourceTableEvery = 600
+
+    \    PruneSourcesOlderThan = 600
+
+    \        "
 immutable: false
 ---
 apiVersion: onepassword.com/v1
