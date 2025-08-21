@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/version: 4.39.6
     helm.sh/chart: authelia-0.10.42
   name: authelia
-  namespace: k2-auth
+  namespace: auth
 data:
   configuration.yaml: |
     ---
@@ -112,7 +112,7 @@ data:
         disable: false
       ldap:
         implementation: 'glauth'
-        address: 'ldap://glauth.k2-auth.svc.cluster.local'
+        address: 'ldap://glauth.auth.svc.cluster.local'
         timeout: '5 seconds'
         start_tls: false
         tls:
@@ -206,7 +206,7 @@ metadata:
     app.kubernetes.io/version: 4.39.6
     helm.sh/chart: authelia-0.10.42
   name: authelia
-  namespace: k2-auth
+  namespace: auth
 spec:
   ports:
     - name: http
@@ -229,7 +229,7 @@ metadata:
     app.kubernetes.io/version: 4.39.6
     helm.sh/chart: authelia-0.10.42
   name: authelia
-  namespace: k2-auth
+  namespace: auth
 spec:
   minReadySeconds: 0
   replicas: 1
@@ -246,7 +246,7 @@ spec:
   template:
     metadata:
       annotations:
-        authelia.com/checksum-config: f96122243dd91dfd59b9ef1ef1f3c537a09f5e2a3d973602bd108640e89984e0
+        authelia.com/checksum-config: 197e656707b39cf372906e3af6d4dcc508c9a5a4744e20cebd6ce1d7d6e4d1dc
       labels:
         app.kubernetes.io/instance: authelia
         app.kubernetes.io/managed-by: Helm
@@ -362,7 +362,7 @@ metadata:
     app.kubernetes.io/version: 4.39.6
     helm.sh/chart: authelia-0.10.42
   name: authelia
-  namespace: k2-auth
+  namespace: auth
 spec:
   rules:
     - host: auth.wyvernzora.io
@@ -384,7 +384,7 @@ apiVersion: onepassword.com/v1
 kind: OnePasswordItem
 metadata:
   name: authelia
-  namespace: k2-auth
+  namespace: auth
 spec:
   itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/ejfcz3g4s6wsr2jtct6hs3alxi
 ---
@@ -392,7 +392,7 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: authelia
-  namespace: k2-auth
+  namespace: auth
 spec:
   forwardAuth:
     address: http://authelia.k2-auth.svc.cluster.local/api/authz/forward-auth?rd=https%3A%2F%2Fauth.wyvernzora.io%2F
@@ -401,3 +401,136 @@ spec:
       - Remote-Groups
       - Remote-Email
       - Remote-Name
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glauth-config-c8503900
+data:
+  config.cfg: "
+
+    [ldap]
+
+    \    enabled = true
+
+    \    listen = \"0.0.0.0:389\"
+
+    [ldaps]
+
+    \    enabled = false
+
+    [backend]
+
+    \    datastore = \"config\"
+
+    \    baseDN = \"dc=wyvernzora,dc=io\"
+
+    [behaviors]
+
+    \    IgnoreCapabilities = false
+
+    \    LimitFailedBinds = true
+
+    \    NumberOfFailedBinds = 3
+
+    \    PeriodOfFailedBinds = 10
+
+    \    BlockFailedBindsFor = 60
+
+    \    PruneSourceTableEvery = 600
+
+    \    PruneSourcesOlderThan = 600
+
+    \        "
+immutable: false
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: glauth-users-c84bf422
+spec:
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/7p4cogd3voxt6sonqlj6jb3q4a
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: glauth-depl-c88d72f7
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: glauth-depl-c8a7ff94
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: glauth-depl-c8a7ff94
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - command:
+            - /app/glauth
+            - -c
+            - /app/conf.d/
+          image: glauth/glauth:v2.4.0
+          imagePullPolicy: Always
+          name: glauth
+          ports:
+            - containerPort: 389
+              name: ldap
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /app/conf.d/config.cfg
+              name: configmap-glauth-config-c8503900
+              subPath: config.cfg
+            - mountPath: /app/conf.d/users.cfg
+              name: secret-glauth-users-c84bf422
+              subPath: users.conf
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            name: glauth-config-c8503900
+          name: configmap-glauth-config-c8503900
+        - name: secret-glauth-users-c84bf422
+          secret:
+            secretName: glauth-users-c84bf422
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: glauth
+spec:
+  externalIPs: []
+  ports:
+    - name: ldap
+      port: 389
+      protocol: TCP
+      targetPort: 389
+  selector:
+    cdk8s.io/metadata.addr: glauth-depl-c8a7ff94
+  type: ClusterIP
