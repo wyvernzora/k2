@@ -8,9 +8,12 @@ permissions:
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+      - renovate/*
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
   schedule:
     - cron: "0 3 * * 0" # every Sunday 03:00 UTC
   workflow_dispatch:
