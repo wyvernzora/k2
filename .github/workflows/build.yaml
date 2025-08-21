@@ -249,7 +249,7 @@ jobs:
         with:
           pull-request-number: ${{ github.event.pull_request.number }}
           merge-method: rebase
-          token: ${{ secrets.GITHUB_TOKEN }} # repo must allow auto-merge
+          token: ${{ secrets.PAT_AUTOMERGE }}
 
   # 5) Push manifests to deploy branch if push to main
   deploy:
