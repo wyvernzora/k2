@@ -3,8 +3,10 @@ import fg from "fast-glob";
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import { App } from "@k2/cdk-lib";
+import { App, ApexDomainContext } from "@k2/cdk-lib";
 import { Chart, ApiObject } from "cdk8s";
+import * as OnePassword from "@k2/1password";
+import * as ArgoCD from "@k2/argocd";
 
 type WorkerData = { type: "app"; appPath: string } | { type: "argo" };
 
@@ -35,7 +37,7 @@ async function synthAppManifest(appPath: string) {
     const mod = require(indexTs);
     if (typeof mod.createAppResources === "function") {
       console.log(`🚀 [V3] Synthesizing ${appName} CDK`);
-      const app = new App();
+      const app = new App(OnePassword.withDefaultVault(), ApexDomainContext.with("wyvernzora.io"));
       mod.createAppResources(app);
       await app.synthToFile(outputPath);
       copyCrdManifest(appPath);
@@ -70,7 +72,11 @@ async function copyCrdManifest(appPath: string) {
 }
 
 async function synthArgoManifest() {
-  const app = new App();
+  const app = new App(
+    OnePassword.withDefaultVault(),
+    ArgoCD.withDefaultArgoCdOptions(),
+    ApexDomainContext.with("wyvernzora.io"),
+  );
   const chart = new Chart(app, "argocd");
 
   // For each app, either call its createArgoCdResources or attach its YAML
