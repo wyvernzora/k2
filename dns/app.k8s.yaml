@@ -240,7 +240,7 @@ data:
     conditional:
       fallbackUpstream: true
       mapping:
-        wyvernzora.io: k8s-gateway.k2-network.svc.cluster.local
+        wyvernzora.io: k8s-gateway.dns.svc.cluster.local
     ports:
       dns: 53
       http: 4000
@@ -250,7 +250,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 6e570205c90b2570b5f52230042462d0f0479db9aed2534d504141fc86edf227
+    checksum/config: ac5b4e03fa0814d3afbd6ded703b0e00a5e6be1c4442f7ba94cbe96e7d1110a9
   name: dns-blocky-depl-c826f1d8
   namespace: dns
 spec:
