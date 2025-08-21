@@ -20,12 +20,13 @@ export class K8sGateway extends Helm {
   constructor(scope: Construct, name: string, props: K8sGatewayProps) {
     super(scope, name, {
       namespace: props.namespace,
-      chart: "helm:https://ori-edge.github.io/k8s_gateway/k8s-gateway@2.4.0",
+      chart: "helm:https://k8s-gateway.github.io/k8s_gateway/k8s-gateway@3.2.6",
       values: {
         domain: props.apexDomain,
         replicaCount: props.replicas || 3,
         service: {
           type: ServiceType.CLUSTER_IP,
+          useTcp: true,
         },
       },
     });
