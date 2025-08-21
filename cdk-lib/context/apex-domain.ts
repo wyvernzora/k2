@@ -5,7 +5,7 @@ export class ApexDomainContext extends Context {
     return "@k2/cdk-lib:apex-domain";
   }
 
-  constructor(public readonly domain: string) {
+  constructor(public readonly apexDomain: string) {
     super();
   }
 }

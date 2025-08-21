@@ -1,19 +1,18 @@
 import { GlauthConfig } from "./config";
-import { Deployment, Protocol, Volume } from "cdk8s-plus-28";
+import { Deployment, Protocol, ISecret, Volume } from "cdk8s-plus-28";
 import { Construct } from "constructs";
-import { GlauthUsers } from "./users";
 import { oci } from "@k2/cdk-lib";
 
 export interface GlauthDeploymentProps {
   readonly config: GlauthConfig;
-  readonly users: GlauthUsers;
+  readonly users: ISecret;
 }
 
 export class GlauthDeployment extends Deployment {
   constructor(scope: Construct, id: string, props: GlauthDeploymentProps) {
     super(scope, id, { replicas: 1 });
     const configVolume = Volume.fromConfigMap(this, "config", props.config);
-    const usersVolume = Volume.fromSecret(this, "users", props.users.secret);
+    const usersVolume = Volume.fromSecret(this, "users", props.users);
     this.addGlauthContainer(configVolume, usersVolume);
   }
 

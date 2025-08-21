@@ -1,6 +1,6 @@
 import { HelmChart } from "@k2/cdk-lib";
 import { Construct } from "constructs";
-import * as authelia from "@k2/authelia";
+import * as Auth from "@k2/auth";
 import dedent from "dedent-js";
 import { ApexDomainContext } from "cdk-lib/context/apex-domain";
 
@@ -26,7 +26,7 @@ export interface ArgoCdProps {
 
 export class ArgoCd extends HelmChart {
   constructor(scope: Construct, name: string, props: ArgoCdProps) {
-    const apexDomain = ApexDomainContext.of(scope).domain;
+    const apexDomain = ApexDomainContext.of(scope).apexDomain;
     super(scope, name, {
       namespace: props.namespace,
       chart: "helm:https://argoproj.github.io/argo-helm/argo-cd@8.3.0",
@@ -38,7 +38,7 @@ export class ArgoCd extends HelmChart {
           ingress: {
             enabled: true,
             annotations: {
-              ...authelia.MiddlewareAnnotation,
+              ...Auth.MiddlewareAnnotation,
               "traefik.ingress.kubernetes.io/router.tls": "true",
             },
             hostname: `${props.subdomain}.${apexDomain}`,

@@ -7,7 +7,6 @@ import { Chart } from "cdk8s";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const { domain: apexDomain } = ApexDomainContext.of(app);
   const chart = new Chart(app, "dns", { namespace: "dns" });
 
   // Default client group and its blocking config
@@ -34,6 +33,7 @@ export const createAppResources: AppResourceFunc = app => {
     },
   });
 
+  const { apexDomain } = ApexDomainContext.of(app);
   new K8sGateway(chart, "k8s-gateway", {
     namespace: "dns",
     apexDomain,

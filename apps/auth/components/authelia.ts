@@ -10,7 +10,7 @@ export class Authelia extends Construct {
     super(scope, name);
 
     this.helm = new HelmChart(this, "authelia", {
-      namespace: "k2-auth",
+      namespace: "auth",
       chart: "helm:https://charts.authelia.com/authelia@0.10.42",
       values: {
         ingress: {
@@ -45,7 +45,7 @@ export class Authelia extends Construct {
             ldap: {
               enabled: true,
               implementation: "glauth",
-              address: "ldap://glauth.k2-auth.svc.cluster.local",
+              address: "ldap://glauth.auth.svc.cluster.local",
               tls: {
                 server_name: "ldap.wyvernzora.io",
               },

@@ -22,7 +22,7 @@ export class K2Certificate extends Certificate {
   public static readonly Name = "default-certificate";
 
   constructor(scope: Construct, id: string, props: ReplicatedCertificateProps) {
-    const { domain } = ApexDomainContext.of(scope);
+    const { apexDomain: domain } = ApexDomainContext.of(scope);
     super(scope, id, {
       metadata: {
         name: K2Certificate.Name,

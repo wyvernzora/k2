@@ -5,7 +5,7 @@ import { Zigbee2Mqtt, Zigbee2MqttProps } from "./zigbee2mqtt";
 import { HomeAssistantDeploymentProps } from "./home-assistant/deployment";
 import { HttpIngressPathType, Ingress, IngressBackend } from "cdk8s-plus-28";
 import { HomeAssistant } from "./home-assistant";
-import { AuthenticatedIngress } from "@k2/authelia";
+import { AuthenticatedIngress } from "@k2/auth";
 
 export interface HomeAutomationProps {
   readonly namespace?: string;

@@ -2,7 +2,7 @@ import { Chart } from "cdk8s";
 import { Construct } from "constructs";
 import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
 import { KavitaDeployment, KavitaDeploymentProps } from "./deployment";
-import { AuthenticatedIngress } from "@k2/authelia";
+import { AuthenticatedIngress } from "@k2/auth";
 import { VolumesOf } from "@k2/cdk-lib";
 
 export interface KavitaProps {
