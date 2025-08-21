@@ -27,6 +27,7 @@ data:
         k8s_gateway wyvernzora.io {
           apex k8s-gateway.dns
           ttl 300
+          resources Ingress Service
         }
         log
         errors
@@ -124,6 +125,10 @@ spec:
       port: 53
       protocol: UDP
       targetPort: dns-udp
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+      targetPort: dns-tcp
   selector:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/name: k8s-gateway
@@ -149,7 +154,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 4e41ae97e17fa2a1fc02a8387822e83bdb091ac4d1f06b85bab372d67172e9db
+        checksum/config: 7ef032d1ae32b0479f592a31179788e1f2f4d29d0d63b37d7fc755f8a8427b3b
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
@@ -177,6 +182,9 @@ spec:
             - containerPort: 1053
               name: dns-udp
               protocol: UDP
+            - containerPort: 1053
+              name: dns-tcp
+              protocol: TCP
             - containerPort: 9153
               name: metrics
               protocol: TCP
