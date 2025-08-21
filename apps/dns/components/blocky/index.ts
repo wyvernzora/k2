@@ -27,10 +27,7 @@ export class Blocky extends Construct {
       serviceType: ServiceType.LOAD_BALANCER,
     });
     if (props.serviceIp) {
-      this.service.metadata.addAnnotation(
-        "metallb.universe.tf/loadBalancerIPs",
-        props.serviceIp,
-      );
+      this.service.metadata.addAnnotation("metallb.universe.tf/loadBalancerIPs", props.serviceIp);
     }
   }
 }
