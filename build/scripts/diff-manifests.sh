@@ -54,8 +54,8 @@ while IFS= read -r file; do
     set -e
     # dyff returns 1 if differences were found, 0 if none, 2 on error
     if [ "$rc" -eq 1 ]; then
-        echo "Changes in $file:"
-        printf '%s\n' "$diff_output"
+        echo "### \`$file\`"
+        printf '```%s\n```\n\n' "$diff_output"
     fi
 done < /tmp/common.txt
 

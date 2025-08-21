@@ -133,11 +133,11 @@ jobs:
           earthly +k8s-manifests $TAG_OPT
           earthly +diff-manifests $TAG_OPT
 
-      - name: 📦 Upload deploy.diff
+      - name: 📦 Upload deploy-diff.md
         uses: actions/upload-artifact@v4
         with:
           name: deploy-diff
-          path: deploy.diff
+          path: deploy-diff.md
           if-no-files-found: error
 
       - name: 📦 Upload k8s manifests
@@ -155,7 +155,7 @@ jobs:
     if: github.event_name == 'pull_request' && !failure() && !cancelled()
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Download deploy.diff
+      - name: 📥 Download deploy-diff.md
         uses: actions/download-artifact@v5
         with:
           name: deploy-diff
@@ -183,7 +183,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          FILE="artifacts/deploy.diff"
+          FILE="artifacts/deploy-diff.md"
           TS="$(date -u +'%Y-%m-%d %H:%M:%SZ')"
           SHA="${HEAD_SHA:0:8}"
           MAX=56000  # leave room for headers/links/fences
@@ -198,9 +198,9 @@ jobs:
 
           if [ ! -f "$FILE" ]; then
             echo "merge=false" >> "$GITHUB_OUTPUT"
-            echo "❌ No deploy.diff artifact found."
+            echo "❌ No deploy-diff.md artifact found."
             {
-              echo "## ⚠️ Could not find \`deploy.diff\` artifact"
+              echo "## ⚠️ Could not find \`deploy-diff.md\` artifact"
               footer
             } >> comment-body.md
             echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
@@ -212,9 +212,8 @@ jobs:
             echo "file=$FILE" >> "$GITHUB_OUTPUT"
             echo "📝 Non-empty diff → will comment."
             {
-              echo "## 📝 deploy.diff"
+              echo "## 📝 Changes to the k8s manifests"
               echo
-              echo '```diff'
               if [ "$(wc -c < "$FILE")" -gt "$MAX" ]; then
                 head -c "$MAX" "$FILE"
                 echo
@@ -222,7 +221,6 @@ jobs:
               else
                 cat "$FILE"
               fi
-              echo '```'
               footer
             } >> comment-body.md
             echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
