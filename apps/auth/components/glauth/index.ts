@@ -3,22 +3,26 @@ import { Construct } from "constructs";
 import { GlauthConfig } from "./config";
 import { GlauthDeployment } from "./deployment";
 import { Service } from "cdk8s-plus-28";
-import { GlauthUsers } from "./users";
+import { ApexDomainContext } from "cdk-lib/context";
+import { K2Secret } from "@k2/1password";
 
-export class GlauthChart extends Chart {
+export class Glauth extends Chart {
   public readonly service: Service;
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
+    const { apexDomain } = ApexDomainContext.of(this);
     const config = new GlauthConfig(this, "config", {
-      domain: "wyvernzora.io",
+      domain: apexDomain,
       ldapPort: 389,
     });
-    const users = new GlauthUsers(this, "users");
+    const users = new K2Secret(this, "users", {
+      itemId: "7p4cogd3voxt6sonqlj6jb3q4a",
+    });
     const deployment = new GlauthDeployment(this, "depl", {
       config: config,
-      users: users,
+      users: users.secret,
     });
     this.service = deployment.exposeViaService({ name: "glauth" });
   }

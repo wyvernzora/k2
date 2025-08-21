@@ -1,5 +1,5 @@
 import { App, HelmChart } from "@k2/cdk-lib";
-import * as authelia from "@k2/authelia";
+import * as authelia from "@k2/auth";
 
 const app = new App();
 new HelmChart(app, "longhorn", {

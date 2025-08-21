@@ -1,7 +1,7 @@
 import { ProwlarrDeployment, ProwlarrDeploymentProps } from "./deployment";
 import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
 import { Construct } from "constructs";
-import { AuthenticatedIngress } from "@k2/authelia";
+import { AuthenticatedIngress } from "@k2/auth";
 
 export interface ProwlarrProps {
   readonly url: string;

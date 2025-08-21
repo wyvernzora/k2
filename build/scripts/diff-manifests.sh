@@ -13,21 +13,22 @@ shift || true
 TMPDIR="$(mktemp -d)"
 git clone --branch deploy --depth 1 "$REMOTE_URL" "$TMPDIR" >/dev/null 2>&1
 
-# 2) build sorted file lists (YAML only)
+# 2) Build sorted lists of YAML manifests
+LOCAL_LIST=$(mktemp)
+REMOTE_LIST=$(mktemp)
+ALL_LIST=$(mktemp)
+trap 'rm -rf "$TMPDIR" "$LOCAL_LIST" "$REMOTE_LIST" "$ALL_LIST"' EXIT
+
 find ./deploy -type f -name '*.k8s.yaml' \
-  | sed 's|^./deploy/||' | sort > /tmp/local.txt
+  | sed 's|^./deploy/||' | sort > "$LOCAL_LIST"
 
 find "$TMPDIR" -type f -name '*.k8s.yaml' \
-  | sed "s#^${TMPDIR}/##" | sort > /tmp/remote.txt
+  | sed "s#^${TMPDIR}/##" | sort > "$REMOTE_LIST"
 
-comm -23 /tmp/local.txt /tmp/remote.txt > /tmp/only-local.txt
-comm -13 /tmp/local.txt /tmp/remote.txt > /tmp/only-remote.txt
-comm -12 /tmp/local.txt /tmp/remote.txt > /tmp/common.txt
+# 3) Compute union of all paths
+sort -u "$LOCAL_LIST" "$REMOTE_LIST" > "$ALL_LIST"
 
-sed 's/^/+/' /tmp/only-local.txt
-sed 's/^/+/' /tmp/only-remote.txt
-
-# 3) build exclude patterns
+# 4) Build exclude arguments from .dyffignore
 excludes=()
 DYFFIGNORE=".dyffignore"
 if [[ -f "$DYFFIGNORE" ]]; then
@@ -42,22 +43,46 @@ if [[ -f "$DYFFIGNORE" ]]; then
     done < "$DYFFIGNORE"
 fi
 
-# 5) for each file present in both, invoke dyff on that pair:
+# 5) Loop over every manifest path
 while IFS= read -r file; do
+    LOCAL_PATH="./deploy/$file"
+    REMOTE_PATH="$TMPDIR/$file"
+
+    if [ ! -f "$REMOTE_PATH" ]; then
+        echo "### ✨ \`$file\`"
+        echo '```'
+        cat "$LOCAL_PATH"
+        echo '```'
+        echo
+        continue
+    fi
+
+    if [ ! -f "$LOCAL_PATH" ]; then
+        echo "### 🗑️ \`$file\`"
+        echo '```'
+        cat "$REMOTE_PATH"
+        echo '```'
+        echo
+        continue
+    fi
+
     set +e
     diff_output=$(
-        dyff between -ibs "${excludes[@]}" \
-        "$TMPDIR/$file" \
-        "./deploy/$file"
+        dyff between -ibs "${excludes[@]}" "$@" \
+        "$REMOTE_PATH" \
+        "$LOCAL_PATH"
     )
     rc=$?
     set -e
     # dyff returns 1 if differences were found, 0 if none, 2 on error
     if [ "$rc" -eq 1 ]; then
-        echo "### \`$file\`"
-        printf '```%s\n```\n\n' "$diff_output"
+        echo "### ✏️ \`$file\`"
+        echo -n '```'
+        echo "$diff_output"
+        echo '```'
+        echo
     fi
-done < /tmp/common.txt
+done < "$ALL_LIST"
 
-# 5) cleanup
-rm -rf "$TMPDIR" /tmp/{local,remote,only-local,only-remote,common}.txt
+# 7) Cleanup
+rm -rf "$TMPDIR" "$LOCAL_LIST" "$REMOTE_LIST" "$ALL_LIST"
