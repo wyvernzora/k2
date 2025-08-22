@@ -1,77 +1,64 @@
-import { isMainThread, parentPort, workerData } from "worker_threads";
+import os from "os";
 import fg from "fast-glob";
 import fs from "fs";
 import path from "path";
-import yaml from "js-yaml";
+import pLimit from "p-limit";
+
 import { App, ApexDomainContext } from "@k2/cdk-lib";
-import { Chart, ApiObject } from "cdk8s";
+import { Chart } from "cdk8s";
 import * as OnePassword from "@k2/1password";
 import * as ArgoCD from "@k2/argocd";
 
-type WorkerData = { type: "app"; appPath: string } | { type: "argo" };
+type Task = { type: "app"; appPath: string } | { type: "argo" };
 
 async function main() {
-  // Discover all app dirs under ./apps
-  const appPaths: string[] = await fg("apps/*", { onlyDirectories: true });
-  const jobs: Promise<void>[] = [];
+  // 1) Discover all apps and build task list
+  const appDirs = await fg("apps/*", { onlyDirectories: true });
+  const tasks: Task[] = appDirs.map(appPath => ({ type: "app", appPath }));
+  tasks.push({ type: "argo" });
 
-  // Spawn one worker per app
-  for (const appPath of appPaths) {
-    jobs.push(spawnWorker({ type: "app", appPath }));
-  }
+  // 2) Concurrency limit (env MAX_CONCURRENCY or # of CPUs)
+  const maxConcurrency = Number(process.env.MAX_CONCURRENCY) || os.cpus().length;
+  const limit = pLimit(maxConcurrency);
 
-  // Spawn the Argo manifest worker
-  jobs.push(spawnWorker({ type: "argo" }));
+  console.log(`⏳ Synthesizing manifests with concurrency=${maxConcurrency}`);
 
-  await Promise.all(jobs);
+  // 3) Fire off all tasks through p-limit
+  await Promise.all(
+    tasks.map(task =>
+      limit(async () => {
+        if (task.type === "app") {
+          await synthAppManifest(task.appPath);
+        } else {
+          await synthArgoManifest();
+        }
+      }),
+    ),
+  );
+
   console.log("✅ All synth tasks complete");
 }
 
 async function synthAppManifest(appPath: string) {
   const appName = path.basename(appPath);
-  const outputPath = path.resolve("deploy", appName, "app.k8s.yaml");
+  const outFile = path.resolve("deploy", appName, "app.k8s.yaml");
 
-  // 1) Try createAppResources export in apps/$APP/index.ts
-  const indexTs = path.resolve(appPath, "index.ts");
-  if (fs.existsSync(indexTs)) {
-    const mod = require(indexTs);
-    if (typeof mod.createAppResources === "function") {
-      console.log(`🚀 [V3] Synthesizing ${appName} CDK`);
-      const app = new App(OnePassword.withDefaultVault(), ApexDomainContext.with("wyvernzora.io"));
-      mod.createAppResources(app);
-      await app.synthToFile(outputPath);
-      copyCrdManifest(appPath);
-      console.log(`✅ [V3] Synthesized ${appName} CDK`);
-      return;
-    }
+  console.log(`🚀 Synthesizing ${appName} CDK`);
+  const mod = require(path.resolve(appPath, "index.ts"));
+  if (typeof mod.createAppResources !== "function") {
+    throw new Error(`[V3] ${appName}: missing createAppResources export`);
   }
 
-  // 2) If apps/$APP/deploy/index.ts exists, just run it
-  const deployIndexTs = path.resolve(appPath, "deploy", "index.ts");
-  if (fs.existsSync(deployIndexTs)) {
-    console.log(`🚀 [V2] Synthesizing ${appName} CDK`);
-    require(deployIndexTs);
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-    fs.renameSync("dist/app.k8s.yaml", outputPath);
-    copyCrdManifest(appPath);
-    console.log(`✅ [V2] Synthesized ${appName} CDK`);
-    return;
-  }
+  const app = new App(OnePassword.withDefaultVault(), ApexDomainContext.with("wyvernzora.io"));
+  mod.createAppResources(app);
+  await app.synthToFile(outFile);
 
-  console.log(`${appName} has no exported CDK synthesis methods`);
-}
-
-async function copyCrdManifest(appPath: string) {
-  const appName = path.basename(appPath);
-  const sourcePath = path.resolve(appPath, "crds/crds.k8s.yaml");
-  const outputPath = path.resolve("deploy", appName, "crds.k8s.yaml");
-
-  if (fs.existsSync(sourcePath)) {
-    fs.copyFileSync(sourcePath, outputPath);
-  }
+  copyCrdManifest(appPath);
+  console.log(`✅ Synthesized ${appName} CDK`);
 }
 
 async function synthArgoManifest() {
+  console.log("🔄 Synthesizing ArgoCD manifest");
   const app = new App(
     OnePassword.withDefaultVault(),
     ArgoCD.withDefaultArgoCdOptions(),
@@ -79,86 +66,32 @@ async function synthArgoManifest() {
   );
   const chart = new Chart(app, "argocd");
 
-  // For each app, either call its createArgoCdResources or attach its YAML
-  const appPaths: string[] = await fg("apps/*", { onlyDirectories: true });
-  for (const appPath of appPaths) {
+  const appDirs = await fg("apps/*", { onlyDirectories: true });
+  for (const appPath of appDirs) {
     const appName = path.basename(appPath);
-
-    // Try an exported function first
-    const indexTs = path.resolve(appPath, "index.ts");
-    if (fs.existsSync(indexTs)) {
-      const mod = require(indexTs);
-      if (typeof mod.createArgoCdResources === "function") {
-        console.log(`🔄 [V3] Synthesizing ${appName} ArgoCD`);
-        mod.createArgoCdResources(chart);
-        continue;
-      }
+    const mod = require(path.resolve(appPath, "index.ts"));
+    if (typeof mod.createArgoCdResources !== "function") {
+      throw new Error(`[V3] ${appName}: missing createArgoCdResources export`);
     }
-
-    // Fallback to raw YAML file if present
-    const yamlFile = path.resolve(appPath, "argocd.k8s.yaml");
-    if (fs.existsSync(yamlFile)) {
-      console.log(`🔄 [V2] Synthesizing ${appName} ArgoCD`);
-      const docs = yaml.loadAll(await fs.promises.readFile(yamlFile, "utf8"));
-      for (const doc of docs) {
-        const name = (doc as any).metadata?.name;
-        if (!name) {
-          throw new Error(`Invalid ArgoCD manifest; no resource name: ${yamlFile}`);
-        }
-        new ApiObject(chart, name, doc as any);
-      }
-    }
+    console.log(`🔄 Synthesizing ${appName} ArgoCD`);
+    mod.createArgoCdResources(chart);
   }
 
-  // Synthesize and write to ./deploy/app.k8s.yaml
   await app.synthToFile("deploy/app.k8s.yaml");
-
   console.log(`✅ Synthesized ArgoCD manifest`);
 }
 
-async function spawnWorker(data: WorkerData): Promise<void> {
-  /*
-  return new Promise((resolve, reject) => {
-    const w = new Worker(__filename, {
-      workerData: data,
-      execArgv: [
-        // preserve node flags to enable TypeScript loading
-        ...process.execArgv,
-      ],
-    });
-    w.once("message", () => resolve());
-    w.once("error", err => reject(err));
-    w.once("exit", code => {
-      if (code !== 0) {
-        reject(new Error(`Worker for ${data.type} exited with code ${code}`));
-      }
-    });
-  });
-  */
-  if (data.type === "app") {
-    await synthAppManifest(data.appPath);
-  } else {
-    await synthArgoManifest();
+function copyCrdManifest(appPath: string) {
+  const appName = path.basename(appPath);
+  const src = path.resolve(appPath, "crds/crds.k8s.yaml");
+  const dst = path.resolve("deploy", appName, "crds.k8s.yaml");
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dst);
   }
 }
 
-if (isMainThread) {
-  main().catch(err => {
-    console.error(err);
-    process.exit(1);
-  });
-} else {
-  // Worker thread entrypoint
-  const data = workerData as WorkerData;
-  (async () => {
-    if (data.type === "app") {
-      await synthAppManifest(data.appPath);
-    } else {
-      await synthArgoManifest();
-    }
-    parentPort!.postMessage("done");
-  })().catch(err => {
-    console.error(err);
-    process.exit(1);
-  });
-}
+// Entrypoint
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
