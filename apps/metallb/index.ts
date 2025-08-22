@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChart } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 import { IpAddressPool, L2Advertisement } from "./crds/metallb.io";
 
@@ -10,7 +10,7 @@ export const crd = {
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const chart = new HelmChart(app, "metallb", {
+  const chart = new HelmChartV1(app, "metallb", {
     namespace: "k2-network",
     chart: "helm:https://metallb.github.io/metallb/metallb@0.15.2",
   });

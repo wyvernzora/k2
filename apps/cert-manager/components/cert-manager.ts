@@ -1,4 +1,4 @@
-import { HelmChart } from "@k2/cdk-lib";
+import { HelmChartV1 } from "@k2/cdk-lib";
 import { Construct } from "constructs";
 import { K2Issuer, K2Certificate } from "@k2/cert-manager";
 import * as OnePassword from "@k2/1password";
@@ -8,7 +8,7 @@ export interface CertManagerProps {
   readonly awsSecretId: string;
 }
 
-export class CertManager extends HelmChart {
+export class CertManager extends HelmChartV1 {
   readonly issuer: K2Issuer;
   readonly cert: K2Certificate;
 

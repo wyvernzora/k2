@@ -1,6 +1,7 @@
 import { AppOptionFunc } from "@k2/cdk-lib";
 import { Context } from ".";
-import { ApiObject, Chart, ChartProps, Helm, HelmProps as HelmPropsBase } from "cdk8s";
+import * as base from "cdk8s";
+import { ApiObject, Chart, ChartProps } from "cdk8s";
 import * as findUp from "find-up";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
@@ -8,15 +9,14 @@ import * as yaml from "js-yaml";
 import { AppRootContext } from "./app-root";
 import { Construct } from "constructs";
 
-export type HelmPropsV2 = Omit<HelmPropsBase, "chart" | "repo" | "version">;
+export type HelmProps = Omit<base.HelmProps, "chart" | "repo" | "version">;
 
-export type HelmChartType = {
-  new (scope: Construct, id: string, props: ChartProps & HelmPropsV2): Chart;
+export type HelmChart = {
+  new (scope: Construct, id: string, props: ChartProps & HelmProps): base.Chart;
 };
 
-export type HelmType = {
-  new (scope: Construct, id: string, props: HelmPropsV2): Helm;
-  asChart(): HelmChartType;
+export type Helm = {
+  new (scope: Construct, id: string, props: HelmProps): base.Helm;
 };
 
 export class HelmChartsContext extends Context {
@@ -41,10 +41,10 @@ export class HelmChartsContext extends Context {
     };
   }
 
-  public chart(name: string): HelmType {
+  public asConstruct(name: string): Helm {
     const ref = this.findDependency(name);
-    class DerivedHelm extends Helm {
-      constructor(scope: Construct, id: string, props: HelmPropsV2) {
+    return class extends base.Helm {
+      constructor(scope: Construct, id: string, props: HelmProps) {
         super(scope, id, {
           chart: ref.name,
           repo: ref.repository,
@@ -54,18 +54,17 @@ export class HelmChartsContext extends Context {
         });
         removeCustomResourceDefinitions(this);
       }
+    };
+  }
 
-      static asChart<T extends typeof DerivedHelm>(this: T): HelmChartType {
-        const HelmType = this;
-        return class extends Chart {
-          constructor(scope: Construct, id: string, props: ChartProps & HelmPropsV2) {
-            super(scope, id, props);
-            new HelmType(this, id, props);
-          }
-        };
+  public asChart(name: string): HelmChart {
+    const GeneratedHelmType = this.asConstruct(name);
+    return class extends Chart {
+      constructor(scope: Construct, id: string, props: ChartProps & HelmProps) {
+        super(scope, id, props);
+        new GeneratedHelmType(this, id, props);
       }
-    }
-    return DerivedHelm;
+    };
   }
 
   private findDependency(name: string): ChartDependency {
@@ -107,7 +106,7 @@ function getDependencyCharts(root: string): Array<ChartDependency> {
   return chartData.dependencies ?? [];
 }
 
-function removeCustomResourceDefinitions<T extends Helm>(helm: T): void {
+function removeCustomResourceDefinitions<T extends base.Helm>(helm: T): void {
   for (const child of helm.node.children) {
     if (ApiObject.isApiObject(child) && child.kind === "CustomResourceDefinition") {
       helm.node.tryRemoveChild(child.node.id);

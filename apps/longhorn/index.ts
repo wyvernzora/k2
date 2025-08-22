@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChart } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 import * as Auth from "@k2/auth";
 
@@ -10,7 +10,7 @@ export const crd = {
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  new HelmChart(app, "longhorn", {
+  new HelmChartV1(app, "longhorn", {
     namespace: "k2-storage",
     chart: "helm:https://charts.longhorn.io/longhorn@1.9.1",
     values: {

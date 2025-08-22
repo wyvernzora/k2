@@ -14,7 +14,7 @@ export * from "./lib/context";
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
   const helm = HelmChartsContext.of(app);
-  const OnePassword = helm.chart("1password-connect").asChart();
+  const OnePassword = helm.asChart("1password-connect");
 
   new OnePassword(app, "1password", {
     namespace: "k2-core",

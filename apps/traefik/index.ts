@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChart, Toleration } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1, Toleration } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 /* Export raw CRDs */
@@ -16,7 +16,7 @@ export const crd = {
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const chart = new HelmChart(app, "traefik", {
+  const chart = new HelmChartV1(app, "traefik", {
     namespace: "k2-network",
     chart: "helm:https://traefik.github.io/charts/traefik@37.0.0",
     values: {

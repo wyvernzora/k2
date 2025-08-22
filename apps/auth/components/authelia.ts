@@ -1,15 +1,15 @@
-import { HelmChart } from "@k2/cdk-lib";
+import { HelmChartV1 } from "@k2/cdk-lib";
 import * as OnePassword from "@k2/1password";
 import * as Traefik from "@k2/traefik";
 import { Construct } from "constructs";
 
 export class Authelia extends Construct {
-  readonly helm: HelmChart;
+  readonly helm: HelmChartV1;
 
   constructor(scope: Construct, name: string) {
     super(scope, name);
 
-    this.helm = new HelmChart(this, "authelia", {
+    this.helm = new HelmChartV1(this, "authelia", {
       namespace: "auth",
       chart: "helm:https://charts.authelia.com/authelia@0.10.42",
       values: {

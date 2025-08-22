@@ -1,9 +1,9 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChart } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  new HelmChart(app, "kube-vip", {
+  new HelmChartV1(app, "kube-vip", {
     namespace: "k2-network",
     chart: "helm:https://kube-vip.github.io/helm-charts/kube-vip@0.8.0",
     values: {

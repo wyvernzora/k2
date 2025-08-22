@@ -1,4 +1,4 @@
-import { HelmChart } from "@k2/cdk-lib";
+import { HelmChartV1 } from "@k2/cdk-lib";
 import { Construct } from "constructs";
 import * as Auth from "@k2/auth";
 import dedent from "dedent-js";
@@ -24,7 +24,7 @@ export interface ArgoCdProps {
   readonly namespace: string;
 }
 
-export class ArgoCd extends HelmChart {
+export class ArgoCd extends HelmChartV1 {
   constructor(scope: Construct, name: string, props: ArgoCdProps) {
     const apexDomain = ApexDomainContext.of(scope).apexDomain;
     super(scope, name, {
