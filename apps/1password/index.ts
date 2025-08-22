@@ -15,7 +15,7 @@ export * from "./lib/context";
 export const createAppResources: AppResourceFunc = app => {
   new HelmChart(app, "1password", {
     namespace: "k2-core",
-    chart: "helm:https://1password.github.io/connect-helm-charts/connect@2.0.2",
+    chart: "helm:https://1password.github.io/connect-helm-charts/connect@2.0.3",
     values: {
       connect: {
         tolerations: [...Toleration.ALLOW_CRITICAL_ADDONS_ONLY, ...Toleration.ALLOW_CONTROL_PLANE],
