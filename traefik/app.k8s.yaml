@@ -251,13 +251,13 @@ spec:
       serviceAccountName: traefik
       terminationGracePeriodSeconds: 60
       tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
           operator: Exists
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
+          operator: Exists
+        - key: CriticalAddonsOnly
           operator: Exists
       volumes:
         - emptyDir: {}

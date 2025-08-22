@@ -175,8 +175,6 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
   name: kube-vip
   namespace: k2-core
 spec:
@@ -196,7 +194,7 @@ spec:
       backoff:
         duration: 30s
         factor: 2
-        maxDuration: 10m
+        maxDuration: 600s
       limit: 10
     syncOptions:
       - CreateNamespace=true
@@ -206,8 +204,6 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "6"
   name: longhorn
   namespace: k2-core
 spec:
@@ -227,7 +223,7 @@ spec:
       backoff:
         duration: 30s
         factor: 2
-        maxDuration: 10m
+        maxDuration: 600s
       limit: 10
     syncOptions:
       - CreateNamespace=true
@@ -268,19 +264,12 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
   name: metallb
   namespace: k2-core
 spec:
   destination:
     namespace: k2-network
     server: https://kubernetes.default.svc
-  ignoreDifferences:
-    - group: apiextensions.k8s.io
-      jsonPointers:
-        - /spec/conversion/webhook/clientConfig/caBundle
-      kind: CustomResourceDefinition
   project: default
   source:
     path: metallb
@@ -294,7 +283,7 @@ spec:
       backoff:
         duration: 30s
         factor: 2
-        maxDuration: 10m
+        maxDuration: 600s
       limit: 10
     syncOptions:
       - CreateNamespace=true
@@ -366,8 +355,6 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
   name: traefik
   namespace: k2-core
 spec:
@@ -387,7 +374,7 @@ spec:
       backoff:
         duration: 30s
         factor: 2
-        maxDuration: 10m
+        maxDuration: 600s
       limit: 10
     syncOptions:
       - CreateNamespace=true
