@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import pLimit from "p-limit";
 
-import { App, ApexDomainContext } from "@k2/cdk-lib";
+import { App, ApexDomainContext, AppRootContext, HelmChartsContext } from "@k2/cdk-lib";
 import { Chart } from "cdk8s";
 import * as OnePassword from "@k2/1password";
 import * as ArgoCD from "@k2/argocd";
@@ -49,9 +49,13 @@ async function synthAppManifest(appPath: string) {
     throw new Error(`[V3] ${appName}: missing createAppResources export`);
   }
 
-  const app = new App(OnePassword.withDefaultVault(), ApexDomainContext.with("wyvernzora.io"));
-  mod.createAppResources(app);
-  await app.synthToFile(outFile);
+  await new App()
+    .use(AppRootContext, appPath)
+    .use(HelmChartsContext)
+    .use(OnePassword.withDefaultVault())
+    .use(ApexDomainContext, "wyvernzora.io")
+    .use(app => mod.createAppResources(app))
+    .synthToFile(outFile);
 
   copyCrdManifest(appPath);
   console.log(`✅ Synthesized ${appName} CDK`);
@@ -59,11 +63,10 @@ async function synthAppManifest(appPath: string) {
 
 async function synthArgoManifest() {
   console.log("🔄 Synthesizing ArgoCD manifest");
-  const app = new App(
-    OnePassword.withDefaultVault(),
-    ArgoCD.withDefaultArgoCdOptions(),
-    ApexDomainContext.with("wyvernzora.io"),
-  );
+  const app = new App()
+    .use(OnePassword.withDefaultVault())
+    .use(ArgoCD.withDefaultArgoCdOptions())
+    .use(ApexDomainContext, "wyvernzora.io");
   const chart = new Chart(app, "argocd");
 
   const appDirs = await fg("apps/*", { onlyDirectories: true });
