@@ -146,8 +146,6 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "6"
   name: home-automation
   namespace: k2-core
 spec:
@@ -167,7 +165,7 @@ spec:
       backoff:
         duration: 30s
         factor: 2
-        maxDuration: 10m
+        maxDuration: 600s
       limit: 10
     syncOptions:
       - CreateNamespace=true
