@@ -10,7 +10,7 @@ export interface ArgoAppProps {
 export class ContinuousDeployment extends Construct {
   readonly argo: crd.Application;
 
-  constructor(scope: Construct, name: string, props: ArgoAppProps) {
+  constructor(scope: Construct, name: string, props: ArgoAppProps = {}) {
     super(scope, name);
     const ctx = ArgoCdContext.of(this);
 
@@ -21,7 +21,7 @@ export class ContinuousDeployment extends Construct {
       },
       spec: {
         destination: {
-          namespace: props.namespace,
+          namespace: props.namespace ?? name,
           server: ctx.server,
         },
         project: ctx.project,
