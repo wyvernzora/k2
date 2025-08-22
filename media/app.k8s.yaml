@@ -114,7 +114,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
   name: media-sonarr-ingress-c8028a46
 spec:
   rules:
@@ -249,7 +249,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
   name: media-kavita-ingress-c8169fbf
 spec:
   rules:
@@ -525,7 +525,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
   name: media-qbit-ingr-c86a809e
 spec:
   rules:
@@ -649,7 +649,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
   name: media-prowlarr-ingress-c8f444b5
 spec:
   rules:

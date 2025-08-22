@@ -3073,7 +3073,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: k2-auth-authelia@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
     traefik.ingress.kubernetes.io/router.tls: "true"
   labels:
     app.kubernetes.io/component: server
