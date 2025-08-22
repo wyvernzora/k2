@@ -60,6 +60,15 @@ export class Helm extends base.Helm {
       helmFlags: ["--skip-crds"],
       ...chart,
     });
+    this.removeCustomResourceDefinitions();
+  }
+
+  removeCustomResourceDefinitions(): void {
+    for (const child of this.node.children) {
+      if (base.ApiObject.isApiObject(child) && child.kind === "CustomResourceDefinition") {
+        this.node.tryRemoveChild(child.node.id);
+      }
+    }
   }
 }
 
@@ -76,14 +85,5 @@ export class HelmChart extends base.Chart {
       namespace: this.namespace,
       ...props,
     });
-    this.removeCustomResourceDefinitions();
-  }
-
-  removeCustomResourceDefinitions(): void {
-    for (const child of this.helm.node.children) {
-      if (base.ApiObject.isApiObject(child) && child.kind === "CustomResourceDefinition") {
-        this.helm.node.tryRemoveChild(child.node.id);
-      }
-    }
   }
 }

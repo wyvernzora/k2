@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChart, Toleration } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmChartsContext, Toleration } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 /* Export raw CRDs */
@@ -13,9 +13,11 @@ export * from "./lib/context";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  new HelmChart(app, "1password", {
+  const helm = HelmChartsContext.of(app);
+  const OnePassword = helm.chart("1password-connect").asChart();
+
+  new OnePassword(app, "1password", {
     namespace: "k2-core",
-    chart: "helm:https://1password.github.io/connect-helm-charts/connect@2.0.3",
     values: {
       connect: {
         tolerations: [...Toleration.ALLOW_CRITICAL_ADDONS_ONLY, ...Toleration.ALLOW_CONTROL_PLANE],

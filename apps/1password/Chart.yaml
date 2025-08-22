@@ -1,0 +1,8 @@
+apiVersion: v2
+name: k2-1password
+version: 1.0.0
+dependencies:
+  - name: connect
+    alias: 1password-connect
+    repository: https://1password.github.io/connect-helm-charts
+    version: 2.0.3
