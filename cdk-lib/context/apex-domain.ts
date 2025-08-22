@@ -8,4 +8,8 @@ export class ApexDomainContext extends Context {
   constructor(public readonly apexDomain: string) {
     super();
   }
+
+  public subdomain(name: string): string {
+    return `${name}.${this.apexDomain}`;
+  }
 }
