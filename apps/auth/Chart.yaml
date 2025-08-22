@@ -1,0 +1,7 @@
+apiVersion: v2
+name: k2-auth
+version: 1.0.0
+dependencies:
+  - name: authelia
+    repository: https://charts.authelia.com
+    version: 0.10.42

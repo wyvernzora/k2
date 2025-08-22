@@ -1,17 +1,16 @@
-import { HelmChartV1 } from "@k2/cdk-lib";
+import { ApexDomainContext, App, HelmChartsContext } from "@k2/cdk-lib";
 import * as OnePassword from "@k2/1password";
 import * as Traefik from "@k2/traefik";
-import { Construct } from "constructs";
 
-export class Authelia extends Construct {
-  readonly helm: HelmChartV1;
+export default {
+  create(app: App) {
+    const helm = HelmChartsContext.of(app);
+    const Authelia = helm.asChart("authelia");
 
-  constructor(scope: Construct, name: string) {
-    super(scope, name);
+    const domainContext = ApexDomainContext.of(app);
 
-    this.helm = new HelmChartV1(this, "authelia", {
+    const chart = new Authelia(app, "authelia", {
       namespace: "auth",
-      chart: "helm:https://charts.authelia.com/authelia@0.10.42",
       values: {
         ingress: {
           enabled: true,
@@ -47,7 +46,7 @@ export class Authelia extends Construct {
               implementation: "glauth",
               address: "ldap://glauth.auth.svc.cluster.local",
               tls: {
-                server_name: "ldap.wyvernzora.io",
+                server_name: domainContext.subdomain("ldap"),
               },
               base_dn: "dc=wyvernzora,dc=io",
               additional_users_dn: "ou=users",
@@ -60,9 +59,9 @@ export class Authelia extends Construct {
           session: {
             cookies: [
               {
-                domain: "wyvernzora.io",
+                domain: domainContext.apexDomain,
                 subdomain: "auth",
-                default_redirection_url: "https://h.wyvernzora.io",
+                default_redirection_url: `https://${domainContext.subdomain("h")}`,
               },
             ],
             redis: {
@@ -94,14 +93,14 @@ export class Authelia extends Construct {
       },
     });
 
-    new OnePassword.K2Secret(this.helm, "secret", {
+    new OnePassword.K2Secret(chart, "secret", {
       metadata: {
         name: "authelia",
       },
       itemId: "ejfcz3g4s6wsr2jtct6hs3alxi",
     });
 
-    new Traefik.crd.Middleware(this.helm, "middleware", {
+    new Traefik.crd.Middleware(chart, "middleware", {
       metadata: {
         name: "authelia",
       },
@@ -113,5 +112,5 @@ export class Authelia extends Construct {
         },
       },
     });
-  }
-}
+  },
+};
