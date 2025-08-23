@@ -5,13 +5,13 @@ import { mkdir, writeFile } from "fs/promises";
 import { Context, ContextClass } from "./context";
 
 export class App extends base.App {
-  constructor(...options: Array<AppOptionFunc>) {
+  constructor(...options: Array<AppOption>) {
     super({ yamlOutputType: YamlOutputType.FILE_PER_APP });
     options.forEach(opt => opt(this));
   }
 
   use<C extends ContextClass<any[]>>(Ctor: C, ...args: Parameters<C["with"]>): this;
-  use(opt: AppOptionFunc): this;
+  use(opt: AppOption): this;
 
   use(first: any, ...rest: any[]): this {
     if (Context.isContextClass(first)) {
@@ -19,7 +19,7 @@ export class App extends base.App {
       opt(this);
       return this;
     }
-    if (isAppOptionFunc(first)) {
+    if (isAppOption(first)) {
       first(this);
       return this;
     }
@@ -33,24 +33,12 @@ export class App extends base.App {
   }
 }
 
-// Option that gets applied to the app
-export type AppOptionFunc = (app: App) => void;
+export type AppOption = (app: App) => void;
 
-/** Type guards for runtime dispatch */
-function isAppOptionFunc(x: unknown): x is AppOptionFunc {
+function isAppOption(x: unknown): x is AppOption {
   return typeof x === "function" && x.length >= 1; // (app) => void
 }
 
 export type AppResourceFunc = (app: App) => void;
 
 export type ArgoCDResourceFunc = (chart: base.Chart) => void;
-
-export function defineAppExports<
-  T extends {
-    createAppResources: AppResourceFunc;
-    createArgoCdResources: ArgoCDResourceFunc;
-    crds?: object;
-  },
->(m: T): T {
-  return m;
-}

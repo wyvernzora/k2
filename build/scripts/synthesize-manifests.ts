@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import pLimit from "p-limit";
 
-import { App, ApexDomainContext, AppRootContext, HelmChartsContext } from "@k2/cdk-lib";
+import { App, ApexDomain, AppRoot, HelmCharts } from "@k2/cdk-lib";
 import { Chart } from "cdk8s";
 import * as OnePassword from "@k2/1password";
 import * as ArgoCD from "@k2/argocd";
@@ -50,10 +50,10 @@ async function synthAppManifest(appPath: string) {
   }
 
   await new App()
-    .use(AppRootContext, appPath)
-    .use(HelmChartsContext)
+    .use(AppRoot, appPath)
+    .use(HelmCharts)
     .use(OnePassword.withDefaultVault())
-    .use(ApexDomainContext, "wyvernzora.io")
+    .use(ApexDomain, "wyvernzora.io")
     .use(app => mod.createAppResources(app))
     .synthToFile(outFile);
 
@@ -66,7 +66,7 @@ async function synthArgoManifest() {
   const app = new App()
     .use(OnePassword.withDefaultVault())
     .use(ArgoCD.withDefaultArgoCdOptions())
-    .use(ApexDomainContext, "wyvernzora.io");
+    .use(ApexDomain, "wyvernzora.io");
   const chart = new Chart(app, "argocd");
 
   const appDirs = await fg("apps/*", { onlyDirectories: true });

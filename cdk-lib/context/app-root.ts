@@ -1,6 +1,6 @@
 import { Context } from ".";
 
-export class AppRootContext extends Context {
+export class AppRoot extends Context {
   get ContextKey() {
     return "@k2/cdk-lib:app-root";
   }

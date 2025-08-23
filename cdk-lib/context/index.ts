@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import { AppOptionFunc } from "..";
+import { AppOption } from "..";
 
 const kContextClass = Symbol("@k2/cdk-lib:symbol:context-class");
 
@@ -24,7 +24,7 @@ export abstract class Context {
   public static with<C extends { new (...args: any[]): Context }>(
     this: C,
     ...args: ConstructorParameters<C>
-  ): AppOptionFunc {
+  ): AppOption {
     return app => {
       const inst = new this(...args);
       app.node.setContext(inst.ContextKey, inst);
@@ -46,9 +46,10 @@ export abstract class Context {
 // A constructor for a Context subclass that also has a static `with(...args)`
 // returning an AppOptionFunc. The tuple A is the constructor args.
 export type ContextClass<A extends any[] = any[]> = (abstract new (...args: A) => Context) & {
-  with(...args: A): AppOptionFunc;
+  with(...args: A): AppOption;
 };
 
 export * from "./apex-domain";
 export * from "./app-root";
 export * from "./helm-charts";
+export * from "./namespace";

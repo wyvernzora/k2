@@ -1,5 +1,5 @@
 import dedent from "dedent-js";
-import { ApexDomainContext, AppResourceFunc, ArgoCDResourceFunc, HelmChartsContext } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, HelmCharts } from "@k2/cdk-lib";
 import * as Auth from "@k2/auth";
 
 /* Export raw CRDs */
@@ -15,7 +15,7 @@ export * from "./lib/context";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const helm = HelmChartsContext.of(app);
+  const helm = HelmCharts.of(app);
   const ArgoCD = helm.asChart("argo-cd");
 
   new ArgoCD(app, "argocd", {
@@ -31,7 +31,7 @@ export const createAppResources: AppResourceFunc = app => {
             ...Auth.MiddlewareAnnotation,
             "traefik.ingress.kubernetes.io/router.tls": "true",
           },
-          hostname: ApexDomainContext.of(app).subdomain("deploy"),
+          hostname: ApexDomain.of(app).subdomain("deploy"),
         },
       },
       configs: {

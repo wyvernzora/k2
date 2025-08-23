@@ -1,4 +1,4 @@
-import { ApexDomainContext, AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 import { BlockingGroup, ClientGroup, CustomDns, Blocky } from "./components/blocky";
@@ -33,7 +33,7 @@ export const createAppResources: AppResourceFunc = app => {
     },
   });
 
-  const { apexDomain } = ApexDomainContext.of(app);
+  const { apexDomain } = ApexDomain.of(app);
   new K8sGateway(chart, "k8s-gateway", {
     namespace: "dns",
     apexDomain,

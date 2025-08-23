@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChartsContext, Toleration } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Toleration } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 /* Export raw CRDs */
@@ -13,7 +13,7 @@ export * from "./lib/context";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const helm = HelmChartsContext.of(app);
+  const helm = HelmCharts.of(app);
   const OnePassword = helm.asChart("1password-connect");
 
   new OnePassword(app, "1password", {

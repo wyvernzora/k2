@@ -1,4 +1,4 @@
-import { AppOptionFunc } from "@k2/cdk-lib";
+import { AppOption } from "@k2/cdk-lib";
 import { Context } from ".";
 import * as base from "cdk8s";
 import { ApiObject, Chart, ChartProps } from "cdk8s";
@@ -6,20 +6,10 @@ import * as findUp from "find-up";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import * as yaml from "js-yaml";
-import { AppRootContext } from "./app-root";
+import { AppRoot } from "./app-root";
 import { Construct } from "constructs";
 
-export type HelmProps = Omit<base.HelmProps, "chart" | "repo" | "version">;
-
-export type HelmChart = {
-  new (scope: Construct, id: string, props: ChartProps & HelmProps): base.Chart;
-};
-
-export type Helm = {
-  new (scope: Construct, id: string, props: HelmProps): base.Helm;
-};
-
-export class HelmChartsContext extends Context {
+export class HelmCharts extends Context {
   get ContextKey() {
     return "@k2/cdk-lib:helm-charts";
   }
@@ -78,15 +68,25 @@ export class HelmChartsContext extends Context {
     return refs[0];
   }
 
-  public static with(): AppOptionFunc {
+  public static with(): AppOption {
     return app => {
-      const { appRoot } = AppRootContext.of(app);
+      const { appRoot } = AppRoot.of(app);
       const dependencies = getDependencyCharts(appRoot);
-      const instance = new HelmChartsContext(dependencies);
+      const instance = new HelmCharts(dependencies);
       app.node.setContext(instance.ContextKey, instance);
     };
   }
 }
+
+export type HelmProps = Omit<base.HelmProps, "chart" | "repo" | "version">;
+
+export type HelmChart = {
+  new (scope: Construct, id: string, props: ChartProps & HelmProps): base.Chart;
+};
+
+export type Helm = {
+  new (scope: Construct, id: string, props: HelmProps): base.Helm;
+};
 
 export interface ChartDependency {
   name: string;

@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 import Authelia from "./components/authelia";
 import Glauth from "./components/glauth";
@@ -8,6 +8,7 @@ export * from "./lib/ingress";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
+  app.use(Namespace, "auth");
   Authelia.create(app);
   Glauth.create(app);
 };

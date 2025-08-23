@@ -1,6 +1,6 @@
 import { Context } from ".";
 
-export class ApexDomainContext extends Context {
+export class ApexDomain extends Context {
   get ContextKey() {
     return "@k2/cdk-lib:apex-domain";
   }

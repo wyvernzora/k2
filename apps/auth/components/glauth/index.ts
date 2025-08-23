@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 import { GlauthConfig } from "./config";
 import { GlauthDeployment } from "./deployment";
 import { Service } from "cdk8s-plus-28";
-import { App, ApexDomainContext } from "@k2/cdk-lib";
+import { App, ApexDomain } from "@k2/cdk-lib";
 import { K2Secret } from "@k2/1password";
 
 export class Glauth extends Chart {
@@ -12,7 +12,7 @@ export class Glauth extends Chart {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const { apexDomain } = ApexDomainContext.of(this);
+    const { apexDomain } = ApexDomain.of(this);
     const config = new GlauthConfig(this, "config", {
       domain: apexDomain,
       ldapPort: 389,

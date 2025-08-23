@@ -1,11 +1,11 @@
-import { ApexDomainContext, AppResourceFunc, ArgoCDResourceFunc, K2Volume } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, K2Volume } from "@k2/cdk-lib";
 import { HomeAutomation } from "./components";
 import { Size } from "cdk8s";
 import { ContinuousDeployment } from "@k2/argocd";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const { apexDomain } = ApexDomainContext.of(app);
+  const { apexDomain } = ApexDomain.of(app);
   new HomeAutomation(app, "home-automation", {
     namespace: "home-automation",
     hostname: `ha.${apexDomain}`,

@@ -1,13 +1,13 @@
-import { ApexDomainContext, App, HelmChartsContext } from "@k2/cdk-lib";
+import { ApexDomain, App, HelmCharts } from "@k2/cdk-lib";
 import * as OnePassword from "@k2/1password";
 import * as Traefik from "@k2/traefik";
 
 export default {
   create(app: App) {
-    const helm = HelmChartsContext.of(app);
+    const helm = HelmCharts.of(app);
     const Authelia = helm.asChart("authelia");
 
-    const domainContext = ApexDomainContext.of(app);
+    const domainContext = ApexDomain.of(app);
 
     const chart = new Authelia(app, "authelia", {
       namespace: "auth",

@@ -1,4 +1,4 @@
-import { ApexDomainContext } from "cdk-lib/context";
+import { ApexDomain } from "cdk-lib/context";
 import { Certificate, ClusterIssuer, Issuer } from "../crds/cert-manager.io";
 import { Construct } from "constructs";
 
@@ -22,7 +22,7 @@ export class K2Certificate extends Certificate {
   public static readonly Name = "default-certificate";
 
   constructor(scope: Construct, id: string, props: ReplicatedCertificateProps) {
-    const { apexDomain: domain } = ApexDomainContext.of(scope);
+    const { apexDomain: domain } = ApexDomain.of(scope);
     super(scope, id, {
       metadata: {
         name: K2Certificate.Name,
