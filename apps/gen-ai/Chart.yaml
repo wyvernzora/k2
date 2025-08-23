@@ -1,0 +1,7 @@
+apiVersion: v2
+name: gen-ai
+version: 1.0.0
+dependencies:
+  - name: open-webui
+    repository: https://open-webui.github.io/helm-charts
+    version: 7.6.0
