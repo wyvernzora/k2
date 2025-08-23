@@ -4143,7 +4143,7 @@ spec:
                                 - message: service must only contain valid characters (matching ^(?i)\.?[a-z_][a-z_0-9]*(\.[a-z_][a-z_0-9]*)*$)
                                   rule: "(!has(self.type) || self.type == 'Exact') && has(self.service) ? self.service.matches(r\"\"\"^(?i)\\.?[a-z_][a-z_0-9]*(\\.[a-z_][a-z_0-9]*)*$\"\"\"): true"
                                 - message: method must only contain valid characters (matching ^[A-Za-z_][A-Za-z_0-9]*$)
-                                  rule: "(!has(self.type) || self.type == 'Exact') && has(self.method) ? self.method.matches(r\"\"\"^[A-Za-z_][A-Za-z_0-9]*$\"\"\"): true"
+                                  rule: '(!has(self.type) || self.type == ''Exact'') && has(self.method) ? self.method.matches(r"""^[A-Za-z_][A-Za-z_0-9]*$"""): true'
                           type: object
                         maxItems: 8
                         type: array
@@ -6600,7 +6600,7 @@ spec:
                                 - message: type must be one of ['Exact', 'PathPrefix', 'RegularExpression']
                                   rule: self.type in ['Exact','PathPrefix'] || self.type == 'RegularExpression'
                                 - message: must only contain valid characters (matching ^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$) for types ['Exact', 'PathPrefix']
-                                  rule: "(self.type in ['Exact','PathPrefix']) ? self.value.matches(r\"\"\"^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$\"\"\") : true"
+                                  rule: '(self.type in [''Exact'',''PathPrefix'']) ? self.value.matches(r"""^(?:[-A-Za-z0-9/._~!$&''()*+,;=:@]|[%][0-9a-fA-F]{2})+$""") : true'
                             queryParams:
                               description: |-
                                 QueryParams specifies HTTP query parameter matchers. Multiple match
@@ -9170,7 +9170,7 @@ spec:
                                 - message: type must be one of ['Exact', 'PathPrefix', 'RegularExpression']
                                   rule: self.type in ['Exact','PathPrefix'] || self.type == 'RegularExpression'
                                 - message: must only contain valid characters (matching ^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$) for types ['Exact', 'PathPrefix']
-                                  rule: "(self.type in ['Exact','PathPrefix']) ? self.value.matches(r\"\"\"^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$\"\"\") : true"
+                                  rule: '(self.type in [''Exact'',''PathPrefix'']) ? self.value.matches(r"""^(?:[-A-Za-z0-9/._~!$&''()*+,;=:@]|[%][0-9a-fA-F]{2})+$""") : true'
                             queryParams:
                               description: |-
                                 QueryParams specifies HTTP query parameter matchers. Multiple match
