@@ -1,6 +1,7 @@
-import { ConfigMap } from "@k2/cdk-lib";
 import { Construct } from "constructs";
 import dedent from "dedent-js";
+
+import { ConfigMap } from "@k2/cdk-lib";
 
 export class HomeAssistantConfig extends ConfigMap {
   constructor(scope: Construct, id: string) {

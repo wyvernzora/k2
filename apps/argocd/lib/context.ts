@@ -1,5 +1,6 @@
-import { Context } from "@k2/cdk-lib";
 import { Duration } from "cdk8s";
+
+import { Context } from "@k2/cdk-lib";
 
 export interface ArgoCdContextProps {
   readonly project: string;

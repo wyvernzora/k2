@@ -40,7 +40,7 @@ export class ClientGroup {
    * Ignores the resolver if it is already being used by this client group.
    */
   public addUpstream(address: string): ClientGroup {
-    if (!this.upstream.some((val) => val === address)) {
+    if (!this.upstream.some(val => val === address)) {
       this.upstream.push(address);
     }
     return this;
@@ -51,10 +51,8 @@ export class ClientGroup {
    * If a blocking group of the same name is already being used, throws an error.
    */
   public useBlockingGroup(group: BlockingGroup): ClientGroup {
-    if (this.blockingGroups.some((gp) => gp.name === group.name)) {
-      throw new Error(
-        `BlockingGroup ${group.name} already used by ClientGroup ${this.name}`,
-      );
+    if (this.blockingGroups.some(gp => gp.name === group.name)) {
+      throw new Error(`BlockingGroup ${group.name} already used by ClientGroup ${this.name}`);
     }
     this.blockingGroups.push(group);
     return this;

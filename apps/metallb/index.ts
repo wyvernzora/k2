@@ -1,9 +1,10 @@
 import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
+
 import { IpAddressPool, L2Advertisement } from "./crds/metallb.io";
+import * as CRD from "./crds/metallb.io";
 
 /* Export raw CRDs */
-import * as CRD from "./crds/metallb.io";
 export const crd = {
   ...CRD,
 };

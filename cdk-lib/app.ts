@@ -1,7 +1,10 @@
-import * as base from "cdk8s";
-import { YamlOutputType } from "cdk8s";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { dirname } from "path";
 import { mkdir, writeFile } from "fs/promises";
+
+import * as base from "cdk8s";
+import { YamlOutputType } from "cdk8s";
+
 import { Context, ContextClass } from "./context";
 
 export class App extends base.App {

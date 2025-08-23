@@ -1,7 +1,9 @@
 import { Construct } from "constructs";
-import { MosquittoDeployment, MosquittoDeploymentProps } from "./deployment";
 import { NetworkPolicy, Service, ServiceType } from "cdk8s-plus-28";
+
 import { K2Volume } from "@k2/cdk-lib";
+
+import { MosquittoDeployment, MosquittoDeploymentProps } from "./deployment";
 import { MosquittoConfig } from "./config";
 
 export interface MosquittoProps {

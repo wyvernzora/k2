@@ -1,7 +1,9 @@
-import { GlauthConfig } from "./config";
 import { Deployment, Protocol, ISecret, Volume } from "cdk8s-plus-28";
 import { Construct } from "constructs";
+
 import { oci } from "@k2/cdk-lib";
+
+import { GlauthConfig } from "./config";
 
 export interface GlauthDeploymentProps {
   readonly config: GlauthConfig;

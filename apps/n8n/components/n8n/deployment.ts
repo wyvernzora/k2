@@ -1,8 +1,9 @@
 import { Cpu, Deployment, DeploymentStrategy, EnvValue, ImagePullPolicy, Probe } from "cdk8s-plus-28";
 import { Construct } from "constructs";
+import { Size } from "cdk8s";
+
 import { K2Volumes, oci } from "@k2/cdk-lib";
 import { K2Secret } from "@k2/1password";
-import { Size } from "cdk8s";
 
 export interface N8NDeploymentProps {
   readonly volumes: K2Volumes<"appdata">;

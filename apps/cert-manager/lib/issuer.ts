@@ -1,6 +1,8 @@
-import { K2Secret } from "@k2/1password";
-import { ClusterIssuer } from "../crds/cert-manager.io";
 import { Construct } from "constructs";
+
+import { K2Secret } from "@k2/1password";
+
+import { ClusterIssuer } from "../crds/cert-manager.io";
 
 const EMAIL = "wyvernzora+letsencrypt@gmail.com";
 const DOMAIN = "wyvernzora.io";

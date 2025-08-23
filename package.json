@@ -15,6 +15,7 @@
     "yaml": "^2.3.4"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.2.3",
     "@tsconfig/recommended": "^1.0.10",
     "@types/common-tags": "^1.8.4",
     "@types/debug": "^4.1.12",
@@ -25,30 +26,14 @@
     "@typescript-eslint/parser": "^8.0.0-alpha.14",
     "eslint": "^9.3.0",
     "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "jiti": "^2.5.1",
     "prettier": "^3.2.4",
+    "eslint-plugin-import": "^2.27.5",
     "require-resolve-cli": "^1.0.0",
     "tsx": "^4.20.4",
-    "typescript": "^5.3.3"
-  },
-  "eslintConfig": {
-    "root": true,
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/eslint-recommended",
-      "plugin:@typescript-eslint/recommended",
-      "prettier"
-    ],
-    "rules": {
-      "@typescript-eslint/no-namespace": "off"
-    },
-    "ignorePatterns": [
-      "**/dist/*.ts",
-      "node_modules"
-    ]
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.40.0"
   },
   "prettier": {
     "arrowParens": "avoid",

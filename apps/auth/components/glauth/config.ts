@@ -21,7 +21,7 @@ export class GlauthConfig extends ConfigMap {
     datastore = "config"
     baseDN = "${props.domain
       .split(".")
-      .map((s) => `dc=${s}`)
+      .map(s => `dc=${s}`)
       .join(",")}"
 [behaviors]
     IgnoreCapabilities = false

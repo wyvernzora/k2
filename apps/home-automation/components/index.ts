@@ -1,11 +1,13 @@
 import { Construct } from "constructs";
 import { Chart } from "cdk8s";
+import { HttpIngressPathType, Ingress, IngressBackend } from "cdk8s-plus-28";
+
+import { AuthenticatedIngress } from "@k2/auth";
+
 import { Mosquitto, MosquittoProps } from "./mosquitto";
 import { Zigbee2Mqtt, Zigbee2MqttProps } from "./zigbee2mqtt";
 import { HomeAssistantDeploymentProps } from "./home-assistant/deployment";
-import { HttpIngressPathType, Ingress, IngressBackend } from "cdk8s-plus-28";
 import { HomeAssistant } from "./home-assistant";
-import { AuthenticatedIngress } from "@k2/auth";
 
 export interface HomeAutomationProps {
   readonly namespace?: string;

@@ -1,6 +1,8 @@
 import { Construct } from "constructs";
 import * as YAML from "yaml";
+
 import { ConfigMap } from "@k2/cdk-lib";
+
 import { ClientGroup } from "./client-group";
 import { CustomDns } from "./custom-dns";
 
@@ -76,6 +78,7 @@ function renderBlocking(clientGroups: ClientGroup[]) {
 
 function renderCustomDns(customDns: CustomDns, apex: string) {
   const mapping: Record<string, string> = {};
+  // eslint-disable-next-line prefer-const
   for (let [host, addrs] of Object.entries(customDns.records)) {
     if (!host.endsWith(apex)) {
       host = `${host}.${apex}`;

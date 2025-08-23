@@ -1,8 +1,10 @@
 import { Construct } from "constructs";
-import { ConfigMap } from "@k2/cdk-lib";
 import { stringify } from "yaml";
-import { Mosquitto } from "../mosquitto";
 import dedent from "dedent-js";
+
+import { ConfigMap } from "@k2/cdk-lib";
+
+import { Mosquitto } from "../mosquitto";
 
 export interface Zigbee2MqttConfigProps {
   readonly url: string;

@@ -1,7 +1,8 @@
 import { Cpu, Deployment, DeploymentStrategy, VolumeMount } from "cdk8s-plus-28";
 import { Construct } from "constructs";
-import { K2Volume, K2Volumes, oci } from "@k2/cdk-lib";
 import { Size } from "cdk8s";
+
+import { K2Volume, K2Volumes, oci } from "@k2/cdk-lib";
 
 export interface SonarrDeploymentProps {
   readonly volumes: K2Volumes<"anime" | "appdata">;

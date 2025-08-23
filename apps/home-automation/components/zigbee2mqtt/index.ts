@@ -1,9 +1,12 @@
 import { Construct } from "constructs";
-import { Zigbee2MqttConfig } from "./config";
 import { Service, ServiceType } from "cdk8s-plus-28";
-import { Zigbee2MqttDeployment } from "./deployment";
-import { Mosquitto } from "../mosquitto";
+
 import { K2Volume, K2Volumes } from "@k2/cdk-lib";
+
+import { Mosquitto } from "../mosquitto";
+
+import { Zigbee2MqttConfig } from "./config";
+import { Zigbee2MqttDeployment } from "./deployment";
 
 export interface Zigbee2MqttProps {
   readonly url: string;

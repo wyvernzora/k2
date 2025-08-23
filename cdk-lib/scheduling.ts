@@ -43,7 +43,7 @@ function annotatedNode(annotation: string): k8s.NodeSelectorTerm {
 
 function preferAnyOf(...terms: k8s.NodeSelectorTerm[]): k8s.NodeAffinity {
   return {
-    preferredDuringSchedulingIgnoredDuringExecution: terms.map((term) => ({
+    preferredDuringSchedulingIgnoredDuringExecution: terms.map(term => ({
       weight: 1,
       preference: term,
     })),

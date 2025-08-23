@@ -1,6 +1,7 @@
+import { basename, dirname } from "path";
+
 import { Construct } from "constructs";
 import * as base from "cdk8s";
-import { basename, dirname } from "path";
 
 /**
  * Represents a reference to a Helm chart, including its repository and version.

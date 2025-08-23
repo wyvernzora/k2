@@ -1,7 +1,8 @@
 import { Cpu, Deployment, DeploymentStrategy, Probe, VolumeMount } from "cdk8s-plus-28";
 import { Construct } from "constructs";
-import { K2Volumes, oci, VolumesOf } from "@k2/cdk-lib";
 import { Size } from "cdk8s";
+
+import { K2Volumes, oci, VolumesOf } from "@k2/cdk-lib";
 
 export interface KavitaDeploymentProps {
   readonly volumes: K2Volumes<"appdata" | "library">;

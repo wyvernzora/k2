@@ -1,8 +1,10 @@
 import { Cpu, Deployment, Protocol, Volume } from "cdk8s-plus-28";
-import { BlockyConfig } from "./config";
 import { Construct } from "constructs";
 import { Size } from "cdk8s";
+
 import { oci } from "@k2/cdk-lib";
+
+import { BlockyConfig } from "./config";
 
 export interface BlockyDeploymentProps {
   readonly replicas: number;

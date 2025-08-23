@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import os from "os";
-import fg from "fast-glob";
 import fs from "fs";
 import path from "path";
+
+import fg from "fast-glob";
 import pLimit from "p-limit";
+import { Chart } from "cdk8s";
 
 import { App, ApexDomain, AppRoot, HelmCharts } from "@k2/cdk-lib";
-import { Chart } from "cdk8s";
 import * as OnePassword from "@k2/1password";
 import * as ArgoCD from "@k2/argocd";
 

@@ -1,8 +1,10 @@
 import { Chart } from "cdk8s";
 import { Construct } from "constructs";
 import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
-import { SonarrDeployment, SonarrDeploymentProps } from "./deployment";
+
 import { AuthenticatedIngress } from "@k2/auth";
+
+import { SonarrDeployment, SonarrDeploymentProps } from "./deployment";
 
 export interface SonarrProps {
   readonly url: string;

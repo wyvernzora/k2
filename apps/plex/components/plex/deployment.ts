@@ -1,7 +1,9 @@
-import { K2Volumes, oci } from "@k2/cdk-lib";
+import { join } from "path";
+
 import { Construct } from "constructs";
 import { ConfigMap, Deployment, DeploymentStrategy, Secret, VolumeMount, Volume } from "cdk8s-plus-28";
-import { join } from "path";
+
+import { K2Volumes, oci } from "@k2/cdk-lib";
 
 const PLEX_ROOT = "/config/Library/Application Support/Plex Media Server";
 

@@ -1,8 +1,9 @@
-import { K2MaterializedVolume, K2Volumes, oci } from "@k2/cdk-lib";
 import { Size } from "cdk8s";
 import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Probe, Volume, VolumeMount } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 import dedent from "dedent-js";
+
+import { K2MaterializedVolume, K2Volumes, oci } from "@k2/cdk-lib";
 
 const PUID = 3000;
 const PGID = 2001;

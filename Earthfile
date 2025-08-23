@@ -66,4 +66,4 @@ npm-install:
     ARG TAG="latest"
     FROM ghcr.io/wyvernzora/k2-build:${TAG}
     COPY package.json package-lock.json ./
-    RUN npm ci
+    RUN NO_UPDATE_NOTIFIER=true npm ci

@@ -1,7 +1,8 @@
+import { hash } from "crypto";
+
 import { Lazy } from "cdk8s";
 import * as base from "cdk8s-plus-28";
 import { Construct } from "constructs";
-import { hash } from "crypto";
 import stringify from "json-stable-stringify";
 
 export class ConfigMap extends base.ConfigMap {

@@ -8,7 +8,9 @@ import {
   Volume,
   VolumeMount,
 } from "cdk8s-plus-28";
+
 import { K2Volumes, oci } from "@k2/cdk-lib";
+
 import { MosquittoConfig } from "./config";
 
 export interface MosquittoDeploymentProps {
@@ -44,37 +46,14 @@ export class MosquittoDeployment extends Deployment {
       securityContext: {
         ensureNonRoot: false,
       },
-      liveness: Probe.fromCommand([
-        "mosquitto_sub",
-        "-t",
-        "$$SYS/#",
-        "-C",
-        "1",
-        "-W",
-        "5",
-      ]),
-      readiness: Probe.fromCommand([
-        "mosquitto_sub",
-        "-t",
-        "$$SYS/#",
-        "-C",
-        "1",
-        "-W",
-        "5",
-      ]),
+      liveness: Probe.fromCommand(["mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-W", "5"]),
+      readiness: Probe.fromCommand(["mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-W", "5"]),
     });
   }
 
-  private *createVolumeMounts(
-    config: MosquittoConfig,
-    volumes: Props["volumes"],
-  ): Iterable<VolumeMount> {
-    yield volumes
-      .data(this, "vol-data")
-      .mount(this, { path: "/mosquitto/data" });
-    yield volumes
-      .logs(this, "vol-logs")
-      .mount(this, { path: "/mosquitto/log" });
+  private *createVolumeMounts(config: MosquittoConfig, volumes: Props["volumes"]): Iterable<VolumeMount> {
+    yield volumes.data(this, "vol-data").mount(this, { path: "/mosquitto/data" });
+    yield volumes.logs(this, "vol-logs").mount(this, { path: "/mosquitto/log" });
     yield {
       volume: Volume.fromConfigMap(this, "vol-conf", config),
       path: "/mosquitto/config/mosquitto.conf",

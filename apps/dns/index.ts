@@ -1,9 +1,10 @@
+import { Chart } from "cdk8s";
+
 import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 import { BlockingGroup, ClientGroup, CustomDns, Blocky } from "./components/blocky";
 import { K8sGateway } from "./components/gateway";
-import { Chart } from "cdk8s";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

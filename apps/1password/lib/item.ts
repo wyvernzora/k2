@@ -1,7 +1,9 @@
-import { OnePasswordItem } from "../crds/onepassword.com";
 import { ApiObjectMetadata } from "cdk8s";
 import { ISecret, Secret } from "cdk8s-plus-28";
 import { Construct } from "constructs";
+
+import { OnePasswordItem } from "../crds/onepassword.com";
+
 import { VaultContext } from "./context";
 
 export interface K2SecretProps {

@@ -1,5 +1,6 @@
-import { HelmChartV1 } from "@k2/cdk-lib";
 import { Construct } from "constructs";
+
+import { HelmChartV1 } from "@k2/cdk-lib";
 
 export interface ReflectorProps {
   readonly namespace: string;

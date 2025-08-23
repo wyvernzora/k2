@@ -1,7 +1,9 @@
-import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, K2Volume } from "@k2/cdk-lib";
-import { HomeAutomation } from "./components";
 import { Size } from "cdk8s";
+
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, K2Volume } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
+
+import { HomeAutomation } from "./components";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

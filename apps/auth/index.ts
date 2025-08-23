@@ -1,5 +1,6 @@
 import { AppResourceFunc, ArgoCDResourceFunc, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
+
 import Authelia from "./components/authelia";
 import Glauth from "./components/glauth";
 

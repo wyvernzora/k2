@@ -1,7 +1,9 @@
+import { Size } from "cdk8s";
+
 import { AppResourceFunc, ArgoCDResourceFunc, K2Volume } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
+
 import { PlexChart } from "./components/plex/chart";
-import { Size } from "cdk8s";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

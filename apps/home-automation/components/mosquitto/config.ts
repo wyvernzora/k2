@@ -1,5 +1,6 @@
 import { Construct } from "constructs";
 import dedent from "dedent-js";
+
 import { ConfigMap } from "@k2/cdk-lib";
 
 export interface MosquittoConfigProps {

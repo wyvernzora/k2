@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Construct } from "constructs";
+
 import { AppOption } from "..";
 
 const kContextClass = Symbol("@k2/cdk-lib:symbol:context-class");
@@ -13,15 +15,15 @@ export abstract class Context {
   /**
    * @returns the instance of the context object from CDK construct context.
    */
-  public static of<C extends { new (...args: any[]): Context }>(this: C, construct: Construct): InstanceType<C> {
-    const key = (this.prototype as any).ContextKey;
+  public static of<C extends { new (...args: unknown[]): Context }>(this: C, construct: Construct): InstanceType<C> {
+    const key = (this.prototype as Context).ContextKey;
     return construct.node.getContext(key) as InstanceType<C>;
   }
 
   /**
    * @returns an AppOptionFunc that attaches the context object to the CDK construct context.
    */
-  public static with<C extends { new (...args: any[]): Context }>(
+  public static with<C extends { new (...args: unknown[]): Context }>(
     this: C,
     ...args: ConstructorParameters<C>
   ): AppOption {
@@ -31,8 +33,8 @@ export abstract class Context {
     };
   }
 
-  static isContextClass(x: unknown): x is ContextClass<any[]> {
-    return typeof x === "function" && x != null && (x as any)[kContextClass] === true;
+  static isContextClass<T extends unknown[]>(x: unknown): x is ContextClass<T> {
+    return typeof x === "function" && x != null && (x as unknown as { [key: symbol]: true })[kContextClass] === true;
   }
   static isContextInstance(x: unknown): x is Context {
     if (!x || typeof x !== "object") {

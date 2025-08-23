@@ -1,11 +1,12 @@
 import { AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
+
 import { Reflector } from "./components/reflector";
 import { CertManager } from "./components/cert-manager";
-
-/* Export raw CRDs */
 import * as AcmeCRD from "./crds/acme.cert-manager.io";
 import * as MainCRD from "./crds/cert-manager.io";
+
+/* Export raw CRDs */
 export const crd = {
   ...MainCRD,
   acme: AcmeCRD,

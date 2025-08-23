@@ -1,6 +1,7 @@
 import { Construct } from "constructs";
-import { QBitTorrent, QBitTorrentProps } from "./qbittorrent";
 import { Chart, ChartProps } from "cdk8s";
+
+import { QBitTorrent, QBitTorrentProps } from "./qbittorrent";
 import { Prowlarr, ProwlarrProps } from "./prowlarr";
 import { Sonarr, SonarrProps } from "./sonarr";
 import { Kavita, KavitaProps } from "./kavita";
