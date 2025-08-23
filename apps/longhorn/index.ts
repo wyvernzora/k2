@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 import * as Auth from "@k2/auth";
 
@@ -7,13 +7,15 @@ export * as crd from "./crds/longhorn.io.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  new HelmChartV1(app, "longhorn", {
-    namespace: "k2-storage",
-    chart: "helm:https://charts.longhorn.io/longhorn@1.9.1",
+  app.use(Namespace, "k2-storage");
+  const Longhorn = HelmCharts.of(app).asChart("longhorn");
+
+  new Longhorn(app, "longhorn", {
+    ...Namespace.of(app),
     values: {
       ingress: {
         enabled: true,
-        host: "lh.wyvernzora.io",
+        host: ApexDomain.of(app).subdomain("lh"),
         annotations: {
           ...Auth.MiddlewareAnnotation,
         },

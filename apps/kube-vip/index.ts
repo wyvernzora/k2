@@ -1,11 +1,14 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  new HelmChartV1(app, "kube-vip", {
-    namespace: "k2-network",
-    chart: "helm:https://kube-vip.github.io/helm-charts/kube-vip@0.8.0",
+  app.use(Namespace, "k2-network");
+  const helm = HelmCharts.of(app);
+  const KubeVip = helm.asChart("kube-vip");
+
+  new KubeVip(app, "kube-vip", {
+    ...Namespace.of(app),
     values: {
       config: {
         address: "10.10.8.2",

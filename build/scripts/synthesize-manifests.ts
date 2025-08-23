@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import os from "os";
 import fs from "fs";
 import path from "path";

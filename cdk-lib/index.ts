@@ -11,6 +11,5 @@ export * from "./context/namespace.js";
 
 /* Constructs */
 export * from "./constructs/config-map.js";
-export * from "./constructs/helm.js";
 export * from "./constructs/scheduling.js";
 export * from "./constructs/volume.js";

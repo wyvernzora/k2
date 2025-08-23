@@ -1,14 +1,17 @@
 import { Chart } from "cdk8s";
+import { ServiceType } from "cdk8s-plus-28";
 
-import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, Namespace } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 import { BlockingGroup, ClientGroup, CustomDns, Blocky } from "./components/blocky/index.js";
-import { K8sGateway } from "./components/gateway/index.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
   app.use(Namespace, "dns");
+  const helm = HelmCharts.of(app);
+  const K8sGateway = helm.asConstruct("k8s-gateway");
+
   const chart = new Chart(app, "dns", { ...Namespace.of(app) });
 
   // Default client group and its blocking config
@@ -36,8 +39,15 @@ export const createAppResources: AppResourceFunc = app => {
   });
 
   new K8sGateway(chart, "k8s-gateway", {
-    ...ApexDomain.of(app),
     ...Namespace.of(app),
+    values: {
+      domain: ApexDomain.of(app).apexDomain,
+      replicaCount: 3,
+      service: {
+        type: ServiceType.CLUSTER_IP,
+        useTcp: true,
+      },
+    },
   });
   new Blocky(chart, "blocky", {
     ...ApexDomain.of(app),

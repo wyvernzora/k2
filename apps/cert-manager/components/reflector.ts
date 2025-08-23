@@ -1,19 +1,14 @@
-import { Construct } from "constructs";
+import { App, HelmCharts, Namespace } from "@k2/cdk-lib";
 
-import { HelmChartV1 } from "@k2/cdk-lib";
+export default {
+  create(app: App) {
+    const Reflector = HelmCharts.of(app).asChart("reflector");
 
-export interface ReflectorProps {
-  readonly namespace: string;
-}
-
-export class Reflector extends HelmChartV1 {
-  constructor(scope: Construct, name: string, props: ReflectorProps) {
-    super(scope, name, {
-      namespace: props.namespace,
-      chart: "helm:https://emberstack.github.io/helm-charts/reflector@9.1.27",
+    new Reflector(app, "reflector", {
+      ...Namespace.of(app),
       values: {
         priorityClassName: "system-cluster-critical",
       },
     });
-  }
-}
+  },
+};

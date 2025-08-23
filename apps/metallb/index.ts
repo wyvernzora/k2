@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 import { IpAddressPool, L2Advertisement } from "./crds/metallb.io.js";
@@ -6,10 +6,10 @@ export * as crd from "./crds/metallb.io.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const chart = new HelmChartV1(app, "metallb", {
-    namespace: "k2-network",
-    chart: "helm:https://metallb.github.io/metallb/metallb@0.15.2",
-  });
+  app.use(Namespace, "k2-network");
+  const Metallb = HelmCharts.of(app).asChart("metallb");
+
+  const chart = new Metallb(app, "metallb", { ...Namespace.of(app) });
 
   /**
    * Address pool where IP addresses get assigned from by default.

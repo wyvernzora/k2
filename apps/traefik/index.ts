@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1, Toleration } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace, Toleration } from "@k2/cdk-lib";
 import { K2Certificate } from "@k2/cert-manager";
 import { ContinuousDeployment } from "@k2/argocd";
 
@@ -9,9 +9,11 @@ export * as HubCRD from "./crds/hub.traefik.io.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const chart = new HelmChartV1(app, "traefik", {
-    namespace: "k2-network",
-    chart: "helm:https://traefik.github.io/charts/traefik@37.0.0",
+  app.use(Namespace, "k2-network");
+  const Traefik = HelmCharts.of(app).asChart("traefik");
+
+  const chart = new Traefik(app, "traefik", {
+    ...Namespace.of(app),
     values: {
       podAnnotations: {
         "prometheus.io/port": "8082",

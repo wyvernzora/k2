@@ -1,8 +1,8 @@
-import { AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import { Reflector } from "./components/reflector.js";
-import { CertManager } from "./components/cert-manager.js";
+import Reflector from "./components/reflector.js";
+import CertManager from "./components/cert-manager.js";
 
 export * as acmecrd from "./crds/acme.cert-manager.io.js";
 export * as crd from "./crds/cert-manager.io.js";
@@ -13,11 +13,9 @@ export * from "./lib/certificate.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  new Reflector(app, "reflector", { namespace: "k2-core" });
-  new CertManager(app, "cert-manager", {
-    namespace: "k2-core",
-    awsSecretId: "hxitqr6xcco7g2ne3n7m6kkoqa",
-  });
+  app.use(Namespace, "k2-core");
+  Reflector.create(app);
+  CertManager.create(app);
 };
 
 /* Export ArgoCD application factory */
