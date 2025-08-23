@@ -1,14 +1,15 @@
 import { Chart } from "cdk8s";
 
-import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import { BlockingGroup, ClientGroup, CustomDns, Blocky } from "./components/blocky";
-import { K8sGateway } from "./components/gateway";
+import { BlockingGroup, ClientGroup, CustomDns, Blocky } from "./components/blocky/index.js";
+import { K8sGateway } from "./components/gateway/index.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const chart = new Chart(app, "dns", { namespace: "dns" });
+  app.use(Namespace, "dns");
+  const chart = new Chart(app, "dns", { ...Namespace.of(app) });
 
   // Default client group and its blocking config
   const blockingGroup = new BlockingGroup({
@@ -34,13 +35,12 @@ export const createAppResources: AppResourceFunc = app => {
     },
   });
 
-  const { apexDomain } = ApexDomain.of(app);
   new K8sGateway(chart, "k8s-gateway", {
-    namespace: "dns",
-    apexDomain,
+    ...ApexDomain.of(app),
+    ...Namespace.of(app),
   });
   new Blocky(chart, "blocky", {
-    apexDomain,
+    ...ApexDomain.of(app),
     serviceIp: "10.10.10.8",
     clientGroups: [clientGroup],
     customDns,
@@ -49,5 +49,5 @@ export const createAppResources: AppResourceFunc = app => {
 
 /* Export ArgoCD application factory */
 export const createArgoCdResources: ArgoCDResourceFunc = chart => {
-  new ContinuousDeployment(chart, "dns", { namespace: "dns" });
+  new ContinuousDeployment(chart, "dns");
 };

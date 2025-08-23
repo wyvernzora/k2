@@ -1,4 +1,4 @@
-import { Context } from ".";
+import { Context } from "../context.js";
 
 export class Namespace extends Context {
   get ContextKey() {

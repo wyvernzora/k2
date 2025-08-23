@@ -5,7 +5,7 @@ import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } fro
 import { AuthenticatedIngress } from "@k2/auth";
 import { VolumesOf } from "@k2/cdk-lib";
 
-import { KavitaDeployment, KavitaDeploymentProps } from "./deployment";
+import { KavitaDeployment, KavitaDeploymentProps } from "./deployment.js";
 
 export interface KavitaProps {
   readonly url: string;

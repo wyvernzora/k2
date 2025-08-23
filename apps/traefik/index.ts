@@ -2,16 +2,10 @@ import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1, Toleration } from "@k
 import { K2Certificate } from "@k2/cert-manager";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import * as CRD from "./crds/traefik.io";
-import * as GatewayCRD from "./crds/gateway.networking.k8s.io";
-import * as HubCRD from "./crds/hub.traefik.io";
-
-/* Export raw CRDs */
-export const crd = {
-  ...CRD,
-  gateway: GatewayCRD,
-  hub: HubCRD,
-};
+import { TlsStore } from "./crds/traefik.io.js";
+export * as CRD from "./crds/traefik.io.js";
+export * as GatewayCRD from "./crds/gateway.networking.k8s.io.js";
+export * as HubCRD from "./crds/hub.traefik.io.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
@@ -57,7 +51,7 @@ export const createAppResources: AppResourceFunc = app => {
   /**
    * Default TLS Store
    */
-  new CRD.TlsStore(chart, "default", {
+  new TlsStore(chart, "default", {
     metadata: {
       name: "default",
     },

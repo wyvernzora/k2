@@ -1,4 +1,4 @@
-import { BlockingGroup } from "./blocking-group";
+import { BlockingGroup } from "./blocking-group.js";
 
 export interface ClientGroupProps {
   /**

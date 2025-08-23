@@ -4,7 +4,7 @@ import dedent from "dedent-js";
 
 import { ConfigMap } from "@k2/cdk-lib";
 
-import { Mosquitto } from "../mosquitto";
+import { Mosquitto } from "../mosquitto/index.js";
 
 export interface Zigbee2MqttConfigProps {
   readonly url: string;

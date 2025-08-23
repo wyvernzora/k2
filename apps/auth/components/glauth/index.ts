@@ -5,8 +5,8 @@ import { Service } from "cdk8s-plus-28";
 import { App, ApexDomain } from "@k2/cdk-lib";
 import { K2Secret } from "@k2/1password";
 
-import { GlauthDeployment } from "./deployment";
-import { GlauthConfig } from "./config";
+import { GlauthDeployment } from "./deployment.js";
+import { GlauthConfig } from "./config.js";
 
 export class Glauth extends Chart {
   public readonly service: Service;

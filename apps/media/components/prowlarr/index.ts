@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 
 import { AuthenticatedIngress } from "@k2/auth";
 
-import { ProwlarrDeployment, ProwlarrDeploymentProps } from "./deployment";
+import { ProwlarrDeployment, ProwlarrDeploymentProps } from "./deployment.js";
 
 export interface ProwlarrProps {
   readonly url: string;

@@ -3,10 +3,7 @@ import { ContinuousDeployment } from "@k2/argocd";
 import * as Auth from "@k2/auth";
 
 /* Export raw CRDs */
-import * as CRD from "./crds/longhorn.io";
-export const crd = {
-  ...CRD,
-};
+export * as crd from "./crds/longhorn.io.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

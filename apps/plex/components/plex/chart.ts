@@ -2,7 +2,7 @@ import { Chart } from "cdk8s";
 import { Deployment, Service, ServiceType } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 
-import { PlexDeployment, PlexDeploymentProps } from "./deployment";
+import { PlexDeployment, PlexDeploymentProps } from "./deployment.js";
 
 export interface PlexChartProps {
   readonly host: string;

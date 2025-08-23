@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 
 import { K2Volumes, oci } from "@k2/cdk-lib";
 
-import { HomeAssistantConfig } from "./config";
+import { HomeAssistantConfig } from "./config.js";
 
 export interface HomeAssistantDeploymentProps {
   readonly config: HomeAssistantConfig;

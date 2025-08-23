@@ -2,9 +2,9 @@ import { ApiObjectMetadata } from "cdk8s";
 import { ISecret, Secret } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 
-import { OnePasswordItem } from "../crds/onepassword.com";
+import { OnePasswordItem } from "../crds/onepassword.com.js";
 
-import { VaultContext } from "./context";
+import { VaultContext } from "./context.js";
 
 export interface K2SecretProps {
   readonly metadata?: ApiObjectMetadata;

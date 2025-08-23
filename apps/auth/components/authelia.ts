@@ -1,6 +1,6 @@
 import { ApexDomain, App, HelmCharts } from "@k2/cdk-lib";
 import { K2Secret } from "@k2/1password";
-import * as Traefik from "@k2/traefik";
+import { CRD as TraefikCRD } from "@k2/traefik";
 
 export default {
   create(app: App) {
@@ -100,7 +100,7 @@ export default {
       itemId: "ejfcz3g4s6wsr2jtct6hs3alxi",
     });
 
-    new Traefik.crd.Middleware(chart, "middleware", {
+    new TraefikCRD.Middleware(chart, "middleware", {
       metadata: {
         name: "authelia",
       },

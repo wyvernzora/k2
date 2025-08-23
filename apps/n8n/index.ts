@@ -3,7 +3,7 @@ import { Size } from "cdk8s";
 import { AppResourceFunc, ArgoCDResourceFunc, K2Volume } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import { N8N } from "./components/n8n";
+import { N8N } from "./components/n8n/index.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

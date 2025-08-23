@@ -9,9 +9,9 @@ import { Construct } from "constructs";
 
 import { AppOption } from "@k2/cdk-lib";
 
-import { AppRoot } from "./app-root";
+import { Context } from "../context.js";
 
-import { Context } from ".";
+import { AppRoot } from "./app-root.js";
 
 export class HelmCharts extends Context {
   get ContextKey() {

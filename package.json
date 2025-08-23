@@ -1,6 +1,7 @@
 {
   "name": "@wyvernzora/k2",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "dependencies": {
     "cdk8s": "^2.68.22",

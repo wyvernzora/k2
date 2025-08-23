@@ -1,10 +1,10 @@
 import { Construct } from "constructs";
 import { Chart, ChartProps } from "cdk8s";
 
-import { QBitTorrent, QBitTorrentProps } from "./qbittorrent";
-import { Prowlarr, ProwlarrProps } from "./prowlarr";
-import { Sonarr, SonarrProps } from "./sonarr";
-import { Kavita, KavitaProps } from "./kavita";
+import { QBitTorrent, QBitTorrentProps } from "./qbittorrent/index.js";
+import { Prowlarr, ProwlarrProps } from "./prowlarr/index.js";
+import { Sonarr, SonarrProps } from "./sonarr/index.js";
+import { Kavita, KavitaProps } from "./kavita/index.js";
 
 export interface MediaProps extends ChartProps {
   readonly qbitTorrent: QBitTorrentProps;

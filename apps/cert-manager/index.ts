@@ -1,20 +1,15 @@
 import { AppResourceFunc, ArgoCDResourceFunc } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import { Reflector } from "./components/reflector";
-import { CertManager } from "./components/cert-manager";
-import * as AcmeCRD from "./crds/acme.cert-manager.io";
-import * as MainCRD from "./crds/cert-manager.io";
+import { Reflector } from "./components/reflector.js";
+import { CertManager } from "./components/cert-manager.js";
 
-/* Export raw CRDs */
-export const crd = {
-  ...MainCRD,
-  acme: AcmeCRD,
-};
+export * as acmecrd from "./crds/acme.cert-manager.io.js";
+export * as crd from "./crds/cert-manager.io.js";
 
 /* Export higher level constructs */
-export * from "./lib/issuer";
-export * from "./lib/certificate";
+export * from "./lib/issuer.js";
+export * from "./lib/certificate.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

@@ -5,7 +5,7 @@ import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } fro
 import { AuthenticatedIngress } from "@k2/auth";
 import { VolumesOf } from "@k2/cdk-lib";
 
-import { N8NDeployment, N8NDeploymentProps } from "./deployment";
+import { N8NDeployment, N8NDeploymentProps } from "./deployment.js";
 
 export interface N8NProps {
   readonly url: string;

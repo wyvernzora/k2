@@ -4,7 +4,7 @@ import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } fro
 
 import { AuthenticatedIngress } from "@k2/auth";
 
-import { SonarrDeployment, SonarrDeploymentProps } from "./deployment";
+import { SonarrDeployment, SonarrDeploymentProps } from "./deployment.js";
 
 export interface SonarrProps {
   readonly url: string;

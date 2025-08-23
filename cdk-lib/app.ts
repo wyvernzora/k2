@@ -5,7 +5,7 @@ import { mkdir, writeFile } from "fs/promises";
 import * as base from "cdk8s";
 import { YamlOutputType } from "cdk8s";
 
-import { Context, ContextClass } from "./context";
+import { Context, ContextClass } from "./context.js";
 
 export class App extends base.App {
   constructor(...options: Array<AppOption>) {

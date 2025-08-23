@@ -3,8 +3,8 @@ import { NetworkPolicy, Service, ServiceType } from "cdk8s-plus-28";
 
 import { K2Volume } from "@k2/cdk-lib";
 
-import { MosquittoDeployment, MosquittoDeploymentProps } from "./deployment";
-import { MosquittoConfig } from "./config";
+import { MosquittoDeployment, MosquittoDeploymentProps } from "./deployment.js";
+import { MosquittoConfig } from "./config.js";
 
 export interface MosquittoProps {
   readonly volumes?: Partial<MosquittoDeploymentProps["volumes"]>;

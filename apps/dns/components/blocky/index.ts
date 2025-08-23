@@ -1,12 +1,12 @@
 import { Service, ServiceType } from "cdk8s-plus-28";
 import { Construct } from "constructs";
 
-import { BlockyConfig, BlockyConfigProps } from "./config";
-import { BlockyDeployment } from "./deployment";
+import { BlockyConfig, BlockyConfigProps } from "./config.js";
+import { BlockyDeployment } from "./deployment.js";
 
-export { BlockingGroup, BlockingGroupProps } from "./blocking-group";
-export { ClientGroup, ClientGroupProps } from "./client-group";
-export { CustomDns, CustomDnsProps } from "./custom-dns";
+export * from "./blocking-group.js";
+export * from "./client-group.js";
+export * from "./custom-dns.js";
 
 export interface BlockyProps extends BlockyConfigProps {
   readonly replicas?: number;

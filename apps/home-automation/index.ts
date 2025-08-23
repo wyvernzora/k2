@@ -1,16 +1,16 @@
 import { Size } from "cdk8s";
 
-import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, K2Volume } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, K2Volume, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import { HomeAutomation } from "./components";
+import { HomeAutomation } from "./components/index.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {
-  const { apexDomain } = ApexDomain.of(app);
+  app.use(Namespace, "home-automation");
   new HomeAutomation(app, "home-automation", {
-    namespace: "home-automation",
-    hostname: `ha.${apexDomain}`,
+    ...Namespace.of(app),
+    hostname: ApexDomain.of(app).subdomain("ha"),
     coordinator: "tcp://10.10.229.62:6638",
     volumes: {
       mosquitto: {

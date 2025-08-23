@@ -4,7 +4,7 @@ import { Size } from "cdk8s";
 
 import { oci } from "@k2/cdk-lib";
 
-import { BlockyConfig } from "./config";
+import { BlockyConfig } from "./config.js";
 
 export interface BlockyDeploymentProps {
   readonly replicas: number;

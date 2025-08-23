@@ -3,8 +3,8 @@ import * as YAML from "yaml";
 
 import { ConfigMap } from "@k2/cdk-lib";
 
-import { ClientGroup } from "./client-group";
-import { CustomDns } from "./custom-dns";
+import { ClientGroup } from "./client-group.js";
+import { CustomDns } from "./custom-dns.js";
 
 export interface BlockyConfigProps {
   readonly apexDomain: string;

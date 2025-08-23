@@ -3,10 +3,10 @@ import { Service, ServiceType } from "cdk8s-plus-28";
 
 import { K2Volume, K2Volumes } from "@k2/cdk-lib";
 
-import { Mosquitto } from "../mosquitto";
+import { Mosquitto } from "../mosquitto/index.js";
 
-import { Zigbee2MqttConfig } from "./config";
-import { Zigbee2MqttDeployment } from "./deployment";
+import { Zigbee2MqttConfig } from "./config.js";
+import { Zigbee2MqttDeployment } from "./deployment.js";
 
 export interface Zigbee2MqttProps {
   readonly url: string;

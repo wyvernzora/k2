@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 
 import { oci } from "@k2/cdk-lib";
 
-import { GlauthConfig } from "./config";
+import { GlauthConfig } from "./config.js";
 
 export interface GlauthDeploymentProps {
   readonly config: GlauthConfig;

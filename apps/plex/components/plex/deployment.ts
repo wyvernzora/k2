@@ -1,4 +1,5 @@
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 import { Construct } from "constructs";
 import { ConfigMap, Deployment, DeploymentStrategy, Secret, VolumeMount, Volume } from "cdk8s-plus-28";
@@ -6,6 +7,7 @@ import { ConfigMap, Deployment, DeploymentStrategy, Secret, VolumeMount, Volume 
 import { K2Volumes, oci } from "@k2/cdk-lib";
 
 const PLEX_ROOT = "/config/Library/Application Support/Plex Media Server";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export interface PlexDeploymentProps {
   readonly volumes: K2Volumes<"config" | "series" | "features" | "airing">;

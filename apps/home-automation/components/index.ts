@@ -4,10 +4,10 @@ import { HttpIngressPathType, Ingress, IngressBackend } from "cdk8s-plus-28";
 
 import { AuthenticatedIngress } from "@k2/auth";
 
-import { Mosquitto, MosquittoProps } from "./mosquitto";
-import { Zigbee2Mqtt, Zigbee2MqttProps } from "./zigbee2mqtt";
-import { HomeAssistantDeploymentProps } from "./home-assistant/deployment";
-import { HomeAssistant } from "./home-assistant";
+import { Mosquitto, MosquittoProps } from "./mosquitto/index.js";
+import { Zigbee2Mqtt, Zigbee2MqttProps } from "./zigbee2mqtt/index.js";
+import { HomeAssistantDeploymentProps } from "./home-assistant/deployment.js";
+import { HomeAssistant } from "./home-assistant/index.js";
 
 export interface HomeAutomationProps {
   readonly namespace?: string;

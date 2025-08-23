@@ -11,7 +11,7 @@ import {
 
 import { K2Volumes, oci } from "@k2/cdk-lib";
 
-import { MosquittoConfig } from "./config";
+import { MosquittoConfig } from "./config.js";
 
 export interface MosquittoDeploymentProps {
   readonly config: MosquittoConfig;

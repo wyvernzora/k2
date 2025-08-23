@@ -2,14 +2,11 @@ import { AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Toleration } from "@k2
 import { ContinuousDeployment } from "@k2/argocd";
 
 /* Export raw CRDs */
-import * as OnePasswordCRD from "./crds/onepassword.com";
-export const crd = {
-  ...OnePasswordCRD,
-};
+export * as CRD from "./crds/onepassword.com.js";
 
 /* Export higher level constructs */
-export * from "./lib/item";
-export * from "./lib/context";
+export * from "./lib/item.js";
+export * from "./lib/context.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

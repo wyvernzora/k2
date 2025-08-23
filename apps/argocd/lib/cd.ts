@@ -1,8 +1,8 @@
 import { Construct } from "constructs";
 
-import * as crd from "../crds/argoproj.io";
+import * as crd from "../crds/argoproj.io.js";
 
-import { ArgoCdContext } from "./context";
+import { ArgoCdContext } from "./context.js";
 
 export interface ArgoAppProps {
   path?: string;

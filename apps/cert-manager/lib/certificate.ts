@@ -1,7 +1,8 @@
-import { ApexDomain } from "cdk-lib/context";
 import { Construct } from "constructs";
 
-import { Certificate, ClusterIssuer, Issuer } from "../crds/cert-manager.io";
+import { ApexDomain } from "@k2/cdk-lib";
+
+import { Certificate, ClusterIssuer, Issuer } from "../crds/cert-manager.io.js";
 
 const NAMESPACES = "k2-auth,k2-network,plex";
 

@@ -1,13 +1,8 @@
 import { AppResourceFunc, ArgoCDResourceFunc, HelmChartV1 } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import { IpAddressPool, L2Advertisement } from "./crds/metallb.io";
-import * as CRD from "./crds/metallb.io";
-
-/* Export raw CRDs */
-export const crd = {
-  ...CRD,
-};
+import { IpAddressPool, L2Advertisement } from "./crds/metallb.io.js";
+export * as crd from "./crds/metallb.io.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

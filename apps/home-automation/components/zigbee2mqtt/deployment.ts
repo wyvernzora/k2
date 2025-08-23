@@ -3,7 +3,7 @@ import { Deployment, DeploymentStrategy, Volume, VolumeMount } from "cdk8s-plus-
 
 import { K2Volumes, oci } from "@k2/cdk-lib";
 
-import { Zigbee2MqttConfig } from "./config";
+import { Zigbee2MqttConfig } from "./config.js";
 
 export interface Zigbee2MqttDeploymentProps {
   readonly config: Zigbee2MqttConfig;

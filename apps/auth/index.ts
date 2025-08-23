@@ -1,11 +1,11 @@
 import { AppResourceFunc, ArgoCDResourceFunc, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
-import Authelia from "./components/authelia";
-import Glauth from "./components/glauth";
+import Authelia from "./components/authelia.js";
+import Glauth from "./components/glauth/index.js";
 
 /* Export higher level constructs */
-export * from "./lib/ingress";
+export * from "./lib/ingress.js";
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

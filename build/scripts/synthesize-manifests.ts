@@ -46,7 +46,7 @@ async function synthAppManifest(appPath: string) {
   const outFile = path.resolve("deploy", appName, "app.k8s.yaml");
 
   console.log(`🚀 Synthesizing ${appName} CDK`);
-  const mod = require(path.resolve(appPath, "index.ts"));
+  const mod = await import(path.resolve(appPath, "index.ts"));
   if (typeof mod.createAppResources !== "function") {
     throw new Error(`[V3] ${appName}: missing createAppResources export`);
   }
@@ -74,7 +74,7 @@ async function synthArgoManifest() {
   const appDirs = await fg("apps/*", { onlyDirectories: true });
   for (const appPath of appDirs) {
     const appName = path.basename(appPath);
-    const mod = require(path.resolve(appPath, "index.ts"));
+    const mod = await import(path.resolve(appPath, "index.ts"));
     if (typeof mod.createArgoCdResources !== "function") {
       throw new Error(`[V3] ${appName}: missing createArgoCdResources export`);
     }

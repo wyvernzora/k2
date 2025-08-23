@@ -3,7 +3,7 @@ import { Construct } from "constructs";
 
 import { AuthenticatedIngress } from "@k2/auth";
 
-import { QBitTorrentDeployment, QBitTorrentDeploymentProps } from "./deployment";
+import { QBitTorrentDeployment, QBitTorrentDeploymentProps } from "./deployment.js";
 
 export interface QBitTorrentProps {
   readonly host: string;
