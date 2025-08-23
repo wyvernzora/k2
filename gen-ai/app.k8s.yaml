@@ -278,8 +278,6 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
-            - name: WEBUI_URL
-              value: http://ai.wyvernzora.io
             - name: OLLAMA_BASE_URLS
               value: http://open-webui-ollama.gen-ai.svc.cluster.local:11434
             - name: OPENAI_API_BASE_URLS
@@ -313,32 +311,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: open-webui
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
-  labels:
-    app.kubernetes.io/component: open-webui
-    app.kubernetes.io/instance: open-webui
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/version: 0.6.25
-    helm.sh/chart: open-webui-7.6.0
-  name: open-webui
-  namespace: gen-ai
-spec:
-  rules:
-    - host: ai.wyvernzora.io
-      http:
-        paths:
-          - backend:
-              service:
-                name: open-webui
-                port:
-                  name: http
-            path: /
-            pathType: Prefix
 ---
 apiVersion: v1
 kind: Pod
