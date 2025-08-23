@@ -1,5 +1,5 @@
 import { ApexDomain, App, HelmCharts } from "@k2/cdk-lib";
-import * as OnePassword from "@k2/1password";
+import { K2Secret } from "@k2/1password";
 import * as Traefik from "@k2/traefik";
 
 export default {
@@ -93,7 +93,7 @@ export default {
       },
     });
 
-    new OnePassword.K2Secret(chart, "secret", {
+    new K2Secret(chart, "secret", {
       metadata: {
         name: "authelia",
       },

@@ -49,10 +49,7 @@ k8s-manifests:
     ARG TAG="latest"
     FROM +npm-install --TAG=$TAG
     COPY . .
-    RUN node \
-        -r ts-node/register \
-        -r tsconfig-paths/register \
-        build/scripts/synthesize-manifests.ts
+    RUN npx tsx build/scripts/synthesize-manifests.ts
     SAVE ARTIFACT deploy AS LOCAL deploy
 
 #

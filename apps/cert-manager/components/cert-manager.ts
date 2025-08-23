@@ -1,7 +1,7 @@
-import { HelmChartV1 } from "@k2/cdk-lib";
 import { Construct } from "constructs";
+import { HelmChartV1 } from "@k2/cdk-lib";
 import { K2Issuer, K2Certificate } from "@k2/cert-manager";
-import * as OnePassword from "@k2/1password";
+import { K2Secret } from "@k2/1password";
 
 export interface CertManagerProps {
   readonly namespace: string;
@@ -23,7 +23,7 @@ export class CertManager extends HelmChartV1 {
     });
 
     this.issuer = new K2Issuer(this, "issuer", {
-      credentials: new OnePassword.K2Secret(this, "aws-credentials", {
+      credentials: new K2Secret(this, "aws-credentials", {
         itemId: "hxitqr6xcco7g2ne3n7m6kkoqa",
       }),
     });
