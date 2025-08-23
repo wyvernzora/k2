@@ -47,7 +47,7 @@ crd-constructs-base:
 #
 k8s-manifests:
     ARG TAG="latest"
-    FROM +npm-install --TAG=$TAG
+    FROM --pass-args +npm-install
     COPY . .
     RUN npx tsx build/scripts/synthesize-manifests.ts
     SAVE ARTIFACT deploy AS LOCAL deploy
@@ -61,6 +61,15 @@ diff-manifests:
     COPY . .
     RUN build/scripts/diff-manifests.sh https://github.com/wyvernzora/k2.git > deploy-diff.md
     SAVE ARTIFACT deploy-diff.md AS LOCAL deploy-diff.md
+
+#
+# +lint: lints codebase
+#
+lint:
+    ARG TAG="latest"
+    FROM --pass-args +npm-install
+    COPY . .
+    RUN npx eslint
 
 npm-install:
     ARG TAG="latest"

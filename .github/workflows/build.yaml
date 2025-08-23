@@ -133,6 +133,7 @@ jobs:
           fi
 
           earthly +crd-constructs $TAG_OPT
+          earthly +lint $TAG_OPT
           earthly +k8s-manifests $TAG_OPT
           earthly +diff-manifests $TAG_OPT
 
