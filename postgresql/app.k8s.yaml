@@ -1233,3 +1233,44 @@ webhooks:
         resources:
           - poolers
     sideEffects: None
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: nexus
+  namespace: postgresql
+spec:
+  bootstrap:
+    initdb:
+      dataChecksums: true
+      owner: dba
+      postInitApplicationSQL:
+        - ALTER ROLE dba WITH LOGIN CREATEDB CREATEROLE INHERIT;
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-standard-bookworm
+  instances: 3
+  resources:
+    limits:
+      cpu: "2"
+      memory: 4Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  storage:
+    size: 16Gi
+    storageClass: longhorn
+  topologySpreadConstraints:
+    - labelSelector:
+        matchLabels:
+          cnpg.io/cluster: nexus
+      maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+    - labelSelector:
+        matchLabels:
+          cnpg.io/cluster: nexus
+      maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  walStorage:
+    size: 4Gi
+    storageClass: longhorn
