@@ -1,14 +1,12 @@
-import { Chart } from "cdk8s";
-
 import { App, HelmCharts, Namespace, Spread } from "@k2/cdk-lib";
 
 export default {
   create(app: App) {
-    const CloudNativePG = HelmCharts.of(app).asConstruct("cloudnative-pg");
-    const chart = new Chart(app, "cloudnative-pg", { ...Namespace.of(app) });
+    const CloudNativePG = HelmCharts.of(app).asChart("cloudnative-pg");
 
     // Set up the helm chart
-    new CloudNativePG(chart, "op", {
+    new CloudNativePG(app, "cloudnative-pg", {
+      ...Namespace.of(app),
       values: {
         replicaCount: 2,
 
