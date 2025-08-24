@@ -30,6 +30,24 @@ export const Toleration = {
   ],
 };
 
+/**
+ * Common spread constraints
+ */
+export const Spread = {
+  AcrossZones: (selector: k8s.LabelSelector) => ({
+    maxSkew: 1,
+    topologyKey: "topology.kubernetes.io/zone",
+    whenUnsatisfiable: "DoNotSchedule",
+    labelSelector: selector,
+  }),
+  AcrossHosts: (selector: k8s.LabelSelector) => ({
+    maxSkew: 1,
+    topologyKey: "kubernetes.io/hostname",
+    whenUnsatisfiable: "ScheduleAnyway",
+    labelSelector: selector,
+  }),
+};
+
 function annotatedNode(annotation: string): k8s.NodeSelectorTerm {
   return {
     matchExpressions: [
