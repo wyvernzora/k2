@@ -1,4 +1,4 @@
-import { Deployment, DeploymentStrategy, Volume, VolumeMount } from "cdk8s-plus-28";
+import { Deployment, DeploymentStrategy, Volume, VolumeMount } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { K2Volumes, oci } from "@k2/cdk-lib";

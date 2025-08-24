@@ -5,7 +5,6 @@
   "private": true,
   "dependencies": {
     "cdk8s": "^2.68.22",
-    "cdk8s-plus-28": "^2.0.8",
     "common-tags": "^1.8.2",
     "debug": "^4.3.4",
     "dedent-js": "^1.0.1",
@@ -25,6 +24,7 @@
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0-alpha.14",
     "@typescript-eslint/parser": "^8.0.0-alpha.14",
+    "cdk8s-plus-32": "^2.4.0",
     "eslint": "^9.3.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-import": "^2.27.5",

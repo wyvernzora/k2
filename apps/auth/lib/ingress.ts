@@ -1,4 +1,4 @@
-import { Ingress, IngressProps } from "cdk8s-plus-28";
+import { Ingress, IngressProps } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 /**

@@ -1,5 +1,5 @@
 import { ApiObjectMetadata } from "cdk8s";
-import { ISecret, Secret } from "cdk8s-plus-28";
+import { ISecret, Secret } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { OnePasswordItem } from "../crds/onepassword.com.js";

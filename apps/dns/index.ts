@@ -1,5 +1,5 @@
 import { Chart } from "cdk8s";
-import { ServiceType } from "cdk8s-plus-28";
+import { ServiceType } from "cdk8s-plus-32";
 
 import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";

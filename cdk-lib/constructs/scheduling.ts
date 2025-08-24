@@ -1,4 +1,4 @@
-import { k8s } from "cdk8s-plus-28";
+import { k8s } from "cdk8s-plus-32";
 
 /**
  * Common tolerations useful when synthesizing Helm charts
