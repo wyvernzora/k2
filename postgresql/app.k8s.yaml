@@ -21,7 +21,8 @@ metadata:
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-controller-manager-config
   namespace: default
-data: {}
+data:
+  WATCH_NAMESPACE: default
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -553,6 +554,101 @@ rules:
       - get
       - list
       - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: op
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cloudnative-pg
+    app.kubernetes.io/version: 1.27.0
+    helm.sh/chart: cloudnative-pg-0.26.0
+  name: op-cloudnative-pg-view
+  namespace: postgresql
+rules:
+  - apiGroups:
+      - postgresql.cnpg.io
+    resources:
+      - backups
+      - clusters
+      - databases
+      - failoverquorums
+      - poolers
+      - publications
+      - scheduledbackups
+      - imagecatalogs
+      - clusterimagecatalogs
+      - subscriptions
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: op
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cloudnative-pg
+    app.kubernetes.io/version: 1.27.0
+    helm.sh/chart: cloudnative-pg-0.26.0
+  name: op-cloudnative-pg-edit
+  namespace: postgresql
+rules:
+  - apiGroups:
+      - postgresql.cnpg.io
+    resources:
+      - backups
+      - clusters
+      - databases
+      - failoverquorums
+      - poolers
+      - publications
+      - scheduledbackups
+      - imagecatalogs
+      - clusterimagecatalogs
+      - subscriptions
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: op
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cloudnative-pg
+    app.kubernetes.io/version: 1.27.0
+    helm.sh/chart: cloudnative-pg-0.26.0
+  name: op-cloudnative-pg
+  namespace: postgresql
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: op-cloudnative-pg
+subjects:
+  - kind: ServiceAccount
+    name: op-cloudnative-pg
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: op
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cloudnative-pg
+    app.kubernetes.io/version: 1.27.0
+    helm.sh/chart: cloudnative-pg-0.26.0
+  name: op-cloudnative-pg
+  namespace: default
+rules:
   - apiGroups:
       - ""
     resources:
@@ -757,69 +853,7 @@ rules:
       - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app.kubernetes.io/instance: op
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.0
-    helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg-view
-  namespace: postgresql
-rules:
-  - apiGroups:
-      - postgresql.cnpg.io
-    resources:
-      - backups
-      - clusters
-      - databases
-      - failoverquorums
-      - poolers
-      - publications
-      - scheduledbackups
-      - imagecatalogs
-      - clusterimagecatalogs
-      - subscriptions
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app.kubernetes.io/instance: op
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.0
-    helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg-edit
-  namespace: postgresql
-rules:
-  - apiGroups:
-      - postgresql.cnpg.io
-    resources:
-      - backups
-      - clusters
-      - databases
-      - failoverquorums
-      - poolers
-      - publications
-      - scheduledbackups
-      - imagecatalogs
-      - clusterimagecatalogs
-      - subscriptions
-    verbs:
-      - create
-      - delete
-      - deletecollection
-      - patch
-      - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/instance: op
@@ -828,10 +862,10 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: op-cloudnative-pg
-  namespace: postgresql
+  namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: op-cloudnative-pg
 subjects:
   - kind: ServiceAccount
@@ -879,9 +913,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: e966c677a22293ac92d7626a3c169d144d8ea066b378abb91cafdcfbc28f02ae
+        checksum/config: 258e0d22e4d5d4caa86e88de7ae7cf4ec807bf366657188be6dc1703c7c43c99
         checksum/monitoring-config: 7792746dcc502bfb7a76c2df3011520d493346a032249dbfa9d41c23d5cc6c23
-        checksum/rbac: 5429a6ebabdda75ec3282d739f411a9db60af9ab0448fb3c5b3d0ef0e9f5da08
+        checksum/rbac: 45ac32250145766b4d53de5ee0c718554e098901755f591089c13a6bdb795a46
       labels:
         app.kubernetes.io/instance: op
         app.kubernetes.io/name: cloudnative-pg
@@ -904,6 +938,8 @@ spec:
                   fieldPath: metadata.namespace
             - name: MONITORING_QUERIES_CONFIGMAP
               value: cnpg-default-monitoring
+            - name: WATCH_NAMESPACE
+              value: default
           image: ghcr.io/cloudnative-pg/cloudnative-pg:1.27.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
