@@ -7,6 +7,9 @@ install:
 
 users:
   - name: kairos
+    groups:
+      - admin
+      - sudo
     passwd: "{{ op://zfsyjjcwge4w4gw6dh4zaqndhq/ktkj6e2nqloze24qu5yc7eddiy/passwd }}"
     ssh_authorized_keys:
       - github:wyvernzora
