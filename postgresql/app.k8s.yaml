@@ -2,40 +2,40 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg
-  namespace: default
+  name: cloudnative-pg
+  namespace: postgresql
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-controller-manager-config
-  namespace: default
+  namespace: postgresql
 data:
-  WATCH_NAMESPACE: default
+  WATCH_NAMESPACE: postgresql
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     cnpg.io/reload: ""
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-default-monitoring
-  namespace: default
+  namespace: postgresql
 data:
   queries: |
     backends:
@@ -522,12 +522,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg
+  name: cloudnative-pg
   namespace: postgresql
 rules:
   - apiGroups:
@@ -559,12 +559,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg-view
+  name: cloudnative-pg-view
   namespace: postgresql
 rules:
   - apiGroups:
@@ -589,12 +589,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg-edit
+  name: cloudnative-pg-edit
   namespace: postgresql
 rules:
   - apiGroups:
@@ -621,33 +621,33 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg
+  name: cloudnative-pg
   namespace: postgresql
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: op-cloudnative-pg
+  name: cloudnative-pg
 subjects:
   - kind: ServiceAccount
-    name: op-cloudnative-pg
-    namespace: default
+    name: cloudnative-pg
+    namespace: postgresql
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg
-  namespace: default
+  name: cloudnative-pg
+  namespace: postgresql
 rules:
   - apiGroups:
       - ""
@@ -856,40 +856,40 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg
-  namespace: default
+  name: cloudnative-pg
+  namespace: postgresql
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: op-cloudnative-pg
+  name: cloudnative-pg
 subjects:
   - kind: ServiceAccount
-    name: op-cloudnative-pg
-    namespace: default
+    name: cloudnative-pg
+    namespace: postgresql
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-webhook-service
-  namespace: default
+  namespace: postgresql
 spec:
   ports:
     - name: webhook-server
       port: 443
       targetPort: webhook-server
   selector:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/name: cloudnative-pg
   type: ClusterIP
 ---
@@ -897,27 +897,27 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
-  name: op-cloudnative-pg
-  namespace: default
+  name: cloudnative-pg
+  namespace: postgresql
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/instance: op
+      app.kubernetes.io/instance: cloudnative-pg
       app.kubernetes.io/name: cloudnative-pg
   template:
     metadata:
       annotations:
-        checksum/config: 258e0d22e4d5d4caa86e88de7ae7cf4ec807bf366657188be6dc1703c7c43c99
-        checksum/monitoring-config: 7792746dcc502bfb7a76c2df3011520d493346a032249dbfa9d41c23d5cc6c23
-        checksum/rbac: 45ac32250145766b4d53de5ee0c718554e098901755f591089c13a6bdb795a46
+        checksum/config: 65714e0366f4c2643718e84c41cc8d50cd1c95f231a58af67af105037ee5c053
+        checksum/monitoring-config: 994a0147bf174512048e5cea1849cfd65ae393218649a0607c85eb48776c8f28
+        checksum/rbac: ad97490343dd57d3f391e99377e967cb94b3d11d3e8ce2743952b499a1a5534a
       labels:
-        app.kubernetes.io/instance: op
+        app.kubernetes.io/instance: cloudnative-pg
         app.kubernetes.io/name: cloudnative-pg
     spec:
       containers:
@@ -939,7 +939,7 @@ spec:
             - name: MONITORING_QUERIES_CONFIGMAP
               value: cnpg-default-monitoring
             - name: WATCH_NAMESPACE
-              value: default
+              value: postgresql
           image: ghcr.io/cloudnative-pg/cloudnative-pg:1.27.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -995,7 +995,7 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: op-cloudnative-pg
+      serviceAccountName: cloudnative-pg
       terminationGracePeriodSeconds: 10
       topologySpreadConstraints:
         - labelSelector:
@@ -1023,7 +1023,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
@@ -1036,7 +1036,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /mutate-postgresql-cnpg-io-v1-backup
         port: 443
     failurePolicy: Fail
@@ -1057,7 +1057,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /mutate-postgresql-cnpg-io-v1-cluster
         port: 443
     failurePolicy: Fail
@@ -1078,7 +1078,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /mutate-postgresql-cnpg-io-v1-database
         port: 443
     failurePolicy: Fail
@@ -1099,7 +1099,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /mutate-postgresql-cnpg-io-v1-scheduledbackup
         port: 443
     failurePolicy: Fail
@@ -1120,7 +1120,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   labels:
-    app.kubernetes.io/instance: op
+    app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.27.0
@@ -1133,7 +1133,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /validate-postgresql-cnpg-io-v1-backup
         port: 443
     failurePolicy: Fail
@@ -1154,7 +1154,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /validate-postgresql-cnpg-io-v1-cluster
         port: 443
     failurePolicy: Fail
@@ -1175,7 +1175,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /validate-postgresql-cnpg-io-v1-scheduledbackup
         port: 443
     failurePolicy: Fail
@@ -1196,7 +1196,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /validate-postgresql-cnpg-io-v1-database
         port: 443
     failurePolicy: Fail
@@ -1217,7 +1217,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: default
+        namespace: postgresql
         path: /validate-postgresql-cnpg-io-v1-pooler
         port: 443
     failurePolicy: Fail
