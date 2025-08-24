@@ -260,6 +260,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 3
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: dns-blocky-depl-c8843b8d
@@ -311,6 +312,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - configMap:

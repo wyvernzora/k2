@@ -6,6 +6,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: media-sonarr-depl-c8f329fb
@@ -69,6 +70,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - name: pvc-media-sonarr-depl-vol-appdata-pvc-c844ea8d
@@ -137,6 +139,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: media-kavita-depl-c8d9faa4
@@ -208,6 +211,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - name: pvc-media-kavita-depl-vol-appdata-pvc-c8a8ac1e
@@ -272,6 +276,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
@@ -434,6 +439,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - name: blk-vol-default
@@ -548,6 +554,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: media-prowlarr-depl-c8bd77f7
@@ -612,6 +619,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - name: pvc-media-prowlarr-depl-vol-appdata-pvc-c88a3d31

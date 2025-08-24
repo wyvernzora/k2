@@ -23,6 +23,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: home-automation-mosquitto-depl-c87ba16f
@@ -90,6 +91,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - name: pvc-home-automation-mosquitto-depl-vol-data-pvc-c806cfab
@@ -202,6 +204,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: home-automation-zigbee2mqtt-depl-c8124576
@@ -269,6 +272,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - name: pvc-home-automation-zigbee2mqtt-depl-vol-data-pvc-c81229cb
@@ -376,6 +380,7 @@ spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       cdk8s.io/metadata.addr: home-automation-home-assistant-depl-c80e458f
@@ -443,6 +448,7 @@ spec:
         fsGroupChangePolicy: Always
         runAsNonRoot: true
       setHostnameAsFQDN: false
+      shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
         - name: pvc-home-automat-home-assistant-depl-vol-conf-pvc-c8a9b07c
