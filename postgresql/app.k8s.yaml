@@ -1,11 +1,4 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: cnpg-system
-  namespace: cnpg-system
-spec: {}
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -15,7 +8,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: op-cloudnative-pg
-  namespace: cnpg-system
+  namespace: default
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -27,7 +20,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-controller-manager-config
-  namespace: cnpg-system
+  namespace: default
 data: {}
 ---
 apiVersion: v1
@@ -41,7 +34,7 @@ metadata:
     cnpg.io/reload: ""
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-default-monitoring
-  namespace: cnpg-system
+  namespace: default
 data:
   queries: |
     backends:
@@ -534,7 +527,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: op-cloudnative-pg
-  namespace: cnpg-system
+  namespace: postgresql
 rules:
   - apiGroups:
       - ""
@@ -773,7 +766,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: op-cloudnative-pg-view
-  namespace: cnpg-system
+  namespace: postgresql
 rules:
   - apiGroups:
       - postgresql.cnpg.io
@@ -803,7 +796,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: op-cloudnative-pg-edit
-  namespace: cnpg-system
+  namespace: postgresql
 rules:
   - apiGroups:
       - postgresql.cnpg.io
@@ -835,7 +828,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: op-cloudnative-pg
-  namespace: cnpg-system
+  namespace: postgresql
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -843,7 +836,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: op-cloudnative-pg
-    namespace: cnpg-system
+    namespace: default
 ---
 apiVersion: v1
 kind: Service
@@ -855,7 +848,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-webhook-service
-  namespace: cnpg-system
+  namespace: default
 spec:
   ports:
     - name: webhook-server
@@ -876,7 +869,7 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: op-cloudnative-pg
-  namespace: cnpg-system
+  namespace: default
 spec:
   replicas: 2
   selector:
@@ -886,9 +879,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 1749277ed108f59f9144c2d2db5b3fa96e05b5857405f91b236190a05f7e6f89
-        checksum/monitoring-config: 30f022820bc9c30fc527c56b7673f5022afe994d4431571615383fea1aa0b9d4
-        checksum/rbac: dd25eaae1d5aff71430690e52a8be2b2b73ca155a5751322e3768400f81b68a4
+        checksum/config: e966c677a22293ac92d7626a3c169d144d8ea066b378abb91cafdcfbc28f02ae
+        checksum/monitoring-config: 7792746dcc502bfb7a76c2df3011520d493346a032249dbfa9d41c23d5cc6c23
+        checksum/rbac: 5429a6ebabdda75ec3282d739f411a9db60af9ab0448fb3c5b3d0ef0e9f5da08
       labels:
         app.kubernetes.io/instance: op
         app.kubernetes.io/name: cloudnative-pg
@@ -1000,14 +993,14 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-mutating-webhook-configuration
-  namespace: cnpg-system
+  namespace: postgresql
 webhooks:
   - admissionReviewVersions:
       - v1
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /mutate-postgresql-cnpg-io-v1-backup
         port: 443
     failurePolicy: Fail
@@ -1028,7 +1021,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /mutate-postgresql-cnpg-io-v1-cluster
         port: 443
     failurePolicy: Fail
@@ -1049,7 +1042,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /mutate-postgresql-cnpg-io-v1-database
         port: 443
     failurePolicy: Fail
@@ -1070,7 +1063,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /mutate-postgresql-cnpg-io-v1-scheduledbackup
         port: 443
     failurePolicy: Fail
@@ -1097,14 +1090,14 @@ metadata:
     app.kubernetes.io/version: 1.27.0
     helm.sh/chart: cloudnative-pg-0.26.0
   name: cnpg-validating-webhook-configuration
-  namespace: cnpg-system
+  namespace: postgresql
 webhooks:
   - admissionReviewVersions:
       - v1
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /validate-postgresql-cnpg-io-v1-backup
         port: 443
     failurePolicy: Fail
@@ -1125,7 +1118,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /validate-postgresql-cnpg-io-v1-cluster
         port: 443
     failurePolicy: Fail
@@ -1146,7 +1139,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /validate-postgresql-cnpg-io-v1-scheduledbackup
         port: 443
     failurePolicy: Fail
@@ -1167,7 +1160,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /validate-postgresql-cnpg-io-v1-database
         port: 443
     failurePolicy: Fail
@@ -1188,7 +1181,7 @@ webhooks:
     clientConfig:
       service:
         name: cnpg-webhook-service
-        namespace: cnpg-system
+        namespace: default
         path: /validate-postgresql-cnpg-io-v1-pooler
         port: 443
     failurePolicy: Fail
