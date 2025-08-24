@@ -2,7 +2,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 import { Construct } from "constructs";
-import { ConfigMap, Deployment, DeploymentStrategy, Secret, VolumeMount, Volume } from "cdk8s-plus-28";
+import { ConfigMap, Deployment, DeploymentStrategy, Secret, VolumeMount, Volume } from "cdk8s-plus-32";
 
 import { K2Volumes, oci } from "@k2/cdk-lib";
 

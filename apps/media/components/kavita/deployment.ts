@@ -1,4 +1,4 @@
-import { Cpu, Deployment, DeploymentStrategy, Probe, VolumeMount } from "cdk8s-plus-28";
+import { Cpu, Deployment, DeploymentStrategy, Probe, VolumeMount } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 import { Size } from "cdk8s";
 

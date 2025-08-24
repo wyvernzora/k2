@@ -1,4 +1,4 @@
-import { Service, ServiceType } from "cdk8s-plus-28";
+import { Service, ServiceType } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { BlockyConfig, BlockyConfigProps } from "./config.js";

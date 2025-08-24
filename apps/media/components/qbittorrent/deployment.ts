@@ -1,5 +1,5 @@
 import { Size } from "cdk8s";
-import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Probe, Volume, VolumeMount } from "cdk8s-plus-28";
+import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Probe, Volume, VolumeMount } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 import dedent from "dedent-js";
 

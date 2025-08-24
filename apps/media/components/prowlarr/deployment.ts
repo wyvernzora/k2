@@ -1,5 +1,5 @@
 import { Size } from "cdk8s";
-import { Cpu, Deployment, DeploymentStrategy, Probe } from "cdk8s-plus-28";
+import { Cpu, Deployment, DeploymentStrategy, Probe } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { K2MaterializedVolume, K2Volumes, oci } from "@k2/cdk-lib";

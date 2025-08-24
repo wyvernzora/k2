@@ -1,4 +1,4 @@
-import { Deployment, Protocol, ISecret, Volume } from "cdk8s-plus-28";
+import { Deployment, Protocol, ISecret, Volume } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { oci } from "@k2/cdk-lib";

@@ -1,7 +1,7 @@
 import { hash } from "crypto";
 
 import { Lazy } from "cdk8s";
-import * as base from "cdk8s-plus-28";
+import * as base from "cdk8s-plus-32";
 import { Construct } from "constructs";
 import stringify from "json-stable-stringify";
 

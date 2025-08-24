@@ -1,5 +1,5 @@
 import { Chart } from "cdk8s";
-import { Deployment, Service, ServiceType } from "cdk8s-plus-28";
+import { Deployment, Service, ServiceType } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { PlexDeployment, PlexDeploymentProps } from "./deployment.js";

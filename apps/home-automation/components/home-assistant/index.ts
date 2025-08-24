@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import { Service, ServiceType } from "cdk8s-plus-28";
+import { Service, ServiceType } from "cdk8s-plus-32";
 
 import { K2Volume, K2Volumes } from "@k2/cdk-lib";
 

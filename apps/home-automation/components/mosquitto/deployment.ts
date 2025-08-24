@@ -7,7 +7,7 @@ import {
   Probe,
   Volume,
   VolumeMount,
-} from "cdk8s-plus-28";
+} from "cdk8s-plus-32";
 
 import { K2Volumes, oci } from "@k2/cdk-lib";
 

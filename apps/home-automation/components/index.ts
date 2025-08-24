@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import { Chart } from "cdk8s";
-import { HttpIngressPathType, Ingress, IngressBackend } from "cdk8s-plus-28";
+import { HttpIngressPathType, Ingress, IngressBackend } from "cdk8s-plus-32";
 
 import { AuthenticatedIngress } from "@k2/auth";
 

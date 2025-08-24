@@ -1,6 +1,6 @@
 import { Chart } from "cdk8s";
 import { Construct } from "constructs";
-import { Service } from "cdk8s-plus-28";
+import { Service } from "cdk8s-plus-32";
 
 import { App, ApexDomain } from "@k2/cdk-lib";
 import { K2Secret } from "@k2/1password";

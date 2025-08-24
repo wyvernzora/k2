@@ -1,4 +1,4 @@
-import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } from "cdk8s-plus-28";
+import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { AuthenticatedIngress } from "@k2/auth";
