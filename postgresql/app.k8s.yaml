@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cloudnative-pg-cnpg-system-c8eeac89
+  name: cnpg-system
   namespace: cnpg-system
 spec: {}
 ---
