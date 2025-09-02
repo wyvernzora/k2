@@ -28,7 +28,7 @@ export class Zigbee2MqttDeployment extends Deployment {
   private addZigbee2MqttContainer(dataVolume: VolumeMount) {
     this.addContainer({
       name: "zigbee2mqtt",
-      image: oci`koenkk/zigbee2mqtt:2.6.0`,
+      image: oci`koenkk/zigbee2mqtt:2.6.1`,
       ports: [
         {
           name: "http",
