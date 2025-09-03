@@ -27,7 +27,7 @@ export class N8NDeployment extends Deployment {
   private addN8NContainer(props: Props): void {
     this.addContainer({
       name: "n8n",
-      image: oci`n8nio/n8n:1.109.1`,
+      image: oci`n8nio/n8n:1.110.1`,
       ports: [
         {
           name: "http",
