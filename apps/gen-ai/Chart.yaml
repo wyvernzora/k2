@@ -4,4 +4,4 @@ version: 1.0.0
 dependencies:
   - name: open-webui
     repository: https://open-webui.github.io/helm-charts
-    version: 7.7.0
+    version: 8.0.0
