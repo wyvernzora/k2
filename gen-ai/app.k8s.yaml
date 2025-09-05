@@ -5,6 +5,7 @@ metadata:
     app.kubernetes.io/component: open-webui-ollama
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: ollama
     app.kubernetes.io/version: 0.11.4
     helm.sh/chart: ollama-1.27.0
   name: open-webui-ollama
@@ -18,6 +19,7 @@ metadata:
     app.kubernetes.io/component: open-webui-pipelines
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pipelines
     app.kubernetes.io/version: alpha
     helm.sh/chart: pipelines-0.7.0
   name: open-webui-pipelines
@@ -30,8 +32,9 @@ metadata:
     app.kubernetes.io/component: open-webui
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: open-webui
     app.kubernetes.io/version: 0.6.26
-    helm.sh/chart: open-webui-8.0.0
+    helm.sh/chart: open-webui-8.1.0
   name: open-webui
   namespace: gen-ai
 automountServiceAccountToken: false
@@ -73,6 +76,7 @@ metadata:
     app.kubernetes.io/component: open-webui-ollama
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: ollama
     app.kubernetes.io/version: 0.11.4
     helm.sh/chart: ollama-1.27.0
   name: open-webui-ollama
@@ -95,6 +99,7 @@ metadata:
     app.kubernetes.io/component: open-webui-pipelines
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pipelines
     app.kubernetes.io/version: alpha
     helm.sh/chart: pipelines-0.7.0
   name: open-webui-pipelines
@@ -117,8 +122,9 @@ metadata:
     app.kubernetes.io/component: open-webui
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: open-webui
     app.kubernetes.io/version: 0.6.26
-    helm.sh/chart: open-webui-8.0.0
+    helm.sh/chart: open-webui-8.1.0
   name: open-webui
   namespace: gen-ai
 spec:
@@ -139,6 +145,7 @@ metadata:
     app.kubernetes.io/component: open-webui-ollama
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: ollama
     app.kubernetes.io/version: 0.11.4
     helm.sh/chart: ollama-1.27.0
   name: open-webui-ollama
@@ -157,6 +164,7 @@ spec:
         app.kubernetes.io/component: open-webui-ollama
         app.kubernetes.io/instance: open-webui
         app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: ollama
         app.kubernetes.io/version: 0.11.4
         helm.sh/chart: ollama-1.27.0
     spec:
@@ -210,6 +218,7 @@ metadata:
     app.kubernetes.io/component: open-webui-pipelines
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pipelines
     app.kubernetes.io/version: alpha
     helm.sh/chart: pipelines-0.7.0
   name: open-webui-pipelines
@@ -226,6 +235,7 @@ spec:
         app.kubernetes.io/component: open-webui-pipelines
         app.kubernetes.io/instance: open-webui
         app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: pipelines
         app.kubernetes.io/version: alpha
         helm.sh/chart: pipelines-0.7.0
     spec:
@@ -255,8 +265,9 @@ metadata:
     app.kubernetes.io/component: open-webui
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: open-webui
     app.kubernetes.io/version: 0.6.26
-    helm.sh/chart: open-webui-8.0.0
+    helm.sh/chart: open-webui-8.1.0
   name: open-webui
   namespace: gen-ai
 spec:
@@ -272,8 +283,9 @@ spec:
         app.kubernetes.io/component: open-webui
         app.kubernetes.io/instance: open-webui
         app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: open-webui
         app.kubernetes.io/version: 0.6.26
-        helm.sh/chart: open-webui-8.0.0
+        helm.sh/chart: open-webui-8.1.0
     spec:
       automountServiceAccountToken: false
       containers:
@@ -321,6 +333,7 @@ metadata:
     app.kubernetes.io/component: open-webui-ollama
     app.kubernetes.io/instance: open-webui
     app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: ollama
     app.kubernetes.io/version: 0.11.4
     helm.sh/chart: ollama-1.27.0
   name: open-webui-ollama-test-connection
