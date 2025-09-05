@@ -353,3 +353,15 @@ metadata:
   namespace: tailscale
 spec:
   itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/4of6ip5wf5s4s5lj2z4bwxww7a
+---
+apiVersion: tailscale.com/v1alpha1
+kind: Connector
+metadata:
+  name: ts-connector-c8c476c0
+  namespace: tailscale
+spec:
+  exitNode: true
+  hostname: k2-net
+  subnetRouter:
+    advertiseRoutes:
+      - 10.0.0.0/8
