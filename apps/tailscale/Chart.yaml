@@ -1,0 +1,7 @@
+apiVersion: v2
+name: networking
+version: 1.0.0
+dependencies:
+  - name: tailscale-operator
+    repository: https://pkgs.tailscale.com/helmcharts
+    version: 1.86.5
