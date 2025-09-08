@@ -34,7 +34,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: open-webui
     app.kubernetes.io/version: 0.6.26
-    helm.sh/chart: open-webui-8.1.0
+    helm.sh/chart: open-webui-8.2.0
   name: open-webui
   namespace: gen-ai
 automountServiceAccountToken: false
@@ -124,7 +124,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: open-webui
     app.kubernetes.io/version: 0.6.26
-    helm.sh/chart: open-webui-8.1.0
+    helm.sh/chart: open-webui-8.2.0
   name: open-webui
   namespace: gen-ai
 spec:
@@ -267,7 +267,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: open-webui
     app.kubernetes.io/version: 0.6.26
-    helm.sh/chart: open-webui-8.1.0
+    helm.sh/chart: open-webui-8.2.0
   name: open-webui
   namespace: gen-ai
 spec:
@@ -285,7 +285,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: open-webui
         app.kubernetes.io/version: 0.6.26
-        helm.sh/chart: open-webui-8.1.0
+        helm.sh/chart: open-webui-8.2.0
     spec:
       automountServiceAccountToken: false
       containers:
