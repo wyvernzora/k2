@@ -4,4 +4,4 @@ version: 1.0.0
 dependencies:
   - name: kube-vip
     repository: https://kube-vip.github.io/helm-charts
-    version: 0.8.0
+    version: 0.9.0
