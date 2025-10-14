@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
-    app.kubernetes.io/version: v0.9.1
-    helm.sh/chart: kube-vip-0.8.0
+    app.kubernetes.io/version: v1.0.0
+    helm.sh/chart: kube-vip-0.9.0
   name: kube-vip
   namespace: k2-network
 ---
@@ -77,8 +77,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
-    app.kubernetes.io/version: v0.9.1
-    helm.sh/chart: kube-vip-0.8.0
+    app.kubernetes.io/version: v1.0.0
+    helm.sh/chart: kube-vip-0.9.0
   name: kube-vip
   namespace: k2-network
 roleRef:
@@ -128,6 +128,8 @@ spec:
               value: "true"
             - name: lb_port
               value: "6443"
+            - name: prometheus_server
+              value: :2112
             - name: svc_election
               value: "false"
             - name: svc_enable
@@ -140,7 +142,7 @@ spec:
               value: "true"
             - name: vip_subnet
               value: "32"
-          image: ghcr.io/kube-vip/kube-vip:v0.9.1
+          image: ghcr.io/kube-vip/kube-vip:v1.0.0
           imagePullPolicy: IfNotPresent
           name: kube-vip
           resources:
