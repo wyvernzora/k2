@@ -138,14 +138,14 @@ jobs:
           earthly +diff-manifests $TAG_OPT
 
       - name: 📦 Upload deploy-diff.md
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: deploy-diff
           path: deploy-diff.md
           if-no-files-found: error
 
       - name: 📦 Upload k8s manifests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: k8s-manifests
           path: ./deploy
@@ -160,7 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download deploy-diff.md
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: deploy-diff
           path: artifacts
@@ -261,7 +261,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download k8s manifests
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: k8s-manifests
           path: artifacts
