@@ -20,7 +20,10 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: mintplexlabs/anythingllm:1.9.0
+        - env:
+            - name: STORAGE_DIR
+              value: /app/server/storage
+          image: mintplexlabs/anythingllm:1.9.0
           imagePullPolicy: Always
           name: anything-llm
           ports:
