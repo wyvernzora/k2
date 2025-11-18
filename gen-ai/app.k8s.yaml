@@ -25,10 +25,22 @@ spec:
               value: /app/server/storage
           image: mintplexlabs/anythingllm:1.9.0
           imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 3001
+              scheme: HTTP
           name: anything-llm
           ports:
             - containerPort: 3001
               name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 3001
+              scheme: HTTP
           resources:
             limits:
               cpu: 1500m
@@ -39,7 +51,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
             runAsGroup: 1000
             runAsNonRoot: true
             runAsUser: 1000
