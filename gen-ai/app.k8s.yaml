@@ -37,7 +37,9 @@ spec:
             allowPrivilegeEscalation: false
             privileged: false
             readOnlyRootFilesystem: true
+            runAsGroup: 1000
             runAsNonRoot: true
+            runAsUser: 1000
           volumeMounts:
             - mountPath: /app/server/storage
               name: pvc-anything-llm-depl-vol-appdata-pvc-c8160e74
