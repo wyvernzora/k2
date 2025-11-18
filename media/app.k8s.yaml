@@ -168,7 +168,7 @@ spec:
               value: "2001"
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/kavita:0.8.7
+          image: linuxserver/kavita:0.8.8
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -368,7 +368,7 @@ spec:
               value: /config
             - name: FLOOD_OPTION_ALLOWEDPATH
               value: /downloads
-          image: jesec/flood:4.10.0
+          image: jesec/flood:4.11.0
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -574,7 +574,7 @@ spec:
               value: "2001"
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/prowlarr:2.0.5
+          image: linuxserver/prowlarr:2.3.0
           imagePullPolicy: Always
           livenessProbe:
             exec:
