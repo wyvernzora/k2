@@ -35,7 +35,7 @@ spec:
               value: "2001"
             - name: TZ
               value: America/Los_Angeles
-          image: quay.io/linuxserver.io/sonarr:4.0.15
+          image: quay.io/linuxserver.io/sonarr:4.0.16
           imagePullPolicy: Always
           name: main
           ports:
