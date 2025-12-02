@@ -173,7 +173,7 @@ spec:
             allowPrivilegeEscalation: false
             privileged: false
             readOnlyRootFilesystem: false
-            runAsNonRoot: true
+            runAsNonRoot: false
           volumeMounts:
             - mountPath: /app/backend/data
               name: pvc-open-webui-depl-vol-data-pvc-c88456de
@@ -181,11 +181,8 @@ spec:
       hostNetwork: false
       restartPolicy: Always
       securityContext:
-        fsGroup: 1000
         fsGroupChangePolicy: Always
-        runAsGroup: 1000
         runAsNonRoot: true
-        runAsUser: 1000
       setHostnameAsFQDN: false
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
