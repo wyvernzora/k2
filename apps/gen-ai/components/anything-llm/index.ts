@@ -25,7 +25,7 @@ export default {
     new AuthenticatedIngress(chart, "ingr", {
       rules: [
         {
-          host: ApexDomain.of(app).apexDomain,
+          host: ApexDomain.of(app).subdomain("allm"),
           backend: IngressBackend.fromService(service),
         },
       ],

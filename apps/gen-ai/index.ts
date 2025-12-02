@@ -6,7 +6,7 @@ import OpenWebUI from "./components/open-webui/index.js";
 
 export const createAppResources: AppResourceFunc = app => {
   app.use(Namespace, "gen-ai");
-  app.use(ApexDomain, "ai.wyvernzora.io");
+  app.use(ApexDomain, "wyvernzora.io");
   AnythingLLM.create(app);
   OpenWebUI.create(app);
 };
