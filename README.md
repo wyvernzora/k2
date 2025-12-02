@@ -13,25 +13,32 @@
 <br>
 <br>
 
-# Ansible
+# Overview
 
-### Why containers?
+K2 is the typed IaC backbone for my homelab: Kubernetes manifests are generated with CDK8s/TypeScript, Ansible keeps the metal hosts consistent, and Kairos templates bootstrap new nodes. Start with [`AGENTS.md`](AGENTS.md) for the full agent handbook, daily workflows, and app catalog.
 
-Repeatability. I have previously encountered issues setting up Ansible on my local machine, then making sure that its version is just right, then gathering all the dependencies and making sure their versions are just right. With containers everything is bundled in. If it works now, it will continue working down the line, just a `docker run` away.
+## Quick Links
 
-### Ansible Roles
+- [`AGENTS.md`](AGENTS.md) – canonical guide for agents and contributors.
+- [`Earthfile`](Earthfile) – reproducible build/lint targets (manifests, CRDs, Docker images).
+- [`build/scripts/`](build/scripts) – automation for manifest synthesis, CRD imports, and diffing.
+- [`deploy/`](deploy) – synthesized manifests and CRDs checked into the `deploy` branch for ArgoCD.
+- [`ansible/`](ansible) – containerized playbooks, roles, and entrypoint for host automation.
 
-| Role                                           | Description                                                   |
-| ---------------------------------------------- | ------------------------------------------------------------- |
-| [`k2.fish`](ansible/roles/k2.fish)             | Set up Fish shell just the way I like it                      |
-| [`k2.tls`](ansible/roles/k2.tls/README.md)     | Pull the latest TLS certificates and update them where needed |
-| [`k2.user`](ansible/roles/k2.user/README.md)   | Set up non-root user and permissions                          |
-| [`k2.vfio`](ansible/roles/k2.vfio/README.md)   | Configure VFIO/IOMMU for PCI passthrough to VMs               |
-| [`k2.user`](ansible/roles/pve.nosub/README.md) | Stop ProxmoxVE nagging about subscription                     |
+## Kubernetes / CDK8s Workflow
 
-### Ansible Playbooks
+1. `npm install` to sync dependencies.
+2. `earthly +k8s-manifests` to regenerate `deploy/`.
+3. `earthly +diff-manifests` to review drift against the `deploy` branch.
+4. Commit application code to `main`; GitHub actions workflow takes care of the rest.
 
-| Playbook        | Description                                       |
-| --------------- | ------------------------------------------------- |
-| `pve-bootstrap` | Set up ProxmoxVE hosts into a good starting state |
-| `update-certs`  | Update TLS certificates everywhere                |
+## Repository Layout
+
+| Path | Description |
+| --- | --- |
+| `apps/<name>/` | App factory (`createAppResources`/`createArgoCdResources`), Helm dependencies, CRDs, and components. |
+| `cdk-lib/` | Shared contexts (namespace, apex domain, Helm), scheduling helpers, and storage constructs. |
+| `build/` | Earthly support scripts plus CRD/manifest tooling. |
+| `deploy/` | Generated manifests per app plus the aggregated `deploy/app.k8s.yaml`. |
+| `ansible/` | Container image definition, roles, and playbooks for Proxmox/bootstrap/TLS tasks. |
+| `kairos/` | Cloud-config templates and helper scripts for spinning up Kairos nodes. |
