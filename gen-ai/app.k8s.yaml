@@ -111,7 +111,7 @@ metadata:
   namespace: gen-ai
 spec:
   rules:
-    - host: ai.wyvernzora.io
+    - host: allm.wyvernzora.io
       http:
         paths:
           - backend:
@@ -229,7 +229,7 @@ metadata:
   namespace: gen-ai
 spec:
   rules:
-    - host: owui.ai.wyvernzora.io
+    - host: ai.wyvernzora.io
       http:
         paths:
           - backend:
