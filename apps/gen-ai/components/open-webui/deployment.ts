@@ -33,6 +33,7 @@ export class OpenWebUIDeployment extends Deployment {
         }),
       ],
       securityContext: {
+        ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
       readiness: Probe.fromHttpGet("/", { port: 8080 }),
