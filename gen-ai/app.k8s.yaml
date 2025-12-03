@@ -144,7 +144,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: ghcr.io/open-webui/open-webui:v0.6.40
+        - image: ghcr.io/open-webui/open-webui:0.6.41
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
