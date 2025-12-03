@@ -20,7 +20,7 @@ export class OpenWebUIDeployment extends Deployment {
   private addOpenWebUIContainer(volumes: VolumesOf<Props>) {
     this.addContainer({
       name: "open-webui",
-      image: oci`ghcr.io/open-webui/open-webui:v0.6.40`,
+      image: oci`ghcr.io/open-webui/open-webui:0.6.41`,
       ports: [
         {
           name: "http",
