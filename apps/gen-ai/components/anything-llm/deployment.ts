@@ -26,7 +26,7 @@ export class AnythingLLMDeployment extends Deployment {
   private addAnythingLLMContainer(volumes: VolumesOf<Props>) {
     this.addContainer({
       name: "anything-llm",
-      image: oci`mintplexlabs/anythingllm:1.9.0`,
+      image: oci`mintplexlabs/anythingllm:1.9.1`,
       ports: [
         {
           name: "http",
