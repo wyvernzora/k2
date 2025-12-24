@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg
   namespace: postgresql
 ---
@@ -17,8 +17,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cnpg-controller-manager-config
   namespace: postgresql
 data:
@@ -31,9 +31,9 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
+    app.kubernetes.io/version: 1.28.0
     cnpg.io/reload: ""
-    helm.sh/chart: cloudnative-pg-0.26.1
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cnpg-default-monitoring
   namespace: postgresql
 data:
@@ -525,8 +525,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg
   namespace: postgresql
 rules:
@@ -562,8 +562,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg-view
   namespace: postgresql
 rules:
@@ -593,8 +593,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg-edit
   namespace: postgresql
 rules:
@@ -626,8 +626,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg
   namespace: postgresql
 roleRef:
@@ -646,8 +646,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg
   namespace: postgresql
 rules:
@@ -861,8 +861,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg
   namespace: postgresql
 roleRef:
@@ -881,8 +881,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cnpg-webhook-service
   namespace: postgresql
 spec:
@@ -902,8 +902,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cloudnative-pg
   namespace: postgresql
 spec:
@@ -915,9 +915,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 6278627949b4e29a0159413cfb62581ff80b4f6b33d8c87964137c424df2610d
-        checksum/monitoring-config: d1ecb47a75c286c0def5767268e7a4ad1195c3797ac29b3c7b001ba38b82f324
-        checksum/rbac: 84ace81754bcc5e479119dc9022d6b5b0b4cc3b28ab1f56eead371e8c4b71c7d
+        checksum/config: 25b8f7bedaceb0e43c5529ee82ce71ca0ae5479b670c1098c8d910f5049f105e
+        checksum/monitoring-config: 7c808b3ec91f6bcfb8fc6268c69af96b4d54d1c1957a839edd557ee4b528f56c
+        checksum/rbac: e05c635d07118e36bb1265ac962039173d2a4acd8ddb8947f396f91d92fe1f31
       labels:
         app.kubernetes.io/instance: cloudnative-pg
         app.kubernetes.io/name: cloudnative-pg
@@ -933,7 +933,7 @@ spec:
             - /manager
           env:
             - name: OPERATOR_IMAGE_NAME
-              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.27.1
+              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.28.0
             - name: OPERATOR_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -942,7 +942,7 @@ spec:
               value: cnpg-default-monitoring
             - name: WATCH_NAMESPACE
               value: postgresql
-          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.27.1
+          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.28.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1028,8 +1028,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cnpg-mutating-webhook-configuration
   namespace: postgresql
 webhooks:
@@ -1125,8 +1125,8 @@ metadata:
     app.kubernetes.io/instance: cloudnative-pg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.27.1
-    helm.sh/chart: cloudnative-pg-0.26.1
+    app.kubernetes.io/version: 1.28.0
+    helm.sh/chart: cloudnative-pg-0.27.0
   name: cnpg-validating-webhook-configuration
   namespace: postgresql
 webhooks:
