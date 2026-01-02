@@ -22,7 +22,7 @@ export const createAppResources: AppResourceFunc = app => {
   const clientGroup = new ClientGroup({
     name: "default",
     blockingGroups: [blockingGroup],
-    upstream: ["10.10.1.1"],
+    upstream: ["1.1.1.1"],
   });
 
   // Custom DNS
