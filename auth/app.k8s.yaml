@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.6
-    helm.sh/chart: authelia-0.10.42
+    app.kubernetes.io/version: 4.39.13
+    helm.sh/chart: authelia-0.10.49
   name: authelia
   namespace: auth
 data:
@@ -110,6 +110,7 @@ data:
         custom_url: ''
       password_change:
         disable: false
+      refresh_interval: '5 minutes'
       ldap:
         implementation: 'glauth'
         address: 'ldap://glauth.auth.svc.cluster.local'
@@ -203,8 +204,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.6
-    helm.sh/chart: authelia-0.10.42
+    app.kubernetes.io/version: 4.39.13
+    helm.sh/chart: authelia-0.10.49
   name: authelia
   namespace: auth
 spec:
@@ -226,8 +227,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.6
-    helm.sh/chart: authelia-0.10.42
+    app.kubernetes.io/version: 4.39.13
+    helm.sh/chart: authelia-0.10.49
   name: authelia
   namespace: auth
 spec:
@@ -246,13 +247,13 @@ spec:
   template:
     metadata:
       annotations:
-        authelia.com/checksum-config: 197e656707b39cf372906e3af6d4dcc508c9a5a4744e20cebd6ce1d7d6e4d1dc
+        authelia.com/checksum-config: 387f91c5d5dd89338661eaa9af94b8c8afb6732e16c2f4c0b66237deb3bbf0f3
       labels:
         app.kubernetes.io/instance: authelia
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: authelia
-        app.kubernetes.io/version: 4.39.6
-        helm.sh/chart: authelia-0.10.42
+        app.kubernetes.io/version: 4.39.13
+        helm.sh/chart: authelia-0.10.49
     spec:
       affinity:
         nodeAffinity: {}
@@ -276,7 +277,7 @@ spec:
               value: /configuration.yaml
             - name: X_AUTHELIA_CONFIG_FILTERS
               value: template
-          image: ghcr.io/authelia/authelia:4.39.6
+          image: ghcr.io/authelia/authelia:4.39.13
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
@@ -359,8 +360,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.6
-    helm.sh/chart: authelia-0.10.42
+    app.kubernetes.io/version: 4.39.13
+    helm.sh/chart: authelia-0.10.49
   name: authelia
   namespace: auth
 spec:
