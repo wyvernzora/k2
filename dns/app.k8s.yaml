@@ -219,7 +219,7 @@ data:
     upstreams:
       groups:
         default:
-          - 10.10.1.1
+          - 1.1.1.1
     blocking:
       whiteLists:
         default: []
@@ -253,7 +253,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: ac5b4e03fa0814d3afbd6ded703b0e00a5e6be1c4442f7ba94cbe96e7d1110a9
+    checksum/config: 02126bc84b6277448b40821f795a2654a42a084b9172a4b87f5b1a881ff32c0d
   name: dns-blocky-depl-c826f1d8
   namespace: dns
 spec:
