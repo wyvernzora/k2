@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.3.0
+    helm.sh/chart: k8s-gateway-3.4.0
   name: k8s-gateway
   namespace: dns
 ---
@@ -18,7 +18,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.3.0
+    helm.sh/chart: k8s-gateway-3.4.0
   name: k8s-gateway
   namespace: dns
 data:
@@ -50,7 +50,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.3.0
+    helm.sh/chart: k8s-gateway-3.4.0
   name: k8s-gateway
   namespace: dns
 rules:
@@ -87,7 +87,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.3.0
+    helm.sh/chart: k8s-gateway-3.4.0
   name: k8s-gateway
   namespace: dns
 roleRef:
@@ -110,7 +110,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.3.0
+    helm.sh/chart: k8s-gateway-3.4.0
   name: k8s-gateway
   namespace: dns
 spec:
@@ -136,7 +136,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.3.0
+    helm.sh/chart: k8s-gateway-3.4.0
   name: k8s-gateway
   namespace: dns
 spec:
@@ -148,13 +148,13 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 573d151f3c49f36386ce316aa6219be737448e33c47713a850226d09c3bdface
+        checksum/config: a4e5afa5a01c86f1fb37ad8a1115ddf99dd00a5284ad33389d252502166c5b21
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: k8s-gateway
         app.kubernetes.io/version: 1.6.1
-        helm.sh/chart: k8s-gateway-3.3.0
+        helm.sh/chart: k8s-gateway-3.4.0
     spec:
       containers:
         - args:

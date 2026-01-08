@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
-    app.kubernetes.io/version: v1.0.1
-    helm.sh/chart: kube-vip-0.9.3
+    app.kubernetes.io/version: v1.0.3
+    helm.sh/chart: kube-vip-0.9.5
   name: kube-vip
   namespace: k2-network
 ---
@@ -77,8 +77,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
-    app.kubernetes.io/version: v1.0.1
-    helm.sh/chart: kube-vip-0.9.3
+    app.kubernetes.io/version: v1.0.3
+    helm.sh/chart: kube-vip-0.9.5
   name: kube-vip
   namespace: k2-network
 roleRef:
@@ -142,7 +142,7 @@ spec:
               value: "true"
             - name: vip_subnet
               value: "32"
-          image: ghcr.io/kube-vip/kube-vip:v1.0.1
+          image: ghcr.io/kube-vip/kube-vip:v1.0.3
           imagePullPolicy: IfNotPresent
           name: kube-vip
           resources:
