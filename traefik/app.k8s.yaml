@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-38.0.1
+    helm.sh/chart: traefik-38.0.2
   name: traefik
   namespace: k2-network
 automountServiceAccountToken: false
@@ -17,7 +17,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-38.0.1
+    helm.sh/chart: traefik-38.0.2
   name: traefik-k2-network
   namespace: k2-network
 rules:
@@ -101,7 +101,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-38.0.1
+    helm.sh/chart: traefik-38.0.2
   name: traefik-k2-network
   namespace: k2-network
 roleRef:
@@ -120,7 +120,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-38.0.1
+    helm.sh/chart: traefik-38.0.2
   name: traefik
   namespace: k2-network
 spec:
@@ -146,7 +146,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-38.0.1
+    helm.sh/chart: traefik-38.0.2
   name: traefik
   namespace: k2-network
 spec:
@@ -171,7 +171,7 @@ spec:
         app.kubernetes.io/instance: traefik-k2-network
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: traefik
-        helm.sh/chart: traefik-38.0.1
+        helm.sh/chart: traefik-38.0.2
     spec:
       automountServiceAccountToken: true
       containers:
@@ -203,7 +203,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: USER
               value: traefik
-          image: docker.io/traefik:v3.6.5
+          image: docker.io/traefik:v3.6.6
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -256,6 +256,8 @@ spec:
         runAsGroup: 65532
         runAsNonRoot: true
         runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: traefik
       terminationGracePeriodSeconds: 60
       tolerations:
@@ -282,7 +284,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-38.0.1
+    helm.sh/chart: traefik-38.0.2
   name: traefik
   namespace: k2-network
 spec:
@@ -295,7 +297,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-38.0.1
+    helm.sh/chart: traefik-38.0.2
   name: traefik-dashboard
   namespace: k2-network
 spec:
