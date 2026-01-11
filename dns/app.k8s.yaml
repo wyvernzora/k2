@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.4.0
+    app.kubernetes.io/version: 1.6.2
+    helm.sh/chart: k8s-gateway-3.4.1
   name: k8s-gateway
   namespace: dns
 ---
@@ -17,8 +17,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.4.0
+    app.kubernetes.io/version: 1.6.2
+    helm.sh/chart: k8s-gateway-3.4.1
   name: k8s-gateway
   namespace: dns
 data:
@@ -49,8 +49,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.4.0
+    app.kubernetes.io/version: 1.6.2
+    helm.sh/chart: k8s-gateway-3.4.1
   name: k8s-gateway
   namespace: dns
 rules:
@@ -86,8 +86,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.4.0
+    app.kubernetes.io/version: 1.6.2
+    helm.sh/chart: k8s-gateway-3.4.1
   name: k8s-gateway
   namespace: dns
 roleRef:
@@ -109,8 +109,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.4.0
+    app.kubernetes.io/version: 1.6.2
+    helm.sh/chart: k8s-gateway-3.4.1
   name: k8s-gateway
   namespace: dns
 spec:
@@ -135,8 +135,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.6.1
-    helm.sh/chart: k8s-gateway-3.4.0
+    app.kubernetes.io/version: 1.6.2
+    helm.sh/chart: k8s-gateway-3.4.1
   name: k8s-gateway
   namespace: dns
 spec:
@@ -148,19 +148,19 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: a4e5afa5a01c86f1fb37ad8a1115ddf99dd00a5284ad33389d252502166c5b21
+        checksum/config: f308fc5b11a8a5654144485e53576ae399900c363e4f8f111cdea3227f8c78ab
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: k8s-gateway
-        app.kubernetes.io/version: 1.6.1
-        helm.sh/chart: k8s-gateway-3.4.0
+        app.kubernetes.io/version: 1.6.2
+        helm.sh/chart: k8s-gateway-3.4.1
     spec:
       containers:
         - args:
             - -conf
             - /etc/coredns/Corefile
-          image: ghcr.io/k8s-gateway/k8s_gateway:1.6.1
+          image: ghcr.io/k8s-gateway/k8s_gateway:1.6.2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
