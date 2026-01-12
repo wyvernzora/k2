@@ -393,7 +393,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: linuxserver/homeassistant:2026.1.0
+        - image: linuxserver/homeassistant:2026.1.1
           imagePullPolicy: Always
           name: home-assistant
           ports:
