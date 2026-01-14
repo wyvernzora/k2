@@ -1,4 +1,4 @@
 collections:
   - name: amazon.aws
-    version: 10.2.0
+    version: 11.0.0
   - name: community.general
