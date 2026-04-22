@@ -217,7 +217,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: koenkk/zigbee2mqtt:2.7.2
+        - image: koenkk/zigbee2mqtt:2.9.2
           imagePullPolicy: Always
           name: zigbee2mqtt
           ports:

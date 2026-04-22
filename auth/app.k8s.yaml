@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.13
-    helm.sh/chart: authelia-0.10.49
+    app.kubernetes.io/version: 4.39.19
+    helm.sh/chart: authelia-0.10.58
   name: authelia
   namespace: auth
 data:
@@ -37,6 +37,23 @@ data:
             implementation: 'ExtAuthz'
           forward-auth:
             implementation: 'ForwardAuth'
+        rate_limits:
+          reset_password_start:
+            enable: true
+          reset_password_finish:
+            enable: true
+          second_factor_totp:
+            enable: true
+          second_factor_duo:
+            enable: true
+          session_elevation_start:
+            enable: true
+          session_elevation_finish:
+            enable: true
+          openid_connect_token:
+            enable: true
+          openid_connect_pushed_authorization_request:
+            enable: true
     log:
       level: 'info'
       format: 'text'
@@ -131,7 +148,6 @@ data:
         group_search_mode: 'filter'
         permit_referrals: false
         permit_unauthenticated_bind: false
-        permit_feature_detection_failure: false
         user: 'cn=authelia,dc=wyvernzora,dc=io'
         attributes:
           distinguished_name: ''
@@ -204,8 +220,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.13
-    helm.sh/chart: authelia-0.10.49
+    app.kubernetes.io/version: 4.39.19
+    helm.sh/chart: authelia-0.10.58
   name: authelia
   namespace: auth
 spec:
@@ -227,8 +243,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.13
-    helm.sh/chart: authelia-0.10.49
+    app.kubernetes.io/version: 4.39.19
+    helm.sh/chart: authelia-0.10.58
   name: authelia
   namespace: auth
 spec:
@@ -247,13 +263,13 @@ spec:
   template:
     metadata:
       annotations:
-        authelia.com/checksum-config: 387f91c5d5dd89338661eaa9af94b8c8afb6732e16c2f4c0b66237deb3bbf0f3
+        authelia.com/checksum-config: adc43829f2e224ef97074056a0fd4a05697226deb0854db33598a6152f370f19
       labels:
         app.kubernetes.io/instance: authelia
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: authelia
-        app.kubernetes.io/version: 4.39.13
-        helm.sh/chart: authelia-0.10.49
+        app.kubernetes.io/version: 4.39.19
+        helm.sh/chart: authelia-0.10.58
     spec:
       affinity:
         nodeAffinity: {}
@@ -277,7 +293,7 @@ spec:
               value: /configuration.yaml
             - name: X_AUTHELIA_CONFIG_FILTERS
               value: template
-          image: ghcr.io/authelia/authelia:4.39.13
+          image: ghcr.io/authelia/authelia:4.39.19
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
@@ -360,8 +376,8 @@ metadata:
     app.kubernetes.io/instance: authelia
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: authelia
-    app.kubernetes.io/version: 4.39.13
-    helm.sh/chart: authelia-0.10.49
+    app.kubernetes.io/version: 4.39.19
+    helm.sh/chart: authelia-0.10.58
   name: authelia
   namespace: auth
 spec:
