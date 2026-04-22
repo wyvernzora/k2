@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
-    app.kubernetes.io/version: v1.0.3
-    helm.sh/chart: kube-vip-0.9.5
+    app.kubernetes.io/version: v1.0.4
+    helm.sh/chart: kube-vip-0.9.8
   name: kube-vip
   namespace: k2-network
 ---
@@ -77,13 +77,53 @@ metadata:
     app.kubernetes.io/instance: kube-vip
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip
-    app.kubernetes.io/version: v1.0.3
-    helm.sh/chart: kube-vip-0.9.5
+    app.kubernetes.io/version: v1.0.4
+    helm.sh/chart: kube-vip-0.9.8
   name: kube-vip
   namespace: k2-network
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
+  name: kube-vip
+subjects:
+  - kind: ServiceAccount
+    name: kube-vip
+    namespace: k2-network
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: kube-vip
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kube-vip
+    app.kubernetes.io/version: v1.0.4
+    helm.sh/chart: kube-vip-0.9.8
+  name: kube-vip
+  namespace: k2-network
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - list
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kube-vip
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kube-vip
+    app.kubernetes.io/version: v1.0.4
+    helm.sh/chart: kube-vip-0.9.8
+  name: kube-vip
+  namespace: k2-network
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
   name: kube-vip
 subjects:
   - kind: ServiceAccount
@@ -142,7 +182,7 @@ spec:
               value: "true"
             - name: vip_subnet
               value: "32"
-          image: ghcr.io/kube-vip/kube-vip:v1.0.3
+          image: ghcr.io/kube-vip/kube-vip:v1.0.4
           imagePullPolicy: IfNotPresent
           name: kube-vip
           resources:
@@ -165,3 +205,7 @@ spec:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
           operator: Exists
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
