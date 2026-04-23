@@ -25,7 +25,7 @@ export class ProwlarrDeployment extends Deployment {
   private addProwlarrContainer(configVolume: K2MaterializedVolume) {
     this.addContainer({
       name: "prowlarr",
-      image: oci`linuxserver/prowlarr:2.3.0`,
+      image: oci`linuxserver/prowlarr:2.3.5`,
       ports: [
         {
           name: "http",
