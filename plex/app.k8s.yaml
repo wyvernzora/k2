@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    checksum/tls-termination-caddy-conf: a0b79a9fe644bba7cb33227959ae7d1384b5763512d60523a8a7322e767ea7ae
   name: plex-depl-c894ec87
 spec:
   minReadySeconds: 0
@@ -88,9 +90,12 @@ spec:
               name: blk-vol-features
             - mountPath: /anime/airing
               name: blk-vol-airing
-        - image: nginx:latest
+        - command:
+            - /bin/sh
+            - /etc/caddy/watch-certs.sh
+          image: caddy:2-alpine
           imagePullPolicy: Always
-          name: nginx
+          name: caddy-tls-termination
           ports:
             - containerPort: 80
               name: http
@@ -109,10 +114,12 @@ spec:
             readOnlyRootFilesystem: false
             runAsNonRoot: false
           volumeMounts:
-            - mountPath: /etc/nginx/ssl
+            - mountPath: /etc/caddy
+              name: configmap-plex-depl-tls-termination-caddy-conf-c8e37d19
+              readOnly: true
+            - mountPath: /etc/caddy/tls
               name: secret-default-certificate
-            - mountPath: /etc/nginx/conf.d
-              name: configmap-plex-depl-nginx-conf-c80f27bb
+              readOnly: true
       dnsPolicy: ClusterFirst
       hostNetwork: false
       restartPolicy: Always
@@ -142,12 +149,12 @@ spec:
             path: /mnt/data/media/anime/airing
             readOnly: true
             server: 10.10.8.1
+        - configMap:
+            name: plex-depl-tls-termination-caddy-conf-c8e37d19
+          name: configmap-plex-depl-tls-termination-caddy-conf-c8e37d19
         - name: secret-default-certificate
           secret:
             secretName: default-certificate
-        - configMap:
-            name: plex-depl-nginx-conf-c80f27bb
-          name: configmap-plex-depl-nginx-conf-c80f27bb
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -165,52 +172,52 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: plex-depl-nginx-conf-c80f27bb
+  name: plex-depl-tls-termination-caddy-conf-c8e37d19
 data:
-  nginx.conf: |
-    # Redirect HTTP to HTTPS
-    server {
-        listen 80 default_server;
-        server_name _;
-
-        return 301 https://$host$request_uri;
+  Caddyfile: |-
+    {
+      auto_https off
     }
 
-    # TLS termination for Plex Media Server
-    server {
-        listen 443 ssl http2 default_server;
-        server_name _;
-
-        # TLS Configuration
-        ssl_certificate /etc/nginx/ssl/tls.crt;
-        ssl_certificate_key /etc/nginx/ssl/tls.key;
-        ssl_protocols TLSv1.2 TLSv1.3;
-        ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
-        ssl_prefer_server_ciphers on;
-        ssl_session_cache shared:SSL:10m;
-        ssl_session_timeout 10m;
-
-        # Strong security headers
-        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-        add_header X-Frame-Options DENY;
-        add_header X-Content-Type-Options nosniff;
-        add_header X-XSS-Protection "1; mode=block";
-
-        # Plex Media Server proxy
-        location / {
-            proxy_pass http://localhost:32400;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Websockets support for Plex
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-        }
-
+    :80 {
+      redir https://{host}{uri} permanent
     }
+
+    :443 {
+      tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
+
+      header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+      }
+
+      reverse_proxy 127.0.0.1:32400
+    }
+  watch-certs.sh: |-
+    #!/bin/sh
+    set -eu
+
+    checksum() {
+      sha256sum /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key 2>/dev/null || true
+    }
+
+    caddy run --config /etc/caddy/Caddyfile --adapter caddyfile &
+    pid="$!"
+    trap 'kill -TERM "$pid"; wait "$pid"' TERM INT
+
+    last="$(checksum)"
+    while kill -0 "$pid" 2>/dev/null; do
+      sleep 60
+      next="$(checksum)"
+      if [ "$next" != "$last" ]; then
+        caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile --force
+        last="$next"
+      fi
+    done
+
+    wait "$pid"
 immutable: false
 ---
 apiVersion: v1
