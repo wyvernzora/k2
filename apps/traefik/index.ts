@@ -15,9 +15,11 @@ export const createAppResources: AppResourceFunc = app => {
   const chart = new Traefik(app, "traefik", {
     ...Namespace.of(app),
     values: {
-      podAnnotations: {
-        "prometheus.io/port": "8082",
-        "prometheus.io/scrape": "true",
+      deployment: {
+        podAnnotations: {
+          "prometheus.io/port": "8082",
+          "prometheus.io/scrape": "true",
+        },
       },
       providers: {
         kubernetesCRD: {
