@@ -444,7 +444,7 @@ data:
 
     [behaviors]
 
-    \    IgnoreCapabilities = false
+    \    IgnoreCapabilities = true
 
     \    LimitFailedBinds = true
 
@@ -487,6 +487,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        k2.wyvernzora.io/config-checksum: 82a553da7117aadfbe972a4ef83fa37ece8c7454f6af47f145ce4c68a600ca0a
       labels:
         cdk8s.io/metadata.addr: glauth-depl-c8a7ff94
     spec:
