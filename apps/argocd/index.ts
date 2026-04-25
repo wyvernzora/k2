@@ -23,6 +23,12 @@ export const createAppResources: AppResourceFunc = app => {
       secret: {
         createSecret: false,
       },
+      dex: {
+        enabled: false,
+      },
+      notifications: {
+        enabled: false,
+      },
       server: {
         ingress: {
           enabled: true,
