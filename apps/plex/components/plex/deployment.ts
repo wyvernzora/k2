@@ -30,7 +30,7 @@ export class PlexDeployment extends K2Deployment {
   private addPlexContainer(props: Props): void {
     this.addContainer({
       name: "plex-media-server",
-      image: oci`plexinc/pms-docker:1.42.2.10156-f737b826c`,
+      image: oci`plexinc/pms-docker:1.43.1.10611-1e34174b1`,
       ports: [
         {
           name: "http-internal",
