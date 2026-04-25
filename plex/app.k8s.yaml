@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/tls-termination-caddy-conf: a0b79a9fe644bba7cb33227959ae7d1384b5763512d60523a8a7322e767ea7ae
+    checksum/tls-termination-caddy-conf: 9cee1c7272b7d39ecea3ea270ffed90bb7b9f4b7c5f9ae8249a153c466e9196e
   name: plex-depl-c894ec87
 spec:
   minReadySeconds: 0
@@ -185,13 +185,6 @@ data:
 
     :443 {
       tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
-
-      header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        X-Frame-Options "DENY"
-        X-Content-Type-Options "nosniff"
-        X-XSS-Protection "1; mode=block"
-      }
 
       reverse_proxy 127.0.0.1:32400
     }
