@@ -128,52 +128,39 @@ data:
       password_change:
         disable: false
       refresh_interval: '5 minutes'
-      ldap:
-        implementation: 'glauth'
-        address: 'ldap://glauth.auth.svc.cluster.local'
-        timeout: '5 seconds'
-        start_tls: false
-        tls:
-          server_name: 'ldap.wyvernzora.io'
-          skip_verify: false
-          minimum_version: 'TLS1.2'
-          maximum_version: 'TLS1.3'
-        pooling:
-          enable: false
-          count: 5
-          retries: 2
-          timeout: '10 seconds'
-        base_dn: 'dc=wyvernzora,dc=io'
-        additional_users_dn: 'ou=users'
-        group_search_mode: 'filter'
-        permit_referrals: false
-        permit_unauthenticated_bind: false
-        user: 'cn=authelia,dc=wyvernzora,dc=io'
-        attributes:
-          distinguished_name: ''
-          username: ''
-          display_name: ''
-          family_name: ''
-          given_name: ''
-          middle_name: ''
-          nickname: ''
-          gender: ''
-          birthdate: ''
-          website: ''
-          profile: ''
-          picture: ''
-          zoneinfo: ''
-          locale: ''
-          phone_number: ''
-          phone_extension: ''
-          street_address: ''
-          locality: ''
-          region: ''
-          postal_code: ''
-          country: ''
-          mail:  ''
-          member_of:  ''
-          group_name:  ''
+      file:
+        path: '/secrets/users/users.yml'
+        watch: false
+        search:
+          email: false
+          case_insensitive: false
+        password:
+          algorithm: 'argon2'
+          argon2:
+            variant: 'argon2id'
+            iterations: 3
+            memory: 65536
+            parallelism: 4
+            key_length: 32
+            salt_length: 16
+          scrypt:
+            variant: 'scrypt'
+            iterations: 16
+            block_size: 8
+            parallelism: 1
+            key_length: 32
+            salt_length: 16
+          pbkdf2:
+            variant: 'sha512'
+            iterations: 310000
+            salt_length: 16
+          sha2crypt:
+            variant: 'sha512'
+            iterations: 50000
+            salt_length: 16
+          bcrypt:
+            variant: 'standard'
+            cost: 12
     password_policy:
       standard:
         enabled: false
@@ -263,7 +250,7 @@ spec:
   template:
     metadata:
       annotations:
-        authelia.com/checksum-config: adc43829f2e224ef97074056a0fd4a05697226deb0854db33598a6152f370f19
+        authelia.com/checksum-config: c1839a1bd754fc34250c60695c5d97b944cc7960617b89ad4e629db050df766a
       labels:
         app.kubernetes.io/instance: authelia
         app.kubernetes.io/managed-by: Helm
@@ -285,8 +272,6 @@ spec:
               value: /secrets/internal/identity_validation.reset_password.jwt.hmac.key
             - name: AUTHELIA_SESSION_SECRET_FILE
               value: /secrets/internal/session.encryption.key
-            - name: AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE
-              value: /secrets/internal/authentication.ldap.password.txt
             - name: AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE
               value: /secrets/internal/storage.encryption.key
             - name: X_AUTHELIA_CONFIG
@@ -343,6 +328,8 @@ spec:
               readOnly: true
             - mountPath: /var/authelia
               name: ephemeral
+            - mountPath: /secrets/users
+              name: users
       enableServiceLinks: false
       hostIPC: false
       hostNetwork: false
@@ -361,13 +348,14 @@ spec:
                 path: identity_validation.reset_password.jwt.hmac.key
               - key: session.encryption.key
                 path: session.encryption.key
-              - key: authentication.ldap.password.txt
-                path: authentication.ldap.password.txt
               - key: storage.encryption.key
                 path: storage.encryption.key
             secretName: authelia
         - emptyDir: {}
           name: ephemeral
+        - name: users
+          secret:
+            secretName: authelia-users
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -405,6 +393,14 @@ metadata:
 spec:
   itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/ejfcz3g4s6wsr2jtct6hs3alxi
 ---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: authelia-users
+  namespace: auth
+spec:
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/7p4cogd3voxt6sonqlj6jb3q4a
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -418,140 +414,3 @@ spec:
       - Remote-Groups
       - Remote-Email
       - Remote-Name
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: glauth-config-c8503900
-data:
-  config.cfg: "
-
-    [ldap]
-
-    \    enabled = true
-
-    \    listen = \"0.0.0.0:389\"
-
-    [ldaps]
-
-    \    enabled = false
-
-    [backend]
-
-    \    datastore = \"config\"
-
-    \    baseDN = \"dc=wyvernzora,dc=io\"
-
-    [behaviors]
-
-    \    IgnoreCapabilities = true
-
-    \    LimitFailedBinds = true
-
-    \    NumberOfFailedBinds = 3
-
-    \    PeriodOfFailedBinds = 10
-
-    \    BlockFailedBindsFor = 60
-
-    \    PruneSourceTableEvery = 600
-
-    \    PruneSourcesOlderThan = 600
-
-    \        "
-immutable: false
----
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
-metadata:
-  name: glauth-users-c84bf422
-spec:
-  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/7p4cogd3voxt6sonqlj6jb3q4a
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: glauth-depl-c88d72f7
-spec:
-  minReadySeconds: 0
-  progressDeadlineSeconds: 600
-  replicas: 1
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      cdk8s.io/metadata.addr: glauth-depl-c8a7ff94
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
-  template:
-    metadata:
-      annotations:
-        k2.wyvernzora.io/config-checksum: 82a553da7117aadfbe972a4ef83fa37ece8c7454f6af47f145ce4c68a600ca0a
-      labels:
-        cdk8s.io/metadata.addr: glauth-depl-c8a7ff94
-    spec:
-      automountServiceAccountToken: false
-      containers:
-        - command:
-            - /app/glauth
-            - -c
-            - /app/conf.d/
-          image: glauth/glauth:v2.4.0
-          imagePullPolicy: Always
-          name: glauth
-          ports:
-            - containerPort: 389
-              name: ldap
-              protocol: TCP
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: false
-            runAsNonRoot: false
-          volumeMounts:
-            - mountPath: /app/conf.d/config.cfg
-              name: configmap-glauth-config-c8503900
-              subPath: config.cfg
-            - mountPath: /app/conf.d/users.cfg
-              name: secret-glauth-users-c84bf422
-              subPath: users.conf
-      dnsPolicy: ClusterFirst
-      hostNetwork: false
-      restartPolicy: Always
-      securityContext:
-        fsGroupChangePolicy: Always
-        runAsNonRoot: true
-      setHostnameAsFQDN: false
-      shareProcessNamespace: false
-      terminationGracePeriodSeconds: 30
-      volumes:
-        - configMap:
-            name: glauth-config-c8503900
-          name: configmap-glauth-config-c8503900
-        - name: secret-glauth-users-c84bf422
-          secret:
-            secretName: glauth-users-c84bf422
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: glauth
-spec:
-  externalIPs: []
-  ports:
-    - name: ldap
-      port: 389
-      protocol: TCP
-      targetPort: 389
-  selector:
-    cdk8s.io/metadata.addr: glauth-depl-c8a7ff94
-  type: ClusterIP
