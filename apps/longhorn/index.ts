@@ -26,5 +26,17 @@ export const createAppResources: AppResourceFunc = app => {
 
 /* Export ArgoCD application factory */
 export const createArgoCdResources: ArgoCDResourceFunc = chart => {
-  new ContinuousDeployment(chart, "longhorn", { namespace: "k2-storage" });
+  new ContinuousDeployment(chart, "longhorn", {
+    namespace: "k2-storage",
+    ignoreDifferences: [
+      {
+        group: "apiextensions.k8s.io",
+        kind: "CustomResourceDefinition",
+        jsonPointers: ["/spec/conversion"],
+      },
+    ],
+    syncOptions: {
+      RespectIgnoreDifferences: true,
+    },
+  });
 };

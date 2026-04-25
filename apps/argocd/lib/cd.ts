@@ -7,6 +7,8 @@ import { ArgoCdContext } from "./context.js";
 export interface ArgoAppProps {
   path?: string;
   namespace?: string;
+  ignoreDifferences?: crd.ApplicationSpecIgnoreDifferences[];
+  syncOptions?: ArgoCdContext["syncOptions"];
 }
 
 export class ContinuousDeployment extends Construct {
@@ -27,6 +29,7 @@ export class ContinuousDeployment extends Construct {
           server: ctx.server,
         },
         project: ctx.project,
+        ignoreDifferences: props.ignoreDifferences,
         source: {
           path: props.path ?? name,
           repoUrl: ctx.repo.url,
@@ -34,7 +37,10 @@ export class ContinuousDeployment extends Construct {
         },
         syncPolicy: {
           ...constructAutoSyncPolicy(ctx),
-          ...constructSyncOptions(ctx),
+          ...constructSyncOptions({
+            ...ctx.syncOptions,
+            ...props.syncOptions,
+          }),
         },
       },
     });
@@ -67,7 +73,7 @@ function constructAutoSyncPolicy(ctx: ArgoCdContext): Partial<crd.ApplicationSpe
   };
 }
 
-function constructSyncOptions(ctx: ArgoCdContext): Partial<crd.ApplicationSpecSyncPolicy> {
-  const options: string[] = Object.entries(ctx.syncOptions).map(([k, v]) => `${k}=${String(v)}`);
+function constructSyncOptions(syncOptions: ArgoCdContext["syncOptions"]): Partial<crd.ApplicationSpecSyncPolicy> {
+  const options: string[] = Object.entries(syncOptions).map(([k, v]) => `${k}=${String(v)}`);
   return options.length ? { syncOptions: options } : {};
 }
