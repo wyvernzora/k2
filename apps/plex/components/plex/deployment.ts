@@ -1,27 +1,23 @@
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-
 import { Construct } from "constructs";
-import { ConfigMap, Deployment, DeploymentStrategy, Secret, VolumeMount, Volume } from "cdk8s-plus-32";
+import { DeploymentStrategy, Secret, VolumeMount } from "cdk8s-plus-32";
 
-import { K2Volumes, oci } from "@k2/cdk-lib";
+import { K2Deployment, K2Volumes, oci } from "@k2/cdk-lib";
 
 const PLEX_ROOT = "/config/Library/Application Support/Plex Media Server";
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export interface PlexDeploymentProps {
   readonly volumes: K2Volumes<"config" | "series" | "features" | "airing">;
 }
 type Props = PlexDeploymentProps;
 
-export class PlexDeployment extends Deployment {
+export class PlexDeployment extends K2Deployment {
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id, {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
     });
     this.addPlexContainer(props);
-    this.addNginxContainer();
+    this.addTLSTerminationProxy(32400, Secret.fromSecretName(this, "plex-cert", "default-certificate"));
   }
 
   private *createVolumeMounts(volumes: Props["volumes"]): Iterable<VolumeMount> {
@@ -61,41 +57,6 @@ export class PlexDeployment extends Deployment {
         VERSION: { value: "docker" },
         ADVERTISE_IP: { value: "https://plex.wyvernzora.io" },
       },
-      securityContext: {
-        ensureNonRoot: false,
-        readOnlyRootFilesystem: false,
-      },
-    });
-  }
-
-  private addNginxContainer(): void {
-    const certSecret = Secret.fromSecretName(this, "plex-cert", "default-certificate");
-    const config = new ConfigMap(this, "nginx-conf");
-    config.addFile(join(__dirname, "./config/nginx.conf"));
-
-    this.addContainer({
-      name: "nginx",
-      image: "nginx:latest",
-      ports: [
-        {
-          name: "http",
-          number: 80,
-        },
-        {
-          name: "https",
-          number: 443,
-        },
-      ],
-      volumeMounts: [
-        {
-          volume: Volume.fromSecret(this, "plex-cert-vol", certSecret),
-          path: "/etc/nginx/ssl",
-        },
-        {
-          volume: Volume.fromConfigMap(this, "plex-conf-vol", config),
-          path: "/etc/nginx/conf.d",
-        },
-      ],
       securityContext: {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
