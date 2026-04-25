@@ -1,7 +1,7 @@
 import tseslint from "typescript-eslint";
 import stylistic from "@stylistic/eslint-plugin";
 import prettier from "eslint-plugin-prettier";
-import importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import-x";
 
 export default tseslint.config(
   // Global ignores
@@ -20,12 +20,12 @@ export default tseslint.config(
     files: ["**/*.ts", "**/*.tsx"],
     plugins: {
       "@stylistic": stylistic,
-      import: importPlugin,
+      "import-x": importPlugin,
       prettier,
     },
     rules: {
       "prettier/prettier": "error",
-      "import/order": [
+      "import-x/order": [
         "error",
         {
           groups: ["builtin", "external", "internal", "parent", "sibling", "index"],
