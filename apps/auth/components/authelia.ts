@@ -26,11 +26,21 @@ export default {
               name: "ephemeral",
               emptyDir: {},
             },
+            {
+              name: "users",
+              secret: {
+                secretName: "authelia-users",
+              },
+            },
           ],
           extraVolumeMounts: [
             {
               name: "ephemeral",
               mountPath: "/var/authelia",
+            },
+            {
+              name: "users",
+              mountPath: "/secrets/users",
             },
           ],
         },
@@ -41,16 +51,9 @@ export default {
             },
           },
           authentication_backend: {
-            ldap: {
+            file: {
               enabled: true,
-              implementation: "glauth",
-              address: "ldap://glauth.auth.svc.cluster.local",
-              tls: {
-                server_name: domainContext.subdomain("ldap"),
-              },
-              base_dn: "dc=wyvernzora,dc=io",
-              additional_users_dn: "ou=users",
-              user: "cn=authelia,dc=wyvernzora,dc=io",
+              path: "/secrets/users/users.yml",
             },
           },
           access_control: {
@@ -98,6 +101,13 @@ export default {
         name: "authelia",
       },
       itemId: "ejfcz3g4s6wsr2jtct6hs3alxi",
+    });
+
+    new K2Secret(chart, "users", {
+      metadata: {
+        name: "authelia-users",
+      },
+      itemId: "7p4cogd3voxt6sonqlj6jb3q4a",
     });
 
     new TraefikCRD.Middleware(chart, "middleware", {
