@@ -26,6 +26,8 @@
 
 ## Build & Validation Workflows
 
+> **Important:** Build, lint, manifest synthesis, CRD generation, and diff workflows must be run through `earthly` targets. The scripts under `build/scripts/` are implementation details for those targets and often require the containerized build environment from `ghcr.io/wyvernzora/k2-build`; invoking them directly from the host shell can fail due to missing CLIs, Node tooling, or expected filesystem/runtime setup.
+
 ### Earthly Targets
 - `earthly +k8s-manifests` → runs `npx tsx build/scripts/synthesize-manifests.ts`, writing manifests into `deploy/`. This target does **not** prune stale files already under `deploy/`; delete/clean `deploy/` before synth when reviewing removals or generating diffs.
 - `earthly +diff-manifests` → compares freshly synthesized manifests against the remote `deploy` branch via `build/scripts/diff-manifests.sh`, honoring `.dyffignore`. Always run this only after a fresh `+k8s-manifests` pass.
@@ -33,19 +35,18 @@
 - `earthly +crd-constructs` → loops over every `apps/*/crds/crds.k8s.yaml`, runs `build/scripts/generate-crd-constructs.sh`, and stores regenerated TypeScript bindings.
 - `earthly +build-image` / `+ansible-image` publish the reusable build/Ansible container images.
 
-### Manual Development Loop
-1. `npm ci` (or reuse Earthly `npm-install`) to install dependencies.
-2. `npx eslint` to lint TypeScript sources locally.
-3. Clean stale generated output, then run `npx tsx build/scripts/synthesize-manifests.ts` to regenerate manifests in place without Earthly (honors `MAX_CONCURRENCY`).
-4. Run `build/scripts/diff-manifests.sh <repo-url?> [dyff args]` or `earthly +diff-manifests` only after synthesis, and review `deploy-diff.md`.
-5. Commit `deploy/` differences to the `deploy` branch (ArgoCD watches that branch).
+### Development Loop
+1. Use `earthly +lint` to lint TypeScript sources.
+2. Clean stale generated output when reviewing removals, then run `earthly +k8s-manifests` to regenerate manifests.
+3. Run `earthly +diff-manifests` only after synthesis, and review `deploy-diff.md`.
+4. Commit `deploy/` differences to the `deploy` branch (ArgoCD watches that branch).
 
 ### CRD Workflow
-- If an upstream Helm release adds/changes CRDs: run `build/scripts/generate-crd-manifest.sh apps/<name>` to template CRDs into `apps/<name>/crds/crds.k8s.yaml`, then `build/scripts/generate-crd-constructs.sh apps/<name>` to regenerate TypeScript bindings under `apps/<name>/crds/*.ts`. Generated files stay ignored by ESLint.
+- If an upstream Helm release adds/changes CRDs: update or regenerate the app CRD manifest, then run `earthly +crd-constructs` to regenerate TypeScript bindings under `apps/<name>/crds/*.ts`. Generated files stay ignored by ESLint.
 - Re-run `+k8s-manifests` afterward to ensure manifests pick up the new CRDs.
 
 ### Diffing & Promotion
-- Use `build/scripts/diff-manifests.sh <repo-url?> [dyff args]` after synthesis to review manifest changes; it clones the remote `deploy` branch into a temp dir, strips `.git`, and prints Markdown diffs, respecting `.dyffignore`.
+- Use `earthly +diff-manifests` after synthesis to review manifest changes; it clones the remote `deploy` branch into a temp dir, strips `.git`, and prints Markdown diffs, respecting `.dyffignore`.
 - For a reliable manifest diff, clean `deploy/`, run `earthly +k8s-manifests`, then run `earthly +diff-manifests`. Running the diff target against stale `deploy/` contents can show unrelated additions or miss removals because synthesis writes files but does not delete obsolete ones.
 - Promote changes by opening PRs against both `main` (source) and the generated `deploy` branch as appropriate.
 
