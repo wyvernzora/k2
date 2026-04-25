@@ -80,6 +80,8 @@ jobs:
 
       - name: 🌍 Setup earthly
         uses: earthly/actions-setup@v1
+        with:
+          version: v0.8.14
 
       - name: 🏗️ Build the k2-build image
         run: earthly +build-image
@@ -118,6 +120,8 @@ jobs:
 
       - name: 🌍 Setup earthly
         uses: earthly/actions-setup@v1
+        with:
+          version: v0.8.14
 
       - name: ⚙️ Run manifest build & diff
         env:
