@@ -27,8 +27,8 @@
 ## Build & Validation Workflows
 
 ### Earthly Targets
-- `earthly +k8s-manifests` → runs `npx tsx build/scripts/synthesize-manifests.ts`, writing manifests into `deploy/`.
-- `earthly +diff-manifests` → compares freshly synthesized manifests against the remote `deploy` branch via `build/scripts/diff-manifests.sh`, honoring `.dyffignore`.
+- `earthly +k8s-manifests` → runs `npx tsx build/scripts/synthesize-manifests.ts`, writing manifests into `deploy/`. This target does **not** prune stale files already under `deploy/`; delete/clean `deploy/` before synth when reviewing removals or generating diffs.
+- `earthly +diff-manifests` → compares freshly synthesized manifests against the remote `deploy` branch via `build/scripts/diff-manifests.sh`, honoring `.dyffignore`. Always run this only after a fresh `+k8s-manifests` pass.
 - `earthly +lint` → executes `npx eslint` with the project config (CRD outputs excluded).
 - `earthly +crd-constructs` → loops over every `apps/*/crds/crds.k8s.yaml`, runs `build/scripts/generate-crd-constructs.sh`, and stores regenerated TypeScript bindings.
 - `earthly +build-image` / `+ansible-image` publish the reusable build/Ansible container images.
@@ -36,8 +36,9 @@
 ### Manual Development Loop
 1. `npm ci` (or reuse Earthly `npm-install`) to install dependencies.
 2. `npx eslint` to lint TypeScript sources locally.
-3. `npx tsx build/scripts/synthesize-manifests.ts` to regenerate manifests in place without Earthly (honors `MAX_CONCURRENCY`).
-4. Commit `deploy/` differences to the `deploy` branch (ArgoCD watches that branch).
+3. Clean stale generated output, then run `npx tsx build/scripts/synthesize-manifests.ts` to regenerate manifests in place without Earthly (honors `MAX_CONCURRENCY`).
+4. Run `build/scripts/diff-manifests.sh <repo-url?> [dyff args]` or `earthly +diff-manifests` only after synthesis, and review `deploy-diff.md`.
+5. Commit `deploy/` differences to the `deploy` branch (ArgoCD watches that branch).
 
 ### CRD Workflow
 - If an upstream Helm release adds/changes CRDs: run `build/scripts/generate-crd-manifest.sh apps/<name>` to template CRDs into `apps/<name>/crds/crds.k8s.yaml`, then `build/scripts/generate-crd-constructs.sh apps/<name>` to regenerate TypeScript bindings under `apps/<name>/crds/*.ts`. Generated files stay ignored by ESLint.
@@ -45,6 +46,7 @@
 
 ### Diffing & Promotion
 - Use `build/scripts/diff-manifests.sh <repo-url?> [dyff args]` after synthesis to review manifest changes; it clones the remote `deploy` branch into a temp dir, strips `.git`, and prints Markdown diffs, respecting `.dyffignore`.
+- For a reliable manifest diff, clean `deploy/`, run `earthly +k8s-manifests`, then run `earthly +diff-manifests`. Running the diff target against stale `deploy/` contents can show unrelated additions or miss removals because synthesis writes files but does not delete obsolete ones.
 - Promote changes by opening PRs against both `main` (source) and the generated `deploy` branch as appropriate.
 
 ## CDK8s Architecture & Conventions
@@ -76,7 +78,8 @@
 
 ## Secrets, Auth & TLS
 - 1Password Connect + Operator live in `apps/1password`; the operator runs in `k2-core` with control-plane tolerations. Use `new K2Secret(scope, id, { itemId })` whenever you need Kubernetes secrets.
-- Authentication is centralized via Authelia + Glauth (`apps/auth`). Reuse `Auth.MiddlewareAnnotation` or `AuthenticatedIngress` for Traefik ingress resources to enforce SSO.
+- Authentication is centralized via Authelia (`apps/auth`) using Traefik ForwardAuth. Reuse `Auth.MiddlewareAnnotation` or `AuthenticatedIngress` for Traefik ingress resources to enforce SSO.
+- Authelia uses its file authentication backend. User records are supplied from a 1Password-backed `authelia-users` secret mounted at `/secrets/users/users.yml`; the 1Password item must expose a key named `users.yml` containing Authelia users database YAML. Because the chart renders `watch: false`, restart/roll Authelia after changing users.
 - `apps/cert-manager` deploys cert-manager, reflector, Route53-based issuer, and the replicated default TLS certificate.
 - Traefik (`apps/traefik`) references the default certificate secret and enables CRD providers, dashboard ingress, and Prometheus annotations; keep middleware names consistent with the auth module.
 
@@ -85,7 +88,7 @@
 | --- | --- | --- |
 | `1password` | `k2-core` | Deploys 1Password Connect + operator with control-plane tolerations for vault-backed secrets. |
 | `argocd` | `k2-core` | Renders the Argo CD Helm chart, disables built-in auth in favor of Authelia, and exposes `/deploy` via Traefik TLS. |
-| `auth` | `auth` | Composes Authelia (Helm chart) and a bespoke Glauth LDAP deployment with secrets from 1Password. |
+| `auth` | `auth` | Deploys Authelia with a 1Password-backed file users database and Traefik ForwardAuth middleware. |
 | `cert-manager` | `k2-core` | Installs cert-manager, reflector, Route53-based issuer, and the replicated default TLS certificate. |
 | `dns` | `dns` | Deploys k8s-gateway + Blocky with custom block lists, static DNS overrides, and fixed service IP. |
 | `gen-ai` | `gen-ai` | Hosts AnythingLLM under `ai.wyvernzora.io`, isolating namespace and apex domain. |
@@ -116,4 +119,5 @@
 - When adding a new app, always create both `createAppResources` and `createArgoCdResources`, list Helm dependencies in `Chart.yaml`, and export any shared constructs from `lib/`.
 - Secrets should come from `K2Secret`; direct `Secret` objects break the 1Password workflow.
 - Use `ContinuousDeployment` for Argo apps so they inherit the default repo/branch/project, unless you intentionally override `namespace` or `path`.
+- Clean stale generated manifests before synthesis when resources may have been removed; `+k8s-manifests` does not delete obsolete files in `deploy/`.
 - After synthesizing manifests, run the diff script before opening PRs to catch unexpected drift.
