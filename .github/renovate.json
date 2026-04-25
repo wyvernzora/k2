@@ -14,7 +14,7 @@
     },
     {
       "matchDepNames": ["plexinc/pms-docker"],
-      "extractVersion": "(?<version>\\d+\\.\\d+\\.\\d+)\\.\\d{4}-.*"
+      "extractVersion": "(?<version>\\d+\\.\\d+\\.\\d+)\\.\\d+-.*"
     }
   ],
   "ignorePaths": ["**/node_modules/**", "**/cdk-lib/src/helm\\.ts"],
@@ -22,7 +22,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": ["/.*\\.ts/"],
-      "matchStrings": ["oci`(?<depName>.+):(?<currentValue>.+)`"],
+      "matchStrings": ["oci`(?<depName>[^`]+):(?<currentValue>[^`]+)`"],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
     }
