@@ -239,7 +239,7 @@ jobs:
           fi
 
       - name: 💬 Sticky PR comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3.0.4
         with:
           number: ${{ github.event.pull_request.number }}
           header: deploy-diff
