@@ -1,0 +1,216 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-config
+  namespace: openclaw
+data:
+  AGENTS.md: |-
+    # OpenClaw
+
+    This OpenClaw instance runs inside the K2 homelab Kubernetes cluster.
+    Keep actions scoped to the configured workspace unless explicitly directed otherwise.
+  openclaw.json: |-
+    {
+      "gateway": {
+        "mode": "local",
+        "bind": "lan",
+        "port": 18789,
+        "auth": {
+          "token": "${OPENCLAW_GATEWAY_TOKEN}"
+        },
+        "controlUi": {
+          "allowedOrigins": [
+            "https://claw.wyvernzora.io"
+          ]
+        },
+        "reload": {
+          "mode": "hybrid"
+        }
+      },
+      "agents": {
+        "defaults": {
+          "workspace": "/home/node/.openclaw/workspace",
+          "userTimezone": "America/Los_Angeles"
+        }
+      }
+    }
+immutable: false
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: openclaw-secrets
+  namespace: openclaw
+spec:
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/wpysnhydomdyqie3shifuxpgly
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/config: 3e1338dd9ac6f94604124c11dc1d11f84e0b416e8185f58b1d7381d6fe3e0a1d
+  name: openclaw-depl-c8e43036
+  namespace: openclaw
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: openclaw-depl-c8667a69
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: openclaw-depl-c8667a69
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - gateway
+          command:
+            - node
+            - dist/index.js
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: OPENCLAW_GATEWAY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: OPENCLAW_GATEWAY_TOKEN
+                  name: openclaw-secrets
+          image: ghcr.io/openclaw/openclaw:2026.4.19-beta.2-slim
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 18789
+              scheme: HTTP
+          name: openclaw
+          ports:
+            - containerPort: 18789
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: 18789
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 4Gi
+              memory: 2048Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+          volumeMounts:
+            - mountPath: /home/node/.openclaw
+              name: pvc-openclaw-depl-vol-data-pvc-c825588d
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      initContainers:
+        - args:
+            - |-
+              set -eu
+              mkdir -p /home/node/.openclaw/workspace
+              cp /config/openclaw.json /home/node/.openclaw/openclaw.json
+              [ -f /home/node/.openclaw/workspace/AGENTS.md ] || cp /config/AGENTS.md /home/node/.openclaw/workspace/AGENTS.md
+          command:
+            - /bin/sh
+            - -c
+          image: busybox:1.37.0
+          imagePullPolicy: Always
+          name: setup-config
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /home/node/.openclaw
+              name: pvc-openclaw-depl-vol-data-pvc-c825588d
+            - mountPath: /config
+              name: configmap-openclaw-config
+              readOnly: true
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+        runAsUser: 1000
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-openclaw-depl-vol-data-pvc-c825588d
+          persistentVolumeClaim:
+            claimName: openclaw-depl-vol-data-pvc-c825588d
+            readOnly: false
+        - configMap:
+            name: openclaw-config
+          name: configmap-openclaw-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openclaw-depl-vol-data-pvc-c825588d
+  namespace: openclaw
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw
+  namespace: openclaw
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 18789
+  selector:
+    cdk8s.io/metadata.addr: openclaw-depl-c8667a69
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
+  name: openclaw-ingress-c80bd82a
+  namespace: openclaw
+spec:
+  rules:
+    - host: claw.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: openclaw
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
