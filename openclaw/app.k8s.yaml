@@ -99,7 +99,7 @@ spec:
                 secretKeyRef:
                   key: OPENAI_API_KEY
                   name: openclaw-openai-credentials
-          image: ghcr.io/openclaw/openclaw:2026.4.19-beta.2-slim
+          image: ghcr.io/openclaw/openclaw:2026.4.24-beta.2-slim
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
