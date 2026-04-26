@@ -15,11 +15,20 @@ data:
         "mode": "local",
         "bind": "lan",
         "port": 18789,
+        "trustedProxies": [
+          "10.42.0.0/16"
+        ],
         "auth": {
-          "token": "${OPENCLAW_GATEWAY_TOKEN}"
+          "mode": "trusted-proxy",
+          "trustedProxy": {
+            "userHeader": "remote-user",
+            "requiredHeaders": [
+              "x-forwarded-proto",
+              "x-forwarded-host"
+            ]
+          }
         },
         "controlUi": {
-          "allowInsecureAuth": true,
           "allowedOrigins": [
             "https://claw.wyvernzora.io"
           ]
@@ -49,7 +58,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 5e9edf3c78ce42d724d162b7d92417ed2d476038b0ae4fcf55921f259dea3128
+    checksum/config: fb6f7509df0f738cec1275d747827f0b2449303616b280f7f422ef735bb94c74
   name: openclaw-depl-c8e43036
   namespace: openclaw
 spec:
