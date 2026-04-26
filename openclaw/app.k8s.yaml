@@ -46,14 +46,6 @@ data:
     }
 immutable: false
 ---
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
-metadata:
-  name: openclaw-secrets
-  namespace: openclaw
-spec:
-  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/wpysnhydomdyqie3shifuxpgly
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -86,11 +78,6 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-            - name: OPENCLAW_GATEWAY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: OPENCLAW_GATEWAY_TOKEN
-                  name: openclaw-secrets
           image: ghcr.io/openclaw/openclaw:2026.4.19-beta.2-slim
           imagePullPolicy: IfNotPresent
           livenessProbe:
