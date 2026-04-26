@@ -74,7 +74,7 @@ export class OpenClawDeployment extends Deployment {
   private addOpenClawContainer(props: Props, dataVolume: VolumeMount): void {
     this.addContainer({
       name: "openclaw",
-      image: oci`ghcr.io/openclaw/openclaw:2026.4.24-beta.2-slim`,
+      image: oci`ghcr.io/openclaw/openclaw:2026.4.25-beta.2-slim`,
       imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
       command: ["node", "dist/index.js"],
       args: ["gateway"],
