@@ -39,6 +39,14 @@ data:
       },
       "agents": {
         "defaults": {
+          "model": {
+            "primary": "openai/gpt-5.4"
+          },
+          "models": {
+            "openai/gpt-5.4": {
+              "alias": "GPT"
+            }
+          },
           "workspace": "/home/node/.openclaw/workspace",
           "userTimezone": "America/Los_Angeles"
         }
@@ -46,11 +54,19 @@ data:
     }
 immutable: false
 ---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: openclaw-openai-credentials
+  namespace: openclaw
+spec:
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/wpysnhydomdyqie3shifuxpgly
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: fb6f7509df0f738cec1275d747827f0b2449303616b280f7f422ef735bb94c74
+    checksum/config: cb561f729995be8b15fedfe4517187419860dfe91242c8cc9e0dc00705e2421e
   name: openclaw-depl-c8e43036
   namespace: openclaw
 spec:
@@ -78,6 +94,11 @@ spec:
           env:
             - name: NODE_ENV
               value: production
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: OPENAI_API_KEY
+                  name: openclaw-openai-credentials
           image: ghcr.io/openclaw/openclaw:2026.4.19-beta.2-slim
           imagePullPolicy: IfNotPresent
           livenessProbe:
