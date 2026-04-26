@@ -19,6 +19,7 @@ data:
           "token": "${OPENCLAW_GATEWAY_TOKEN}"
         },
         "controlUi": {
+          "allowInsecureAuth": true,
           "allowedOrigins": [
             "https://claw.wyvernzora.io"
           ]
@@ -48,7 +49,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    checksum/config: 3e1338dd9ac6f94604124c11dc1d11f84e0b416e8185f58b1d7381d6fe3e0a1d
+    checksum/config: 5e9edf3c78ce42d724d162b7d92417ed2d476038b0ae4fcf55921f259dea3128
   name: openclaw-depl-c8e43036
   namespace: openclaw
 spec:
