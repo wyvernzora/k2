@@ -58,6 +58,8 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+            - containerPort: 8081
+              name: mcp
           readinessProbe:
             failureThreshold: 3
             httpGet:
@@ -114,6 +116,19 @@ spec:
   ports:
     - port: 80
       targetPort: 8080
+  selector:
+    cdk8s.io/metadata.addr: media-kura-depl-c8fdf1b6
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kura-mcp
+spec:
+  externalIPs: []
+  ports:
+    - port: 8081
+      targetPort: 8081
   selector:
     cdk8s.io/metadata.addr: media-kura-depl-c8fdf1b6
   type: ClusterIP
