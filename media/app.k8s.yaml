@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: media-sonarr-depl-c87d4ea4
+  name: media-kura-depl-c87ca1a6
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
@@ -9,13 +9,13 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      cdk8s.io/metadata.addr: media-sonarr-depl-c8f329fb
+      cdk8s.io/metadata.addr: media-kura-depl-c8fdf1b6
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        cdk8s.io/metadata.addr: media-sonarr-depl-c8f329fb
+        cdk8s.io/metadata.addr: media-kura-depl-c8fdf1b6
     spec:
       affinity:
         nodeAffinity:
@@ -29,87 +29,93 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
-            - name: PUID
-              value: "3000"
-            - name: PGID
-              value: "2001"
+            - name: KURA_LIBRARY_ROOT
+              value: /anime/series
+            - name: KURA_INBOX_ROOT
+              value: /anime/downloads
+            - name: KURA_DISABLE_TOKEN
+              value: "1"
+            - name: KURA_HOST_ID
+              value: k2-media-kura
+            - name: KURA_PREFERRED_LANGUAGES
+              value: ja
+            - name: KURA_TVDB_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: credential
+                  name: media-kura-depl-tvdb-c80846d7
             - name: TZ
               value: America/Los_Angeles
-          image: quay.io/linuxserver.io/sonarr:4.0.17
+          image: ghcr.io/wyvernzora/kura:dev
           imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+              scheme: HTTP
           name: main
           ports:
-            - containerPort: 8989
+            - containerPort: 8080
               name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+              scheme: HTTP
           resources:
             limits:
               cpu: 2000m
-              ephemeral-storage: 10Gi
-              memory: 4096Mi
+              ephemeral-storage: 2Gi
+              memory: 2048Mi
             requests:
               cpu: 100m
-              memory: 512Mi
+              memory: 256Mi
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
-            readOnlyRootFilesystem: false
-            runAsNonRoot: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           volumeMounts:
-            - mountPath: /config
-              name: pvc-media-sonarr-depl-vol-appdata-pvc-c844ea8d
-            - mountPath: /mnt/anime
+            - mountPath: /anime
               name: blk-vol-anime
-            - mountPath: /config/Backups
-              name: eph-vol-backups
-            - mountPath: /config/logs
-              name: eph-vol-logs
       dnsPolicy: ClusterFirst
       hostNetwork: false
       restartPolicy: Always
       securityContext:
+        fsGroup: 2001
         fsGroupChangePolicy: Always
+        runAsGroup: 2001
         runAsNonRoot: true
+        runAsUser: 3000
       setHostnameAsFQDN: false
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: pvc-media-sonarr-depl-vol-appdata-pvc-c844ea8d
-          persistentVolumeClaim:
-            claimName: media-sonarr-depl-vol-appdata-pvc-c844ea8d
-            readOnly: false
         - name: blk-vol-anime
           nfs:
-            path: /mnt/data/media/anime/series
+            path: /mnt/data/media/anime
             server: 10.10.8.1
-        - emptyDir: {}
-          name: eph-vol-backups
-        - emptyDir: {}
-          name: eph-vol-logs
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
 metadata:
-  name: media-sonarr-depl-vol-appdata-pvc-c844ea8d
+  name: media-kura-depl-tvdb-c80846d7
 spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 8Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/q4xf32di7npmvc7e62amvgd574
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: sonarr
+  name: kura
 spec:
   externalIPs: []
   ports:
     - port: 80
-      targetPort: 8989
+      targetPort: 8080
   selector:
-    cdk8s.io/metadata.addr: media-sonarr-depl-c8f329fb
+    cdk8s.io/metadata.addr: media-kura-depl-c8fdf1b6
   type: ClusterIP
 ---
 apiVersion: networking.k8s.io/v1
@@ -117,18 +123,18 @@ kind: Ingress
 metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
-  name: media-sonarr-ingress-c8028a46
+  name: media-kura-ingress-c8d306aa
 spec:
   rules:
-    - host: media.wyvernzora.io
+    - host: kura.wyvernzora.io
       http:
         paths:
           - backend:
               service:
-                name: sonarr
+                name: kura
                 port:
                   number: 80
-            path: /sonarr
+            path: /
             pathType: Prefix
 ---
 apiVersion: apps/v1
