@@ -4,30 +4,40 @@ import { Deployment, HttpIngressPathType, Ingress, IngressBackend, Service } fro
 
 import { AuthenticatedIngress } from "@k2/auth";
 
-import { SonarrDeployment, SonarrDeploymentProps } from "./deployment.js";
+import { KuraDeployment, KuraDeploymentProps } from "./deployment.js";
 
-export interface SonarrProps {
+export interface KuraProps {
   readonly url: string;
-  readonly volumes: SonarrDeploymentProps["volumes"];
+  readonly volumes: KuraDeploymentProps["volumes"];
 }
 
-export class Sonarr extends Chart {
+export class Kura extends Chart {
   readonly deployment: Deployment;
   readonly service: Service;
+  readonly mcpService: Service;
   readonly ingress: Ingress;
 
-  constructor(scope: Construct, id: string, props: SonarrProps) {
+  constructor(scope: Construct, id: string, props: KuraProps) {
     super(scope, id, {});
 
     const { hostname, pathname } = new URL(props.url);
 
-    this.deployment = new SonarrDeployment(this, "depl", props);
+    this.deployment = new KuraDeployment(this, "depl", props);
     this.service = this.deployment.exposeViaService({
-      name: "sonarr", // Need to explicitly name this for integration with other apps
+      name: "kura",
       ports: [
         {
           port: 80,
-          targetPort: 8989,
+          targetPort: 8080,
+        },
+      ],
+    });
+    this.mcpService = this.deployment.exposeViaService({
+      name: "kura-mcp",
+      ports: [
+        {
+          port: 8081,
+          targetPort: 8081,
         },
       ],
     });

@@ -30,14 +30,11 @@ export const createAppResources: AppResourceFunc = app => {
         }),
       },
     },
-    sonarr: {
-      url: "https://media.wyvernzora.io/sonarr",
+    kura: {
+      url: "https://kura.wyvernzora.io/",
       volumes: {
-        appdata: K2Volume.replicated({
-          size: Size.gibibytes(8),
-        }),
         anime: K2Volume.bulk({
-          path: "/mnt/data/media/anime/series",
+          path: "/mnt/data/media/anime",
         }),
       },
     },
