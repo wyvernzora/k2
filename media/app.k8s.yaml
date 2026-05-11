@@ -346,7 +346,9 @@ spec:
       restartPolicy: Always
       securityContext:
         fsGroupChangePolicy: Always
+        runAsGroup: 65532
         runAsNonRoot: true
+        runAsUser: 65532
       setHostnameAsFQDN: false
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
