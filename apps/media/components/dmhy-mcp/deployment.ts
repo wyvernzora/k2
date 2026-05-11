@@ -9,6 +9,10 @@ export class DmhyMcpDeployment extends Deployment {
     super(scope, id, {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
+      securityContext: {
+        user: 65532,
+        group: 65532,
+      },
     });
 
     const probe = Probe.fromHttpGet("/healthz", { port: 8080 });
