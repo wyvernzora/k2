@@ -292,6 +292,81 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: media-dmhy-mcp-depl-c897beea
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: media-dmhy-mcp-depl-c864e3e9
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: media-dmhy-mcp-depl-c864e3e9
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: ghcr.io/wyvernzora/dmhy-mcp:dev
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+          name: main
+          ports:
+            - containerPort: 8080
+              name: mcp
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dmhy-mcp
+spec:
+  externalIPs: []
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    cdk8s.io/metadata.addr: media-dmhy-mcp-depl-c864e3e9
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: media-qbit-depl-c81776b5
 spec:
   minReadySeconds: 0
@@ -565,130 +640,4 @@ spec:
                 port:
                   number: 80
             path: /
-            pathType: Prefix
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: media-prowlarr-depl-c828b76f
-spec:
-  minReadySeconds: 0
-  progressDeadlineSeconds: 600
-  replicas: 1
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      cdk8s.io/metadata.addr: media-prowlarr-depl-c8bd77f7
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        cdk8s.io/metadata.addr: media-prowlarr-depl-c8bd77f7
-    spec:
-      automountServiceAccountToken: false
-      containers:
-        - env:
-            - name: PUID
-              value: "3000"
-            - name: PGID
-              value: "2001"
-            - name: TZ
-              value: America/Los_Angeles
-          image: linuxserver/prowlarr:2.3.5
-          imagePullPolicy: Always
-          livenessProbe:
-            exec:
-              command:
-                - wget
-                - -qO
-                - /dev/null
-                - http://127.0.0.1:9696
-            failureThreshold: 3
-          name: prowlarr
-          ports:
-            - containerPort: 9696
-              name: http
-          readinessProbe:
-            exec:
-              command:
-                - wget
-                - -qO
-                - /dev/null
-                - http://127.0.0.1:9696
-            failureThreshold: 3
-          resources:
-            limits:
-              cpu: 1000m
-              ephemeral-storage: 8Gi
-              memory: 4096Mi
-            requests:
-              cpu: 100m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: false
-            runAsNonRoot: false
-          volumeMounts:
-            - mountPath: /config
-              name: pvc-media-prowlarr-depl-vol-appdata-pvc-c88a3d31
-      dnsPolicy: ClusterFirst
-      hostNetwork: false
-      restartPolicy: Always
-      securityContext:
-        fsGroupChangePolicy: Always
-        runAsNonRoot: true
-      setHostnameAsFQDN: false
-      shareProcessNamespace: false
-      terminationGracePeriodSeconds: 30
-      volumes:
-        - name: pvc-media-prowlarr-depl-vol-appdata-pvc-c88a3d31
-          persistentVolumeClaim:
-            claimName: media-prowlarr-depl-vol-appdata-pvc-c88a3d31
-            readOnly: false
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: media-prowlarr-depl-vol-appdata-pvc-c88a3d31
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 4Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: prowlarr
-spec:
-  externalIPs: []
-  ports:
-    - port: 80
-      targetPort: 9696
-  selector:
-    cdk8s.io/metadata.addr: media-prowlarr-depl-c8bd77f7
-  type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
-  name: media-prowlarr-ingress-c8f444b5
-spec:
-  rules:
-    - host: media.wyvernzora.io
-      http:
-        paths:
-          - backend:
-              service:
-                name: prowlarr
-                port:
-                  number: 80
-            path: /prowlarr
             pathType: Prefix
