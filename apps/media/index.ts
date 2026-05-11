@@ -22,14 +22,6 @@ export const createAppResources: AppResourceFunc = app => {
         }),
       },
     },
-    prowlarr: {
-      url: "https://media.wyvernzora.io/prowlarr",
-      volumes: {
-        appdata: K2Volume.replicated({
-          size: Size.gibibytes(4),
-        }),
-      },
-    },
     kura: {
       url: "https://kura.wyvernzora.io/",
       volumes: {
