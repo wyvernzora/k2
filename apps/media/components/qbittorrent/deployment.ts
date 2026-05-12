@@ -1,5 +1,14 @@
 import { Size } from "cdk8s";
-import { ConfigMap, Cpu, Deployment, DeploymentStrategy, Probe, Volume, VolumeMount } from "cdk8s-plus-32";
+import {
+  ConfigMap,
+  Cpu,
+  Deployment,
+  DeploymentStrategy,
+  ImagePullPolicy,
+  Probe,
+  Volume,
+  VolumeMount,
+} from "cdk8s-plus-32";
 import { Construct } from "constructs";
 import dedent from "dedent-js";
 
@@ -24,6 +33,7 @@ export class QBitTorrentDeployment extends Deployment {
     const downloads = this.createAdditionalVolumeMounts(props.downloads);
     this.addQbitTorrentContainer(appdata, downloads);
     this.addFloodUiContainer(appdata, downloads);
+    this.addQbitMcpContainer();
     this.initAppdataContainer(appdata);
   }
 
@@ -123,6 +133,49 @@ export class QBitTorrentDeployment extends Deployment {
       },
       liveness: Probe.fromHttpGet("/", { port: 3000 }),
       readiness: Probe.fromHttpGet("/", { port: 3000 }),
+    });
+  }
+
+  private addQbitMcpContainer() {
+    const probe = Probe.fromHttpGet("/healthz", { port: 8082 });
+    this.addContainer({
+      name: "qbit-mcp",
+      image: oci`ghcr.io/wyvernzora/qbittorrent-mcp:dev`,
+      imagePullPolicy: ImagePullPolicy.ALWAYS,
+      args: ["--transport=http", "--addr=:8082"],
+      ports: [
+        {
+          name: "mcp",
+          number: 8082,
+        },
+      ],
+      envVariables: {
+        QBITTORRENT_URL: { value: "http://127.0.0.1:8080" },
+        QBITTORRENT_SAVE_PATHS: {
+          value: "kura-inbox=/downloads/anime/downloads,other=/downloads/default",
+        },
+      },
+      securityContext: {
+        user: 65532,
+        group: 65532,
+        ensureNonRoot: true,
+        readOnlyRootFilesystem: true,
+      },
+      liveness: probe,
+      readiness: probe,
+      resources: {
+        cpu: {
+          request: Cpu.millis(25),
+          limit: Cpu.millis(500),
+        },
+        memory: {
+          request: Size.mebibytes(32),
+          limit: Size.mebibytes(256),
+        },
+        ephemeralStorage: {
+          limit: Size.gibibytes(1),
+        },
+      },
     });
   }
 

@@ -15,6 +15,7 @@ export class QBitTorrent extends Construct {
   readonly deployment: Deployment;
   readonly floodService: Service;
   readonly qbittorrentService: Service;
+  readonly mcpService: Service;
   readonly ingress: Ingress;
 
   constructor(scope: Construct, id: string, props: QBitTorrentProps) {
@@ -28,6 +29,10 @@ export class QBitTorrent extends Construct {
     this.qbittorrentService = this.deployment.exposeViaService({
       name: "qbittorrent",
       ports: [{ port: 80, targetPort: 8080 }],
+    });
+    this.mcpService = this.deployment.exposeViaService({
+      name: "qbittorrent-mcp",
+      ports: [{ port: 8082, targetPort: 8082 }],
     });
     this.ingress = new AuthenticatedIngress(this, "ingr", {
       rules: [
