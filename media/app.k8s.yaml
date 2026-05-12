@@ -506,6 +506,47 @@ spec:
             - mountPath: /config
               name: pvc-media-qbit-depl-vol-appdata-pvc-c865d717
               subPath: flood
+        - args:
+            - --transport=http
+            - --addr=:8082
+          env:
+            - name: QBITTORRENT_URL
+              value: http://127.0.0.1:8080
+            - name: QBITTORRENT_SAVE_PATHS
+              value: kura-inbox=/downloads/anime/downloads,other=/downloads/default
+          image: ghcr.io/wyvernzora/qbittorrent-mcp:dev
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8082
+              scheme: HTTP
+          name: qbit-mcp
+          ports:
+            - containerPort: 8082
+              name: mcp
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8082
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
       dnsPolicy: ClusterFirst
       hostNetwork: false
       initContainers:
@@ -621,6 +662,19 @@ spec:
   ports:
     - port: 80
       targetPort: 8080
+  selector:
+    cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-mcp
+spec:
+  externalIPs: []
+  ports:
+    - port: 8082
+      targetPort: 8082
   selector:
     cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928
   type: ClusterIP
