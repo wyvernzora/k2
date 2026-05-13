@@ -72,10 +72,9 @@ spec:
               name: pvc-claude-remote-depl-vol-state-pvc-c8333c0b
             - mountPath: /workspace
               name: pvc-claude-remote-depl-vol-workspace-pvc-c8ed2862
-            - mountPath: /home/claude/.claude/.mcp.json
+            - mountPath: /var/run/config/claude
               name: configmap-claude-remote-mcp-config
               readOnly: true
-              subPath: .mcp.json
       dnsPolicy: ClusterFirst
       hostNetwork: false
       restartPolicy: Always
