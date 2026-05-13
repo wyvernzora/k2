@@ -1,5 +1,5 @@
 import { Size } from "cdk8s";
-import { Cpu, Deployment, DeploymentStrategy, ImagePullPolicy, Probe, Volume } from "cdk8s-plus-32";
+import { Cpu, Deployment, DeploymentStrategy, EnvValue, ImagePullPolicy, Probe, Volume } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { K2Volumes, oci } from "@k2/cdk-lib";
@@ -45,6 +45,10 @@ export class ClaudeRemoteDeployment extends Deployment {
           readOnly: true,
         },
       ],
+      envVariables: {
+        CLAUDE_REMOTE_NAME: EnvValue.fromValue("K2 Claude Remote"),
+        CLAUDE_REMOTE_CREATE_SESSION_IN_DIR: EnvValue.fromValue("false"),
+      },
       securityContext: {
         ensureNonRoot: true,
         readOnlyRootFilesystem: false,
