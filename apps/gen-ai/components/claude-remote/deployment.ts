@@ -41,8 +41,7 @@ export class ClaudeRemoteDeployment extends Deployment {
         workspace,
         {
           volume: Volume.fromConfigMap(this, "vol-mcp-config", props.config),
-          path: "/home/claude/.claude/.mcp.json",
-          subPath: ".mcp.json",
+          path: "/var/run/config/claude",
           readOnly: true,
         },
       ],
