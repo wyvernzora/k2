@@ -17,6 +17,10 @@ export class ClaudeRemoteDeployment extends Deployment {
     super(scope, id, {
       replicas: 1,
       strategy: DeploymentStrategy.recreate(),
+      // claude remote-control derives the environment identity from the pod
+      // hostname. Pin a stable hostname so claude.ai/code reuses one env
+      // across pod restarts instead of accumulating per-ReplicaSet ones.
+      dns: { hostname: "k2-claude-remote" },
       securityContext: {
         ensureNonRoot: true,
         user: 1001,
