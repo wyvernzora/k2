@@ -32,7 +32,7 @@ export class QBitTorrent extends Construct {
     });
     this.mcpService = this.deployment.exposeViaService({
       name: "qbittorrent-mcp",
-      ports: [{ port: 8082, targetPort: 8082 }],
+      ports: [{ port: 80, targetPort: 8082 }],
     });
     this.ingress = new AuthenticatedIngress(this, "ingr", {
       rules: [

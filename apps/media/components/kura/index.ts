@@ -36,7 +36,7 @@ export class Kura extends Chart {
       name: "kura-mcp",
       ports: [
         {
-          port: 8081,
+          port: 80,
           targetPort: 8081,
         },
       ],

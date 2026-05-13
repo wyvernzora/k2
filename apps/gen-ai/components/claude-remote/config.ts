@@ -19,15 +19,15 @@ export class ClaudeRemoteConfig extends ConfigMap {
         mcpServers: {
           kura: {
             type: "http",
-            url: "http://kura-mcp.media.svc.cluster.local:8081/mcp",
+            url: "http://kura-mcp.media.svc.cluster.local/mcp",
           },
           dmhy: {
             type: "http",
-            url: "http://dmhy-mcp.media.svc.cluster.local:8080/mcp",
+            url: "http://dmhy-mcp.media.svc.cluster.local/mcp",
           },
           qbittorrent: {
             type: "http",
-            url: "http://qbittorrent-mcp.media.svc.cluster.local:8082/mcp",
+            url: "http://qbittorrent-mcp.media.svc.cluster.local/mcp",
           },
         },
       },

@@ -16,7 +16,7 @@ export class DmhyMcp extends Chart {
       name: "dmhy-mcp",
       ports: [
         {
-          port: 8080,
+          port: 80,
           targetPort: 8080,
         },
       ],
