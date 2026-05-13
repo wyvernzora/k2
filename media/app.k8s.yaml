@@ -127,7 +127,7 @@ metadata:
 spec:
   externalIPs: []
   ports:
-    - port: 8081
+    - port: 80
       targetPort: 8081
   selector:
     cdk8s.io/metadata.addr: media-kura-depl-c8fdf1b6
@@ -360,7 +360,7 @@ metadata:
 spec:
   externalIPs: []
   ports:
-    - port: 8080
+    - port: 80
       targetPort: 8080
   selector:
     cdk8s.io/metadata.addr: media-dmhy-mcp-depl-c864e3e9
@@ -673,7 +673,7 @@ metadata:
 spec:
   externalIPs: []
   ports:
-    - port: 8082
+    - port: 80
       targetPort: 8082
   selector:
     cdk8s.io/metadata.addr: media-qbit-depl-c8bfd928

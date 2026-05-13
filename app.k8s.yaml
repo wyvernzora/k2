@@ -146,6 +146,35 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: gen-ai
+  namespace: k2-core
+spec:
+  destination:
+    namespace: gen-ai
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: gen-ai
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 600s
+      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: home-automation
   namespace: k2-core
 spec:
