@@ -82,6 +82,7 @@ spec:
               readOnly: true
       dnsPolicy: ClusterFirst
       hostNetwork: false
+      hostname: k2-claude-remote
       restartPolicy: Always
       securityContext:
         fsGroup: 1001
