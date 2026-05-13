@@ -47,7 +47,12 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - image: ghcr.io/wyvernzora/claude-remote:2.1.140
+        - env:
+            - name: CLAUDE_REMOTE_NAME
+              value: K2 Claude Remote
+            - name: CLAUDE_REMOTE_CREATE_SESSION_IN_DIR
+              value: "false"
+          image: ghcr.io/wyvernzora/claude-remote:2.1.140
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
