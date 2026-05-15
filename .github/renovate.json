@@ -1,28 +1,210 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "timezone": "America/Los_Angeles",
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 8,
+  "internalChecksFilter": "strict",
+  "minimumReleaseAgeBehaviour": "timestamp-required",
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "manual-review"],
+    "automerge": false
+  },
   "lockFileMaintenance": {
     "enabled": true,
+    "automergeType": "pr",
     "automerge": true
   },
   "packageRules": [
     {
+      "description": "Wait 7 days before opening PRs for datasources with reliable release timestamps.",
+      "matchDatasources": ["npm", "helm", "github-tags", "github-releases"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Wait 7 days for Docker Hub image updates; non-Docker Hub registries often lack tag timestamps.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "bash",
+        "busybox",
+        "caddy",
+        "eclipse-mosquitto",
+        "jesec/flood",
+        "koenkk/zigbee2mqtt",
+        "linuxserver/homeassistant",
+        "linuxserver/kavita",
+        "mikefarah/yq",
+        "n8nio/n8n",
+        "node",
+        "plexinc/pms-docker",
+        "willhallonline/ansible"
+      ],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major-update"],
+      "automerge": false
+    },
+    {
+      "description": "Automerge low-risk npm patch updates for development-only tooling after CI passes.",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["patch"],
       "matchCurrentVersion": "!/^0/",
-      "automergeType": "branch",
+      "automergeType": "pr",
       "automerge": true
     },
     {
+      "description": "Treat cdk8s updates as manifest-affecting even when package.json classifies them as dev tooling.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["cdk8s", "cdk8s-plus-32", "constructs"],
+      "groupName": "cdk8s stack",
+      "addLabels": ["cdk8s", "manifest-impact"],
+      "automerge": false
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "@stylistic/eslint-plugin",
+        "eslint",
+        "eslint-config-prettier",
+        "eslint-plugin-import-x",
+        "eslint-plugin-prettier",
+        "typescript-eslint",
+        "/^@typescript-eslint\\//"
+      ],
+      "groupName": "eslint stack",
+      "addLabels": ["linting"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript", "tsx", "jiti", "@tsconfig/recommended", "@types/node"],
+      "groupName": "typescript tooling",
+      "addLabels": ["typescript"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "common-tags",
+        "debug",
+        "dedent-js",
+        "fast-glob",
+        "find-root",
+        "js-yaml",
+        "json-stable-stringify",
+        "yaml"
+      ],
+      "groupName": "npm runtime libraries",
+      "addLabels": ["npm-runtime"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "github actions",
+      "addLabels": ["ci"]
+    },
+    {
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["kube-vip", "metallb", "k8s-gateway", "reflector"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "low-risk helm charts",
+      "addLabels": ["helm", "cluster-infra"],
+      "automerge": false
+    },
+    {
+      "matchDatasources": ["helm"],
+      "matchPackageNames": [
+        "1password-connect",
+        "argo-cd",
+        "authelia",
+        "cert-manager",
+        "cloudnative-pg",
+        "longhorn",
+        "tailscale-operator",
+        "traefik"
+      ],
+      "addLabels": ["helm", "manual-review", "manifest-impact"],
+      "automerge": false
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/wyvernzora/dmhy-mcp",
+        "ghcr.io/wyvernzora/kura",
+        "ghcr.io/wyvernzora/personal-finance-mcp",
+        "ghcr.io/wyvernzora/qbittorrent-mcp",
+        "ghcr.io/wyvernzora/k2-cluster-init"
+      ],
+      "enabled": false
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["bash", "busybox", "caddy", "mikefarah/yq"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "utility container images",
+      "addLabels": ["container", "utility"],
+      "automergeType": "pr",
+      "automerge": true
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "eclipse-mosquitto",
+        "koenkk/zigbee2mqtt",
+        "linuxserver/homeassistant",
+        "linuxserver/kavita",
+        "lscr.io/linuxserver/qbittorrent",
+        "n8nio/n8n",
+        "plexinc/pms-docker"
+      ],
+      "groupName": "application container images",
+      "addLabels": ["container", "manual-review", "manifest-impact"],
+      "automerge": false
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
+      "addLabels": ["container", "database", "manual-review"],
+      "automerge": false
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["jesec/flood", "ghcr.io/0xerr0r/blocky", "ghcr.io/wyvernzora/claude-remote"],
+      "groupName": "service container images",
+      "addLabels": ["container", "manual-review"],
+      "automerge": false
+    },
+    {
+      "matchDatasources": ["docker"],
       "matchDepNames": ["plexinc/pms-docker"],
       "extractVersion": "(?<version>\\d+\\.\\d+\\.\\d+)\\.\\d+-.*"
     }
   ],
-  "ignorePaths": ["**/node_modules/**", "**/cdk-lib/src/helm\\.ts"],
+  "ignorePaths": ["**/node_modules/**", "**/cdk-lib/src/helm.ts"],
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/.*\\.ts/"],
+      "managerFilePatterns": ["/\\.ts$/"],
       "matchStrings": ["oci`(?<depName>[^`]+):(?<currentValue>[^`]+)`"],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/\\.ts$/"],
+      "matchStrings": [
+        "(?:image|imageName):\\s*[\"'](?<depName>[^\"':\\s]+(?:/[^\"':\\s]+)*):(?<currentValue>[^\"'\\s]+)[\"']"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Earthfile$/"],
+      "matchStrings": ["FROM\\s+(?<depName>[^\\s:@]+(?:/[^\\s:@]+)*):(?<currentValue>[^\\s$]+)"],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
     }
