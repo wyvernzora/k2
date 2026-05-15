@@ -3,12 +3,13 @@ import { Chart, Size } from "cdk8s";
 import { App, Namespace, Spread } from "@k2/cdk-lib";
 
 import { Cluster, ClusterSpecResourcesLimits, ClusterSpecResourcesRequests } from "../crds/postgresql.cnpg.io.js";
+import { NEXUS_CLUSTER_NAME } from "../lib/nexus.js";
 
 export default {
   create(app: App) {
     const chart = new Chart(app, "nexus", { ...Namespace.of(app) });
 
-    const name = "nexus";
+    const name = NEXUS_CLUSTER_NAME;
     new Cluster(chart, "cluster", {
       metadata: { name },
       spec: {
