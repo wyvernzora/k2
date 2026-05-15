@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import { readFileSync } from "node:fs";
 
 import * as base from "cdk8s";
@@ -24,7 +23,7 @@ export class HelmCharts extends Context {
     super();
     this._charts = {
       // Allow charts to be referred by their full name (repo + chart)
-      ...Object.groupBy(dependencies, c => join(c.repository, c.name)),
+      ...Object.groupBy(dependencies, c => dependencyKey(c)),
       // ...also allow them to be referred by just chart name, unless there is a collision
       ...Object.groupBy(dependencies, c => c.name),
       // ...also alias, where present, to avoid collisions
@@ -40,8 +39,7 @@ export class HelmCharts extends Context {
     return class extends base.Helm {
       constructor(scope: Construct, id: string, props: HelmProps) {
         super(scope, id, {
-          chart: ref.name,
-          repo: ref.repository,
+          ...helmChartSource(ref),
           version: ref.version,
           releaseName: id,
           ...props,
@@ -97,6 +95,17 @@ export interface ChartDependency {
   version?: string;
   repository: string;
   alias?: string;
+}
+
+function dependencyKey(ref: ChartDependency): string {
+  return `${ref.repository.replace(/\/+$/, "")}/${ref.name}`;
+}
+
+function helmChartSource(ref: ChartDependency): Pick<base.HelmProps, "chart" | "repo"> {
+  if (ref.repository.startsWith("oci://")) {
+    return { chart: dependencyKey(ref) };
+  }
+  return { chart: ref.name, repo: ref.repository };
 }
 
 function getDependencyCharts(root: string): Array<ChartDependency> {
