@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-39.0.9
+    helm.sh/chart: traefik-40.0.0
   name: traefik
   namespace: k2-network
 automountServiceAccountToken: false
@@ -17,7 +17,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-39.0.9
+    helm.sh/chart: traefik-40.0.0
   name: traefik-k2-network
   namespace: k2-network
 rules:
@@ -101,7 +101,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-39.0.9
+    helm.sh/chart: traefik-40.0.0
   name: traefik-k2-network
   namespace: k2-network
 roleRef:
@@ -120,11 +120,10 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-39.0.9
+    helm.sh/chart: traefik-40.0.0
   name: traefik
   namespace: k2-network
 spec:
-  ipFamilyPolicy: PreferDualStack
   ports:
     - name: web
       port: 80
@@ -146,7 +145,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-39.0.9
+    helm.sh/chart: traefik-40.0.0
   name: traefik
   namespace: k2-network
 spec:
@@ -171,7 +170,7 @@ spec:
         app.kubernetes.io/instance: traefik-k2-network
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: traefik
-        helm.sh/chart: traefik-39.0.9
+        helm.sh/chart: traefik-40.0.0
     spec:
       automountServiceAccountToken: true
       containers:
@@ -203,7 +202,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: USER
               value: traefik
-          image: docker.io/traefik:v3.6.15
+          image: docker.io/traefik:v3.7.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -284,7 +283,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-39.0.9
+    helm.sh/chart: traefik-40.0.0
   name: traefik
   namespace: k2-network
 spec:
@@ -297,7 +296,7 @@ metadata:
     app.kubernetes.io/instance: traefik-k2-network
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: traefik
-    helm.sh/chart: traefik-39.0.9
+    helm.sh/chart: traefik-40.0.0
   name: traefik-dashboard
   namespace: k2-network
 spec:

@@ -1252,7 +1252,7 @@ spec:
       owner: dba
       postInitApplicationSQL:
         - ALTER ROLE dba WITH LOGIN CREATEDB CREATEROLE INHERIT;
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.2-standard-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.9-standard-bookworm
   instances: 3
   resources:
     limits:
