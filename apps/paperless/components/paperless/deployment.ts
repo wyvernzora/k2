@@ -39,7 +39,7 @@ export class PaperlessDeployment extends Deployment {
   private addMediaDirectoriesInitContainer(props: Props): void {
     this.addInitContainer({
       name: "init-media-directories",
-      image: oci`busybox:1.36`,
+      image: oci`busybox:1.37`,
       command: ["/bin/sh", "-c"],
       args: [
         [
