@@ -231,7 +231,7 @@ spec:
               value: "3003"
             - name: USERMAP_GID
               value: "2002"
-          image: ghcr.io/paperless-ngx/paperless-ngx:v2.20.15
+          image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
