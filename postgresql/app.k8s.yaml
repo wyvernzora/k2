@@ -1460,6 +1460,8 @@ spec:
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
+  annotations:
+    cnpg.wyvernzora.io/allowed-claim-namespaces: paperless
   name: nexus
   namespace: postgresql
 spec:
