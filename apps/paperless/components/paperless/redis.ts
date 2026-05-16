@@ -16,7 +16,7 @@ export class RedisDeployment extends Deployment {
 
     this.addContainer({
       name: "redis",
-      image: oci`redis:7.4-alpine`,
+      image: oci`redis:8.6-alpine`,
       args: ["redis-server", "--save", "", "--appendonly", "no", "--requirepass", "$(REDIS_PASSWORD)"],
       ports: [
         {
