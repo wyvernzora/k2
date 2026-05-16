@@ -1469,6 +1469,7 @@ spec:
       owner: dba
       postInitApplicationSQL:
         - ALTER ROLE dba WITH LOGIN CREATEDB CREATEROLE INHERIT;
+  enableSuperuserAccess: true
   imageName: ghcr.io/cloudnative-pg/postgresql:17.9-standard-bookworm
   instances: 3
   resources:
@@ -1481,6 +1482,8 @@ spec:
   storage:
     size: 16Gi
     storageClass: longhorn
+  superuserSecret:
+    name: nexus-superuser
   topologySpreadConstraints:
     - labelSelector:
         matchLabels:

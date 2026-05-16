@@ -105,6 +105,58 @@ data:
     end
     end
     return hs
+  resource.customizations.health.cnpg.wyvernzora.io_DatabaseClaim: |-
+    hs = { status = "Progressing", message = "Waiting for DatabaseClaim status" }
+
+    if obj.status ~= nil and obj.status.conditions ~= nil then
+      for _, condition in ipairs(obj.status.conditions) do
+        if condition.type == "Ready" then
+          hs.message = condition.message or condition.reason or ""
+
+          if condition.status == "True" then
+            hs.status = "Healthy"
+            return hs
+          end
+
+          if condition.status == "False" then
+            if condition.reason == "ClusterNotReady" or condition.reason == "Reconciling" then
+              hs.status = "Progressing"
+            else
+              hs.status = "Degraded"
+            end
+            return hs
+          end
+        end
+      end
+    end
+
+    return hs
+  resource.customizations.health.cnpg.wyvernzora.io_RoleClaim: |-
+    hs = { status = "Progressing", message = "Waiting for RoleClaim status" }
+
+    if obj.status ~= nil and obj.status.conditions ~= nil then
+      for _, condition in ipairs(obj.status.conditions) do
+        if condition.type == "Ready" then
+          hs.message = condition.message or condition.reason or ""
+
+          if condition.status == "True" then
+            hs.status = "Healthy"
+            return hs
+          end
+
+          if condition.status == "False" then
+            if condition.reason == "DatabaseNotReady" or condition.reason == "ClusterNotReady" or condition.reason == "Reconciling" then
+              hs.status = "Progressing"
+            else
+              hs.status = "Degraded"
+            end
+            return hs
+          end
+        end
+      end
+    end
+
+    return hs
   resource.customizations.ignoreResourceUpdates.ConfigMap: |
     jqPathExpressions:
       # Ignore the cluster-autoscaler status
@@ -1199,7 +1251,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: df0d7d24255ea7ce6688468d3fcfd105b1cbc37c113635473c44d4f9ac9fa181
+        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
         checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
       labels:
         app.kubernetes.io/component: repo-server
@@ -1623,7 +1675,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: df0d7d24255ea7ce6688468d3fcfd105b1cbc37c113635473c44d4f9ac9fa181
+        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
         checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
       labels:
         app.kubernetes.io/component: server
@@ -2171,7 +2223,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: df0d7d24255ea7ce6688468d3fcfd105b1cbc37c113635473c44d4f9ac9fa181
+        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
         checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
       labels:
         app.kubernetes.io/component: application-controller
