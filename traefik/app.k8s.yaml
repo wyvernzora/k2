@@ -307,7 +307,7 @@ spec:
     - kind: Rule
       match: Host(`k2.wyvernzora.io`) && PathPrefix(`/traefik`)
       middlewares:
-        - name: k2-auth-authelia@kubernetescrd
+        - name: auth-authelia@kubernetescrd
       services:
         - kind: TraefikService
           name: api@internal
