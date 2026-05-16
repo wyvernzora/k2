@@ -11,7 +11,12 @@ export default {
 
     const name = NEXUS_CLUSTER_NAME;
     new Cluster(chart, "cluster", {
-      metadata: { name },
+      metadata: {
+        name,
+        annotations: {
+          "cnpg.wyvernzora.io/allowed-claim-namespaces": "paperless",
+        },
+      },
       spec: {
         instances: 3,
 
