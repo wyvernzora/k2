@@ -1482,8 +1482,6 @@ spec:
   storage:
     size: 16Gi
     storageClass: longhorn
-  superuserSecret:
-    name: nexus-superuser
   topologySpreadConstraints:
     - labelSelector:
         matchLabels:
