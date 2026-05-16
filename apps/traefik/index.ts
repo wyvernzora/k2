@@ -1,5 +1,6 @@
 import { AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace, Toleration } from "@k2/cdk-lib";
 import { K2Certificate } from "@k2/cert-manager";
+import * as Auth from "@k2/auth";
 import { ContinuousDeployment } from "@k2/argocd";
 
 import { TlsStore } from "./crds/traefik.io.js";
@@ -44,7 +45,7 @@ export const createAppResources: AppResourceFunc = app => {
           entryPoints: ["web", "websecure"],
           middlewares: [
             {
-              name: "k2-auth-authelia@kubernetescrd",
+              name: Auth.MiddlewareName,
             },
           ],
         },

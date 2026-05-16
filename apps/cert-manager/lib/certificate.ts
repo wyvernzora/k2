@@ -4,7 +4,7 @@ import { ApexDomain } from "@k2/cdk-lib";
 
 import { Certificate, ClusterIssuer, Issuer } from "../crds/cert-manager.io.js";
 
-const NAMESPACES = "k2-auth,k2-network,plex";
+const NAMESPACES = "k2-network,plex";
 
 export interface ReplicatedCertificateProps {
   readonly issuer: Issuer | ClusterIssuer;
