@@ -8,6 +8,8 @@ import {
 
 import { NEXUS_CLUSTER_NAME, NEXUS_CLUSTER_NAMESPACE } from "./nexus.js";
 
+export { DatabaseClaimSpecDeletionPolicy } from "../crds/cnpg.wyvernzora.io.js";
+
 export interface DatabaseClaimProps extends Omit<DatabaseClaimResourceProps, "spec"> {
   readonly spec: Omit<DatabaseClaimSpec, "clusterRef">;
 }
