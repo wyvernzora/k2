@@ -1240,6 +1240,223 @@ webhooks:
           - poolers
     sideEffects: None
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: dbclaim-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dbclaim-operator
+    app.kubernetes.io/version: v0.1.1
+    helm.sh/chart: dbclaim-operator-0.1.1
+  name: dbclaim-operator
+  namespace: postgresql
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: dbclaim-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dbclaim-operator
+    app.kubernetes.io/version: v0.1.1
+    helm.sh/chart: dbclaim-operator-0.1.1
+  name: dbclaim-operator-manager
+  namespace: postgresql
+rules:
+  - apiGroups:
+      - cnpg.wyvernzora.io
+    resources:
+      - databaseclaims
+      - roleclaims
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - cnpg.wyvernzora.io
+    resources:
+      - databaseclaims/status
+      - roleclaims/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups:
+      - cnpg.wyvernzora.io
+    resources:
+      - databaseclaims/finalizers
+      - roleclaims/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - postgresql.cnpg.io
+    resources:
+      - clusters
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: dbclaim-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dbclaim-operator
+    app.kubernetes.io/version: v0.1.1
+    helm.sh/chart: dbclaim-operator-0.1.1
+  name: dbclaim-operator-manager
+  namespace: postgresql
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dbclaim-operator-manager
+subjects:
+  - kind: ServiceAccount
+    name: dbclaim-operator
+    namespace: postgresql
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: dbclaim-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dbclaim-operator
+    app.kubernetes.io/version: v0.1.1
+    helm.sh/chart: dbclaim-operator-0.1.1
+  name: dbclaim-operator-leader-election
+  namespace: postgresql
+rules:
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: dbclaim-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dbclaim-operator
+    app.kubernetes.io/version: v0.1.1
+    helm.sh/chart: dbclaim-operator-0.1.1
+  name: dbclaim-operator-leader-election
+  namespace: postgresql
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: dbclaim-operator-leader-election
+subjects:
+  - kind: ServiceAccount
+    name: dbclaim-operator
+    namespace: postgresql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: dbclaim-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: dbclaim-operator
+    app.kubernetes.io/version: v0.1.1
+    helm.sh/chart: dbclaim-operator-0.1.1
+  name: dbclaim-operator
+  namespace: postgresql
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: dbclaim-operator
+      app.kubernetes.io/name: dbclaim-operator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: dbclaim-operator
+        app.kubernetes.io/name: dbclaim-operator
+    spec:
+      containers:
+        - args:
+            - --health-probe-bind-address=:8081
+            - --metrics-bind-address=:8080
+            - --leader-elect
+          image: ghcr.io/wyvernzora/cnpg-dbclaim-operator:v0.1.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: probes
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: manager
+          ports:
+            - containerPort: 8080
+              name: metrics
+              protocol: TCP
+            - containerPort: 8081
+              name: probes
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: probes
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsUser: 65532
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: dbclaim-operator
+---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
