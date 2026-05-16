@@ -221,6 +221,8 @@ spec:
               value: https://paperless.wyvernzora.io
             - name: PAPERLESS_ENABLE_HTTP_REMOTE_USER
               value: "true"
+            - name: PAPERLESS_ENABLE_HTTP_REMOTE_USER_API
+              value: "true"
             - name: PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME
               value: HTTP_REMOTE_USER
             - name: PAPERLESS_DISABLE_REGULAR_LOGIN
@@ -239,6 +241,7 @@ spec:
               path: /
               port: 8000
               scheme: HTTP
+            timeoutSeconds: 5
           name: paperless
           ports:
             - containerPort: 8000
@@ -249,6 +252,7 @@ spec:
               path: /
               port: 8000
               scheme: HTTP
+            timeoutSeconds: 5
           resources:
             limits:
               cpu: 2000m
@@ -261,7 +265,15 @@ spec:
             allowPrivilegeEscalation: false
             privileged: false
             readOnlyRootFilesystem: false
-            runAsNonRoot: true
+            runAsNonRoot: false
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
           volumeMounts:
             - mountPath: /usr/src/paperless/data
               name: pvc-paperless-depl-vol-data-pvc-c8053fea
@@ -272,14 +284,13 @@ spec:
             - mountPath: /usr/src/paperless/export
               name: blk-vol-export
       dnsPolicy: ClusterFirst
+      enableServiceLinks: false
       hostNetwork: false
       restartPolicy: Always
       securityContext:
         fsGroup: 2002
         fsGroupChangePolicy: Always
-        runAsGroup: 2002
         runAsNonRoot: true
-        runAsUser: 3003
       setHostnameAsFQDN: false
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
