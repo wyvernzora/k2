@@ -25,6 +25,7 @@ export class PaperlessDeployment extends Deployment {
       },
     });
 
+    this.addMediaDirectoriesInitContainer(props);
     this.addPaperlessContainer(props);
   }
 
@@ -33,6 +34,33 @@ export class PaperlessDeployment extends Deployment {
     yield volumes.media(this, "vol-media").mount(this, { path: "/usr/src/paperless/media" });
     yield volumes.consume(this, "vol-consume").mount(this, { path: "/usr/src/paperless/consume" });
     yield volumes.export(this, "vol-export").mount(this, { path: "/usr/src/paperless/export" });
+  }
+
+  private addMediaDirectoriesInitContainer(props: Props): void {
+    this.addInitContainer({
+      name: "init-media-directories",
+      image: oci`busybox:1.36`,
+      command: ["/bin/sh", "-c"],
+      args: [
+        [
+          "set -eu",
+          "umask 0007",
+          "mkdir -p /usr/src/paperless/media/documents/archive",
+          "mkdir -p /usr/src/paperless/media/documents/originals",
+          "mkdir -p /usr/src/paperless/media/documents/thumbnails",
+          "chmod 2770 /usr/src/paperless/media/documents || true",
+          "chmod 2770 /usr/src/paperless/media/documents/archive || true",
+          "chmod 2770 /usr/src/paperless/media/documents/originals || true",
+          "chmod 2770 /usr/src/paperless/media/documents/thumbnails || true",
+        ].join("\n"),
+      ],
+      volumeMounts: [props.volumes.media(this, "vol-init-media").mount(this, { path: "/usr/src/paperless/media" })],
+      securityContext: {
+        ensureNonRoot: false,
+        readOnlyRootFilesystem: true,
+        user: 0,
+      },
+    });
   }
 
   private addPaperlessContainer(props: Props): void {
