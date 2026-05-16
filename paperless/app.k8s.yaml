@@ -1,0 +1,347 @@
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: paperless
+spec:
+  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/pw2aod2wbvjibgkkm552mz6jfu
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: DatabaseClaim
+metadata:
+  name: paperless
+spec:
+  clusterRef:
+    name: nexus
+    namespace: postgresql
+  databaseName: paperless
+  deletionPolicy: Retain
+  schemas:
+    - public
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: RoleClaim
+metadata:
+  name: paperless
+spec:
+  access: Owner
+  databaseClaimRef:
+    name: paperless
+  roleName: paperless
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-redis-c8255ce6
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: paperless-redis-c88e5a14
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: paperless-redis-c88e5a14
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - redis-server
+            - --save
+            - ""
+            - --appendonly
+            - "no"
+            - --requirepass
+            - $(REDIS_PASSWORD)
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: redisPassword
+                  name: paperless
+          image: redis:7.4-alpine
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_PASSWORD" ping
+            failureThreshold: 3
+          name: redis
+          ports:
+            - containerPort: 6379
+              name: redis
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_PASSWORD" ping
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperless-redis
+spec:
+  externalIPs: []
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    cdk8s.io/metadata.addr: paperless-redis-c88e5a14
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-depl-c885902c
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: paperless-depl-c8c45422
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: paperless-depl-c8c45422
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              - matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PAPERLESS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secretKey
+                  name: paperless
+            - name: PAPERLESS_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  key: adminUsername
+                  name: paperless
+            - name: PAPERLESS_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: adminPassword
+                  name: paperless
+            - name: PAPERLESS_DBHOST
+              valueFrom:
+                secretKeyRef:
+                  key: host
+                  name: paperless-credentials
+            - name: PAPERLESS_DBPORT
+              valueFrom:
+                secretKeyRef:
+                  key: port
+                  name: paperless-credentials
+            - name: PAPERLESS_DBNAME
+              valueFrom:
+                secretKeyRef:
+                  key: dbname
+                  name: paperless-credentials
+            - name: PAPERLESS_DBUSER
+              valueFrom:
+                secretKeyRef:
+                  key: user
+                  name: paperless-credentials
+            - name: PAPERLESS_DBPASS
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: paperless-credentials
+            - name: PAPERLESS_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: redisPassword
+                  name: paperless
+            - name: PAPERLESS_REDIS
+              value: redis://:$(PAPERLESS_REDIS_PASSWORD)@paperless-redis:6379
+            - name: PAPERLESS_URL
+              value: https://paperless.wyvernzora.io
+            - name: PAPERLESS_TIME_ZONE
+              value: America/Los_Angeles
+            - name: PAPERLESS_OCR_LANGUAGE
+              value: eng
+            - name: PAPERLESS_CONSUMER_POLLING
+              value: "60"
+            - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
+              value: https://paperless.wyvernzora.io
+            - name: PAPERLESS_ENABLE_HTTP_REMOTE_USER
+              value: "true"
+            - name: PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME
+              value: HTTP_REMOTE_USER
+            - name: PAPERLESS_DISABLE_REGULAR_LOGIN
+              value: "true"
+            - name: PAPERLESS_ACCOUNT_ALLOW_SIGNUPS
+              value: "false"
+            - name: USERMAP_UID
+              value: "3003"
+            - name: USERMAP_GID
+              value: "2002"
+          image: ghcr.io/paperless-ngx/paperless-ngx:v2.20.15
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+          name: paperless
+          ports:
+            - containerPort: 8000
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 10Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+          volumeMounts:
+            - mountPath: /usr/src/paperless/data
+              name: pvc-paperless-depl-vol-data-pvc-c8053fea
+            - mountPath: /usr/src/paperless/media
+              name: blk-vol-media
+            - mountPath: /usr/src/paperless/consume
+              name: blk-vol-consume
+            - mountPath: /usr/src/paperless/export
+              name: blk-vol-export
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 2002
+        fsGroupChangePolicy: Always
+        runAsGroup: 2002
+        runAsNonRoot: true
+        runAsUser: 3003
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-paperless-depl-vol-data-pvc-c8053fea
+          persistentVolumeClaim:
+            claimName: paperless-depl-vol-data-pvc-c8053fea
+            readOnly: false
+        - name: blk-vol-media
+          nfs:
+            path: /mnt/data/documents/vault
+            server: 10.10.8.1
+        - name: blk-vol-consume
+          nfs:
+            path: /mnt/data/documents/incoming
+            server: 10.10.8.1
+        - name: blk-vol-export
+          nfs:
+            path: /mnt/data/documents/exports
+            server: 10.10.8.1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paperless-depl-vol-data-pvc-c8053fea
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperless
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+      targetPort: 8000
+  selector:
+    cdk8s.io/metadata.addr: paperless-depl-c8c45422
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
+  name: paperless-ingress-c811ebcd
+spec:
+  rules:
+    - host: paperless.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: paperless
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
