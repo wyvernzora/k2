@@ -44,6 +44,9 @@ func (i Inspector) Artifact(resolved plan.Plan) error {
 	if i.Stdout == nil {
 		i.Stdout = io.Discard
 	}
+	if i.Stderr == nil {
+		i.Stderr = io.Discard
+	}
 
 	if info, err := os.Stat(resolved.ArtifactDir); err != nil {
 		return fmt.Errorf("missing artifact directory %s: %w", resolved.ArtifactDir, err)
@@ -59,7 +62,7 @@ func (i Inspector) Artifact(resolved plan.Plan) error {
 			if err != nil {
 				return err
 			}
-			expectedFiles = append(expectedFiles, files.Raw, files.Compressed)
+			expectedFiles = append(expectedFiles, files.Compressed)
 		case "iso":
 			iso, err := i.inspectISO(resolved)
 			if err != nil {
@@ -81,9 +84,6 @@ func (i Inspector) Artifact(resolved plan.Plan) error {
 
 func (i Inspector) inspectRaw(resolved plan.Plan) (rawFiles, error) {
 	files := RawFiles(resolved)
-	if err := requireFile(files.Raw); err != nil {
-		return rawFiles{}, err
-	}
 	if err := requireFile(files.Compressed); err != nil {
 		return rawFiles{}, err
 	}
@@ -99,7 +99,12 @@ func (i Inspector) inspectRaw(resolved plan.Plan) (rawFiles, error) {
 		}
 		defer os.RemoveAll(workDir)
 
-		if err := rawpatch.ExtractFiles(files.Raw, resolved.Versions.AuroraBootVersion, requests, workDir); err != nil {
+		rawForInspection, err := i.rawForInspection(files, workDir)
+		if err != nil {
+			return rawFiles{}, err
+		}
+
+		if err := rawpatch.ExtractFiles(rawForInspection, resolved.Versions.AuroraBootVersion, requests, workDir); err != nil {
 			return rawFiles{}, err
 		}
 		if len(resolved.RawPatches) > 0 {
@@ -113,6 +118,34 @@ func (i Inspector) inspectRaw(resolved plan.Plan) (rawFiles, error) {
 	}
 
 	return files, nil
+}
+
+func (i Inspector) rawForInspection(files rawFiles, workDir string) (string, error) {
+	if err := requireFile(files.Raw); err == nil {
+		return files.Raw, nil
+	}
+
+	raw := filepath.Join(workDir, strings.TrimSuffix(filepath.Base(files.Compressed), ".xz"))
+	out, err := os.Create(raw)
+	if err != nil {
+		return "", err
+	}
+
+	cmd := exec.Command("xz", "-dc", files.Compressed)
+	cmd.Stdout = out
+	cmd.Stderr = i.Stderr
+	runErr := cmd.Run()
+	closeErr := out.Close()
+	if runErr != nil {
+		return "", fmt.Errorf("decompressing %s for raw inspection failed: %w", files.Compressed, runErr)
+	}
+	if closeErr != nil {
+		return "", closeErr
+	}
+	if err := requireFile(raw); err != nil {
+		return "", err
+	}
+	return raw, nil
 }
 
 func (i Inspector) inspectISO(resolved plan.Plan) (string, error) {

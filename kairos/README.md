@@ -40,8 +40,8 @@ earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-
 
 That target runs the Go tests and vet checks, builds the OCI image, validates
 OCI expectations, runs AuroraBoot, applies raw partition patches, writes
-checksums and a manifest, validates the raw artifact, then exports files under
-`kairos/artifacts/<target>/`.
+checksums and a manifest, validates the raw artifact, then exports the
+compressed image and metadata under `kairos/artifacts/<target>/`.
 
 Useful direct CLI commands:
 

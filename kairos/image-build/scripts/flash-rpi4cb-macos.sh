@@ -140,11 +140,11 @@ require_macos() {
 }
 
 confirm() {
-    local raw_file="$1"
+    local image_file="$1"
 
     echo
     echo "About to flash:"
-    echo "  image: ${raw_file}"
+    echo "  image: ${image_file}"
     echo "  eMMC:  $(disk_path "${EMMC_DISK}")"
     if [ -n "${NVME_DISK}" ]; then
         echo "  NVMe:  $(disk_path "${NVME_DISK}")"
@@ -156,45 +156,63 @@ confirm() {
         diskutil list "$(disk_path "${NVME_DISK}")" || true
     fi
     echo
-    read -r -p "Type FLASH to write ${raw_file} to $(disk_path "${EMMC_DISK}"): " answer
+    read -r -p "Type FLASH to write ${image_file} to $(disk_path "${EMMC_DISK}"): " answer
     if [ "${answer}" != "FLASH" ]; then
         die "confirmation failed; aborting"
     fi
 }
 
-verify_prefix_hash() {
-    local raw_file="$1"
-    local bytes block_size block_count image_hash disk_hash
+manifest_value() {
+    local manifest_file="$1"
+    local key="$2"
 
-    log "Verifying eMMC prefix hash against image"
-    bytes="$(stat -f %z "${raw_file}")"
-    if [ $(( bytes % 1048576 )) -eq 0 ]; then
-        block_size="1m"
-        block_count=$(( bytes / 1048576 ))
-    elif [ $(( bytes % 512 )) -eq 0 ]; then
-        block_size="512"
-        block_count=$(( bytes / 512 ))
-    else
-        die "raw image size ${bytes} is not sector-aligned; cannot verify disk prefix safely"
+    plutil -extract "${key}" raw -o - "${manifest_file}" 2>/dev/null ||
+        die "artifact manifest ${manifest_file} is missing ${key}"
+}
+
+verify_prefix_hash() {
+    local raw_sha="$1"
+    local raw_bytes="$2"
+    local raw_name="$3"
+    local block_size block_count disk_hash
+
+    log "Verifying eMMC prefix hash against manifest raw SHA"
+    if [ -z "${raw_bytes}" ] || [ "${raw_bytes//[0-9]/}" != "" ]; then
+        die "manifest raw.sizeBytes is not a positive integer: ${raw_bytes}"
+    fi
+    if [ "${raw_bytes}" -le 0 ]; then
+        die "manifest raw.sizeBytes is not positive: ${raw_bytes}"
+    fi
+    if [ -z "${raw_sha}" ]; then
+        die "manifest raw.sha256 is empty"
     fi
 
-    echo "Image:"
-    image_hash="$(shasum -a 256 "${raw_file}" | awk '{print $1}')"
-    echo "${image_hash}  ${raw_file}"
+    if [ $(( raw_bytes % 1048576 )) -eq 0 ]; then
+        block_size="1m"
+        block_count=$(( raw_bytes / 1048576 ))
+    elif [ $(( raw_bytes % 512 )) -eq 0 ]; then
+        block_size="512"
+        block_count=$(( raw_bytes / 512 ))
+    else
+        die "manifest raw size ${raw_bytes} is not sector-aligned; cannot verify disk prefix safely"
+    fi
+
+    echo "Manifest raw image:"
+    echo "${raw_sha}  ${raw_name} (${raw_bytes} bytes)"
 
     echo "eMMC prefix:"
     disk_hash="$(sudo dd if="$(raw_disk_path "${EMMC_DISK}")" bs="${block_size}" count="${block_count}" status=progress | shasum -a 256 | awk '{print $1}')"
     echo "${disk_hash}  -"
 
-    if [ "${image_hash}" != "${disk_hash}" ]; then
-        die "verification failed: eMMC prefix hash does not match image"
+    if [ "${raw_sha}" != "${disk_hash}" ]; then
+        die "verification failed: eMMC prefix hash does not match manifest raw SHA"
     fi
 
     log "Verification passed"
 }
 
 main() {
-    local raw_file
+    local artifact_path compressed_file compressed_name manifest_file raw_name raw_sha raw_bytes
     local verify_status="eMMC image verified"
 
     trap 'failure_banner "$?"' ERR
@@ -232,6 +250,7 @@ main() {
     require_cmd find
     require_cmd plutil
     require_cmd shasum
+    require_cmd xz
 
     log "Starting rpi4cb flash helper"
 
@@ -248,25 +267,35 @@ main() {
         validate_target_disk "${NVME_DISK}" "NVMe"
     fi
 
-    raw_file="$(find "$(artifact_dir "${TARGET}")" -maxdepth 1 -type f -name '*.raw' -print -quit)"
-    if [ -z "${raw_file}" ] || [ ! -f "${raw_file}" ]; then
-        die "raw image not found under $(artifact_dir "${TARGET}"); build it first with: earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=${TARGET}"
+    artifact_path="$(artifact_dir "${TARGET}")"
+    manifest_file="${artifact_path}/artifact-manifest.json"
+    if [ ! -f "${manifest_file}" ]; then
+        die "artifact manifest not found at ${manifest_file}; build it first with: earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=${TARGET}"
     fi
-    log "Using raw image: ${raw_file}"
-    log "Raw image size: $(stat -f %z "${raw_file}") bytes"
+    compressed_name="$(manifest_value "${manifest_file}" "compressed.file")"
+    compressed_file="${artifact_path}/${compressed_name}"
+    if [ -z "${compressed_name}" ] || [ ! -f "${compressed_file}" ]; then
+        die "compressed image from manifest not found: ${compressed_file}"
+    fi
+    raw_name="$(manifest_value "${manifest_file}" "raw.file")"
+    raw_sha="$(manifest_value "${manifest_file}" "raw.sha256")"
+    raw_bytes="$(manifest_value "${manifest_file}" "raw.sizeBytes")"
+    log "Using compressed image: ${compressed_file}"
+    log "Compressed image size: $(stat -f %z "${compressed_file}") bytes"
+    log "Uncompressed raw image size: ${raw_bytes} bytes"
 
-    confirm "${raw_file}"
+    confirm "${compressed_file}"
 
     log "Unmounting eMMC $(disk_path "${EMMC_DISK}")"
     diskutil unmountDisk "$(disk_path "${EMMC_DISK}")" || true
 
-    log "Flashing eMMC. This can take a few minutes."
-    sudo dd if="${raw_file}" of="$(raw_disk_path "${EMMC_DISK}")" bs=4m status=progress
+    log "Flashing eMMC from compressed image. This can take a few minutes."
+    xz -dc "${compressed_file}" | sudo dd of="$(raw_disk_path "${EMMC_DISK}")" bs=4m status=progress
     log "Syncing eMMC writes"
     sync
 
     if [ "${SKIP_VERIFY}" != "true" ]; then
-        verify_prefix_hash "${raw_file}"
+        verify_prefix_hash "${raw_sha}" "${raw_bytes}" "${raw_name}"
     else
         warn "Skipping eMMC verification because --skip-verify was set"
         verify_status="eMMC verification skipped"

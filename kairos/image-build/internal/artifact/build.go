@@ -46,8 +46,9 @@ type manifest struct {
 }
 
 type manifestFile struct {
-	File   string `json:"file"`
-	SHA256 string `json:"sha256"`
+	File      string `json:"file"`
+	SHA256    string `json:"sha256"`
+	SizeBytes int64  `json:"sizeBytes"`
 }
 
 type manifestPatches struct {
@@ -100,10 +101,13 @@ func (b Builder) Artifact(resolved plan.Plan) error {
 		}
 	}
 
-	if err := WriteChecksums(resolved.ArtifactDir); err != nil {
+	if err := WriteManifest(resolved); err != nil {
 		return err
 	}
-	if err := WriteManifest(resolved); err != nil {
+	if err := removeTransientRawArtifacts(resolved.ArtifactDir); err != nil {
+		return err
+	}
+	if err := WriteChecksums(resolved.ArtifactDir); err != nil {
 		return err
 	}
 
@@ -210,11 +214,11 @@ func WriteChecksums(dir string) error {
 }
 
 func WriteManifest(resolved plan.Plan) error {
-	rawName, rawSHA, err := optionalManifestFile(resolved.ArtifactDir, "*.raw")
+	rawName, rawSHA, rawSize, err := optionalManifestFile(resolved.ArtifactDir, "*.raw")
 	if err != nil {
 		return err
 	}
-	compressedName, compressedSHA, err := optionalManifestFile(resolved.ArtifactDir, "*.raw.xz")
+	compressedName, compressedSHA, compressedSize, err := optionalManifestFile(resolved.ArtifactDir, "*.raw.xz")
 	if err != nil {
 		return err
 	}
@@ -227,12 +231,14 @@ func WriteManifest(resolved plan.Plan) error {
 		AuroraBootVersion: resolved.Versions.AuroraBootVersion,
 		K3sVersion:        resolved.Versions.K3sVersion,
 		Raw: manifestFile{
-			File:   rawName,
-			SHA256: rawSHA,
+			File:      rawName,
+			SHA256:    rawSHA,
+			SizeBytes: rawSize,
 		},
 		Compressed: manifestFile{
-			File:   compressedName,
-			SHA256: compressedSHA,
+			File:      compressedName,
+			SHA256:    compressedSHA,
+			SizeBytes: compressedSize,
 		},
 		Patches: manifestPatches{
 			Raw: append([]plan.RawPatch(nil), resolved.RawPatches...),
@@ -288,7 +294,7 @@ func cleanArtifacts(dir string) error {
 }
 
 func checksumFiles(dir string) ([]string, error) {
-	patterns := []string{"*.raw", "*.raw.xz", "*.iso"}
+	patterns := []string{"*.raw.xz", "*.iso"}
 	var files []string
 	for _, pattern := range patterns {
 		matches, err := filepath.Glob(filepath.Join(dir, pattern))
@@ -309,16 +315,39 @@ func checksumFiles(dir string) ([]string, error) {
 	return files, nil
 }
 
-func optionalManifestFile(dir string, pattern string) (string, string, error) {
+func removeTransientRawArtifacts(dir string) error {
+	matches, err := filepath.Glob(filepath.Join(dir, "*.raw"))
+	if err != nil {
+		return err
+	}
+	for _, match := range matches {
+		info, err := os.Stat(match)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return err
+		}
+		if info.IsDir() {
+			continue
+		}
+		if err := os.Remove(match); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func optionalManifestFile(dir string, pattern string) (string, string, int64, error) {
 	matches, err := filepath.Glob(filepath.Join(dir, pattern))
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
 	var files []string
 	for _, match := range matches {
 		info, err := os.Stat(match)
 		if err != nil {
-			return "", "", err
+			return "", "", 0, err
 		}
 		if !info.IsDir() {
 			files = append(files, match)
@@ -326,16 +355,20 @@ func optionalManifestFile(dir string, pattern string) (string, string, error) {
 	}
 	sort.Strings(files)
 	if len(files) == 0 {
-		return "", "", nil
+		return "", "", 0, nil
 	}
 	if len(files) > 1 {
-		return "", "", fmt.Errorf("expected at most one %s file in %s, found %d", pattern, dir, len(files))
+		return "", "", 0, fmt.Errorf("expected at most one %s file in %s, found %d", pattern, dir, len(files))
 	}
 	hash, err := SHA256File(files[0])
 	if err != nil {
-		return "", "", err
+		return "", "", 0, err
 	}
-	return filepath.Base(files[0]), hash, nil
+	info, err := os.Stat(files[0])
+	if err != nil {
+		return "", "", 0, err
+	}
+	return filepath.Base(files[0]), hash, info.Size(), nil
 }
 
 func singleGeneratedFile(dir string, pattern string) (string, error) {

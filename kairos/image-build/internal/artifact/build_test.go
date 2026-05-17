@@ -34,7 +34,7 @@ func TestBuilderRawArtifact(t *testing.T) {
 
 	raw := filepath.Join(resolved.ArtifactDir, resolved.ArtifactStem+".raw")
 	compressed := raw + ".xz"
-	requireFile(t, raw)
+	requireNoFile(t, raw)
 	requireFile(t, compressed)
 	requireFile(t, filepath.Join(resolved.ArtifactDir, "SHA256SUMS"))
 	requireFile(t, filepath.Join(resolved.ArtifactDir, "artifact-manifest.json"))
@@ -72,12 +72,14 @@ func TestBuilderRawArtifact(t *testing.T) {
 		Target string `json:"target"`
 		Image  string `json:"image"`
 		Raw    struct {
-			File   string `json:"file"`
-			SHA256 string `json:"sha256"`
+			File      string `json:"file"`
+			SHA256    string `json:"sha256"`
+			SizeBytes int64  `json:"sizeBytes"`
 		} `json:"raw"`
 		Compressed struct {
-			File   string `json:"file"`
-			SHA256 string `json:"sha256"`
+			File      string `json:"file"`
+			SHA256    string `json:"sha256"`
+			SizeBytes int64  `json:"sizeBytes"`
 		} `json:"compressed"`
 		Patches struct {
 			Raw []plan.RawPatch `json:"raw"`
@@ -89,10 +91,10 @@ func TestBuilderRawArtifact(t *testing.T) {
 	if got.Target != resolved.Target || got.Image != resolved.Image {
 		t.Fatalf("manifest target/image mismatch: %#v", got)
 	}
-	if got.Raw.File != filepath.Base(raw) || got.Raw.SHA256 == "" {
+	if got.Raw.File != filepath.Base(raw) || got.Raw.SHA256 == "" || got.Raw.SizeBytes != 3 {
 		t.Fatalf("manifest raw mismatch: %#v", got.Raw)
 	}
-	if got.Compressed.File != filepath.Base(compressed) || got.Compressed.SHA256 == "" {
+	if got.Compressed.File != filepath.Base(compressed) || got.Compressed.SHA256 == "" || got.Compressed.SizeBytes == 0 {
 		t.Fatalf("manifest compressed mismatch: %#v", got.Compressed)
 	}
 	if !reflect.DeepEqual(got.Patches.Raw, resolved.RawPatches) {
@@ -136,14 +138,11 @@ func TestWriteChecksums(t *testing.T) {
 		t.Fatal(err)
 	}
 	lines := strings.Split(strings.TrimSpace(string(got)), "\n")
-	if len(lines) != 2 {
-		t.Fatalf("checksum lines = %#v, want 2 lines", lines)
+	if len(lines) != 1 {
+		t.Fatalf("checksum lines = %#v, want 1 line", lines)
 	}
-	if !strings.HasSuffix(lines[0], "  a.raw") {
-		t.Fatalf("first checksum line = %q, want a.raw first", lines[0])
-	}
-	if !strings.HasSuffix(lines[1], "  b.raw.xz") {
-		t.Fatalf("second checksum line = %q, want b.raw.xz second", lines[1])
+	if !strings.HasSuffix(lines[0], "  b.raw.xz") {
+		t.Fatalf("checksum line = %q, want b.raw.xz", lines[0])
 	}
 }
 
@@ -269,6 +268,15 @@ func requireFile(t *testing.T, path string) {
 	}
 	if info.IsDir() {
 		t.Fatalf("%s is a directory", path)
+	}
+}
+
+func requireNoFile(t *testing.T, path string) {
+	t.Helper()
+	if _, err := os.Stat(path); err == nil {
+		t.Fatalf("%s exists, expected it to be removed", path)
+	} else if !os.IsNotExist(err) {
+		t.Fatal(err)
 	}
 }
 

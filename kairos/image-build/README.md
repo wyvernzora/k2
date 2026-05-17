@@ -74,10 +74,12 @@ earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-
 
 This is the preferred artifact path because all raw image mutation happens on
 Linux-local storage before Earthly exports finished artifacts to
-`kairos/artifacts/<target>/`. macOS/Docker Desktop raw-image writeback is not
-considered an authoritative artifact build path. The Earthly target also exports
-and imports a Docker BuildKit local cache between runs, so the expensive OCI
-build layers do not have to start cold every time.
+`kairos/artifacts/<target>/`. The uncompressed `.raw` file is kept only as a
+build intermediate; exported artifacts use `.raw.xz` plus manifest/checksum
+metadata. macOS/Docker Desktop raw-image writeback is not considered an
+authoritative artifact build path. The Earthly target also exports and imports a
+Docker BuildKit local cache between runs, so the expensive OCI build layers do
+not have to start cold every time.
 
 Inspect the artifact:
 
@@ -168,4 +170,5 @@ earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=<target
 
 That Earthly target builds the target OCI image in a Linux Docker environment,
 runs AuroraBoot, applies raw overlay patches, writes checksums and the artifact
-manifest, and runs artifact inspection before exporting `kairos/artifacts/`.
+manifest, and runs artifact inspection before exporting compressed artifacts to
+`kairos/artifacts/`.
