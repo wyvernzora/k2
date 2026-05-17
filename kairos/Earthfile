@@ -1,0 +1,71 @@
+VERSION 0.8
+
+ARG KAIROS_TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s-base"
+
+#
+# +image-build-unit: tests and validates the self-contained Kairos image builder
+#
+image-build-unit:
+    FROM golang:1.26-bookworm
+    WORKDIR /src
+    COPY image-build/go.mod image-build/go.sum ./kairos/image-build/
+    WORKDIR /src/kairos/image-build
+    RUN --mount=type=cache,target=/go/pkg/mod go mod download
+    WORKDIR /src
+    COPY image-build ./kairos/image-build
+    COPY targets.yaml versions.env ./kairos/
+    COPY overlays ./kairos/overlays
+    WORKDIR /src/kairos/image-build
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go test ./...
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go vet ./...
+    RUN bash -n scripts/flash-rpi4cb-macos.sh
+    RUN go run ./cmd/image-build --build-root /src/kairos/image-build --kairos-root /src/kairos plan --all --format json >/tmp/kairos-image-build-plans.json
+
+#
+# +image-build-cli: builds the image-build CLI used by Earthly artifact targets
+#
+image-build-cli:
+    FROM --pass-args +image-build-unit
+    WORKDIR /src/kairos/image-build
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /out/k2-kairos-image-build ./cmd/image-build
+    SAVE ARTIFACT /out/k2-kairos-image-build
+
+#
+# +image-build-artifact: builds, patches, inspects, and exports Kairos boot artifacts in Linux
+#
+image-build-artifact:
+    ARG KAIROS_TARGET
+    FROM earthly/dind:ubuntu-23.04-docker-25.0.2-1
+    WORKDIR /src
+    RUN command -v bash && command -v xz && command -v docker && command -v dockerd
+    COPY image-build ./kairos/image-build
+    COPY targets.yaml versions.env ./kairos/
+    COPY overlays ./kairos/overlays
+    COPY +image-build-cli/k2-kairos-image-build /usr/local/bin/k2-kairos-image-build
+    WITH DOCKER
+        RUN --mount=type=cache,target=/var/cache/k2-kairos-image-build set -eu; \
+            docker run --privileged --rm tonistiigi/binfmt:latest --install all; \
+            docker buildx rm k2-earthly-builder >/dev/null 2>&1 || true; \
+            docker buildx create --name k2-earthly-builder --driver docker-container --use >/dev/null; \
+            docker buildx inspect --bootstrap >/dev/null; \
+            cache_root="/var/cache/k2-kairos-image-build/oci/${KAIROS_TARGET}"; \
+            cache_current="${cache_root}/current"; \
+            cache_next="${cache_root}/next"; \
+            mkdir -p "${cache_current}"; \
+            rm -rf "${cache_next}"; \
+            mkdir -p "${cache_next}"; \
+            cache_from_args=""; \
+            if [ -f "${cache_current}/index.json" ]; then \
+                cache_from_args="--cache-from type=local,src=${cache_current}"; \
+            fi; \
+            k2-kairos-image-build --build-root /src/kairos/image-build --kairos-root /src/kairos --artifacts /out build oci \
+                ${cache_from_args} \
+                --cache-to "type=local,dest=${cache_next},mode=max" \
+                "$KAIROS_TARGET"; \
+            rm -rf "${cache_current}"; \
+            mv "${cache_next}" "${cache_current}"; \
+            k2-kairos-image-build --build-root /src/kairos/image-build --kairos-root /src/kairos --artifacts /out inspect oci "$KAIROS_TARGET"; \
+            k2-kairos-image-build --build-root /src/kairos/image-build --kairos-root /src/kairos --artifacts /out build artifact "$KAIROS_TARGET"; \
+            k2-kairos-image-build --build-root /src/kairos/image-build --kairos-root /src/kairos --artifacts /out inspect artifact "$KAIROS_TARGET"
+    END
+    SAVE ARTIFACT /out/$KAIROS_TARGET AS LOCAL artifacts/$KAIROS_TARGET
