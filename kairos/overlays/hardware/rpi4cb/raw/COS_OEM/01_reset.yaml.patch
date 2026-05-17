@@ -1,0 +1,6 @@
+- op: test
+  path: /stages/rootfs.before/0/layout/add_partitions/1/fsLabel
+  value: COS_PERSISTENT
+- op: add
+  path: /stages/rootfs.before/0/layout/add_partitions/1/size
+  value: 500

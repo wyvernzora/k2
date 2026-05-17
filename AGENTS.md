@@ -18,7 +18,8 @@
 | `cdk-lib/` | Shared CDK8s contexts (`AppRoot`, `HelmCharts`, `Namespace`, `ApexDomain`), constructs (config maps, scheduling, volumes), and helper types for apps. |
 | `deploy/` | Generated manifest output under cluster-specific `legacy/` and `v3/` trees. |
 | `ansible/` | Containerized Ansible runtime (`Earthfile`, `entrypoint.sh`, roles, playbooks) for host bootstrap and TLS refresh. |
-| `kairos/` | Kairos cloud-config templates & helper scripts; secrets injected via `op inject`. |
+| `kairos/` | Kairos image target definitions, pinned versions, overlays, Earthly image-build targets, ignored artifacts, and notes. |
+| `kairos/image-build/` | Self-contained Go CLI and Dockerfile for Ubuntu+k3s Kairos OCI images and bootable artifacts. |
 | `Earthfile` | Defines reusable Earthly targets for builds, linting, manifest synthesis, CRD imports, and Docker image publishing. |
 | `deploy-diff.md` | Generated report from `build/scripts/diff-manifests.sh`. |
 | `package.json`, `package-lock.json`, `node_modules/` | Node dependencies for CDK8s synthesis and linting. |
@@ -113,7 +114,8 @@
 - The Ansible `Earthfile` builds a container image off `willhallonline/ansible`, installs Galaxy requirements, and sets `/ansible/entrypoint.sh` as the entrypoint.
 
 ### Kairos
-- Templates in `kairos/*` provide bootstrap/master/worker cloud-configs. Use `op inject -i <file> | pbcopy` to render secrets before pasting into the Kairos installer (see `kairos/README.md`).
+- Kairos image configuration lives directly under `kairos/`: `targets.yaml`, `versions.env`, `overlays/`, `Earthfile`, ignored `artifacts/`, and notes.
+- Kairos build logic lives under `kairos/image-build/`. Prefer direct CLI invocation with `(cd kairos/image-build && go run ./cmd/image-build ...)`, or use the reproducible Earthly artifact path `earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=<target>`.
 
 ## Tips & Gotchas
 - Context order matters: `AppRoot` must be registered before `HelmCharts.with()`, and the default synth pipeline already does this—mirror it in tests and scripts.

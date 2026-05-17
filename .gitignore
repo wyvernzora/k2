@@ -48,6 +48,10 @@ notes/
 *.tsbuildinfo
 .tmp-earthly-out
 
+# Kairos image build local artifacts
+/kairos/artifacts/
+/kairos/notes/
+
 # k8s manifest output destination
 /deploy/
 deploy.diff

@@ -1,0 +1,38 @@
+inspect:
+  oci:
+    files:
+      - path: /system/oem/05-rpi4cb-nvme-persistent.yaml
+        contains:
+          - RPi CM4 ComputeBlade NVMe COS_PERSISTENT
+          - kairos-nvme-persistent
+    absent:
+      - /system/oem/20-rpi4cb-nvme-data.yaml
+    commands:
+      - blkid
+      - e2label
+      - findmnt
+      - lsblk
+      - mkfs.ext4
+      - modprobe
+      - parted
+      - partprobe
+      - readlink
+      - udevadm
+      - wipefs
+  raw:
+    partitions:
+      COS_GRUB:
+        files:
+          - path: extraconfig.txt
+            contains:
+              - dtparam=pciex1
+      COS_OEM:
+        files:
+          - path: 01_reset.yaml
+            structuredTests:
+              - op: test
+                path: /stages/rootfs.before/0/layout/add_partitions/1/fsLabel
+                value: COS_PERSISTENT
+              - op: test
+                path: /stages/rootfs.before/0/layout/add_partitions/1/size
+                value: 500

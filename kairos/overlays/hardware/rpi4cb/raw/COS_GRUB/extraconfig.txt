@@ -1,0 +1,3 @@
+[cm4]
+dtparam=pciex1
+

@@ -1,0 +1,192 @@
+#cloud-config
+name: "RPi CM4 ComputeBlade NVMe COS_PERSISTENT"
+
+stages:
+  rootfs.before:
+    - name: "Prepare NVMe-backed COS_PERSISTENT"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - |
+          set -eu
+          PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+          nvme_disk="/dev/nvme0n1"
+          nvme_part="/dev/nvme0n1p1"
+          persist_label="COS_PERSISTENT"
+          old_emmc_label="COS_PERSIST_OLD"
+          destructive_nvme_init="1"
+
+          log() {
+              msg="kairos-nvme-persistent: $*"
+              echo "${msg}"
+              if [ -e /dev/kmsg ]; then
+                  printf '%s\n' "${msg}" >/dev/kmsg || true
+              fi
+          }
+
+          need() {
+              if ! command -v "$1" >/dev/null 2>&1; then
+                  log "missing required command: $1"
+                  exit 1
+              fi
+          }
+
+          need blkid
+          need e2label
+          need mkfs.ext4
+          need modprobe
+          need parted
+          need partprobe
+          need readlink
+          need udevadm
+          need wipefs
+
+          modprobe nvme_core 2>/dev/null || true
+          modprobe nvme 2>/dev/null || true
+          udevadm settle 2>/dev/null || true
+
+          i=0
+          while [ "${i}" -lt 90 ]; do
+              if [ -b "${nvme_disk}" ]; then
+                  break
+              fi
+              i=$((i + 1))
+              sleep 1
+          done
+
+          if [ ! -b "${nvme_disk}" ]; then
+              log "NVMe disk ${nvme_disk} did not appear; refusing to continue"
+              exit 1
+          fi
+
+          resolve_dev() {
+              readlink -f "$1" 2>/dev/null || printf '%s\n' "$1"
+          }
+
+          is_nvme_dev() {
+              dev="$(resolve_dev "$1")"
+              case "${dev}" in
+                  /dev/nvme*) return 0 ;;
+                  *) return 1 ;;
+              esac
+          }
+
+          relabel_fs() {
+              dev="$1"
+              new_label="$2"
+              fstype="$(blkid -s TYPE -o value "${dev}" 2>/dev/null || true)"
+              case "${fstype}" in
+                  ext2|ext3|ext4)
+                      log "relabeling ${dev} from ${persist_label} to ${new_label}"
+                      e2label "${dev}" "${new_label}"
+                      ;;
+                  "")
+                      log "device ${dev} has label ${persist_label} but no detectable filesystem type"
+                      exit 1
+                      ;;
+                  *)
+                      log "device ${dev} has unsupported filesystem type '${fstype}'; refusing to relabel"
+                      exit 1
+                      ;;
+              esac
+          }
+
+          for dev in $(blkid -o device -t LABEL="${persist_label}" 2>/dev/null || true); do
+              if is_nvme_dev "${dev}"; then
+                  log "found existing NVMe ${persist_label} at ${dev}"
+              else
+                  relabel_fs "${dev}" "${old_emmc_label}"
+              fi
+          done
+
+          existing_nvme_persistent=""
+          for dev in $(blkid -o device -t LABEL="${persist_label}" 2>/dev/null || true); do
+              if is_nvme_dev "${dev}"; then
+                  existing_nvme_persistent="${dev}"
+                  break
+              fi
+          done
+
+          if [ -n "${existing_nvme_persistent}" ]; then
+              log "NVMe-backed ${persist_label} already exists at ${existing_nvme_persistent}"
+              exit 0
+          fi
+
+          if [ -b "${nvme_part}" ]; then
+              existing_type="$(blkid -s TYPE -o value "${nvme_part}" 2>/dev/null || true)"
+              existing_label="$(blkid -s LABEL -o value "${nvme_part}" 2>/dev/null || true)"
+              if [ -z "${existing_type}" ]; then
+                  log "formatting existing empty ${nvme_part} as ${persist_label}"
+                  mkfs.ext4 -F -L "${persist_label}" "${nvme_part}"
+                  exit 0
+              fi
+              if [ "${existing_label}" = "${persist_label}" ]; then
+                  log "${nvme_part} is already labeled ${persist_label}"
+                  exit 0
+              fi
+              if [ "${destructive_nvme_init}" != "1" ]; then
+                  log "${nvme_part} already has filesystem type '${existing_type}' label '${existing_label}'; refusing to wipe"
+                  exit 1
+              fi
+              log "${nvme_part} already has filesystem type '${existing_type}' label '${existing_label}'; wiping because destructive init is enabled"
+          else
+              log "${nvme_part} does not exist; creating a fresh GPT and single full-disk persistent partition"
+          fi
+
+          log "wiping ${nvme_disk}"
+          wipefs -a "${nvme_disk}" || true
+          parted -s "${nvme_disk}" mklabel gpt
+          parted -s -a optimal "${nvme_disk}" mkpart kairos-persistent ext4 1MiB 100%
+          partprobe "${nvme_disk}" 2>/dev/null || true
+          udevadm settle 2>/dev/null || true
+          sleep 2
+
+          i=0
+          while [ "${i}" -lt 30 ]; do
+              if [ -b "${nvme_part}" ]; then
+                  break
+              fi
+              i=$((i + 1))
+              sleep 1
+          done
+
+          if [ ! -b "${nvme_part}" ]; then
+              log "created partition did not appear as ${nvme_part}"
+              exit 1
+          fi
+
+          log "formatting ${nvme_part} as ext4 label ${persist_label}"
+          mkfs.ext4 -F -L "${persist_label}" "${nvme_part}"
+          log "NVMe persistent setup complete"
+
+  fs:
+    - name: "Verify /usr/local is on NVMe"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - |
+          set -eu
+          PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+          log() {
+              msg="kairos-nvme-persistent: $*"
+              echo "${msg}"
+              if [ -e /dev/kmsg ]; then
+                  printf '%s\n' "${msg}" >/dev/kmsg || true
+              fi
+          }
+
+          src="$(findmnt -n -o SOURCE /usr/local 2>/dev/null || true)"
+          resolved="$(readlink -f "${src}" 2>/dev/null || printf '%s\n' "${src}")"
+          case "${resolved}" in
+              /dev/nvme*)
+                  log "/usr/local is correctly mounted from ${resolved}"
+                  mkdir -p /usr/local/.state
+                  touch /usr/local/.state/.nvme-persistent-ok
+                  ;;
+              *)
+                  log "ERROR: /usr/local source is '${src}' resolved '${resolved}', not NVMe"
+                  log "Current block layout:"
+                  lsblk -o NAME,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINTS || true
+                  exit 1
+                  ;;
+          esac
