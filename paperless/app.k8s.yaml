@@ -306,7 +306,7 @@ spec:
           command:
             - /bin/sh
             - -c
-          image: busybox:1.36
+          image: busybox:1.37
           imagePullPolicy: Always
           name: init-media-directories
           resources:
