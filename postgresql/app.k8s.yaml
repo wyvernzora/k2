@@ -1247,8 +1247,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.1.1
-    helm.sh/chart: dbclaim-operator-0.1.1
+    app.kubernetes.io/version: v0.3.0
+    helm.sh/chart: dbclaim-operator-0.3.0
   name: dbclaim-operator
   namespace: postgresql
 ---
@@ -1259,8 +1259,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.1.1
-    helm.sh/chart: dbclaim-operator-0.1.1
+    app.kubernetes.io/version: v0.3.0
+    helm.sh/chart: dbclaim-operator-0.3.0
   name: dbclaim-operator-manager
   namespace: postgresql
 rules:
@@ -1268,14 +1268,20 @@ rules:
       - cnpg.wyvernzora.io
     resources:
       - databaseclaims
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+  - apiGroups:
+      - cnpg.wyvernzora.io
+    resources:
       - roleclaims
     verbs:
       - get
       - list
       - watch
-      - create
       - update
-      - patch
       - delete
   - apiGroups:
       - cnpg.wyvernzora.io
@@ -1313,6 +1319,13 @@ rules:
       - update
       - patch
       - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1321,8 +1334,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.1.1
-    helm.sh/chart: dbclaim-operator-0.1.1
+    app.kubernetes.io/version: v0.3.0
+    helm.sh/chart: dbclaim-operator-0.3.0
   name: dbclaim-operator-manager
   namespace: postgresql
 roleRef:
@@ -1341,8 +1354,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.1.1
-    helm.sh/chart: dbclaim-operator-0.1.1
+    app.kubernetes.io/version: v0.3.0
+    helm.sh/chart: dbclaim-operator-0.3.0
   name: dbclaim-operator-leader-election
   namespace: postgresql
 rules:
@@ -1373,8 +1386,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.1.1
-    helm.sh/chart: dbclaim-operator-0.1.1
+    app.kubernetes.io/version: v0.3.0
+    helm.sh/chart: dbclaim-operator-0.3.0
   name: dbclaim-operator-leader-election
   namespace: postgresql
 roleRef:
@@ -1393,8 +1406,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.1.1
-    helm.sh/chart: dbclaim-operator-0.1.1
+    app.kubernetes.io/version: v0.3.0
+    helm.sh/chart: dbclaim-operator-0.3.0
   name: dbclaim-operator
   namespace: postgresql
 spec:
@@ -1414,7 +1427,7 @@ spec:
             - --health-probe-bind-address=:8081
             - --metrics-bind-address=:8080
             - --leader-elect
-          image: ghcr.io/wyvernzora/cnpg-dbclaim-operator:v0.1.1
+          image: ghcr.io/wyvernzora/cnpg-dbclaim-operator:v0.3.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
