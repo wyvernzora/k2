@@ -1,0 +1,342 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: k8s-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: k8s-gateway
+    app.kubernetes.io/version: 1.8.0
+    helm.sh/chart: k8s-gateway-3.7.1
+  name: k8s-gateway
+  namespace: dns
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: k8s-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: k8s-gateway
+    app.kubernetes.io/version: 1.8.0
+    helm.sh/chart: k8s-gateway-3.7.1
+  name: k8s-gateway
+  namespace: dns
+data:
+  Corefile: |-
+    .:1053 {
+        k8s_gateway wyvernzora.io {
+          apex k8s-gateway.dns
+          ttl 300
+          resources Ingress Service
+        }
+        log
+        errors
+        health { 
+          lameduck 5s
+        }
+        ready
+        prometheus 0.0.0.0:9153
+        forward . /etc/resolv.conf
+        loop
+        reload
+        loadbalance
+      }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: k8s-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: k8s-gateway
+    app.kubernetes.io/version: 1.8.0
+    helm.sh/chart: k8s-gateway-3.7.1
+  name: k8s-gateway
+  namespace: dns
+rules:
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - namespaces
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: k8s-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: k8s-gateway
+    app.kubernetes.io/version: 1.8.0
+    helm.sh/chart: k8s-gateway-3.7.1
+  name: k8s-gateway
+  namespace: dns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-gateway
+subjects:
+  - kind: ServiceAccount
+    name: k8s-gateway
+    namespace: dns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/port: "9153"
+    prometheus.io/scrape: "true"
+  labels:
+    app.kubernetes.io/instance: k8s-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: k8s-gateway
+    app.kubernetes.io/version: 1.8.0
+    helm.sh/chart: k8s-gateway-3.7.1
+  name: k8s-gateway
+  namespace: dns
+spec:
+  ports:
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+      targetPort: dns-udp
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+      targetPort: dns-tcp
+  selector:
+    app.kubernetes.io/instance: k8s-gateway
+    app.kubernetes.io/name: k8s-gateway
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: k8s-gateway
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: k8s-gateway
+    app.kubernetes.io/version: 1.8.0
+    helm.sh/chart: k8s-gateway-3.7.1
+  name: k8s-gateway
+  namespace: dns
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: k8s-gateway
+      app.kubernetes.io/name: k8s-gateway
+  template:
+    metadata:
+      annotations:
+        checksum/config: c3fecb18fddd71b78ad661899ef972ee571f8d4c49f629df0d0c95f8780de1c0
+      labels:
+        app.kubernetes.io/instance: k8s-gateway
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: k8s-gateway
+        app.kubernetes.io/version: 1.8.0
+        helm.sh/chart: k8s-gateway-3.7.1
+    spec:
+      containers:
+        - args:
+            - -conf
+            - /etc/coredns/Corefile
+          image: ghcr.io/k8s-gateway/k8s_gateway:1.7.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: k8s-gateway
+          ports:
+            - containerPort: 1053
+              name: dns-udp
+              protocol: UDP
+            - containerPort: 1053
+              name: dns-tcp
+              protocol: TCP
+            - containerPort: 9153
+              name: metrics
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /ready
+              port: 8181
+              scheme: HTTP
+            initialDelaySeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /etc/coredns
+              name: config-volume
+      securityContext: {}
+      serviceAccountName: k8s-gateway
+      volumes:
+        - configMap:
+            items:
+              - key: Corefile
+                path: Corefile
+            name: k8s-gateway
+          name: config-volume
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dns-blocky-config-c84a486c
+  namespace: dns
+data:
+  blocky.yaml: |
+    log:
+      level: debug
+    upstreams:
+      groups:
+        default:
+          - 1.1.1.1
+    blocking:
+      whiteLists:
+        default: []
+      blackLists:
+        default:
+          - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+      clientGroupsBlock:
+        default:
+          - default
+    customDNS:
+      customTTL: 300s
+      filterUnmappedTypes: true
+      mapping:
+        unifi.wyvernzora.io: 10.10.1.1
+        roxy.wyvernzora.io: 10.10.7.1
+        eris.wyvernzora.io: 10.10.7.2
+        sylphy.wyvernzora.io: 10.10.7.3
+        pve.wyvernzora.io: 10.10.7.254
+        rumi.wyvernzora.io: 10.10.8.1
+        k8s.wyvernzora.io: 10.10.8.2
+    conditional:
+      fallbackUpstream: true
+      mapping:
+        wyvernzora.io: k8s-gateway.dns.svc.cluster.local
+    ports:
+      dns: 53
+      http: 4000
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    checksum/config: 02126bc84b6277448b40821f795a2654a42a084b9172a4b87f5b1a881ff32c0d
+  name: dns-blocky-depl-c826f1d8
+  namespace: dns
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      cdk8s.io/metadata.addr: dns-blocky-depl-c8843b8d
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: dns-blocky-depl-c8843b8d
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: TZ
+              value: America/Los_Angeles
+          image: ghcr.io/0xerr0r/blocky:v0.26
+          imagePullPolicy: Always
+          name: blocky
+          ports:
+            - containerPort: 53
+              name: dns-udp
+              protocol: UDP
+            - containerPort: 4000
+              name: http
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 250m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          volumeMounts:
+            - mountPath: /app/config.yml
+              name: configmap-dns-blocky-config-c84a486c
+              subPath: blocky.yaml
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            name: dns-blocky-config-c84a486c
+          name: configmap-dns-blocky-config-c84a486c
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 10.10.10.8
+  name: blocky
+  namespace: dns
+spec:
+  externalIPs: []
+  ports:
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+      targetPort: 53
+    - name: http
+      port: 4000
+      protocol: TCP
+      targetPort: 4000
+  selector:
+    cdk8s.io/metadata.addr: dns-blocky-depl-c8843b8d
+  type: LoadBalancer

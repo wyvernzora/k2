@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: next-argocd
+  namespace: k2-core
+spec:
+  destination:
+    namespace: k2-core
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: next/apps/argocd
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: next-kube-vip
+  namespace: k2-core
+spec:
+  destination:
+    namespace: k2-network
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: next/apps/kube-vip
+    repoURL: https://github.com/wyvernzora/k2
+    targetRevision: deploy
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
