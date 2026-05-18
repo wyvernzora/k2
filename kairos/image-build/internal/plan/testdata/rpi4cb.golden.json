@@ -49,6 +49,15 @@
     "oci": {
       "files": [
         {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml",
+          "contains": [
+            "flannel-backend: none",
+            "disable-kube-proxy: true",
+            "secrets-encryption-provider: aescbc"
+          ]
+        },
+        {
           "source": "overlay:hardware/rpi4cb",
           "path": "/system/oem/05-rpi4cb-nvme-persistent.yaml",
           "contains": [
@@ -57,10 +66,19 @@
         },
         {
           "source": "overlay:kubernetes/k3s",
+          "path": "/system/oem/30-k2-k3s-provider.yaml",
+          "contains": [
+            "#cloud-config",
+            "k3s:",
+            "enabled: true"
+          ]
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
           "path": "/usr/share/k2/node-provision/k3s/README.md",
           "contains": [
             "K2 K3s Node Provisioning Overlay",
-            "Active K3s configuration is written at provision time"
+            "Active cluster-specific K3s configuration is written at provision time"
           ]
         }
       ],
@@ -68,10 +86,6 @@
         {
           "source": "overlay:kubernetes/k3s",
           "path": "/etc/rancher/k3s/config.yaml"
-        },
-        {
-          "source": "overlay:kubernetes/k3s",
-          "path": "/etc/rancher/k3s/config.yaml.d/10-k2-server-common.yaml"
         },
         {
           "source": "overlay:kubernetes/k3s",

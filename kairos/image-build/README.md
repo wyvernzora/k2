@@ -20,19 +20,18 @@ move into a standalone repository if that becomes useful.
 ## Target Strategy
 
 The PoC image is cluster-light. It includes Ubuntu, Kairos, k3s, hardware
-defaults for the selected target, and invariant K2 provisioning contracts, but
-not cluster identity, node identity, or active K3s config. Future baked content
-should be added by declaring overlays in `targets.yaml`, not by making one-off
-Dockerfile edits.
+defaults for the selected target, K3s provider enablement, and invariant K2 K3s
+server config, but not cluster identity, node identity, or active
+cluster-specific K3s config. Future baked content should be added by declaring
+overlays in `targets.yaml`, not by making one-off Dockerfile edits.
 
 `hardware` is the K2 hardware profile used in tags and overlay selection.
 `kairosModel` is the Kairos model passed to `kairos-init`. For example,
 `rpi4cb` still uses `kairosModel: rpi4` because the ComputeBlade nodes are CM4
 systems using the Kairos Raspberry Pi 4 boot model.
 
-Node roles are not part of the image-build contract. Bootstrap server, joining
-server, and agent intent comes from per-node seed or bundle input consumed by
-the node provisioner.
+Node roles are not part of the image-build contract. Bootstrap and join intent
+comes from per-node seed or bundle input consumed by the node provisioner.
 
 Never bake secrets, 1Password material, k3s tokens, private keys, cluster CA
 private material, hostnames, node IPs, or VIP ownership into images.

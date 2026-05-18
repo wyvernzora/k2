@@ -238,20 +238,43 @@ inspect:
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "README.md"), strings.TrimSpace(`
 # K2 K3s Node Provisioning Overlay
 
-The overlay does not install active files under /etc/rancher/k3s.
-Active K3s configuration is written at provision time.
+The overlay installs only invariant K2 K3s server configuration under /etc/rancher/k3s.
+Active cluster-specific K3s configuration is written at provision time.
+`)+"\n")
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "etc", "rancher", "k3s", "config.yaml.d", "10-k2-invariant.yaml"), strings.TrimSpace(`
+flannel-backend: none
+disable-kube-proxy: true
+disable-helm-controller: true
+secrets-encryption: true
+secrets-encryption-provider: aescbc
+`)+"\n")
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "system", "oem", "30-k2-k3s-provider.yaml"), strings.TrimSpace(`
+#cloud-config
+name: "K2 K3s provider"
+
+k3s:
+  enabled: true
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "overlay.yaml"), strings.TrimSpace(`
 inspect:
   oci:
     files:
+      - path: /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
+        contains:
+          - "flannel-backend: none"
+          - "disable-kube-proxy: true"
+          - "secrets-encryption-provider: aescbc"
+      - path: /system/oem/30-k2-k3s-provider.yaml
+        contains:
+          - "#cloud-config"
+          - "k3s:"
+          - "enabled: true"
       - path: /usr/share/k2/node-provision/k3s/README.md
         contains:
           - K2 K3s Node Provisioning Overlay
-          - Active K3s configuration is written at provision time
+          - Active cluster-specific K3s configuration is written at provision time
     absent:
       - /etc/rancher/k3s/config.yaml
-      - /etc/rancher/k3s/config.yaml.d/10-k2-server-common.yaml
       - /etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "extra", ".gitkeep"), "")

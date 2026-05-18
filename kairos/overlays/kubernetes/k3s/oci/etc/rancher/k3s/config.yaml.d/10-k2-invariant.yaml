@@ -1,0 +1,19 @@
+# K2 invariant k3s server settings.
+#
+# Keep cluster-specific values out of this baked image layer. The node
+# provisioner or bootstrap/join bundle owns CIDRs, cluster DNS, API endpoints,
+# TLS SANs, tokens, node labels, node taints, and bootstrap manifests.
+
+flannel-backend: none
+disable-network-policy: true
+disable-kube-proxy: true
+disable-helm-controller: true
+
+disable:
+  - traefik
+  - servicelb
+  - local-storage
+  - metrics-server
+
+secrets-encryption: true
+secrets-encryption-provider: aescbc

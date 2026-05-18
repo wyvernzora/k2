@@ -1,0 +1,5 @@
+#cloud-config
+name: "K2 K3s provider"
+
+k3s:
+  enabled: true

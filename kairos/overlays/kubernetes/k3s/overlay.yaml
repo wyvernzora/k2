@@ -1,13 +1,25 @@
 inspect:
   oci:
     files:
+      - path: /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
+        contains:
+          - K2 invariant k3s server settings
+          - "flannel-backend: none"
+          - "disable-kube-proxy: true"
+          - "disable-helm-controller: true"
+          - "secrets-encryption: true"
+          - "secrets-encryption-provider: aescbc"
+      - path: /system/oem/30-k2-k3s-provider.yaml
+        contains:
+          - "#cloud-config"
+          - K2 K3s provider
+          - "k3s:"
+          - "enabled: true"
       - path: /usr/share/k2/node-provision/k3s/README.md
         contains:
           - K2 K3s Node Provisioning Overlay
-          - The overlay does not install active files under `/etc/rancher/k3s`
-          - Active K3s configuration is written at provision time
+          - Active cluster-specific K3s configuration is written at provision time
     absent:
       - /etc/rancher/k3s/config.yaml
-      - /etc/rancher/k3s/config.yaml.d/10-k2-server-common.yaml
       - /etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml
       - /var/lib/rancher/k3s/server/manifests/k2-bootstrap.yaml

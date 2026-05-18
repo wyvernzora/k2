@@ -27,9 +27,9 @@ ubuntu-24.04-standard-arm64-rpi4cb-k3s
 It builds an Ubuntu 24.04, Kairos v4.1.0, arm64 Raspberry Pi 4 model image with
 k3s v1.36.0+k3s1. The hardware profile is `rpi4cb`, meaning Raspberry Pi CM4 on
 ComputeBlade. The target is intentionally cluster-light: it includes the OS,
-k3s, hardware defaults, and the invariant K2 K3s provisioning contract, but not
-node identity, cluster tokens, VIP ownership, hostnames, private keys, active
-K3s config, or other secrets.
+k3s, hardware defaults, K3s provider enablement, and invariant K2 K3s server
+config, but not node identity, cluster tokens, VIP ownership, hostnames, private
+keys, active cluster-specific K3s config, or other secrets.
 
 ## Build Flow
 

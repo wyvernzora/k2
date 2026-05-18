@@ -3,16 +3,16 @@
 This directory is baked into the immutable Kairos image as the K2 K3s
 provisioning contract area.
 
-The overlay does not install active files under `/etc/rancher/k3s`. Active K3s
-configuration is written at provision time by `k2-node-provision` from a bundle
-or node seed derived from `clusters/<name>.yaml`.
+The overlay installs only invariant K2 K3s server configuration under
+`/etc/rancher/k3s`. Active cluster-specific K3s configuration is written at
+provision time by `k2-node-provision` from a bundle or node seed derived from
+`clusters/<name>.yaml`.
 
 Cluster-owned settings include:
 
 - API VIPs, DNS names, and TLS SANs
 - pod and service CIDRs
 - cluster DNS and cluster domain
-- server-critical K3s settings
 - bootstrap versus join intent
 - token or token-file strategy
 - node labels and taints
