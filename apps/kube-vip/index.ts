@@ -1,4 +1,4 @@
-import { AppResourceFunc, ArgoCDResourceFunc, defineDeployment, HelmCharts, Namespace } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, defineDeployment, HelmCharts, Namespace, Toleration } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 export const deployment = defineDeployment({
@@ -16,6 +16,10 @@ function namespaceForTarget(target: Parameters<AppResourceFunc>[1]["target"]): s
   return target === "v3" ? "kube-vip" : "k2-network";
 }
 
+function apiVipForTarget(target: Parameters<AppResourceFunc>[1]["target"]): string {
+  return target === "v3" ? "10.10.9.1" : "10.10.8.2";
+}
+
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = (app, ctx) => {
   app.use(Namespace, namespaceForTarget(ctx.target));
@@ -26,13 +30,14 @@ export const createAppResources: AppResourceFunc = (app, ctx) => {
     ...Namespace.of(app),
     values: {
       config: {
-        address: "10.10.8.2",
+        address: apiVipForTarget(ctx.target),
       },
       env: {
         cp_enable: "true",
         svc_enable: "false",
         vip_leaderelection: "true",
       },
+      tolerations: Toleration.ALLOW_CONTROL_PLANE,
       resources: {
         limits: {
           cpu: "200m",

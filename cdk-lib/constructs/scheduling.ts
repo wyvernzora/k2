@@ -59,10 +59,19 @@ function annotatedNode(annotation: string): k8s.NodeSelectorTerm {
   };
 }
 
+function unannotatedNode(...annotations: string[]): k8s.NodeSelectorTerm {
+  return {
+    matchExpressions: annotations.map(annotation => ({
+      key: annotation,
+      operator: "DoesNotExist",
+    })),
+  };
+}
+
 function preferAnyOf(...terms: k8s.NodeSelectorTerm[]): k8s.NodeAffinity {
   return {
     preferredDuringSchedulingIgnoredDuringExecution: terms.map(term => ({
-      weight: 1,
+      weight: 100,
       preference: term,
     })),
   };
@@ -86,6 +95,13 @@ export const NodeAffinity = {
   PREFER_CONTROL_PLANE: preferAnyOf(
     annotatedNode("node-role.kubernetes.io/control-plane"),
     annotatedNode("node-role.kubernetes.io/master"),
+  ),
+  /**
+   * Strongly prefers worker nodes while still allowing scheduling when only
+   * control plane nodes are available.
+   */
+  PREFER_NON_CONTROL_PLANE: preferAnyOf(
+    unannotatedNode("node-role.kubernetes.io/control-plane", "node-role.kubernetes.io/master"),
   ),
   /**
    * Requires the pod to be scheduled on the control plane node

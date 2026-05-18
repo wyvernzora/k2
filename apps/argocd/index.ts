@@ -1,6 +1,14 @@
 import dedent from "dedent-js";
 
-import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, defineDeployment, HelmCharts } from "@k2/cdk-lib";
+import {
+  ApexDomain,
+  AppResourceFunc,
+  ArgoCDResourceFunc,
+  defineDeployment,
+  HelmCharts,
+  NodeAffinity,
+  Toleration,
+} from "@k2/cdk-lib";
 import * as Auth from "@k2/auth";
 
 import { ContinuousDeployment } from "./lib/cd.js";
@@ -27,6 +35,14 @@ function namespaceForTarget(target: Parameters<AppResourceFunc>[1]["target"]): s
   return target === "v3" ? "argocd" : "k2-core";
 }
 
+function tolerationsForTarget(target: Parameters<AppResourceFunc>[1]["target"]) {
+  return target === "v3" ? Toleration.ALLOW_CONTROL_PLANE : [];
+}
+
+function affinityForTarget(target: Parameters<AppResourceFunc>[1]["target"]) {
+  return target === "v3" ? { nodeAffinity: NodeAffinity.PREFER_NON_CONTROL_PLANE } : {};
+}
+
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = (app, ctx) => {
   const helm = HelmCharts.of(app);
@@ -36,6 +52,12 @@ export const createAppResources: AppResourceFunc = (app, ctx) => {
   new ArgoCD(app, "argocd", {
     namespace,
     values: {
+      global: {
+        tolerations: tolerationsForTarget(ctx.target),
+      },
+      controller: {
+        affinity: affinityForTarget(ctx.target),
+      },
       secret: {
         createSecret: false,
       },
@@ -45,7 +67,17 @@ export const createAppResources: AppResourceFunc = (app, ctx) => {
       notifications: {
         enabled: false,
       },
+      applicationSet: {
+        affinity: affinityForTarget(ctx.target),
+      },
+      redis: {
+        affinity: affinityForTarget(ctx.target),
+      },
+      repoServer: {
+        affinity: affinityForTarget(ctx.target),
+      },
       server: {
+        affinity: affinityForTarget(ctx.target),
         ingress: {
           enabled: true,
           annotations: {

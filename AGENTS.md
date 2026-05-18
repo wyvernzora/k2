@@ -91,10 +91,11 @@
 | `argocd` | `k2-core` | Renders the Argo CD Helm chart, disables built-in auth in favor of Authelia, and exposes `/deploy` via Traefik TLS. |
 | `auth` | `auth` | Deploys Authelia with a 1Password-backed file users database and Traefik ForwardAuth middleware. |
 | `cert-manager` | `k2-core` | Installs cert-manager, reflector, Route53-based issuer, and the replicated default TLS certificate. |
+| `cilium` | `cilium` | v3-only CNI with kube-proxy replacement, L2 announcements, and `10.10.9.16-10.10.9.255` LoadBalancer IPAM. |
 | `dns` | `dns` | Deploys k8s-gateway + Blocky with custom block lists, static DNS overrides, and fixed service IP. |
 | `gen-ai` | `gen-ai` | Hosts AnythingLLM under `ai.wyvernzora.io`, isolating namespace and apex domain. |
 | `home-automation` | `home-automation` | Wraps Home Assistant, Mosquitto, Zigbee2MQTT, etc., with replicated volumes and Zigbee coordinator address. |
-| `kube-vip` | `k2-network` | Schedules kube-vip only on control-plane nodes with static VIP `10.10.8.2`. |
+| `kube-vip` | `k2-network` / `kube-vip` | Schedules kube-vip only on control-plane nodes with legacy VIP `10.10.8.2` or v3 API VIP `10.10.9.1`. |
 | `longhorn` | `k2-storage` | Installs Longhorn and secures its UI with the Authelia middleware. |
 | `media` | (per component) | Manages qBittorrent, Prowlarr, Sonarr, and Kavita, wiring replicated PVCs plus NAS-backed bulk storage. |
 | `metallb` | `k2-network` | Sets default (`10.10.12.0/24`) and sandbox (`10.10.10.0/24`) address pools with L2 advertisements. |

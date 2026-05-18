@@ -121,6 +121,7 @@
         "argo-cd",
         "authelia",
         "cert-manager",
+        "cilium",
         "cloudnative-pg",
         "longhorn",
         "tailscale-operator",
