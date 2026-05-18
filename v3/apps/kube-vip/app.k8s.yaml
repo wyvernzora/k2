@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: k2-network
+  namespace: kube-vip
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -16,7 +16,7 @@ metadata:
   annotations:
     rbac.authorization.kubernetes.io/autoupdate: "true"
   name: kube-vip
-  namespace: k2-network
+  namespace: kube-vip
 rules:
   - apiGroups:
       - ""
@@ -80,7 +80,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: k2-network
+  namespace: kube-vip
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -88,7 +88,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kube-vip
-    namespace: k2-network
+    namespace: kube-vip
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -100,7 +100,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: k2-network
+  namespace: kube-vip
 rules:
   - apiGroups:
       - ""
@@ -120,7 +120,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: k2-network
+  namespace: kube-vip
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -128,13 +128,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kube-vip
-    namespace: k2-network
+    namespace: kube-vip
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-vip
-  namespace: k2-network
+  namespace: kube-vip
 spec:
   selector:
     matchLabels:

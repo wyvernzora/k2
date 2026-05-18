@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: k2-core
+  namespace: argocd
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -25,7 +25,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: k2-core
+  namespace: argocd
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -40,7 +40,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: k2-core
+  namespace: argocd
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -55,7 +55,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -70,7 +70,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-secret
-  namespace: k2-core
+  namespace: argocd
 type: Opaque
 ---
 apiVersion: v1
@@ -85,7 +85,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-cm
-  namespace: k2-core
+  namespace: argocd
 data:
   admin.enabled: "true"
   application.instanceLabelKey: argocd.argoproj.io/instance
@@ -269,7 +269,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-cmd-params-cm
-  namespace: k2-core
+  namespace: argocd
 data:
   applicationsetcontroller.enable.leader.election: "false"
   applicationsetcontroller.log.format: text
@@ -303,7 +303,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-gpg-keys-cm
-  namespace: k2-core
+  namespace: argocd
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -317,7 +317,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-rbac-cm
-  namespace: k2-core
+  namespace: argocd
 data:
   policy.csv: ""
   policy.default: ""
@@ -335,7 +335,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-ssh-known-hosts-cm
-  namespace: k2-core
+  namespace: argocd
 data:
   ssh_known_hosts: |
     [ssh.github.com]:443 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
@@ -364,7 +364,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-tls-certs-cm
-  namespace: k2-core
+  namespace: argocd
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -378,7 +378,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-health-configmap
-  namespace: k2-core
+  namespace: argocd
 data:
   redis_liveness.sh: |
     response=$(
@@ -419,7 +419,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: k2-core
+  namespace: argocd
 rules:
   - apiGroups:
       - "*"
@@ -444,7 +444,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 rules:
   - apiGroups:
       - "*"
@@ -503,7 +503,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: k2-core
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -511,7 +511,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-application-controller
-    namespace: k2-core
+    namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -525,7 +525,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -533,7 +533,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-server
-    namespace: k2-core
+    namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -547,7 +547,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: k2-core
+  namespace: argocd
 rules:
   - apiGroups:
       - ""
@@ -600,7 +600,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: k2-core
+  namespace: argocd
 rules:
   - apiGroups:
       - argoproj.io
@@ -700,7 +700,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: k2-core
+  namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -714,7 +714,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 rules:
   - apiGroups:
       - ""
@@ -763,7 +763,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: k2-core
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -771,7 +771,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-application-controller
-    namespace: k2-core
+    namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -785,7 +785,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: k2-core
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -793,7 +793,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-applicationset-controller
-    namespace: k2-core
+    namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -807,7 +807,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: k2-core
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -815,7 +815,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-repo-server
-    namespace: k2-core
+    namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -829,7 +829,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -837,7 +837,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-server
-    namespace: k2-core
+    namespace: argocd
 ---
 apiVersion: v1
 kind: Service
@@ -851,7 +851,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: k2-core
+  namespace: argocd
 spec:
   ports:
     - name: http-webhook
@@ -874,7 +874,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: k2-core
+  namespace: argocd
 spec:
   ports:
     - name: tcp-repo-server
@@ -897,7 +897,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 spec:
   ports:
     - name: http
@@ -926,7 +926,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis
-  namespace: k2-core
+  namespace: argocd
 spec:
   ports:
     - name: redis
@@ -948,7 +948,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: k2-core
+  namespace: argocd
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -959,7 +959,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
+        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
       labels:
         app.kubernetes.io/component: applicationset-controller
         app.kubernetes.io/instance: argocd
@@ -1240,7 +1240,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: k2-core
+  namespace: argocd
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -1251,8 +1251,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
-        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
+        checksum/cm: 02aa7d2c551f2f43a04c5c1b506f66db2f2eb31cdb27bfdeb24acd3eff251269
+        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
       labels:
         app.kubernetes.io/component: repo-server
         app.kubernetes.io/instance: argocd
@@ -1664,7 +1664,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -1675,8 +1675,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
-        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
+        checksum/cm: 02aa7d2c551f2f43a04c5c1b506f66db2f2eb31cdb27bfdeb24acd3eff251269
+        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
       labels:
         app.kubernetes.io/component: server
         app.kubernetes.io/instance: argocd
@@ -2125,7 +2125,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis
-  namespace: k2-core
+  namespace: argocd
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -2211,7 +2211,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: k2-core
+  namespace: argocd
 spec:
   replicas: 1
   revisionHistoryLimit: 5
@@ -2223,8 +2223,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
-        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
+        checksum/cm: 02aa7d2c551f2f43a04c5c1b506f66db2f2eb31cdb27bfdeb24acd3eff251269
+        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
       labels:
         app.kubernetes.io/component: application-controller
         app.kubernetes.io/instance: argocd
@@ -2611,7 +2611,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: k2-core
+  namespace: argocd
 spec:
   rules:
     - host: deploy.wyvernzora.io
@@ -2640,7 +2640,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: k2-core
+  namespace: argocd
 automountServiceAccountToken: true
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2658,7 +2658,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: k2-core
+  namespace: argocd
 rules:
   - apiGroups:
       - ""
@@ -2690,7 +2690,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: k2-core
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -2714,7 +2714,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: k2-core
+  namespace: argocd
 spec:
   template:
     metadata:

@@ -1,15 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: next-argocd
-  namespace: k2-core
+  name: v3-argocd
+  namespace: argocd
 spec:
   destination:
-    namespace: k2-core
+    namespace: argocd
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: next/apps/argocd
+    path: v3/apps/argocd
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
@@ -21,15 +21,15 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: next-kube-vip
-  namespace: k2-core
+  name: v3-kube-vip
+  namespace: argocd
 spec:
   destination:
-    namespace: k2-network
+    namespace: kube-vip
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: next/apps/kube-vip
+    path: v3/apps/kube-vip
     repoURL: https://github.com/wyvernzora/k2
     targetRevision: deploy
   syncPolicy:
