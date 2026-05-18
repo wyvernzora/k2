@@ -38,7 +38,7 @@ export class ClaudeRemoteDeployment extends Deployment {
 
     this.addContainer({
       name: "claude-remote",
-      image: oci`ghcr.io/wyvernzora/claude-remote:2.1.140`,
+      image: oci`ghcr.io/wyvernzora/claude-remote:2.1.143`,
       imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
       volumeMounts: [
         state,
