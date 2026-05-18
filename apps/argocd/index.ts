@@ -1,6 +1,6 @@
 import dedent from "dedent-js";
 
-import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, HelmCharts } from "@k2/cdk-lib";
+import { ApexDomain, AppResourceFunc, ArgoCDResourceFunc, defineDeployment, HelmCharts } from "@k2/cdk-lib";
 import * as Auth from "@k2/auth";
 
 import { ContinuousDeployment } from "./lib/cd.js";
@@ -11,6 +11,20 @@ export * as crd from "./crds/argoproj.io.js";
 /* Export higher level constructs */
 export * from "./lib/cd.js";
 export * from "./lib/context.js";
+
+export const deployment = defineDeployment({
+  targets: {
+    legacy: true,
+    next: {
+      enabled: true,
+      bootstrap: {
+        order: 30,
+        fileName: "30-argocd.k8s.yaml",
+      },
+      argo: true,
+    },
+  },
+});
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

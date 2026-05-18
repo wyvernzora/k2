@@ -47,9 +47,12 @@ crd-constructs-base:
 #
 k8s-manifests:
     ARG TAG="latest"
+    ARG K2_CLUSTER="all"
+    ARG K2_LEGACY_COMPAT="1"
     FROM --pass-args +npm-install
     COPY . .
-    RUN npx tsx build/scripts/synthesize-manifests.ts
+    RUN rm -rf deploy
+    RUN K2_CLUSTER="$K2_CLUSTER" K2_LEGACY_COMPAT="$K2_LEGACY_COMPAT" npx tsx build/scripts/synthesize-manifests.ts
     SAVE ARTIFACT deploy AS LOCAL deploy
 
 #

@@ -1,5 +1,19 @@
-import { AppResourceFunc, ArgoCDResourceFunc, HelmCharts, Namespace } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, defineDeployment, HelmCharts, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
+
+export const deployment = defineDeployment({
+  targets: {
+    legacy: true,
+    next: {
+      enabled: true,
+      bootstrap: {
+        order: 10,
+        fileName: "10-kube-vip.k8s.yaml",
+      },
+      argo: true,
+    },
+  },
+});
 
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = app => {

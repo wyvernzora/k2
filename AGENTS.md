@@ -16,7 +16,7 @@
 | `apps/<name>/` | Each application module with `Chart.yaml` dependencies, `index.ts` factories, CRD bindings, components, and optional `lib/` helpers. |
 | `build/scripts/` | Utility scripts (manifest synth, CRD import, diffing) that the Earthly targets invoke. |
 | `cdk-lib/` | Shared CDK8s contexts (`AppRoot`, `HelmCharts`, `Namespace`, `ApexDomain`), constructs (config maps, scheduling, volumes), and helper types for apps. |
-| `deploy/` | Output manifests: `deploy/<app>/app.k8s.yaml` (+ CRDs) plus `deploy/app.k8s.yaml` for aggregate ArgoCD applications. |
+| `deploy/` | Generated manifest output: legacy compatibility paths plus cluster-specific `legacy/` and `next/` trees. |
 | `ansible/` | Containerized Ansible runtime (`Earthfile`, `entrypoint.sh`, roles, playbooks) for host bootstrap and TLS refresh. |
 | `kairos/` | Kairos cloud-config templates & helper scripts; secrets injected via `op inject`. |
 | `Earthfile` | Defines reusable Earthly targets for builds, linting, manifest synthesis, CRD imports, and Docker image publishing. |
@@ -29,7 +29,7 @@
 > **Important:** Build, lint, manifest synthesis, CRD generation, and diff workflows must be run through `earthly` targets. The scripts under `build/scripts/` are implementation details for those targets and often require the containerized build environment from `ghcr.io/wyvernzora/k2-build`; invoking them directly from the host shell can fail due to missing CLIs, Node tooling, or expected filesystem/runtime setup.
 
 ### Earthly Targets
-- `earthly +k8s-manifests` → runs `npx tsx build/scripts/synthesize-manifests.ts`, writing manifests into `deploy/`. This target does **not** prune stale files already under `deploy/`; delete/clean `deploy/` before synth when reviewing removals or generating diffs.
+- `earthly +k8s-manifests` → runs manifest synthesis inside the Earthly build environment from a clean `deploy/`, writing legacy compatibility output plus `deploy/legacy/` and `deploy/next/`. Pass `--K2_CLUSTER=legacy` or `--K2_CLUSTER=next` to focus on one target.
 - `earthly +diff-manifests` → compares freshly synthesized manifests against the remote `deploy` branch via `build/scripts/diff-manifests.sh`, honoring `.dyffignore`. Always run this only after a fresh `+k8s-manifests` pass.
 - `earthly +lint` → executes `npx eslint` with the project config (CRD outputs excluded).
 - `earthly +crd-constructs` → loops over every `apps/*/crds/crds.k8s.yaml`, runs `build/scripts/generate-crd-constructs.sh`, and stores regenerated TypeScript bindings.
@@ -37,7 +37,7 @@
 
 ### Development Loop
 1. Use `earthly +lint` to lint TypeScript sources.
-2. Clean stale generated output when reviewing removals, then run `earthly +k8s-manifests` to regenerate manifests.
+2. Run `earthly +k8s-manifests` to regenerate manifests from a clean generated output tree.
 3. Run `earthly +diff-manifests` only after synthesis, and review `deploy-diff.md`.
 4. Commit `deploy/` differences to the `deploy` branch (ArgoCD watches that branch).
 
@@ -47,14 +47,14 @@
 
 ### Diffing & Promotion
 - Use `earthly +diff-manifests` after synthesis to review manifest changes; it clones the remote `deploy` branch into a temp dir, strips `.git`, and prints Markdown diffs, respecting `.dyffignore`.
-- For a reliable manifest diff, clean `deploy/`, run `earthly +k8s-manifests`, then run `earthly +diff-manifests`. Running the diff target against stale `deploy/` contents can show unrelated additions or miss removals because synthesis writes files but does not delete obsolete ones.
+- For a reliable manifest diff, run `earthly +k8s-manifests`, then run `earthly +diff-manifests`.
 - Promote changes by opening PRs against both `main` (source) and the generated `deploy` branch as appropriate.
 
 ## CDK8s Architecture & Conventions
 
 ### App Composition
 - `cdk-lib/App` extends `cdk8s.App`, adds `.use()` to apply `AppOption`s or `Context` classes, and provides `synthToFile()` to write YAML per app.
-- `build/scripts/synthesize-manifests.ts` dynamically imports each `apps/<name>/index.ts`, creates a new `App`, applies contexts, calls `createAppResources(app)`, and writes `deploy/<name>/app.k8s.yaml`. It also synthesizes a top-level ArgoCD bundle by calling every `createArgoCdResources(chart)`.
+- `build/scripts/synthesize-manifests.ts` dynamically imports each `apps/<name>/index.ts`, resolves per-cluster deployment metadata, creates a new `App`, applies contexts, and writes enabled app manifests plus ArgoCD application bundles for each target.
 - Always export both `createAppResources` (configure Kubernetes resources) and `createArgoCdResources` (register a `ContinuousDeployment` Argo app) from each `index.ts`.
 
 ### Context Pipeline
@@ -120,5 +120,5 @@
 - When adding a new app, always create both `createAppResources` and `createArgoCdResources`, list Helm dependencies in `Chart.yaml`, and export any shared constructs from `lib/`.
 - Secrets should come from `K2Secret`; direct `Secret` objects break the 1Password workflow.
 - Use `ContinuousDeployment` for Argo apps so they inherit the default repo/branch/project, unless you intentionally override `namespace` or `path`.
-- Clean stale generated manifests before synthesis when resources may have been removed; `+k8s-manifests` does not delete obsolete files in `deploy/`.
+- `+k8s-manifests` rebuilds `deploy/` from a clean generated output tree.
 - After synthesizing manifests, run the diff script before opening PRs to catch unexpected drift.

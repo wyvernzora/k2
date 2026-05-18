@@ -20,7 +20,7 @@ export class ContinuousDeployment extends Construct {
 
     this.argo = new crd.Application(this, name, {
       metadata: {
-        name,
+        name: `${ctx.applicationNamePrefix}${name}`,
         namespace: ctx.namespace,
       },
       spec: {
@@ -31,7 +31,7 @@ export class ContinuousDeployment extends Construct {
         project: ctx.project,
         ignoreDifferences: props.ignoreDifferences,
         source: {
-          path: props.path ?? name,
+          path: props.path ?? joinArgoPath(ctx.repo.basePath, name),
           repoUrl: ctx.repo.url,
           targetRevision: ctx.repo.branch,
         },
@@ -49,12 +49,7 @@ export class ContinuousDeployment extends Construct {
 
 function constructAutoSyncPolicy(ctx: ArgoCdContext): Partial<crd.ApplicationSpecSyncPolicy> {
   if (!ctx.autoSyncPolicy) {
-    return {
-      automated: {
-        selfHeal: false,
-        prune: false,
-      },
-    };
+    return {};
   }
   const backoff = ctx.autoSyncPolicy.backoff;
   return {
@@ -76,4 +71,8 @@ function constructAutoSyncPolicy(ctx: ArgoCdContext): Partial<crd.ApplicationSpe
 function constructSyncOptions(syncOptions: ArgoCdContext["syncOptions"]): Partial<crd.ApplicationSpecSyncPolicy> {
   const options: string[] = Object.entries(syncOptions).map(([k, v]) => `${k}=${String(v)}`);
   return options.length ? { syncOptions: options } : {};
+}
+
+function joinArgoPath(basePath: string | undefined, name: string): string {
+  return [basePath, name].filter(Boolean).join("/");
 }

@@ -40,6 +40,9 @@ logs/
 coverage/
 *.lcov
 
+# Private notes
+notes/
+
 # Other files to ignore
 .nx
 *.tsbuildinfo

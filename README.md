@@ -32,6 +32,8 @@ K2 is the typed IaC backbone for my homelab: Kubernetes manifests are generated 
 3. `earthly +diff-manifests` to review drift against the `deploy` branch.
 4. Commit application code to `main`; GitHub actions workflow takes care of the rest.
 
+Manifest synthesis is target-aware and starts from a clean generated `deploy/` tree. During the migration, `earthly +k8s-manifests` writes the current legacy-compatible output plus cluster-specific output under `deploy/legacy/` and `deploy/next/`. Use `earthly +k8s-manifests --K2_CLUSTER=legacy` or `--K2_CLUSTER=next` to focus on one target.
+
 ## Repository Layout
 
 | Path | Description |
@@ -39,6 +41,6 @@ K2 is the typed IaC backbone for my homelab: Kubernetes manifests are generated 
 | `apps/<name>/` | App factory (`createAppResources`/`createArgoCdResources`), Helm dependencies, CRDs, and components. |
 | `cdk-lib/` | Shared contexts (namespace, apex domain, Helm), scheduling helpers, and storage constructs. |
 | `build/` | Earthly support scripts plus CRD/manifest tooling. |
-| `deploy/` | Generated manifests per app plus the aggregated `deploy/app.k8s.yaml`. |
+| `deploy/` | Generated manifests, including legacy compatibility output and target-specific `legacy/` and `next/` trees. |
 | `ansible/` | Container image definition, roles, and playbooks for Proxmox/bootstrap/TLS tasks. |
 | `kairos/` | Cloud-config templates and helper scripts for spinning up Kairos nodes. |

@@ -6,6 +6,7 @@ import * as base from "cdk8s";
 import { YamlOutputType } from "cdk8s";
 
 import { Context, ContextClass } from "./context.js";
+import type { K2SynthContext } from "./cluster.js";
 
 export class App extends base.App {
   constructor(...options: Array<AppOption>) {
@@ -42,6 +43,6 @@ function isAppOption(x: unknown): x is AppOption {
   return typeof x === "function" && x.length >= 1; // (app) => void
 }
 
-export type AppResourceFunc = (app: App) => void;
+export type AppResourceFunc = (app: App, ctx: K2SynthContext) => void;
 
-export type ArgoCDResourceFunc = (chart: base.Chart) => void;
+export type ArgoCDResourceFunc = (chart: base.Chart, ctx: K2SynthContext) => void;
