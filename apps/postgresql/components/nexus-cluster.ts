@@ -20,7 +20,7 @@ export default {
       spec: {
         instances: 3,
 
-        imageName: "ghcr.io/cloudnative-pg/postgresql:17.9-standard-bookworm",
+        imageName: "ghcr.io/cloudnative-pg/postgresql:18.4-standard-bookworm",
         enableSuperuserAccess: true,
 
         // Set up backing storage on replicated volumes
