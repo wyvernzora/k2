@@ -6,10 +6,7 @@ export const deployment = defineDeployment({
     legacy: true,
     v3: {
       enabled: true,
-      bootstrap: {
-        order: 10,
-        fileName: "10-kube-vip.k8s.yaml",
-      },
+      bootstrap: true,
       argo: true,
     },
   },

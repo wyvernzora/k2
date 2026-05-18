@@ -55,14 +55,9 @@ export const CLUSTERS = {
 
 export interface AppTargetConfig {
   readonly enabled: boolean;
-  readonly bootstrap?: boolean | AppTargetBootstrapConfig;
+  readonly bootstrap?: boolean;
   readonly argo?: boolean | AppTargetArgoConfig;
   readonly values?: Record<string, unknown>;
-}
-
-export interface AppTargetBootstrapConfig {
-  readonly order?: number;
-  readonly fileName?: string;
 }
 
 export interface AppTargetArgoConfig {
@@ -80,8 +75,6 @@ export interface NormalizedAppTargetConfig {
   readonly enabled: boolean;
   readonly bootstrap: {
     readonly enabled: boolean;
-    readonly order?: number;
-    readonly fileName?: string;
   };
   readonly argo: {
     readonly enabled: boolean;
@@ -100,7 +93,6 @@ export interface K2SynthContext {
   readonly output: {
     readonly appPath: string;
     readonly argoPath: string;
-    readonly bootstrapPath: string;
   };
 }
 

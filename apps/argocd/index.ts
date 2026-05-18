@@ -17,10 +17,7 @@ export const deployment = defineDeployment({
     legacy: true,
     v3: {
       enabled: true,
-      bootstrap: {
-        order: 30,
-        fileName: "30-argocd.k8s.yaml",
-      },
+      bootstrap: true,
       argo: true,
     },
   },

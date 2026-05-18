@@ -84,15 +84,11 @@ async function synthTarget(
     cluster,
     enabledApps.filter(app => app.deployment.argo.enabled),
   );
-  await synthBootstrapManifests(
-    cluster,
-    enabledApps.filter(app => app.deployment.bootstrap.enabled),
-  );
 }
 
 async function synthTargetAppManifest(cluster: ClusterConfig, app: EnabledApp): Promise<void> {
   const outFile = path.resolve("deploy", cluster.id, "apps", app.appName, "app.k8s.yaml");
-  const ctx = makeSynthContext(cluster, app, outFile, path.resolve("deploy", cluster.id, "argocd", "app.k8s.yaml"), "");
+  const ctx = makeSynthContext(cluster, app, outFile, path.resolve("deploy", cluster.id, "argocd", "app.k8s.yaml"));
 
   if (!app.mod.createAppResources) {
     throw new Error(`${app.appName}: missing createAppResources export`);
@@ -129,34 +125,9 @@ function synthArgoApp(chart: Chart, cluster: ClusterConfig, app: EnabledApp, arg
     throw new Error(`${app.appName}: missing createArgoCdResources export`);
   }
 
-  const ctx = makeSynthContext(cluster, app, "", argoOutFile, "");
+  const ctx = makeSynthContext(cluster, app, "", argoOutFile);
   console.log(`Synthesizing ${cluster.id}/${app.appName} ArgoCD`);
   app.mod.createArgoCdResources(chart, ctx);
-}
-
-async function synthBootstrapManifests(cluster: ClusterConfig, enabledApps: EnabledApp[]): Promise<void> {
-  if (enabledApps.length === 0) {
-    return;
-  }
-
-  const bootstrapDir = path.resolve("deploy", cluster.id, "bootstrap");
-  const names = new Set<string>();
-  const bootstrapApps = [...enabledApps].sort(compareBootstrapApps);
-
-  await fs.mkdir(bootstrapDir, { recursive: true });
-
-  for (const app of bootstrapApps) {
-    const fileName = bootstrapFileName(app);
-    if (names.has(fileName)) {
-      throw new Error(`${cluster.id}: duplicate bootstrap output file ${fileName}`);
-    }
-    names.add(fileName);
-
-    await fs.copyFile(
-      path.resolve("deploy", cluster.id, "apps", app.appName, "app.k8s.yaml"),
-      path.resolve(bootstrapDir, fileName),
-    );
-  }
 }
 
 function createBaseApp(cluster: ClusterConfig, appPath: string): App {
@@ -219,20 +190,11 @@ function disabledConfig(): NormalizedAppTargetConfig {
   };
 }
 
-function normalizeBootstrap(
-  bootstrap: boolean | { readonly order?: number; readonly fileName?: string } | undefined,
-): NormalizedAppTargetConfig["bootstrap"] {
+function normalizeBootstrap(bootstrap: boolean | undefined): NormalizedAppTargetConfig["bootstrap"] {
   if (!bootstrap) {
     return { enabled: false };
   }
-  if (bootstrap === true) {
-    return { enabled: true };
-  }
-  return {
-    enabled: true,
-    order: bootstrap.order,
-    fileName: bootstrap.fileName,
-  };
+  return { enabled: true };
 }
 
 function normalizeArgo(
@@ -260,13 +222,7 @@ function normalizeArgo(
   };
 }
 
-function makeSynthContext(
-  cluster: ClusterConfig,
-  app: EnabledApp,
-  appPath: string,
-  argoPath: string,
-  bootstrapPath: string,
-): K2SynthContext {
+function makeSynthContext(cluster: ClusterConfig, app: EnabledApp, appPath: string, argoPath: string): K2SynthContext {
   return {
     cluster,
     appName: app.appName,
@@ -275,7 +231,6 @@ function makeSynthContext(
     output: {
       appPath,
       argoPath,
-      bootstrapPath,
     },
   };
 }
@@ -308,23 +263,6 @@ function selectedClusters(): ClusterConfig[] {
 
 function isClusterTarget(target: string): target is ClusterTarget {
   return CLUSTER_TARGETS.includes(target as ClusterTarget);
-}
-
-function compareBootstrapApps(a: EnabledApp, b: EnabledApp): number {
-  const aOrder = a.deployment.bootstrap.order ?? 1000;
-  const bOrder = b.deployment.bootstrap.order ?? 1000;
-  if (aOrder !== bOrder) {
-    return aOrder - bOrder;
-  }
-  return a.appName.localeCompare(b.appName);
-}
-
-function bootstrapFileName(app: EnabledApp): string {
-  if (app.deployment.bootstrap.fileName) {
-    return app.deployment.bootstrap.fileName;
-  }
-  const order = app.deployment.bootstrap.order ?? 1000;
-  return `${String(order).padStart(2, "0")}-${app.appName}.k8s.yaml`;
 }
 
 function isNodeError(err: unknown): err is NodeJS.ErrnoException {
