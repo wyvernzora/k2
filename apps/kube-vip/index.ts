@@ -20,6 +20,10 @@ function apiVipForTarget(target: Parameters<AppResourceFunc>[1]["target"]): stri
   return target === "v3" ? "10.10.9.1" : "10.10.8.2";
 }
 
+function extraValuesForTarget(target: Parameters<AppResourceFunc>[1]["target"]) {
+  return target === "v3" ? { tolerations: Toleration.ALLOW_CONTROL_PLANE } : {};
+}
+
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = (app, ctx) => {
   app.use(Namespace, namespaceForTarget(ctx.target));
@@ -37,7 +41,7 @@ export const createAppResources: AppResourceFunc = (app, ctx) => {
         svc_enable: "false",
         vip_leaderelection: "true",
       },
-      tolerations: Toleration.ALLOW_CONTROL_PLANE,
+      ...extraValuesForTarget(ctx.target),
       resources: {
         limits: {
           cpu: "200m",
