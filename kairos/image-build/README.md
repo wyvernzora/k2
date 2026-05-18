@@ -19,27 +19,20 @@ move into a standalone repository if that becomes useful.
 
 ## Target Strategy
 
-The PoC image is cluster-light. It includes Ubuntu, Kairos, k3s, and hardware
-defaults for the selected target, but not cluster identity or node identity.
-Future baked content should be added by declaring overlays in `targets.yaml`,
-not by making one-off Dockerfile edits.
+The PoC image is cluster-light. It includes Ubuntu, Kairos, k3s, hardware
+defaults for the selected target, and invariant K2 provisioning contracts, but
+not cluster identity, node identity, or active K3s config. Future baked content
+should be added by declaring overlays in `targets.yaml`, not by making one-off
+Dockerfile edits.
 
 `hardware` is the K2 hardware profile used in tags and overlay selection.
 `kairosModel` is the Kairos model passed to `kairos-init`. For example,
 `rpi4cb` still uses `kairosModel: rpi4` because the ComputeBlade nodes are CM4
 systems using the Kairos Raspberry Pi 4 boot model.
 
-Role-specific behavior should become explicit image targets when it is stable:
-
-```text
-ubuntu-24.04-standard-arm64-rpi4cb-k3s-base
-ubuntu-24.04-standard-arm64-rpi4cb-k3s-master
-ubuntu-24.04-standard-arm64-rpi4cb-k3s-worker
-ubuntu-24.04-standard-amd64-generic-k3s-worker
-```
-
-Do not infer node role from hostname, IP address, hardware, or labels at boot.
-Use per-node config during the PoC, then explicit role variants later.
+Node roles are not part of the image-build contract. Bootstrap server, joining
+server, and agent intent comes from per-node seed or bundle input consumed by
+the node provisioner.
 
 Never bake secrets, 1Password material, k3s tokens, private keys, cluster CA
 private material, hostnames, node IPs, or VIP ownership into images.
@@ -56,20 +49,20 @@ xz --version
 Build and load the PoC OCI image:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build build oci ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
+(cd kairos/image-build && go run ./cmd/image-build build oci ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
 Build the raw artifact from the locally loaded image:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
+(cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
 Build the OCI image, raw artifact, raw patches, checksums, manifest, and
 inspection inside Earthly's Linux/Docker environment:
 
 ```sh
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s-base
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
 This is the preferred artifact path because all raw image mutation happens on
@@ -84,31 +77,31 @@ not have to start cold every time.
 Inspect the artifact:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
+(cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
 Inspect the locally loaded OCI image against overlay/target expectations:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
+(cd kairos/image-build && go run ./cmd/image-build inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
 Push an OCI image after a local build succeeds:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build build oci ubuntu-24.04-standard-arm64-rpi4cb-k3s-base --push)
+(cd kairos/image-build && go run ./cmd/image-build build oci ubuntu-24.04-standard-arm64-rpi4cb-k3s --push)
 ```
 
 Preview the resolved build plan:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build plan ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
+(cd kairos/image-build && go run ./cmd/image-build plan ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
 The PoC target produces this image tag:
 
 ```text
-ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-base-rev0
+ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0
 ```
 
 ## rpi4cb Hardware Defaults

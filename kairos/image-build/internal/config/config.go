@@ -2,6 +2,7 @@ package config
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -33,7 +34,6 @@ type Target struct {
 	Platform           string          `yaml:"platform,omitempty"`
 	Hardware           string          `yaml:"hardware,omitempty"`
 	KairosModel        string          `yaml:"kairosModel,omitempty"`
-	Role               string          `yaml:"role,omitempty"`
 	KubernetesDistro   string          `yaml:"kubernetesDistro,omitempty"`
 	Artifacts          []string        `yaml:"artifacts,omitempty"`
 	Overlays           []string        `yaml:"overlays,omitempty"`
@@ -94,7 +94,9 @@ func LoadTargets(path string) (TargetsFile, error) {
 	}
 
 	var targets TargetsFile
-	if err := yaml.Unmarshal(data, &targets); err != nil {
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&targets); err != nil {
 		return TargetsFile{}, err
 	}
 	if len(targets.Targets) == 0 {
@@ -172,6 +174,10 @@ func (t Target) OverlaysSpecified() bool {
 }
 
 func (t *Target) UnmarshalYAML(node *yaml.Node) error {
+	if err := rejectUnknownTargetKeys(node); err != nil {
+		return err
+	}
+
 	type rawTarget Target
 	var raw rawTarget
 	if err := node.Decode(&raw); err != nil {
@@ -180,6 +186,37 @@ func (t *Target) UnmarshalYAML(node *yaml.Node) error {
 	*t = Target(raw)
 	t.artifactsSpecified = nodeHasKey(node, "artifacts")
 	t.overlaysSpecified = nodeHasKey(node, "overlays")
+	return nil
+}
+
+func rejectUnknownTargetKeys(node *yaml.Node) error {
+	node = unwrapDocumentNode(node)
+	if node == nil || node.Kind != yaml.MappingNode {
+		return nil
+	}
+
+	allowed := map[string]bool{
+		"enabled":          true,
+		"inherits":         true,
+		"flavor":           true,
+		"flavorRelease":    true,
+		"variant":          true,
+		"arch":             true,
+		"platform":         true,
+		"hardware":         true,
+		"kairosModel":      true,
+		"kubernetesDistro": true,
+		"artifacts":        true,
+		"overlays":         true,
+		"artifactOptions":  true,
+		"inspect":          true,
+	}
+	for i := 0; i+1 < len(node.Content); i += 2 {
+		key := node.Content[i].Value
+		if !allowed[key] {
+			return fmt.Errorf("unknown target field %q", key)
+		}
+	}
 	return nil
 }
 

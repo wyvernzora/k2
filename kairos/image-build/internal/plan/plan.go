@@ -28,7 +28,6 @@ type Plan struct {
 	Platform         string          `json:"platform" yaml:"platform"`
 	Hardware         string          `json:"hardware" yaml:"hardware"`
 	KairosModel      string          `json:"kairosModel" yaml:"kairosModel"`
-	Role             string          `json:"role" yaml:"role"`
 	KubernetesDistro string          `json:"kubernetesDistro" yaml:"kubernetesDistro"`
 	Artifacts        []string        `json:"artifacts" yaml:"artifacts"`
 	Overlays         []string        `json:"overlays" yaml:"overlays"`
@@ -163,7 +162,6 @@ func (p Planner) Build(target string) (Plan, error) {
 		Platform:         resolved.Platform,
 		Hardware:         resolved.Hardware,
 		KairosModel:      resolved.KairosModel,
-		Role:             resolved.Role,
 		KubernetesDistro: resolved.KubernetesDistro,
 		Artifacts:        append([]string(nil), resolved.Artifacts...),
 		Overlays:         append([]string(nil), resolved.Overlays...),
@@ -220,7 +218,6 @@ func (p Planner) resolveTarget(name string, seen map[string]bool) (config.Target
 	mergeString(&merged.Platform, target.Platform)
 	mergeString(&merged.Hardware, target.Hardware)
 	mergeString(&merged.KairosModel, target.KairosModel)
-	mergeString(&merged.Role, target.Role)
 	mergeString(&merged.KubernetesDistro, target.KubernetesDistro)
 	if target.Enabled != nil {
 		merged.Enabled = target.Enabled
@@ -246,7 +243,6 @@ func (p Planner) validate(resolved Plan) error {
 		resolved.Platform == "" ||
 		resolved.Hardware == "" ||
 		resolved.KairosModel == "" ||
-		resolved.Role == "" ||
 		resolved.KubernetesDistro == "" {
 		return fmt.Errorf("target %q is missing one or more required fields", resolved.Target)
 	}
@@ -320,7 +316,7 @@ func (p Planner) inspection(targetName string, resolved config.Target) (Inspecti
 func (p Planner) imageTag(target config.Target) string {
 	k3sTag := strings.ReplaceAll(p.Versions.K3sVersion, "+", "-")
 	return fmt.Sprintf(
-		"%s:%s-%s-%s-%s-%s-%s-%s-%s-%s-%s",
+		"%s:%s-%s-%s-%s-%s-%s-%s-%s-%s",
 		p.Versions.RegistryImage,
 		target.Flavor,
 		target.FlavorRelease,
@@ -330,7 +326,6 @@ func (p Planner) imageTag(target config.Target) string {
 		target.Hardware,
 		target.KubernetesDistro,
 		k3sTag,
-		target.Role,
 		p.Versions.ImageRevision,
 	)
 }

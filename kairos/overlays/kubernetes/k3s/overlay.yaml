@@ -1,0 +1,13 @@
+inspect:
+  oci:
+    files:
+      - path: /usr/share/k2/node-provision/k3s/README.md
+        contains:
+          - K2 K3s Node Provisioning Overlay
+          - The overlay does not install active files under `/etc/rancher/k3s`
+          - Active K3s configuration is written at provision time
+    absent:
+      - /etc/rancher/k3s/config.yaml
+      - /etc/rancher/k3s/config.yaml.d/10-k2-server-common.yaml
+      - /etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml
+      - /var/lib/rancher/k3s/server/manifests/k2-bootstrap.yaml

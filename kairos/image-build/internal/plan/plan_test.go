@@ -21,12 +21,8 @@ func TestBuildPlanGolden(t *testing.T) {
 		golden string
 	}{
 		{
-			target: "ubuntu-24.04-standard-arm64-rpi4cb-k3s-base",
-			golden: "rpi4cb-base.golden.json",
-		},
-		{
-			target: "ubuntu-24.04-standard-arm64-rpi4cb-k3s-master",
-			golden: "rpi4cb-master.golden.json",
+			target: "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+			golden: "rpi4cb.golden.json",
 		},
 	}
 
@@ -45,7 +41,7 @@ func TestEnabledTargets(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 
 	got := planner.EnabledTargets()
-	want := []string{"ubuntu-24.04-standard-arm64-rpi4cb-k3s-base"}
+	want := []string{"ubuntu-24.04-standard-arm64-rpi4cb-k3s"}
 	if !slices.Equal(got, want) {
 		t.Fatalf("enabled targets = %#v, want %#v", got, want)
 	}
@@ -54,16 +50,16 @@ func TestEnabledTargets(t *testing.T) {
 func TestImageTagAndArtifactStemMatchShellContract(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 
-	got, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s-base")
+	got, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-base-rev0"
+	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0"
 	if got.Image != wantImage {
 		t.Fatalf("image = %q, want %q", got.Image, wantImage)
 	}
-	wantStem := "ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-base-rev0"
+	wantStem := "ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0"
 	if got.ArtifactStem != wantStem {
 		t.Fatalf("artifact stem = %q, want %q", got.ArtifactStem, wantStem)
 	}
@@ -74,7 +70,7 @@ func TestRawPatchRejectsUnsupportedPatchTarget(t *testing.T) {
 	unsupported := filepath.Join(planner.Paths.OverlaysDir, "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt.patch")
 	mustWrite(t, unsupported, "- op: test\n  path: /value\n  value: nope\n")
 
-	_, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s-base")
+	_, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s")
 	if err == nil {
 		t.Fatal("expected unsupported .txt.patch error")
 	}
@@ -83,9 +79,40 @@ func TestRawPatchRejectsUnsupportedPatchTarget(t *testing.T) {
 	}
 }
 
+func TestTargetsRejectUnknownFields(t *testing.T) {
+	root := t.TempDir()
+	targetsPath := filepath.Join(root, "targets.yaml")
+	mustWrite(t, targetsPath, strings.TrimSpace(`
+targets:
+  ubuntu-24.04-standard-arm64-rpi4cb-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: arm64
+    platform: linux/arm64
+    hardware: rpi4cb
+    kairosModel: rpi4
+    role: base
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/rpi4cb
+`)+"\n")
+
+	_, err := config.LoadTargets(targetsPath)
+	if err == nil {
+		t.Fatal("expected unknown field error")
+	}
+	if !strings.Contains(err.Error(), `unknown target field "role"`) {
+		t.Fatalf("error = %v", err)
+	}
+}
+
 func TestInspectionRejectsConflictingStructuredTests(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
-	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "roles", "master", "overlay.yaml"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "extra", "overlay.yaml"), strings.TrimSpace(`
 inspect:
   raw:
     partitions:
@@ -98,7 +125,7 @@ inspect:
                 value: 250
 `)+"\n")
 
-	_, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s-master")
+	_, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s-extra")
 	if err == nil {
 		t.Fatal("expected conflicting inspection error")
 	}
@@ -109,14 +136,14 @@ inspect:
 
 func TestInspectionRejectsAbsentFileConflict(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
-	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "roles", "master", "overlay.yaml"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "extra", "overlay.yaml"), strings.TrimSpace(`
 inspect:
   oci:
     absent:
       - /system/oem/05-rpi4cb-nvme-persistent.yaml
 `)+"\n")
 
-	_, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s-master")
+	_, err := planner.Build("ubuntu-24.04-standard-arm64-rpi4cb-k3s-extra")
 	if err == nil {
 		t.Fatal("expected absent/file conflict")
 	}
@@ -146,7 +173,7 @@ REGISTRY_IMAGE=ghcr.io/wyvernzora/k2-kairos
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "targets.yaml"), strings.TrimSpace(`
 targets:
-  ubuntu-24.04-standard-arm64-rpi4cb-k3s-base:
+  ubuntu-24.04-standard-arm64-rpi4cb-k3s:
     enabled: true
     flavor: ubuntu
     flavorRelease: "24.04"
@@ -155,27 +182,23 @@ targets:
     platform: linux/arm64
     hardware: rpi4cb
     kairosModel: rpi4
-    role: base
     kubernetesDistro: k3s
     artifacts:
       - raw
     overlays:
-      - base
       - hardware/rpi4cb
-      - sites/k2
+      - kubernetes/k3s
     artifactOptions:
       raw:
         diskStateSize: 8192
 
-  ubuntu-24.04-standard-arm64-rpi4cb-k3s-master:
+  ubuntu-24.04-standard-arm64-rpi4cb-k3s-extra:
     enabled: false
-    inherits: ubuntu-24.04-standard-arm64-rpi4cb-k3s-base
-    role: master
+    inherits: ubuntu-24.04-standard-arm64-rpi4cb-k3s
     overlays:
-      - roles/master
+      - extra
 `)+"\n")
 
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "base", ".gitkeep"), "")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt"), "dtparam=pciex1\n")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_OEM", "01_reset.yaml.patch"), strings.TrimSpace(`
 - op: test
@@ -212,8 +235,26 @@ inspect:
                 path: /stages/rootfs.before/0/layout/add_partitions/1/size
                 value: 500
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "sites", "k2", ".gitkeep"), "")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "roles", "master", ".gitkeep"), "")
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "README.md"), strings.TrimSpace(`
+# K2 K3s Node Provisioning Overlay
+
+The overlay does not install active files under /etc/rancher/k3s.
+Active K3s configuration is written at provision time.
+`)+"\n")
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "overlay.yaml"), strings.TrimSpace(`
+inspect:
+  oci:
+    files:
+      - path: /usr/share/k2/node-provision/k3s/README.md
+        contains:
+          - K2 K3s Node Provisioning Overlay
+          - Active K3s configuration is written at provision time
+    absent:
+      - /etc/rancher/k3s/config.yaml
+      - /etc/rancher/k3s/config.yaml.d/10-k2-server-common.yaml
+      - /etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml
+`)+"\n")
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "extra", ".gitkeep"), "")
 
 	discovered, err := paths.Discover(buildRoot, paths.Overrides{})
 	if err != nil {

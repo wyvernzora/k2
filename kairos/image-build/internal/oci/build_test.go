@@ -57,7 +57,7 @@ func TestBuilderImage(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Building ubuntu-24.04-standard-arm64-rpi4cb-k3s-base",
+		"Building ubuntu-24.04-standard-arm64-rpi4cb-k3s",
 		"image: ghcr.io/wyvernzora/k2-kairos:test",
 		"platform: linux/arm64",
 		"kairos model: rpi4",
@@ -174,7 +174,7 @@ func indexOf(values []string, needle string) int {
 
 func testPlan() plan.Plan {
 	return plan.Plan{
-		Target:           "ubuntu-24.04-standard-arm64-rpi4cb-k3s-base",
+		Target:           "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
 		Platform:         "linux/arm64",
 		KairosModel:      "rpi4",
 		Hardware:         "rpi4cb",

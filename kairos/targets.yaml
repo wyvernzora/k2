@@ -1,5 +1,5 @@
 targets:
-  ubuntu-24.04-standard-arm64-rpi4cb-k3s-base:
+  ubuntu-24.04-standard-arm64-rpi4cb-k3s:
     enabled: true
     flavor: ubuntu
     flavorRelease: "24.04"
@@ -8,12 +8,12 @@ targets:
     platform: linux/arm64
     hardware: rpi4cb
     kairosModel: rpi4
-    role: base
     kubernetesDistro: k3s
     artifacts:
       - raw
     overlays:
       - hardware/rpi4cb
+      - kubernetes/k3s
     artifactOptions:
       raw:
         diskStateSize: 8192

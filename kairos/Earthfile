@@ -1,6 +1,6 @@
 VERSION 0.8
 
-ARG KAIROS_TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s-base"
+ARG KAIROS_TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s"
 
 #
 # +image-build-unit: tests and validates the self-contained Kairos image builder

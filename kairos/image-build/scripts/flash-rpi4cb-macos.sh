@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KAIROS_DIR="${KAIROS_DIR:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 ARTIFACT_ROOT="${ARTIFACT_ROOT:-${KAIROS_DIR}/artifacts}"
 
-TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s-base"
+TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s"
 EMMC_DISK=""
 NVME_DISK=""
 ZERO_NVME="false"
@@ -105,32 +105,32 @@ diskutil_value() {
 
 validate_target_disk() {
     local disk="$1"
-    local role="$2"
+    local label="$2"
     local whole internal size_bytes max_bytes
 
-    log "Validating ${role} target $(disk_path "${disk}")"
+    log "Validating ${label} target $(disk_path "${disk}")"
     whole="$(diskutil_value "${disk}" WholeDisk)"
     internal="$(diskutil_value "${disk}" Internal)"
     size_bytes="$(diskutil_value "${disk}" TotalSize)"
     max_bytes=$(( 512 * 1024 * 1024 * 1024 ))
 
     if [ "${whole}" != "true" ]; then
-        die "${role} $(disk_path "${disk}") is not a whole disk"
+        die "${label} $(disk_path "${disk}") is not a whole disk"
     fi
 
     if [ "${internal}" != "false" ]; then
-        die "${role} $(disk_path "${disk}") is not marked external by diskutil"
+        die "${label} $(disk_path "${disk}") is not marked external by diskutil"
     fi
 
     if [ "${size_bytes}" -gt "${max_bytes}" ]; then
-        die "${role} $(disk_path "${disk}") is larger than 512GB (${size_bytes} bytes)"
+        die "${label} $(disk_path "${disk}") is larger than 512GB (${size_bytes} bytes)"
     fi
 
     if ! diskutil list "$(disk_path "${disk}")" | head -n 1 | grep -F "(external, physical)" >/dev/null; then
-        die "${role} $(disk_path "${disk}") is not marked as (external, physical) in diskutil list"
+        die "${label} $(disk_path "${disk}") is not marked as (external, physical) in diskutil list"
     fi
 
-    log "${role} target accepted: $(disk_path "${disk}") (${size_bytes} bytes)"
+    log "${label} target accepted: $(disk_path "${disk}") (${size_bytes} bytes)"
 }
 
 require_macos() {

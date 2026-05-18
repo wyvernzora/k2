@@ -1,6 +1,6 @@
 {
-  "target": "ubuntu-24.04-standard-arm64-rpi4cb-k3s-master",
-  "enabled": false,
+  "target": "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+  "enabled": true,
   "flavor": "ubuntu",
   "flavorRelease": "24.04",
   "variant": "standard",
@@ -8,16 +8,13 @@
   "platform": "linux/arm64",
   "hardware": "rpi4cb",
   "kairosModel": "rpi4",
-  "role": "master",
   "kubernetesDistro": "k3s",
   "artifacts": [
     "raw"
   ],
   "overlays": [
-    "base",
     "hardware/rpi4cb",
-    "sites/k2",
-    "roles/master"
+    "kubernetes/k3s"
   ],
   "rawPatches": [
     {
@@ -57,9 +54,29 @@
           "contains": [
             "#cloud-config"
           ]
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/usr/share/k2/node-provision/k3s/README.md",
+          "contains": [
+            "K2 K3s Node Provisioning Overlay",
+            "Active K3s configuration is written at provision time"
+          ]
         }
       ],
       "absent": [
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/etc/rancher/k3s/config.yaml"
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/etc/rancher/k3s/config.yaml.d/10-k2-server-common.yaml"
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml"
+        },
         {
           "source": "overlay:hardware/rpi4cb",
           "path": "/system/oem/20-rpi4cb-nvme-data.yaml"
@@ -110,9 +127,9 @@
       "diskStateSize": 8192
     }
   },
-  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-master-rev0",
-  "artifactStem": "ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-master-rev0",
-  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-standard-arm64-rpi4cb-k3s-master",
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0",
+  "artifactStem": "ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0",
+  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-standard-arm64-rpi4cb-k3s",
   "versions": {
     "kairosVersion": "v4.1.0",
     "kairosInitVersion": "v0.13.0",

@@ -21,21 +21,22 @@ becomes useful.
 The active target is:
 
 ```text
-ubuntu-24.04-standard-arm64-rpi4cb-k3s-base
+ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
 It builds an Ubuntu 24.04, Kairos v4.1.0, arm64 Raspberry Pi 4 model image with
 k3s v1.36.0+k3s1. The hardware profile is `rpi4cb`, meaning Raspberry Pi CM4 on
 ComputeBlade. The target is intentionally cluster-light: it includes the OS,
-k3s, and hardware defaults, but not node identity, cluster tokens, VIP
-ownership, hostnames, private keys, or other secrets.
+k3s, hardware defaults, and the invariant K2 K3s provisioning contract, but not
+node identity, cluster tokens, VIP ownership, hostnames, private keys, active
+K3s config, or other secrets.
 
 ## Build Flow
 
 The preferred local artifact path is Earthly:
 
 ```sh
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s-base
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
 That target runs the Go tests and vet checks, builds the OCI image, validates
@@ -46,9 +47,9 @@ compressed image and metadata under `kairos/artifacts/<target>/`.
 Useful direct CLI commands:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build plan ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
-(cd kairos/image-build && go run ./cmd/image-build inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
-(cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s-base)
+(cd kairos/image-build && go run ./cmd/image-build plan ubuntu-24.04-standard-arm64-rpi4cb-k3s)
+(cd kairos/image-build && go run ./cmd/image-build inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s)
+(cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
 ## Overlay Contract
