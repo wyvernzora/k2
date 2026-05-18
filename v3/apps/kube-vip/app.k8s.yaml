@@ -161,7 +161,7 @@ spec:
             - manager
           env:
             - name: vip_address
-              value: 10.10.8.2
+              value: 10.10.9.1
             - name: cp_enable
               value: "true"
             - name: lb_enable
@@ -204,6 +204,9 @@ spec:
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
           operator: Exists
   updateStrategy:
     rollingUpdate:

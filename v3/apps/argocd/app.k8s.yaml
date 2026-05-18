@@ -970,13 +970,14 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/name: argocd-applicationset-controller
-                topologyKey: kubernetes.io/hostname
+            - preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/master
+                    operator: DoesNotExist
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -1195,6 +1196,13 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-applicationset-controller
       terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
       volumes:
         - configMap:
             name: argocd-ssh-known-hosts-cm
@@ -1263,13 +1271,14 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/name: argocd-repo-server
-                topologyKey: kubernetes.io/hostname
+            - preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/master
+                    operator: DoesNotExist
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -1620,6 +1629,13 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-repo-server
       terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
       volumes:
         - emptyDir: {}
           name: helm-working-dir
@@ -1687,13 +1703,14 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/name: argocd-server
-                topologyKey: kubernetes.io/hostname
+            - preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/master
+                    operator: DoesNotExist
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -2070,6 +2087,13 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-server
       terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
       volumes:
         - emptyDir: {}
           name: plugins-home
@@ -2144,13 +2168,14 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/name: argocd-redis
-                topologyKey: kubernetes.io/hostname
+            - preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/master
+                    operator: DoesNotExist
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -2193,6 +2218,13 @@ spec:
           type: RuntimeDefault
       serviceAccountName: default
       terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
       volumes:
         - configMap:
             defaultMode: 493
@@ -2235,13 +2267,14 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/name: argocd-application-controller
-                topologyKey: kubernetes.io/hostname
+            - preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/master
+                    operator: DoesNotExist
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -2572,6 +2605,13 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-application-controller
       terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
       volumes:
         - emptyDir: {}
           name: argocd-home
@@ -2758,4 +2798,11 @@ spec:
         kubernetes.io/os: linux
       restartPolicy: OnFailure
       serviceAccountName: argocd-redis-secret-init
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
   ttlSecondsAfterFinished: 60
