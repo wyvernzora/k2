@@ -6,7 +6,7 @@ import fg from "fast-glob";
 import pLimit from "p-limit";
 import { Chart } from "cdk8s";
 
-import { App, ApexDomain, AppRoot, CLUSTERS, CLUSTER_TARGETS, ClusterContext, HelmCharts } from "@k2/cdk-lib";
+import { App, ApexDomain, AppRoot, CLUSTER_TARGETS, ClusterContext, HelmCharts, loadClusters } from "@k2/cdk-lib";
 import type {
   AppDeployment,
   AppResourceFunc,
@@ -38,7 +38,8 @@ interface EnabledApp extends LoadedApp {
 async function main() {
   const appDirs = await fg("apps/*", { onlyDirectories: true });
   const loadedApps = await loadApps(appDirs);
-  const clusters = selectedClusters();
+  const clusterConfigs = loadClusters();
+  const clusters = selectedClusters(clusterConfigs);
 
   const maxConcurrency = Number(process.env.MAX_CONCURRENCY) || os.cpus().length;
   const limit = pLimit(maxConcurrency);
@@ -108,7 +109,7 @@ async function synthTargetArgoManifest(cluster: ClusterConfig, enabledApps: Enab
   const outFile = path.resolve("deploy", cluster.id, "argocd", "app.k8s.yaml");
   const app = new App()
     .use(ClusterContext, cluster)
-    .use(OnePassword.withDefaultVault())
+    .use(OnePassword.withVault(cluster.onePassword.vaultId))
     .use(ArgoCD.withClusterArgoCdOptions(cluster))
     .use(ApexDomain, cluster.apexDomain);
   const chart = new Chart(app, "argocd");
@@ -135,7 +136,7 @@ function createBaseApp(cluster: ClusterConfig, appPath: string): App {
     .use(ClusterContext, cluster)
     .use(AppRoot, appPath)
     .use(HelmCharts)
-    .use(OnePassword.withDefaultVault())
+    .use(OnePassword.withVault(cluster.onePassword.vaultId))
     .use(ApexDomain, cluster.apexDomain);
 }
 
@@ -247,17 +248,17 @@ async function copyCrdManifest(appPath: string, dst: string): Promise<void> {
   }
 }
 
-function selectedClusters(): ClusterConfig[] {
+function selectedClusters(clusters: Record<ClusterTarget, ClusterConfig>): ClusterConfig[] {
   const raw = process.env.K2_CLUSTER ?? "all";
   if (raw === "all") {
-    return CLUSTER_TARGETS.map(target => CLUSTERS[target]);
+    return CLUSTER_TARGETS.map(target => clusters[target]);
   }
 
   return raw.split(",").map(target => {
     if (!isClusterTarget(target)) {
       throw new Error(`Unknown K2_CLUSTER target: ${target}`);
     }
-    return CLUSTERS[target];
+    return clusters[target];
   });
 }
 

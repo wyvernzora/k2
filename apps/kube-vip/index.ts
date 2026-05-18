@@ -16,10 +16,6 @@ function namespaceForTarget(target: Parameters<AppResourceFunc>[1]["target"]): s
   return target === "v3" ? "kube-vip" : "k2-network";
 }
 
-function apiVipForTarget(target: Parameters<AppResourceFunc>[1]["target"]): string {
-  return target === "v3" ? "10.10.9.1" : "10.10.8.2";
-}
-
 function extraValuesForTarget(target: Parameters<AppResourceFunc>[1]["target"]) {
   return target === "v3" ? { tolerations: Toleration.ALLOW_CONTROL_PLANE } : {};
 }
@@ -34,7 +30,7 @@ export const createAppResources: AppResourceFunc = (app, ctx) => {
     ...Namespace.of(app),
     values: {
       config: {
-        address: apiVipForTarget(ctx.target),
+        address: ctx.cluster.kubernetes.api.vip,
       },
       env: {
         cp_enable: "true",

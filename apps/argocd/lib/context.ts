@@ -58,36 +58,11 @@ export class ArgoCdContext extends Context {
   }
 }
 
-export function withDefaultArgoCdOptions() {
-  return ArgoCdContext.with({
-    project: "default",
-    namespace: "k2-core",
-    server: "https://kubernetes.default.svc",
-    repo: {
-      url: "https://github.com/wyvernzora/k2",
-      branch: "deploy",
-    },
-    autoSyncPolicy: {
-      retryLimit: 10,
-      backoff: {
-        duration: Duration.seconds(30),
-        maxDuration: Duration.minutes(10),
-        factor: 2,
-      },
-    },
-    syncOptions: {
-      CreateNamespace: true,
-      ServerSideApply: true,
-      ApplyOutOfSyncOnly: true,
-    },
-  });
-}
-
 export function withClusterArgoCdOptions(cluster: ClusterConfig) {
   return ArgoCdContext.with({
     project: cluster.argo.project,
     namespace: cluster.argo.namespace,
-    server: "https://kubernetes.default.svc",
+    server: cluster.argo.server,
     applicationNamePrefix: cluster.argo.applicationNamePrefix,
     repo: {
       url: cluster.argo.repoUrl,
@@ -104,10 +79,6 @@ export function withClusterArgoCdOptions(cluster: ClusterConfig) {
           },
         }
       : undefined,
-    syncOptions: {
-      CreateNamespace: true,
-      ServerSideApply: true,
-      ApplyOutOfSyncOnly: true,
-    },
+    syncOptions: cluster.argo.syncOptions,
   });
 }

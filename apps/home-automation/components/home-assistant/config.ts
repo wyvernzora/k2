@@ -1,11 +1,14 @@
 import { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { ConfigMap } from "@k2/cdk-lib";
+import { ClusterContext, ConfigMap } from "@k2/cdk-lib";
 
 export class HomeAssistantConfig extends ConfigMap {
+  private readonly trustedProxyCidr: string;
+
   constructor(scope: Construct, id: string) {
     super(scope, id, {});
+    this.trustedProxyCidr = ClusterContext.of(this).cluster.kubernetes.networking.podCidr;
     this.addData("init.sh", this.renderInitScript());
     this.addData("configuration.yaml", this.renderConfigurationYaml());
     this.addData("http.yaml", this.renderHttpYaml());
@@ -69,7 +72,7 @@ export class HomeAssistantConfig extends ConfigMap {
       # Allow reverse proxy
       use_x_forwarded_for: true
       trusted_proxies:
-        - 10.42.0.0/16
+        - ${this.trustedProxyCidr}
       `;
   }
 }

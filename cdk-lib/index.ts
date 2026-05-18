@@ -1,7 +1,7 @@
 /* App Interfaces */
 export * from "./app.js";
 export * from "./oci.js";
-export * from "./cluster.js";
+export * from "./cluster/index.js";
 
 /* App Context Types */
 export * from "./context.js";

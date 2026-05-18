@@ -1,10 +1,7 @@
-import { App, HelmCharts, Namespace, NodeAffinity } from "@k2/cdk-lib";
+import { App, ClusterContext, HelmCharts, Namespace, NodeAffinity } from "@k2/cdk-lib";
 
 import { CiliumL2AnnouncementPolicy, CiliumLoadBalancerIpPool } from "../crds/cilium.io.js";
 
-const KUBERNETES_API_VIP = "10.10.9.1";
-const LOAD_BALANCER_POOL_START = "10.10.9.16";
-const LOAD_BALANCER_POOL_STOP = "10.10.9.255";
 const CILIUM_OPERATOR_POD_ANTI_AFFINITY = {
   requiredDuringSchedulingIgnoredDuringExecution: [
     {
@@ -20,14 +17,18 @@ const CILIUM_OPERATOR_POD_ANTI_AFFINITY = {
 
 export default {
   create(app: App) {
+    const cluster = ClusterContext.of(app).cluster;
+    if (!cluster.cilium) {
+      throw new Error(`${cluster.id}: cilium cluster config is required to synthesize the cilium app`);
+    }
     const Cilium = HelmCharts.of(app).asChart("cilium");
 
     const chart = new Cilium(app, "cilium", {
       ...Namespace.of(app),
       values: {
         kubeProxyReplacement: true,
-        k8sServiceHost: KUBERNETES_API_VIP,
-        k8sServicePort: 6443,
+        k8sServiceHost: cluster.kubernetes.api.vip,
+        k8sServicePort: cluster.kubernetes.api.port,
         k8sClientRateLimit: {
           qps: 20,
           burst: 40,
@@ -37,7 +38,7 @@ export default {
         },
         ipam: {
           operator: {
-            clusterPoolIPv4PodCIDRList: ["10.42.0.0/16"],
+            clusterPoolIPv4PodCIDRList: [cluster.kubernetes.networking.podCidr],
           },
         },
         operator: {
@@ -60,8 +61,8 @@ export default {
       spec: {
         blocks: [
           {
-            start: LOAD_BALANCER_POOL_START,
-            stop: LOAD_BALANCER_POOL_STOP,
+            start: cluster.cilium.loadBalancerPool.start,
+            stop: cluster.cilium.loadBalancerPool.stop,
           },
         ],
       },

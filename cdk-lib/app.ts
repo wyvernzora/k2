@@ -6,7 +6,7 @@ import * as base from "cdk8s";
 import { YamlOutputType } from "cdk8s";
 
 import { Context, ContextClass } from "./context.js";
-import type { K2SynthContext } from "./cluster.js";
+import type { K2SynthContext } from "./cluster/index.js";
 
 export class App extends base.App {
   constructor(...options: Array<AppOption>) {

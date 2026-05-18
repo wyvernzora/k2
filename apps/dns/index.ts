@@ -7,7 +7,7 @@ import { ContinuousDeployment } from "@k2/argocd";
 import { BlockingGroup, ClientGroup, CustomDns, Blocky } from "./components/blocky/index.js";
 
 /* Export deployment chart factory */
-export const createAppResources: AppResourceFunc = app => {
+export const createAppResources: AppResourceFunc = (app, ctx) => {
   app.use(Namespace, "dns");
   const helm = HelmCharts.of(app);
   const K8sGateway = helm.asConstruct("k8s-gateway");
@@ -34,7 +34,7 @@ export const createAppResources: AppResourceFunc = app => {
       sylphy: ["10.10.7.3"],
       pve: ["10.10.7.254"],
       rumi: ["10.10.8.1"],
-      k8s: ["10.10.8.2"],
+      k8s: [ctx.cluster.kubernetes.api.vip],
     },
   });
 

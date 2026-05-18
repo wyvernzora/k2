@@ -1,0 +1,33 @@
+id: legacy
+deployPath: deploy/legacy
+apexDomain: wyvernzora.io
+
+onePassword:
+  vaultId: zfsyjjcwge4w4gw6dh4zaqndhq
+
+kubernetes:
+  api:
+    vip: 10.10.8.2
+    dnsName: k8s.wyvernzora.io
+    port: 6443
+    tlsSans:
+      - 10.10.8.2
+  networking:
+    podCidr: 10.42.0.0/16
+    serviceCidr: 10.43.0.0/16
+    clusterDns: 10.43.0.10
+    clusterDomain: cluster.local
+
+argo:
+  namespace: k2-core
+  project: default
+  server: https://kubernetes.default.svc
+  repoUrl: https://github.com/wyvernzora/k2
+  repoBranch: deploy
+  appsPath: legacy/apps
+  rootPath: legacy/argocd
+  autoSync: true
+  syncOptions:
+    CreateNamespace: true
+    ServerSideApply: true
+    ApplyOutOfSyncOnly: true

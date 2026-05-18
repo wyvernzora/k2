@@ -1,0 +1,40 @@
+id: v3
+deployPath: deploy/v3
+apexDomain: wyvernzora.io
+
+onePassword:
+  vaultId: zfsyjjcwge4w4gw6dh4zaqndhq
+
+kubernetes:
+  api:
+    vip: 10.10.9.1
+    dnsName: k8s-api.wyvernzora.io
+    port: 6443
+    tlsSans:
+      - 10.10.9.1
+      - k8s-api.wyvernzora.io
+  networking:
+    podCidr: 10.42.0.0/16
+    serviceCidr: 10.43.0.0/16
+    clusterDns: 10.43.0.10
+    clusterDomain: cluster.local
+
+cilium:
+  loadBalancerPool:
+    start: 10.10.9.16
+    stop: 10.10.9.255
+
+argo:
+  namespace: argocd
+  project: default
+  server: https://kubernetes.default.svc
+  repoUrl: https://github.com/wyvernzora/k2
+  repoBranch: deploy
+  appsPath: v3/apps
+  rootPath: v3/argocd
+  autoSync: false
+  applicationNamePrefix: v3-
+  syncOptions:
+    CreateNamespace: true
+    ServerSideApply: true
+    ApplyOutOfSyncOnly: true
