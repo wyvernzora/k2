@@ -41,7 +41,7 @@ export const CLUSTERS = {
     deployPath: "deploy/v3",
     apexDomain: "wyvernzora.io",
     argo: {
-      namespace: "k2-core",
+      namespace: "argocd",
       project: "default",
       repoUrl: "https://github.com/wyvernzora/k2",
       repoBranch: "deploy",

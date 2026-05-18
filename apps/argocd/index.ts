@@ -26,13 +26,18 @@ export const deployment = defineDeployment({
   },
 });
 
+function namespaceForTarget(target: Parameters<AppResourceFunc>[1]["target"]): string {
+  return target === "v3" ? "argocd" : "k2-core";
+}
+
 /* Export deployment chart factory */
-export const createAppResources: AppResourceFunc = app => {
+export const createAppResources: AppResourceFunc = (app, ctx) => {
   const helm = HelmCharts.of(app);
   const ArgoCD = helm.asChart("argo-cd");
+  const namespace = namespaceForTarget(ctx.target);
 
   new ArgoCD(app, "argocd", {
-    namespace: "k2-core",
+    namespace,
     values: {
       secret: {
         createSecret: false,
@@ -138,6 +143,6 @@ export const createAppResources: AppResourceFunc = app => {
 };
 
 /* Export ArgoCD application factory */
-export const createArgoCdResources: ArgoCDResourceFunc = chart => {
-  new ContinuousDeployment(chart, "argocd", { namespace: "k2-core" });
+export const createArgoCdResources: ArgoCDResourceFunc = (chart, ctx) => {
+  new ContinuousDeployment(chart, "argocd", { namespace: namespaceForTarget(ctx.target) });
 };

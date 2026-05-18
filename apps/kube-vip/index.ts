@@ -15,9 +15,13 @@ export const deployment = defineDeployment({
   },
 });
 
+function namespaceForTarget(target: Parameters<AppResourceFunc>[1]["target"]): string {
+  return target === "v3" ? "kube-vip" : "k2-network";
+}
+
 /* Export deployment chart factory */
-export const createAppResources: AppResourceFunc = app => {
-  app.use(Namespace, "k2-network");
+export const createAppResources: AppResourceFunc = (app, ctx) => {
+  app.use(Namespace, namespaceForTarget(ctx.target));
   const helm = HelmCharts.of(app);
   const KubeVip = helm.asChart("kube-vip");
 
@@ -71,6 +75,6 @@ export const createAppResources: AppResourceFunc = app => {
 };
 
 /* Export ArgoCD application factory */
-export const createArgoCdResources: ArgoCDResourceFunc = chart => {
-  new ContinuousDeployment(chart, "kube-vip", { namespace: "k2-network" });
+export const createArgoCdResources: ArgoCDResourceFunc = (chart, ctx) => {
+  new ContinuousDeployment(chart, "kube-vip", { namespace: namespaceForTarget(ctx.target) });
 };
