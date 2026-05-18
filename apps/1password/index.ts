@@ -11,7 +11,7 @@ export * from "./lib/context.js";
 export const deployment = defineDeployment({
   targets: {
     legacy: true,
-    next: false,
+    v3: false,
   },
 });
 

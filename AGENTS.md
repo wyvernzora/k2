@@ -16,7 +16,7 @@
 | `apps/<name>/` | Each application module with `Chart.yaml` dependencies, `index.ts` factories, CRD bindings, components, and optional `lib/` helpers. |
 | `build/scripts/` | Utility scripts (manifest synth, CRD import, diffing) that the Earthly targets invoke. |
 | `cdk-lib/` | Shared CDK8s contexts (`AppRoot`, `HelmCharts`, `Namespace`, `ApexDomain`), constructs (config maps, scheduling, volumes), and helper types for apps. |
-| `deploy/` | Generated manifest output: legacy compatibility paths plus cluster-specific `legacy/` and `next/` trees. |
+| `deploy/` | Generated manifest output under cluster-specific `legacy/` and `v3/` trees. |
 | `ansible/` | Containerized Ansible runtime (`Earthfile`, `entrypoint.sh`, roles, playbooks) for host bootstrap and TLS refresh. |
 | `kairos/` | Kairos cloud-config templates & helper scripts; secrets injected via `op inject`. |
 | `Earthfile` | Defines reusable Earthly targets for builds, linting, manifest synthesis, CRD imports, and Docker image publishing. |
@@ -29,7 +29,7 @@
 > **Important:** Build, lint, manifest synthesis, CRD generation, and diff workflows must be run through `earthly` targets. The scripts under `build/scripts/` are implementation details for those targets and often require the containerized build environment from `ghcr.io/wyvernzora/k2-build`; invoking them directly from the host shell can fail due to missing CLIs, Node tooling, or expected filesystem/runtime setup.
 
 ### Earthly Targets
-- `earthly +k8s-manifests` → runs manifest synthesis inside the Earthly build environment from a clean `deploy/`, writing legacy compatibility output plus `deploy/legacy/` and `deploy/next/`. Pass `--K2_CLUSTER=legacy` or `--K2_CLUSTER=next` to focus on one target.
+- `earthly +k8s-manifests` → runs manifest synthesis inside the Earthly build environment from a clean `deploy/`, writing target-specific `deploy/legacy/` and `deploy/v3/` output. Pass `--K2_CLUSTER=legacy` or `--K2_CLUSTER=v3` to focus on one target.
 - `earthly +diff-manifests` → compares freshly synthesized manifests against the remote `deploy` branch via `build/scripts/diff-manifests.sh`, honoring `.dyffignore`. Always run this only after a fresh `+k8s-manifests` pass.
 - `earthly +lint` → executes `npx eslint` with the project config (CRD outputs excluded).
 - `earthly +crd-constructs` → loops over every `apps/*/crds/crds.k8s.yaml`, runs `build/scripts/generate-crd-constructs.sh`, and stores regenerated TypeScript bindings.

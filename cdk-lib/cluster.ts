@@ -1,6 +1,6 @@
 import { Context } from "./context.js";
 
-export const CLUSTER_TARGETS = ["legacy", "next"] as const;
+export const CLUSTER_TARGETS = ["legacy", "v3"] as const;
 export type ClusterTarget = (typeof CLUSTER_TARGETS)[number];
 
 export interface ClusterConfig {
@@ -36,19 +36,19 @@ export const CLUSTERS = {
       autoSync: true,
     },
   },
-  next: {
-    id: "next",
-    deployPath: "deploy/next",
+  v3: {
+    id: "v3",
+    deployPath: "deploy/v3",
     apexDomain: "wyvernzora.io",
     argo: {
       namespace: "k2-core",
       project: "default",
       repoUrl: "https://github.com/wyvernzora/k2",
       repoBranch: "deploy",
-      appsPath: "next/apps",
-      rootPath: "next/argocd",
+      appsPath: "v3/apps",
+      rootPath: "v3/argocd",
       autoSync: false,
-      applicationNamePrefix: "next-",
+      applicationNamePrefix: "v3-",
     },
   },
 } satisfies Record<ClusterTarget, ClusterConfig>;

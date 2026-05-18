@@ -45,10 +45,6 @@ async function main() {
 
   console.log(`Synthesizing manifests with concurrency=${maxConcurrency}`);
 
-  if (clusters.some(cluster => cluster.id === "legacy") && shouldEmitLegacyCompatibility()) {
-    await synthLegacyCompatibility(loadedApps, limit);
-  }
-
   for (const cluster of clusters) {
     await synthTarget(cluster, loadedApps, limit);
   }
@@ -64,26 +60,13 @@ async function loadApps(appDirs: string[]): Promise<LoadedApp[]> {
     const mod = (await import(path.resolve(appPath, "index.ts"))) as AppModule;
 
     if (!mod.deployment) {
-      console.warn(`${appName}: missing deployment metadata; treating as legacy-only during migration`);
+      console.warn(`${appName}: missing deployment metadata; treating as legacy-only`);
     }
 
     apps.push({ appName, appPath, mod });
   }
 
   return apps;
-}
-
-async function synthLegacyCompatibility(loadedApps: LoadedApp[], limit: ReturnType<typeof pLimit>): Promise<void> {
-  const cluster = CLUSTERS.legacy;
-  const enabledApps = enabledAppsFor(cluster, loadedApps);
-
-  console.log("Synthesizing legacy compatibility manifests");
-
-  await Promise.all(enabledApps.map(app => limit(() => synthCompatibilityAppManifest(cluster, app))));
-  await synthCompatibilityArgoManifest(
-    cluster,
-    enabledApps.filter(app => app.deployment.argo.enabled),
-  );
 }
 
 async function synthTarget(
@@ -107,23 +90,6 @@ async function synthTarget(
   );
 }
 
-async function synthCompatibilityAppManifest(cluster: ClusterConfig, app: EnabledApp): Promise<void> {
-  const outFile = path.resolve("deploy", app.appName, "app.k8s.yaml");
-  const ctx = makeSynthContext(cluster, app, outFile, "deploy/app.k8s.yaml", "");
-
-  if (!app.mod.createAppResources) {
-    throw new Error(`${app.appName}: missing createAppResources export`);
-  }
-  const createAppResources = app.mod.createAppResources;
-
-  console.log(`Synthesizing ${app.appName} compatibility CDK`);
-  await createBaseApp(cluster, app.appPath)
-    .use(cdkApp => createAppResources(cdkApp, ctx))
-    .synthToFile(outFile);
-
-  await copyCrdManifest(app.appPath, path.resolve("deploy", app.appName, "crds.k8s.yaml"));
-}
-
 async function synthTargetAppManifest(cluster: ClusterConfig, app: EnabledApp): Promise<void> {
   const outFile = path.resolve("deploy", cluster.id, "apps", app.appName, "app.k8s.yaml");
   const ctx = makeSynthContext(cluster, app, outFile, path.resolve("deploy", cluster.id, "argocd", "app.k8s.yaml"), "");
@@ -139,22 +105,6 @@ async function synthTargetAppManifest(cluster: ClusterConfig, app: EnabledApp): 
     .synthToFile(outFile);
 
   await copyCrdManifest(app.appPath, path.resolve("deploy", cluster.id, "apps", app.appName, "crds.k8s.yaml"));
-}
-
-async function synthCompatibilityArgoManifest(cluster: ClusterConfig, enabledApps: EnabledApp[]): Promise<void> {
-  console.log("Synthesizing legacy compatibility ArgoCD manifest");
-  const app = new App()
-    .use(ClusterContext, cluster)
-    .use(OnePassword.withDefaultVault())
-    .use(ArgoCD.withDefaultArgoCdOptions())
-    .use(ApexDomain, cluster.apexDomain);
-  const chart = new Chart(app, "argocd");
-
-  for (const enabledApp of enabledApps) {
-    synthArgoApp(chart, cluster, enabledApp, "deploy/app.k8s.yaml");
-  }
-
-  await app.synthToFile("deploy/app.k8s.yaml");
 }
 
 async function synthTargetArgoManifest(cluster: ClusterConfig, enabledApps: EnabledApp[]): Promise<void> {
@@ -354,10 +304,6 @@ function selectedClusters(): ClusterConfig[] {
     }
     return CLUSTERS[target];
   });
-}
-
-function shouldEmitLegacyCompatibility(): boolean {
-  return process.env.K2_LEGACY_COMPAT !== "0";
 }
 
 function isClusterTarget(target: string): target is ClusterTarget {

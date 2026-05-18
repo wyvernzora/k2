@@ -4,7 +4,7 @@ import { ContinuousDeployment } from "@k2/argocd";
 export const deployment = defineDeployment({
   targets: {
     legacy: true,
-    next: {
+    v3: {
       enabled: true,
       bootstrap: {
         order: 10,
