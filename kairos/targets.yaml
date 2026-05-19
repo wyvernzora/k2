@@ -1,0 +1,59 @@
+targets:
+  ubuntu-24.04-standard-amd64-qemu-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: amd64
+    platform: linux/amd64
+    hardware: qemu
+    kairosModel: generic
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/qemu
+      - kubernetes/k3s
+    artifactOptions:
+      raw:
+        diskSize: 16384
+        diskStateSize: 8192
+
+  ubuntu-24.04-standard-arm64-qemu-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: arm64
+    platform: linux/arm64
+    hardware: qemu
+    kairosModel: generic
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/qemu
+      - kubernetes/k3s
+    artifactOptions:
+      raw:
+        diskSize: 16384
+        diskStateSize: 8192
+
+  ubuntu-24.04-standard-arm64-rpi4cb-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: arm64
+    platform: linux/arm64
+    hardware: rpi4cb
+    kairosModel: rpi4
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/rpi4cb
+      - kubernetes/k3s
+    artifactOptions:
+      raw:
+        diskStateSize: 8192

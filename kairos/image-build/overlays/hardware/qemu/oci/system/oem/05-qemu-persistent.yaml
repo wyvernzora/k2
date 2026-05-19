@@ -1,0 +1,15 @@
+#cloud-config
+name: "QEMU optional second-disk COS_PERSISTENT"
+
+stages:
+  rootfs.before:
+    - name: "Prepare QEMU COS_PERSISTENT"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - /usr/local/bin/k2-node-init storage --mode optional --disk auto --log-prefix kairos-qemu-persistent --marker .qemu-persistent-ok
+
+  fs:
+    - name: "Record QEMU persistent layout"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - /usr/local/bin/k2-node-init storage --verify-only --mode optional --log-prefix kairos-qemu-persistent --marker .qemu-persistent-ok

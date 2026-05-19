@@ -1,0 +1,160 @@
+name: Kairos Image Build
+
+env:
+  EARTHLY_IMAGE: earthly/earthly:v0.8.13
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "kairos/image-build/**"
+      - "kairos/Earthfile"
+      - "kairos/targets.yaml"
+      - "kairos/versions.env"
+      - "kairos/overlays/**"
+      - ".github/workflows/kairos-image-build.yaml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "kairos/image-build/**"
+      - "kairos/Earthfile"
+      - "kairos/targets.yaml"
+      - "kairos/versions.env"
+      - "kairos/overlays/**"
+      - ".github/workflows/kairos-image-build.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  targets:
+    name: Resolve targets
+    runs-on: ubuntu-24.04
+    outputs:
+      targets: ${{ steps.targets.outputs.targets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kairos/image-build/go.mod
+
+      - name: Test image-build CLI
+        shell: bash
+        run: |
+          cd kairos/image-build
+          go test ./...
+          go run ./cmd/image-build plan --all --format json >/tmp/kairos-image-build-plans.json
+
+      - name: Resolve enabled targets
+        id: targets
+        shell: bash
+        run: |
+          targets=$(jq -c '[.targets[] | select(.enabled == true) | .target]' /tmp/kairos-image-build-plans.json)
+          echo "targets=${targets}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: targets
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJson(needs.targets.outputs.targets) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kairos/image-build/go.mod
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build OCI image locally
+        shell: bash
+        run: |
+          cd kairos/image-build
+          go run ./cmd/image-build build oci "${{ matrix.target }}"
+
+      - name: Inspect OCI image
+        shell: bash
+        run: |
+          cd kairos/image-build
+          go run ./cmd/image-build inspect oci "${{ matrix.target }}"
+
+      - name: Resolve image tag
+        id: image
+        shell: bash
+        run: |
+          cd kairos/image-build
+          echo "tag=$(go run ./cmd/image-build plan "${{ matrix.target }}" --format json | jq -r '.image')" >> "$GITHUB_OUTPUT"
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        continue-on-error: true
+        with:
+          image-ref: ${{ steps.image.outputs.tag }}
+          format: table
+          severity: CRITICAL,HIGH
+
+      - name: Grype scan
+        uses: anchore/scan-action@7037fa011853d5a11690026fb85feee79f4c946c
+        continue-on-error: true
+        with:
+          image: ${{ steps.image.outputs.tag }}
+          fail-build: false
+          severity-cutoff: critical
+
+      - name: Build and inspect bootable artifact with Earthly
+        shell: bash
+        run: |
+          docker run --privileged --rm \
+            -v "$PWD":/workspace \
+            -v earthly-cache:/tmp/earthly \
+            -w /workspace \
+            "${EARTHLY_IMAGE}" \
+            --allow-privileged \
+            ./kairos+image-build-artifact \
+            --KAIROS_TARGET="${{ matrix.target }}"
+
+      - name: Push OCI image
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          cd kairos/image-build
+          go run ./cmd/image-build build oci "${{ matrix.target }}" --push
+
+      - name: Upload Kairos artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: kairos-${{ matrix.target }}
+          path: kairos/artifacts/${{ matrix.target }}/*
+          if-no-files-found: error
+          retention-days: 14
