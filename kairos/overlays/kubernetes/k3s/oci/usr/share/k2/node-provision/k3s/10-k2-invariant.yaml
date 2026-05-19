@@ -1,0 +1,23 @@
+# K2 invariant k3s server settings.
+#
+# Keep cluster-specific values out of this baked image layer. The node
+# provisioner copies this file into /etc/rancher/k3s/config.yaml.d only for
+# server roles. It is intentionally inert in the base image so worker nodes can
+# share the same image without parsing server-only K3s flags.
+#
+# The node provisioner owns CIDRs, cluster DNS, API endpoints, TLS SANs,
+# tokens, node labels, node taints, and bootstrap manifests.
+
+flannel-backend: none
+disable-network-policy: true
+disable-kube-proxy: true
+disable-helm-controller: true
+
+disable:
+  - traefik
+  - servicelb
+  - local-storage
+  - metrics-server
+
+secrets-encryption: true
+secrets-encryption-provider: secretbox

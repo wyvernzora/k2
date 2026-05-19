@@ -19,19 +19,20 @@ move into a standalone repository if that becomes useful.
 
 ## Target Strategy
 
-The PoC image is cluster-light. It includes Ubuntu, Kairos, k3s, hardware
-defaults for the selected target, K3s provider enablement, and invariant K2 K3s
-server config, but not cluster identity, node identity, or active
+The images are cluster-light. They include Ubuntu, Kairos, k3s, hardware
+defaults for the selected target, and invariant K2 K3s server config, but do
+not enable the K3s service or bake cluster identity, node identity, or active
 cluster-specific K3s config. Future baked content should be added by declaring
 overlays in `targets.yaml`, not by making one-off Dockerfile edits.
 
 `hardware` is the K2 hardware profile used in tags and overlay selection.
 `kairosModel` is the Kairos model passed to `kairos-init`. For example,
 `rpi4cb` still uses `kairosModel: rpi4` because the ComputeBlade nodes are CM4
-systems using the Kairos Raspberry Pi 4 boot model.
+systems using the Kairos Raspberry Pi 4 boot model. The `qemu` target uses
+`kairosModel: generic` for local amd64 VM provisioning tests.
 
 Node roles are not part of the image-build contract. Bootstrap and join intent
-comes from per-node seed or bundle input consumed by the node provisioner.
+comes from files written by the node provisioner before it activates K3s.
 
 Never bake secrets, 1Password material, k3s tokens, private keys, cluster CA
 private material, hostnames, node IPs, or VIP ownership into images.
@@ -55,6 +56,12 @@ Build the raw artifact from the locally loaded image:
 
 ```sh
 (cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
+```
+
+Build the generic QEMU raw artifact for local VM provisioning tests:
+
+```sh
+(cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-amd64-qemu-k3s)
 ```
 
 Build the OCI image, raw artifact, raw patches, checksums, manifest, and

@@ -16,20 +16,25 @@ becomes useful.
 | `image-build/` | Self-contained Go CLI and Dockerfile for planning, building, patching, inspecting, and flashing images. |
 | `Earthfile` | Reproducible Earthly targets for Go validation, OCI builds, raw artifact generation, patching, and inspection. |
 
-## Current Target
+## Current Targets
 
-The active target is:
+The active targets are:
 
 ```text
+ubuntu-24.04-standard-amd64-qemu-k3s
 ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
-It builds an Ubuntu 24.04, Kairos v4.1.0, arm64 Raspberry Pi 4 model image with
-k3s v1.36.0+k3s1. The hardware profile is `rpi4cb`, meaning Raspberry Pi CM4 on
-ComputeBlade. The target is intentionally cluster-light: it includes the OS,
-k3s, hardware defaults, K3s provider enablement, and invariant K2 K3s server
-config, but not node identity, cluster tokens, VIP ownership, hostnames, private
-keys, active cluster-specific K3s config, or other secrets.
+Both build Ubuntu 24.04, Kairos v4.1.0 images with k3s v1.36.0+k3s1.
+
+- `qemu` is an amd64 generic Kairos image for local VM provisioning tests.
+- `rpi4cb` is an arm64 Raspberry Pi 4 model image for Raspberry Pi CM4 modules
+  on ComputeBlade.
+
+The targets are intentionally cluster-light: they include the OS, k3s, hardware
+defaults, and invariant K2 K3s server config, but do not enable the K3s service
+or bake node identity, cluster tokens, VIP ownership, hostnames, private keys,
+active cluster-specific K3s config, or other secrets.
 
 ## Build Flow
 
@@ -37,6 +42,12 @@ The preferred local artifact path is Earthly:
 
 ```sh
 earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s
+```
+
+For VM provisioning tests, build the QEMU target instead:
+
+```sh
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-amd64-qemu-k3s
 ```
 
 That target runs the Go tests and vet checks, builds the OCI image, validates

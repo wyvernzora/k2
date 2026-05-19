@@ -21,6 +21,10 @@ func TestBuildPlanGolden(t *testing.T) {
 		golden string
 	}{
 		{
+			target: "ubuntu-24.04-standard-amd64-qemu-k3s",
+			golden: "qemu.golden.json",
+		},
+		{
 			target: "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
 			golden: "rpi4cb.golden.json",
 		},
@@ -41,7 +45,7 @@ func TestEnabledTargets(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 
 	got := planner.EnabledTargets()
-	want := []string{"ubuntu-24.04-standard-arm64-rpi4cb-k3s"}
+	want := []string{"ubuntu-24.04-standard-amd64-qemu-k3s", "ubuntu-24.04-standard-arm64-rpi4cb-k3s"}
 	if !slices.Equal(got, want) {
 		t.Fatalf("enabled targets = %#v, want %#v", got, want)
 	}
@@ -84,6 +88,25 @@ func TestTargetsRejectUnknownFields(t *testing.T) {
 	targetsPath := filepath.Join(root, "targets.yaml")
 	mustWrite(t, targetsPath, strings.TrimSpace(`
 targets:
+  ubuntu-24.04-standard-amd64-qemu-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: amd64
+    platform: linux/amd64
+    hardware: qemu
+    kairosModel: generic
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/qemu
+      - kubernetes/k3s
+    artifactOptions:
+      raw:
+        diskStateSize: 8192
+
   ubuntu-24.04-standard-arm64-rpi4cb-k3s:
     enabled: true
     flavor: ubuntu
@@ -173,6 +196,25 @@ REGISTRY_IMAGE=ghcr.io/wyvernzora/k2-kairos
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "targets.yaml"), strings.TrimSpace(`
 targets:
+  ubuntu-24.04-standard-amd64-qemu-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: amd64
+    platform: linux/amd64
+    hardware: qemu
+    kairosModel: generic
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/qemu
+      - kubernetes/k3s
+    artifactOptions:
+      raw:
+        diskStateSize: 8192
+
   ubuntu-24.04-standard-arm64-rpi4cb-k3s:
     enabled: true
     flavor: ubuntu
@@ -199,6 +241,14 @@ targets:
       - extra
 `)+"\n")
 
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "qemu", "README.md"), "# qemu Hardware Overlay\n")
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "qemu", "overlay.yaml"), strings.TrimSpace(`
+inspect:
+  oci:
+    absent:
+      - /system/oem/05-rpi4cb-nvme-persistent.yaml
+      - /system/oem/20-rpi4cb-nvme-data.yaml
+`)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt"), "dtparam=pciex1\n")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_OEM", "01_reset.yaml.patch"), strings.TrimSpace(`
 - op: test
@@ -238,43 +288,33 @@ inspect:
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "README.md"), strings.TrimSpace(`
 # K2 K3s Node Provisioning Overlay
 
-The overlay installs only invariant K2 K3s server configuration under /etc/rancher/k3s.
+The overlay installs invariant K2 K3s server configuration as inert files in /usr/share/k2.
 Active cluster-specific K3s configuration is written at provision time.
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "etc", "rancher", "k3s", "config.yaml.d", "10-k2-invariant.yaml"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "10-k2-invariant.yaml"), strings.TrimSpace(`
 flannel-backend: none
 disable-kube-proxy: true
 disable-helm-controller: true
 secrets-encryption: true
-secrets-encryption-provider: aescbc
-`)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "system", "oem", "30-k2-k3s-provider.yaml"), strings.TrimSpace(`
-#cloud-config
-name: "K2 K3s provider"
-
-k3s:
-  enabled: true
+secrets-encryption-provider: secretbox
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "overlay.yaml"), strings.TrimSpace(`
 inspect:
   oci:
     files:
-      - path: /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
+      - path: /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml
         contains:
           - "flannel-backend: none"
           - "disable-kube-proxy: true"
-          - "secrets-encryption-provider: aescbc"
-      - path: /system/oem/30-k2-k3s-provider.yaml
-        contains:
-          - "#cloud-config"
-          - "k3s:"
-          - "enabled: true"
+          - "secrets-encryption-provider: secretbox"
       - path: /usr/share/k2/node-provision/k3s/README.md
         contains:
           - K2 K3s Node Provisioning Overlay
           - Active cluster-specific K3s configuration is written at provision time
     absent:
+      - /system/oem/30-k2-k3s-provider.yaml
       - /etc/rancher/k3s/config.yaml
+      - /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
       - /etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "overlays", "extra", ".gitkeep"), "")
