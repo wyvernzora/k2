@@ -1,0 +1,135 @@
+package render
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/wyvernzora/k2/kairos/provision/internal/clusterconfig"
+)
+
+func TestBootstrapConfigAddsAutomaticServerLabelsAndTaints(t *testing.T) {
+	data, err := BootstrapConfig(BootstrapInput{
+		Cluster:  clusterconfig.Config{},
+		NodeName: "node-01",
+		Labels:   []string{"example.com/custom=true"},
+		Taints:   []string{"example.com/custom=true:NoSchedule"},
+		ImageMetadata: ImageMetadata{
+			Target:   "ubuntu-24.04-standard-arm64-qemu-k3s",
+			Arch:     "arm64",
+			Hardware: "qemu",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(data)
+	for _, want := range []string{
+		"cluster-init: true",
+		"node-name: node-01",
+		"k2.wyvernzora.io/hardware=qemu",
+		"k2.wyvernzora.io/image-target=ubuntu-24.04-standard-arm64-qemu-k3s",
+		"k2.wyvernzora.io/arch=arm64",
+		"node-role.kubernetes.io/control-plane=true:NoSchedule",
+		"example.com/custom=true",
+		"example.com/custom=true:NoSchedule",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("bootstrap config missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "node-label:\n    - node-role.kubernetes.io/control-plane=true") ||
+		strings.Contains(got, "node-label:\n- node-role.kubernetes.io/control-plane=true") {
+		t.Fatalf("bootstrap config should not set reserved control-plane node label through kubelet:\n%s", got)
+	}
+}
+
+func TestBootstrapConfigAcceptsTaintWithoutValue(t *testing.T) {
+	data, err := BootstrapConfig(BootstrapInput{
+		NodeName: "node-01",
+		Taints:   []string{"example.com/dedicated:NoSchedule"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := string(data); !strings.Contains(got, "example.com/dedicated:NoSchedule") {
+		t.Fatalf("bootstrap config missing taint:\n%s", got)
+	}
+}
+
+func TestBootstrapConfigRejectsConflictingLabels(t *testing.T) {
+	_, err := BootstrapConfig(BootstrapInput{
+		NodeName:      "node-01",
+		Labels:        []string{"k2.wyvernzora.io/hardware=other"},
+		ImageMetadata: ImageMetadata{Hardware: "qemu"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "conflicting label") {
+		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestBootstrapConfigRejectsReservedKubeletLabel(t *testing.T) {
+	_, err := BootstrapConfig(BootstrapInput{
+		NodeName: "node-01",
+		Labels:   []string{"node-role.kubernetes.io/control-plane=true"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "reserved kubelet label") {
+		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestBootstrapConfigAllowsWhitelistedKubeletReservedLabel(t *testing.T) {
+	_, err := BootstrapConfig(BootstrapInput{
+		NodeName: "node-01",
+		Labels:   []string{"kubernetes.io/hostname=node-01"},
+	})
+	if err != nil {
+		t.Fatalf("expected reserved label allowlist to pass: %v", err)
+	}
+}
+
+func TestClusterConfig(t *testing.T) {
+	cfg := clusterconfig.Config{}
+	cfg.Kubernetes.API.TLSSans = []string{"10.10.9.1", "k8s-api.wyvernzora.io"}
+	cfg.Kubernetes.Networking.PodCIDR = "10.42.0.0/16"
+	cfg.Kubernetes.Networking.ServiceCIDR = "10.43.0.0/16"
+	cfg.Kubernetes.Networking.ClusterDNS = "10.43.0.10"
+	cfg.Kubernetes.Networking.ClusterDomain = "cluster.local"
+
+	data, err := ClusterConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(data)
+	for _, want := range []string{
+		"cluster-cidr: 10.42.0.0/16",
+		"service-cidr: 10.43.0.0/16",
+		"cluster-dns: 10.43.0.10",
+		"cluster-domain: cluster.local",
+		"- 10.10.9.1",
+		"- k8s-api.wyvernzora.io",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("cluster config missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestActivationCloudConfigSetsHostnameAndEnablesK3s(t *testing.T) {
+	got := string(ActivationCloudConfig("v3-test-01", []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFake operator"}))
+	for _, want := range []string{
+		"#cloud-config",
+		"name: K2 K3s bootstrap activation",
+		"hostname: v3-test-01",
+		"users:",
+		"name: kairos",
+		"passwd: '!'",
+		"ssh_authorized_keys:",
+		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFake operator",
+		"k3s:",
+		"enabled: true",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("activation config missing %q:\n%s", want, got)
+		}
+	}
+}
