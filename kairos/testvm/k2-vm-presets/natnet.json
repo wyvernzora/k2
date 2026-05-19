@@ -1,0 +1,40 @@
+{
+  "description": "Test VM on the shared isolated K2 NAT network with SSH and Kubernetes API forwards.",
+  "target": "host-qemu",
+  "memoryMb": 4096,
+  "cpus": 2,
+  "platformArchitecture": "host",
+  "ostype": "host-ubuntu",
+  "firmware": "efi",
+  "display": {
+    "graphicsController": "vmsvga",
+    "vramMb": 16
+  },
+  "persistentDisk": {
+    "enabled": true,
+    "sizeMb": 8192
+  },
+  "network": {
+    "mode": "natnetwork",
+    "name": "k2-testvm",
+    "cidr": "10.42.0.0/24",
+    "dhcp": true,
+    "guestIp": "auto"
+  },
+  "forwards": [
+    {
+      "name": "ssh",
+      "protocol": "tcp",
+      "hostIp": "127.0.0.1",
+      "hostPort": "auto:2222-2299",
+      "guestPort": 22
+    },
+    {
+      "name": "k8s-api",
+      "protocol": "tcp",
+      "hostIp": "127.0.0.1",
+      "hostPort": "auto:6443-6543",
+      "guestPort": 6443
+    }
+  ]
+}
