@@ -56,6 +56,7 @@ type ArtifactOptions struct {
 
 type RawArtifactOptions struct {
 	DiskStateSize *int `json:"diskStateSize,omitempty" yaml:"diskStateSize,omitempty"`
+	DiskSize      *int `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
 }
 
 type RawPatch struct {
@@ -231,6 +232,9 @@ func (p Planner) resolveTarget(name string, seen map[string]bool) (config.Target
 	if target.ArtifactOptions.Raw.DiskStateSize != nil {
 		merged.ArtifactOptions.Raw.DiskStateSize = target.ArtifactOptions.Raw.DiskStateSize
 	}
+	if target.ArtifactOptions.Raw.DiskSize != nil {
+		merged.ArtifactOptions.Raw.DiskSize = target.ArtifactOptions.Raw.DiskSize
+	}
 	merged.Inspect = mergeConfigInspection(parent.Inspect, target.Inspect)
 	return merged, nil
 }
@@ -271,6 +275,10 @@ func (p Planner) validate(resolved Plan) error {
 	if hasRaw {
 		if resolved.ArtifactOptions.Raw.DiskStateSize == nil {
 			return fmt.Errorf("target %q raw artifact requires diskStateSize", resolved.Target)
+		}
+		if resolved.ArtifactOptions.Raw.DiskSize != nil &&
+			*resolved.ArtifactOptions.Raw.DiskSize <= *resolved.ArtifactOptions.Raw.DiskStateSize {
+			return fmt.Errorf("target %q raw diskSize must be larger than diskStateSize", resolved.Target)
 		}
 	}
 
@@ -477,6 +485,7 @@ func convertArtifactOptions(options config.ArtifactOptions) ArtifactOptions {
 	return ArtifactOptions{
 		Raw: RawArtifactOptions{
 			DiskStateSize: options.Raw.DiskStateSize,
+			DiskSize:      options.Raw.DiskSize,
 		},
 	}
 }

@@ -48,6 +48,9 @@ func TestBuilderRawArtifact(t *testing.T) {
 	if !slices.Contains(runner.calls[0].args, "--set") || !slices.Contains(runner.calls[0].args, "disk.state_size=8192") {
 		t.Fatalf("docker args do not include disk.state_size=8192: %#v", runner.calls[0].args)
 	}
+	if !slices.Contains(runner.calls[0].args, "disk.size=16384") {
+		t.Fatalf("docker args do not include disk.size=16384: %#v", runner.calls[0].args)
+	}
 	if runner.calls[1].name != "xz" {
 		t.Fatalf("second command = %q, want xz", runner.calls[1].name)
 	}
@@ -220,11 +223,12 @@ func testPlan(t *testing.T, artifacts []string) plan.Plan {
 	buildRoot := filepath.Join(root, "kairos", "image-build")
 	kairosRoot := filepath.Join(root, "kairos")
 	artifactDir := filepath.Join(kairosRoot, "artifacts", "target")
-	overlaysDir := filepath.Join(kairosRoot, "overlays")
+	overlaysDir := filepath.Join(buildRoot, "overlays")
 	mustMkdir(t, filepath.Join(buildRoot, "scripts", "artifact"))
 	mustMkdir(t, filepath.Join(overlaysDir, "hardware", "rpi4cb", "raw", "COS_GRUB"))
 	mustMkdir(t, artifactDir)
 
+	diskSize := 16384
 	stateSize := 8192
 	return plan.Plan{
 		Target:       "target",
@@ -236,6 +240,7 @@ func testPlan(t *testing.T, artifacts []string) plan.Plan {
 		ArtifactOptions: plan.ArtifactOptions{
 			Raw: plan.RawArtifactOptions{
 				DiskStateSize: &stateSize,
+				DiskSize:      &diskSize,
 			},
 		},
 		RawPatches: []plan.RawPatch{

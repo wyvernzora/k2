@@ -1,0 +1,27 @@
+inspect:
+  oci:
+    files:
+      - path: /system/oem/05-qemu-persistent.yaml
+        contains:
+          - QEMU optional second-disk COS_PERSISTENT
+          - kairos-qemu-persistent
+          - k2-node-init storage
+    absent:
+      - /system/oem/05-rpi4cb-nvme-persistent.yaml
+      - /system/oem/20-rpi4cb-nvme-data.yaml
+    commands:
+      - blkid
+      - e2label
+      - findmnt
+      - k2-node-init
+      - lsblk
+      - mkfs.ext4
+      - mount
+      - parted
+      - partprobe
+      - readlink
+      - resize2fs
+      - tar
+      - udevadm
+      - umount
+      - wipefs

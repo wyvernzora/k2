@@ -1,10 +1,9 @@
 # K2 Kairos Images
 
 This directory defines the Kairos images used to bootstrap K2 nodes.
-It is the image configuration layer: targets, version pins, hardware overlays,
-and Earthly targets live here. The build-system implementation lives separately
-under `image-build/` so it can be moved into its own repository later if that
-becomes useful.
+It is the image configuration layer: targets, version pins, and Earthly targets
+live here. Image-build implementation details, including hardware and
+Kubernetes overlays, live under `image-build/`.
 
 ## Layout
 
@@ -12,8 +11,8 @@ becomes useful.
 | --- | --- |
 | `targets.yaml` | Enabled and planned image targets. Each target selects hardware, Kairos model, artifact types, overlays, and raw artifact sizing. |
 | `versions.env` | Pinned Kairos, kairos-init, AuroraBoot, Ubuntu, k3s, image revision, and registry values. |
-| `overlays/` | Reviewable target content. `oci/` content is baked into OCI images, `raw/` content patches generated disk partitions, and `overlay.yaml` declares inspection expectations. |
-| `image-build/` | Self-contained Go CLI and Dockerfile for planning, building, patching, inspecting, and flashing images. |
+| `image-build/` | Self-contained Go CLI, Dockerfile, and overlays for planning, building, patching, inspecting, and flashing images. |
+| `provision/` | Client-side Go CLI for writing bootstrap K3s config and manifests to clean Kairos nodes over SSH. |
 | `Earthfile` | Reproducible Earthly targets for Go validation, OCI builds, raw artifact generation, patching, and inspection. |
 
 ## Current Targets
@@ -22,12 +21,16 @@ The active targets are:
 
 ```text
 ubuntu-24.04-standard-amd64-qemu-k3s
+ubuntu-24.04-standard-arm64-qemu-k3s
 ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
 Both build Ubuntu 24.04, Kairos v4.1.0 images with k3s v1.36.0+k3s1.
 
-- `qemu` is an amd64 generic Kairos image for local VM provisioning tests.
+- `qemu` targets are generic Kairos images for local VM provisioning tests.
+  Use `amd64` on x86 hosts and `arm64` on Apple Silicon or other ARM hosts.
+  They generate 16 GiB disks with an 8 GiB Kairos state partition, leaving the
+  remainder for persistent K3s and provisioning state.
 - `rpi4cb` is an arm64 Raspberry Pi 4 model image for Raspberry Pi CM4 modules
   on ComputeBlade.
 
@@ -48,6 +51,7 @@ For VM provisioning tests, build the QEMU target instead:
 
 ```sh
 earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-amd64-qemu-k3s
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-qemu-k3s
 ```
 
 That target runs the Go tests and vet checks, builds the OCI image, validates
@@ -63,9 +67,20 @@ Useful direct CLI commands:
 (cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
-## Overlay Contract
+## Provisioning
 
-Selected overlays are applied in target order:
+After a raw-image node boots into the installed Kairos system, use the
+provisioner to write bootstrap-specific config and activate k3s:
+
+```sh
+(cd kairos/provision && go run ./cmd/k2-provision bootstrap --cluster-target v3 --cluster-name v3-test --host 127.0.0.1 --ssh-port 2222 --node-name v3-test-01 --operator-key-file ~/.ssh/id_ed25519.pub --onepassword-token-file /path/to/onepassword-service-account-token)
+```
+
+Use `render bootstrap` first when you want to inspect the bundle locally.
+
+## Image-Build Overlay Contract
+
+Selected overlays from `image-build/overlays/` are applied in target order:
 
 - `oci/` is copied into the OCI root filesystem.
 - `raw/<PARTITION_LABEL>/` is applied to generated raw image partitions after

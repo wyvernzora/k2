@@ -76,9 +76,18 @@ func buildArgs(resolved plan.Plan, options Options) []string {
 		"--build-arg", "MODEL=" + resolved.KairosModel,
 		"--build-arg", "KUBERNETES_DISTRO=" + resolved.KubernetesDistro,
 		"--build-arg", "KUBERNETES_VERSION=" + resolved.Versions.K3sVersion,
+		"--build-arg", "KAIROS_VERSION=" + resolved.Versions.KairosVersion,
 		"--build-arg", "VERSION=" + resolved.Versions.KairosVersion + "-" + resolved.Versions.ImageRevision,
+		"--build-arg", "IMAGE_REVISION=" + resolved.Versions.ImageRevision,
 		"--build-arg", "TRUSTED_BOOT=false",
 		"--build-arg", "OVERLAYS=" + strings.Join(resolved.Overlays, ","),
+		"--build-arg", "TARGET_NAME=" + resolved.Target,
+		"--build-arg", "FLAVOR=" + resolved.Flavor,
+		"--build-arg", "FLAVOR_RELEASE=" + resolved.FlavorRelease,
+		"--build-arg", "VARIANT=" + resolved.Variant,
+		"--build-arg", "ARCH=" + resolved.Arch,
+		"--build-arg", "PLATFORM=" + resolved.Platform,
+		"--build-arg", "HARDWARE=" + resolved.Hardware,
 		"--tag", resolved.Image,
 	}
 	if options.NoCache {

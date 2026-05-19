@@ -1,8 +1,8 @@
 # K2 Kairos Image Build
 
-This directory contains the self-contained build tooling for K2 Kairos images.
-Image configuration lives one level up in `kairos/`, so this tooling can later
-move into a standalone repository if that becomes useful.
+This directory contains the self-contained build tooling and overlay inputs for
+K2 Kairos images. Cluster-agnostic target configuration still lives one level
+up in `kairos/`.
 
 ## Layout
 
@@ -10,7 +10,7 @@ move into a standalone repository if that becomes useful.
 | --- | --- |
 | `../versions.env` | Shared version pins for Kairos, kairos-init, AuroraBoot, Ubuntu, k3s, and GHCR image name. |
 | `../targets.yaml` | Build matrix for enabled and planned image targets. |
-| `../overlays/` | Optional reviewable OCI/raw overlays plus overlay inspection metadata. |
+| `overlays/` | Optional reviewable OCI/raw overlays plus overlay inspection metadata. |
 | `../artifacts/` | Ignored local bootable artifact output. |
 | `../Earthfile` | Earthly targets for reproducible image-build validation and artifact generation. |
 | `Dockerfile` | Image-build Dockerfile that turns Ubuntu into a Kairos+k3s OCI image. |
@@ -28,8 +28,8 @@ overlays in `targets.yaml`, not by making one-off Dockerfile edits.
 `hardware` is the K2 hardware profile used in tags and overlay selection.
 `kairosModel` is the Kairos model passed to `kairos-init`. For example,
 `rpi4cb` still uses `kairosModel: rpi4` because the ComputeBlade nodes are CM4
-systems using the Kairos Raspberry Pi 4 boot model. The `qemu` target uses
-`kairosModel: generic` for local amd64 VM provisioning tests.
+systems using the Kairos Raspberry Pi 4 boot model. The `qemu` targets use
+`kairosModel: generic` for local VM provisioning tests on x86 and ARM hosts.
 
 Node roles are not part of the image-build contract. Bootstrap and join intent
 comes from files written by the node provisioner before it activates K3s.
@@ -58,11 +58,16 @@ Build the raw artifact from the locally loaded image:
 (cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
-Build the generic QEMU raw artifact for local VM provisioning tests:
+Build a generic QEMU raw artifact for local VM provisioning tests:
 
 ```sh
 (cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-amd64-qemu-k3s)
+(cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-qemu-k3s)
 ```
+
+QEMU targets generate 16 GiB disks with an 8 GiB Kairos state partition, leaving
+the remainder for persistent K3s state, containerd, kubelet, and repeated
+experiments.
 
 Build the OCI image, raw artifact, raw patches, checksums, manifest, and
 inspection inside Earthly's Linux/Docker environment:

@@ -22,7 +22,11 @@ func TestBuildPlanGolden(t *testing.T) {
 	}{
 		{
 			target: "ubuntu-24.04-standard-amd64-qemu-k3s",
-			golden: "qemu.golden.json",
+			golden: "qemu-amd64.golden.json",
+		},
+		{
+			target: "ubuntu-24.04-standard-arm64-qemu-k3s",
+			golden: "qemu-arm64.golden.json",
 		},
 		{
 			target: "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
@@ -45,7 +49,11 @@ func TestEnabledTargets(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 
 	got := planner.EnabledTargets()
-	want := []string{"ubuntu-24.04-standard-amd64-qemu-k3s", "ubuntu-24.04-standard-arm64-rpi4cb-k3s"}
+	want := []string{
+		"ubuntu-24.04-standard-amd64-qemu-k3s",
+		"ubuntu-24.04-standard-arm64-qemu-k3s",
+		"ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+	}
 	if !slices.Equal(got, want) {
 		t.Fatalf("enabled targets = %#v, want %#v", got, want)
 	}
@@ -105,6 +113,27 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
+        diskSize: 16384
+        diskStateSize: 8192
+
+  ubuntu-24.04-standard-arm64-qemu-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: arm64
+    platform: linux/arm64
+    hardware: qemu
+    kairosModel: generic
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/qemu
+      - kubernetes/k3s
+    artifactOptions:
+      raw:
+        diskSize: 16384
         diskStateSize: 8192
 
   ubuntu-24.04-standard-arm64-rpi4cb-k3s:
@@ -213,6 +242,27 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
+        diskSize: 16384
+        diskStateSize: 8192
+
+  ubuntu-24.04-standard-arm64-qemu-k3s:
+    enabled: true
+    flavor: ubuntu
+    flavorRelease: "24.04"
+    variant: standard
+    arch: arm64
+    platform: linux/arm64
+    hardware: qemu
+    kairosModel: generic
+    kubernetesDistro: k3s
+    artifacts:
+      - raw
+    overlays:
+      - hardware/qemu
+      - kubernetes/k3s
+    artifactOptions:
+      raw:
+        diskSize: 16384
         diskStateSize: 8192
 
   ubuntu-24.04-standard-arm64-rpi4cb-k3s:
@@ -241,16 +291,25 @@ targets:
       - extra
 `)+"\n")
 
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "qemu", "README.md"), "# qemu Hardware Overlay\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "qemu", "overlay.yaml"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "qemu", "README.md"), "# qemu Hardware Overlay\n")
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "qemu", "overlay.yaml"), strings.TrimSpace(`
 inspect:
   oci:
+    files:
+      - path: /system/oem/05-qemu-persistent.yaml
+        contains:
+          - QEMU optional second-disk COS_PERSISTENT
+          - kairos-qemu-persistent
     absent:
       - /system/oem/05-rpi4cb-nvme-persistent.yaml
       - /system/oem/20-rpi4cb-nvme-data.yaml
+    commands:
+      - parted
+      - resize2fs
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt"), "dtparam=pciex1\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_OEM", "01_reset.yaml.patch"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "qemu", "oci", "system", "oem", "05-qemu-persistent.yaml"), "#cloud-config\nname: QEMU optional second-disk COS_PERSISTENT\n# kairos-qemu-persistent\n")
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt"), "dtparam=pciex1\n")
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_OEM", "01_reset.yaml.patch"), strings.TrimSpace(`
 - op: test
   path: /stages/rootfs.before/0/layout/add_partitions/1/fsLabel
   value: COS_PERSISTENT
@@ -258,8 +317,8 @@ inspect:
   path: /stages/rootfs.before/0/layout/add_partitions/1/size
   value: 500
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "oci", "system", "oem", "05-rpi4cb-nvme-persistent.yaml"), "#cloud-config\nname: test\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "hardware", "rpi4cb", "overlay.yaml"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "rpi4cb", "oci", "system", "oem", "05-rpi4cb-nvme-persistent.yaml"), "#cloud-config\nname: test\n")
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "rpi4cb", "overlay.yaml"), strings.TrimSpace(`
 inspect:
   oci:
     files:
@@ -285,20 +344,20 @@ inspect:
                 path: /stages/rootfs.before/0/layout/add_partitions/1/size
                 value: 500
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "README.md"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "README.md"), strings.TrimSpace(`
 # K2 K3s Node Provisioning Overlay
 
 The overlay installs invariant K2 K3s server configuration as inert files in /usr/share/k2.
 Active cluster-specific K3s configuration is written at provision time.
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "10-k2-invariant.yaml"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "kubernetes", "k3s", "oci", "usr", "share", "k2", "node-provision", "k3s", "10-k2-invariant.yaml"), strings.TrimSpace(`
 flannel-backend: none
 disable-kube-proxy: true
 disable-helm-controller: true
 secrets-encryption: true
 secrets-encryption-provider: secretbox
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "kubernetes", "k3s", "overlay.yaml"), strings.TrimSpace(`
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "kubernetes", "k3s", "overlay.yaml"), strings.TrimSpace(`
 inspect:
   oci:
     files:
@@ -317,7 +376,7 @@ inspect:
       - /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
       - /etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml
 `)+"\n")
-	mustWrite(t, filepath.Join(kairosRoot, "overlays", "extra", ".gitkeep"), "")
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "extra", ".gitkeep"), "")
 
 	discovered, err := paths.Discover(buildRoot, paths.Overrides{})
 	if err != nil {

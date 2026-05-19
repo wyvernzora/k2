@@ -51,6 +51,7 @@ notes/
 # Kairos image build local artifacts
 /kairos/artifacts/
 /kairos/notes/
+/kairos/vm/
 
 # k8s manifest output destination
 /deploy/

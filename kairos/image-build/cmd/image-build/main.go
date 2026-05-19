@@ -105,7 +105,7 @@ func run(args []string) error {
 	var app cli
 	parser, err := kong.New(
 		&app,
-		kong.Name("k2-kairos-image-build"),
+		kong.Name("k2-image-build"),
 		kong.Description("Build and inspect K2 Kairos images."),
 		kong.UsageOnError(),
 	)

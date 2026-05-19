@@ -136,6 +136,9 @@ func (b Builder) buildRaw(resolved plan.Plan) error {
 		"--set", "disk.raw=true",
 		"--set", fmt.Sprintf("disk.state_size=%d", *resolved.ArtifactOptions.Raw.DiskStateSize),
 	}
+	if resolved.ArtifactOptions.Raw.DiskSize != nil {
+		args = append(args, "--set", fmt.Sprintf("disk.size=%d", *resolved.ArtifactOptions.Raw.DiskSize))
+	}
 	if err := b.Runner.Run("docker", args, b.Stdout, b.Stderr); err != nil {
 		return fmt.Errorf("auroraboot raw build failed: %w", err)
 	}

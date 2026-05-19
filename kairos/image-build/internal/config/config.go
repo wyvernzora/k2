@@ -49,6 +49,7 @@ type ArtifactOptions struct {
 
 type RawArtifactOptions struct {
 	DiskStateSize *int `yaml:"diskStateSize,omitempty"`
+	DiskSize      *int `yaml:"diskSize,omitempty"`
 }
 
 type OverlayMetadata struct {

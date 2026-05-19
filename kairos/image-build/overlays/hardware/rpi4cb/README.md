@@ -24,7 +24,7 @@ separate `/var` layout.
 
 | Path | Purpose |
 | --- | --- |
-| `oci/system/oem/05-rpi4cb-nvme-persistent.yaml` | Baked into the OCI rootfs as `/system/oem/05-rpi4cb-nvme-persistent.yaml`. On active boot, it prepares `/dev/nvme0n1p1` as `COS_PERSISTENT`, relabels any eMMC `COS_PERSISTENT` to `COS_PERSIST_OLD`, and verifies `/usr/local` is NVMe-backed. |
+| `oci/system/oem/05-rpi4cb-nvme-persistent.yaml` | Baked into the OCI rootfs as `/system/oem/05-rpi4cb-nvme-persistent.yaml`. On active boot, it invokes `k2-node-init storage` to prepare `/dev/nvme0n1p1` as `COS_PERSISTENT`, relabel any eMMC `COS_PERSISTENT` to `COS_PERSIST_OLD`, and verify `/usr/local` is NVMe-backed. |
 | `raw/COS_GRUB/extraconfig.txt` | Copied into the generated `COS_GRUB` partition. It enables the CM4 PCIe lane with `[cm4] dtparam=pciex1`, which is required for the NVMe device to appear. |
 | `raw/COS_OEM/01_reset.yaml.patch` | Applies a JSON Patch to AuroraBoot's generated `COS_OEM/01_reset.yaml`, adding `size: 500` to the eMMC `COS_PERSISTENT` placeholder partition. The real persistent filesystem is moved to NVMe on first active boot. |
 | `overlay.yaml` | Declares OCI and raw artifact inspection expectations for this overlay. These checks are consumed by the image-build CLI to verify generated images and artifacts. |
@@ -33,10 +33,11 @@ separate `/var` layout.
 
 On first recovery boot, AuroraBoot's reset layout creates eMMC `COS_STATE` and a
 small 500 MiB eMMC `COS_PERSISTENT` placeholder. On the first active boot, the
-cloud-config in `05-rpi4cb-nvme-persistent.yaml` runs during `rootfs.before`,
-before Kairos mounts `LABEL=COS_PERSISTENT` at `/usr/local`.
+cloud-config in `05-rpi4cb-nvme-persistent.yaml` runs `k2-node-init storage`
+during `rootfs.before`, before Kairos mounts `LABEL=COS_PERSISTENT` at
+`/usr/local`.
 
-The script waits for `/dev/nvme0n1`, relabels any non-NVMe `COS_PERSISTENT` to
+The helper waits for `/dev/nvme0n1`, relabels any non-NVMe `COS_PERSISTENT` to
 `COS_PERSIST_OLD`, creates or reuses `/dev/nvme0n1p1`, labels it
 `COS_PERSISTENT`, and lets Kairos mount NVMe-backed persistence for the normal
 state bind mounts.
@@ -51,7 +52,7 @@ dedicated Kairos state disk.
 
 - OCI image contains `/system/oem/05-rpi4cb-nvme-persistent.yaml`;
 - transitional `/system/oem/20-rpi4cb-nvme-data.yaml` is absent;
-- rootfs commands used by the cloud-config are present;
+- `k2-node-init` and rootfs commands used by the helper are present;
 - raw `COS_GRUB/extraconfig.txt` contains `dtparam=pciex1`;
 - raw `COS_OEM/01_reset.yaml` contains the `COS_PERSISTENT` entry with
   `size: 500`.

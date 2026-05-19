@@ -50,7 +50,7 @@ func Discover(cwd string, overrides Overrides) (Paths, error) {
 
 	targetsFile := defaultPath(overrides.TargetsFile, kairosRoot, "targets.yaml")
 	versionsFile := defaultPath(overrides.VersionsFile, kairosRoot, "versions.env")
-	overlaysDir := defaultPath(overrides.OverlaysDir, kairosRoot, "overlays")
+	overlaysDir := defaultPath(overrides.OverlaysDir, buildRoot, "overlays")
 	artifactsDir := defaultPath(overrides.ArtifactsDir, kairosRoot, "artifacts")
 
 	return Paths{

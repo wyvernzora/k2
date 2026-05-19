@@ -1,5 +1,0 @@
-inspect:
-  oci:
-    absent:
-      - /system/oem/05-rpi4cb-nvme-persistent.yaml
-      - /system/oem/20-rpi4cb-nvme-data.yaml

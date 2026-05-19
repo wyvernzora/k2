@@ -18,8 +18,8 @@
 | `cdk-lib/` | Shared CDK8s contexts (`AppRoot`, `HelmCharts`, `Namespace`, `ApexDomain`), constructs (config maps, scheduling, volumes), and helper types for apps. |
 | `deploy/` | Generated manifest output under cluster-specific `legacy/` and `v3/` trees. |
 | `ansible/` | Containerized Ansible runtime (`Earthfile`, `entrypoint.sh`, roles, playbooks) for host bootstrap and TLS refresh. |
-| `kairos/` | Kairos image target definitions, pinned versions, overlays, Earthly image-build targets, ignored artifacts, and notes. |
-| `kairos/image-build/` | Self-contained Go CLI and Dockerfile for Ubuntu+k3s Kairos OCI images and bootable artifacts. |
+| `kairos/` | Kairos image target definitions, pinned versions, Earthly image-build targets, ignored artifacts, and notes. |
+| `kairos/image-build/` | Self-contained Go CLI, Dockerfile, and overlays for Ubuntu+k3s Kairos OCI images and bootable artifacts. |
 | `Earthfile` | Defines reusable Earthly targets for builds, linting, manifest synthesis, CRD imports, and Docker image publishing. |
 | `deploy-diff.md` | Generated report from `build/scripts/diff-manifests.sh`. |
 | `package.json`, `package-lock.json`, `node_modules/` | Node dependencies for CDK8s synthesis and linting. |
@@ -114,7 +114,7 @@
 - The Ansible `Earthfile` builds a container image off `willhallonline/ansible`, installs Galaxy requirements, and sets `/ansible/entrypoint.sh` as the entrypoint.
 
 ### Kairos
-- Kairos image configuration lives directly under `kairos/`: `targets.yaml`, `versions.env`, `overlays/`, `Earthfile`, ignored `artifacts/`, and notes.
+- Kairos image configuration lives under `kairos/`: `targets.yaml`, `versions.env`, `Earthfile`, ignored `artifacts/`, and notes. Image-build-only overlays live under `kairos/image-build/overlays/`.
 - Kairos build logic lives under `kairos/image-build/`. Prefer direct CLI invocation with `(cd kairos/image-build && go run ./cmd/image-build ...)`, or use the reproducible Earthly artifact path `earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=<target>`.
 
 ## Tips & Gotchas

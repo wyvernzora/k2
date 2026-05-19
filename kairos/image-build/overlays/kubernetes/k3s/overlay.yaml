@@ -7,6 +7,11 @@ inspect:
           - "flannel-backend: none"
           - "disable-kube-proxy: true"
           - "disable-helm-controller: true"
+          - "disable:"
+          - "- traefik"
+          - "- servicelb"
+          - "- local-storage"
+          - "- metrics-server"
           - "secrets-encryption: true"
           - "secrets-encryption-provider: secretbox"
       - path: /usr/share/k2/node-provision/k3s/README.md

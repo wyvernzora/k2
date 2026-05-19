@@ -5,19 +5,25 @@ inspect:
         contains:
           - RPi CM4 ComputeBlade NVMe COS_PERSISTENT
           - kairos-nvme-persistent
+          - k2-node-init storage
     absent:
       - /system/oem/20-rpi4cb-nvme-data.yaml
     commands:
       - blkid
       - e2label
       - findmnt
+      - k2-node-init
       - lsblk
       - mkfs.ext4
+      - mount
       - modprobe
       - parted
       - partprobe
       - readlink
+      - resize2fs
+      - tar
       - udevadm
+      - umount
       - wipefs
   raw:
     partitions:
