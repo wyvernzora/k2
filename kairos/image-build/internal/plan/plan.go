@@ -240,6 +240,19 @@ func (p Planner) resolveTarget(name string, seen map[string]bool) (config.Target
 }
 
 func (p Planner) validate(resolved Plan) error {
+	if err := validateRequiredFields(resolved); err != nil {
+		return err
+	}
+	if err := validatePlatform(resolved); err != nil {
+		return err
+	}
+	if err := validateArtifacts(resolved); err != nil {
+		return err
+	}
+	return p.validateOverlays(resolved)
+}
+
+func validateRequiredFields(resolved Plan) error {
 	if resolved.Flavor == "" ||
 		resolved.FlavorRelease == "" ||
 		resolved.Variant == "" ||
@@ -250,7 +263,10 @@ func (p Planner) validate(resolved Plan) error {
 		resolved.KubernetesDistro == "" {
 		return fmt.Errorf("target %q is missing one or more required fields", resolved.Target)
 	}
+	return nil
+}
 
+func validatePlatform(resolved Plan) error {
 	expectedPlatform := map[string]string{
 		"amd64": "linux/amd64",
 		"arm64": "linux/arm64",
@@ -261,7 +277,10 @@ func (p Planner) validate(resolved Plan) error {
 	if resolved.Platform != expectedPlatform {
 		return fmt.Errorf("target %q arch/platform mismatch: %s expects %s, got %s", resolved.Target, resolved.Arch, expectedPlatform, resolved.Platform)
 	}
+	return nil
+}
 
+func validateArtifacts(resolved Plan) error {
 	for _, artifact := range resolved.Artifacts {
 		if artifact != "raw" && artifact != "iso" {
 			return fmt.Errorf("target %q has unsupported artifact type %q", resolved.Target, artifact)
@@ -281,7 +300,10 @@ func (p Planner) validate(resolved Plan) error {
 			return fmt.Errorf("target %q raw diskSize must be larger than diskStateSize", resolved.Target)
 		}
 	}
+	return nil
+}
 
+func (p Planner) validateOverlays(resolved Plan) error {
 	for _, overlay := range resolved.Overlays {
 		info, err := os.Stat(filepath.Join(p.Paths.OverlaysDir, overlay))
 		if err != nil {

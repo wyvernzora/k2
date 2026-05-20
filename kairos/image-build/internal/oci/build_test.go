@@ -38,7 +38,7 @@ func TestBuilderImage(t *testing.T) {
 	wantArgs := []string{
 		"buildx", "build",
 		"--platform", "linux/arm64",
-		"--file", filepath.Join("/repo/kairos/image-build", "Dockerfile"),
+		"--file", filepath.Join(string(filepath.Separator), "repo", "kairos", "image-build", "Dockerfile"),
 		"--build-arg", "BASE_IMAGE=ubuntu:24.04",
 		"--build-arg", "KAIROS_INIT_VERSION=v0.13.0",
 		"--build-arg", "MODEL=rpi4",

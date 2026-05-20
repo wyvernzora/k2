@@ -63,7 +63,20 @@ func mergeRawInspectionPartitions(parent map[string]config.RawPartitionInspectio
 }
 
 func (a *inspectionAccumulator) addInspection(source string, inspect config.Inspection) error {
-	for _, file := range inspect.OCI.Files {
+	if err := a.addOCIFileInspections(source, inspect.OCI.Files); err != nil {
+		return err
+	}
+	if err := a.addOCIAbsentInspections(source, inspect.OCI.Absent); err != nil {
+		return err
+	}
+	if err := a.addOCICommandInspections(source, inspect.OCI.Commands); err != nil {
+		return err
+	}
+	return a.addRawInspections(source, inspect.Raw.Partitions)
+}
+
+func (a *inspectionAccumulator) addOCIFileInspections(source string, files []config.FileInspection) error {
+	for _, file := range files {
 		converted, err := convertFileInspection(source, file, true)
 		if err != nil {
 			return err
@@ -75,7 +88,11 @@ func (a *inspectionAccumulator) addInspection(source string, inspect config.Insp
 			return err
 		}
 	}
-	for _, path := range inspect.OCI.Absent {
+	return nil
+}
+
+func (a *inspectionAccumulator) addOCIAbsentInspections(source string, paths []string) error {
+	for _, path := range paths {
 		path = strings.TrimSpace(path)
 		if path == "" {
 			return fmt.Errorf("%s declares an empty OCI absent path", source)
@@ -87,7 +104,11 @@ func (a *inspectionAccumulator) addInspection(source string, inspect config.Insp
 			a.ociAbsent[path] = PathInspection{Source: source, Path: path}
 		}
 	}
-	for _, command := range inspect.OCI.Commands {
+	return nil
+}
+
+func (a *inspectionAccumulator) addOCICommandInspections(source string, commands []string) error {
+	for _, command := range commands {
 		command = strings.TrimSpace(command)
 		if command == "" {
 			return fmt.Errorf("%s declares an empty OCI command expectation", source)
@@ -96,8 +117,11 @@ func (a *inspectionAccumulator) addInspection(source string, inspect config.Insp
 			a.ociCommands[command] = CommandInspection{Source: source, Name: command}
 		}
 	}
+	return nil
+}
 
-	for label, partition := range inspect.Raw.Partitions {
+func (a *inspectionAccumulator) addRawInspections(source string, partitions map[string]config.RawPartitionInspection) error {
+	for label, partition := range partitions {
 		label = strings.TrimSpace(label)
 		if label == "" {
 			return fmt.Errorf("%s declares a raw inspection partition with an empty label", source)

@@ -63,21 +63,7 @@ func (ExecRunner) Run(name string, args []string, stdout io.Writer, stderr io.Wr
 }
 
 func (b Builder) Artifact(resolved plan.Plan) error {
-	if b.Stdout == nil {
-		b.Stdout = io.Discard
-	}
-	if b.Stderr == nil {
-		b.Stderr = io.Discard
-	}
-	if b.Runner == nil {
-		b.Runner = ExecRunner{}
-	}
-	if b.Patcher == nil {
-		b.Patcher = rawpatch.Patcher{
-			Stdout: b.Stdout,
-			Stderr: b.Stderr,
-		}
-	}
+	b = b.withDefaults()
 
 	if err := os.MkdirAll(resolved.ArtifactDir, 0o755); err != nil {
 		return err
@@ -113,6 +99,25 @@ func (b Builder) Artifact(resolved plan.Plan) error {
 
 	fmt.Fprintf(b.Stdout, "Artifacts written to %s\n", resolved.ArtifactDir)
 	return nil
+}
+
+func (b Builder) withDefaults() Builder {
+	if b.Stdout == nil {
+		b.Stdout = io.Discard
+	}
+	if b.Stderr == nil {
+		b.Stderr = io.Discard
+	}
+	if b.Runner == nil {
+		b.Runner = ExecRunner{}
+	}
+	if b.Patcher == nil {
+		b.Patcher = rawpatch.Patcher{
+			Stdout: b.Stdout,
+			Stderr: b.Stderr,
+		}
+	}
+	return b
 }
 
 func (b Builder) buildRaw(resolved plan.Plan) error {
@@ -341,7 +346,7 @@ func removeTransientRawArtifacts(dir string) error {
 	return nil
 }
 
-func optionalManifestFile(dir string, pattern string) (string, string, int64, error) {
+func optionalManifestFile(dir string, pattern string) (name string, hash string, size int64, err error) {
 	matches, err := filepath.Glob(filepath.Join(dir, pattern))
 	if err != nil {
 		return "", "", 0, err
@@ -363,7 +368,7 @@ func optionalManifestFile(dir string, pattern string) (string, string, int64, er
 	if len(files) > 1 {
 		return "", "", 0, fmt.Errorf("expected at most one %s file in %s, found %d", pattern, dir, len(files))
 	}
-	hash, err := SHA256File(files[0])
+	hash, err = SHA256File(files[0])
 	if err != nil {
 		return "", "", 0, err
 	}

@@ -1,0 +1,73 @@
+# golangci-lint config for K2 Go modules.
+# Mirrors the lint profile used by github.com/wyvernzora/kura.
+#
+# Linter selection:
+#   - govet         standard go vet checks; baseline correctness.
+#   - gocritic      opinionated diagnostic + performance + style checks.
+#   - cyclop        cyclomatic complexity ceiling per function.
+#   - decorder      declaration-order hygiene inside files.
+#   - contextcheck  catches functions that should accept ctx but don't.
+#   - staticcheck   honnef.co static analysis suite, scoped to SA*.
+version: "2"
+
+run:
+  modules-download-mode: readonly
+  tests: true
+
+linters:
+  default: none
+  enable:
+    - contextcheck
+    - cyclop
+    - decorder
+    - gocritic
+    - govet
+    - staticcheck
+  settings:
+    cyclop:
+      max-complexity: 15
+      package-average: 0
+    decorder:
+      disable-dec-num-check: true
+      disable-dec-order-check: true
+      disable-init-func-first-check: true
+    gocritic:
+      disabled-checks:
+        - paramTypeCombine
+        - commentedOutCode
+        - hugeParam
+        - rangeValCopy
+        - builtinShadow
+        - regexpSimplify
+        - importShadow
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+    staticcheck:
+      checks:
+        - SA*
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - cyclop
+        path: (.+)_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - vendor$
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - vendor$

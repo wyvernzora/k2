@@ -204,10 +204,10 @@ inspect:
 	}
 }
 
-func newFixturePlanner(t *testing.T) (plan.Planner, string) {
+func newFixturePlanner(t *testing.T) (planner plan.Planner, root string) {
 	t.Helper()
 
-	root := t.TempDir()
+	root = t.TempDir()
 	buildRoot := filepath.Join(root, "kairos", "image-build")
 	kairosRoot := filepath.Join(root, "kairos")
 	mustMkdir(t, buildRoot)

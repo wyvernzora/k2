@@ -1,0 +1,77 @@
+name: Go
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/go.yaml"
+      - ".golangci.yml"
+      - "kairos/image-build/**"
+      - "kairos/node-init/**"
+      - "kairos/tools/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/go.yaml"
+      - ".golangci.yml"
+      - "kairos/image-build/**"
+      - "kairos/node-init/**"
+      - "kairos/tools/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    name: ${{ matrix.module }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - kairos/image-build
+          - kairos/node-init
+          - kairos/tools
+    defaults:
+      run:
+        working-directory: ${{ matrix.module }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ${{ matrix.module }}/go.mod
+          cache: true
+          cache-dependency-path: ${{ matrix.module }}/go.sum
+
+      - name: gofmt
+        shell: bash
+        run: |
+          drift=$(gofmt -l .)
+          if [ -n "$drift" ]; then
+            echo "::error::gofmt drift in:" >&2
+            echo "$drift" >&2
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
+        with:
+          version: v2.12.2
+          install-mode: goinstall
+          working-directory: ${{ matrix.module }}
+          args: --config=${{ github.workspace }}/.golangci.yml ./...
+
+      - name: go test
+        run: go test -race -count=1 ./...

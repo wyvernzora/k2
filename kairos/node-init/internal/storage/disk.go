@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+const (
+	sysDir   = "sys"
+	classDir = "class"
+	blockDir = "block"
+)
+
 func (m manager) targetDisk() (string, error) {
 	if m.cfg.Disk != "auto" {
 		if err := waitForBlock(m.cfg.Disk, m.cfg.WaitSeconds); err != nil {
@@ -22,7 +28,7 @@ func (m manager) targetDisk() (string, error) {
 	}
 
 	bootDisk, _ := m.bootDisk()
-	disks, err := filepath.Glob("/sys/block/*")
+	disks, err := filepath.Glob(sysBlockPath("*"))
 	if err != nil {
 		return "", err
 	}
@@ -148,9 +154,9 @@ func diskForDev(dev string, runner Runner) (string, error) {
 		resolved = out
 	}
 	name := filepath.Base(resolved)
-	sysPath, err := filepath.EvalSymlinks(filepath.Join("/sys/class/block", name))
+	sysPath, err := filepath.EvalSymlinks(sysClassBlockPath(name))
 	if err == nil {
-		if _, err := os.Stat(filepath.Join("/sys/class/block", name, "partition")); err == nil {
+		if _, err := os.Stat(sysClassBlockPath(name, "partition")); err == nil {
 			return "/dev/" + filepath.Base(filepath.Dir(sysPath)), nil
 		}
 	}
@@ -161,7 +167,7 @@ func diskForDev(dev string, runner Runner) (string, error) {
 }
 
 func partitionNumber(dev string) (string, error) {
-	out, err := os.ReadFile(filepath.Join("/sys/class/block", filepath.Base(dev), "partition"))
+	out, err := os.ReadFile(sysClassBlockPath(filepath.Base(dev), "partition"))
 	if err != nil {
 		return "", fmt.Errorf("read partition number for %s: %w", dev, err)
 	}
@@ -169,7 +175,7 @@ func partitionNumber(dev string) (string, error) {
 }
 
 func partitionChildren(disk string) []string {
-	children, _ := filepath.Glob(filepath.Join("/sys/block", filepath.Base(disk), "*"))
+	children, _ := filepath.Glob(sysBlockPath(filepath.Base(disk), "*"))
 	var out []string
 	for _, child := range children {
 		if _, err := os.Stat(filepath.Join(child, "partition")); err == nil {
@@ -177,4 +183,12 @@ func partitionChildren(disk string) []string {
 		}
 	}
 	return out
+}
+
+func sysClassBlockPath(parts ...string) string {
+	return filepath.Join(append([]string{string(os.PathSeparator), sysDir, classDir, blockDir}, parts...)...)
+}
+
+func sysBlockPath(parts ...string) string {
+	return filepath.Join(append([]string{string(os.PathSeparator), sysDir, blockDir}, parts...)...)
 }

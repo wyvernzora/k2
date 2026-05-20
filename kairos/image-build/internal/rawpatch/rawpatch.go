@@ -49,15 +49,7 @@ func (p Patcher) Patch(rawFile string, resolved plan.Plan) error {
 	if len(resolved.RawPatches) == 0 {
 		return nil
 	}
-	if p.Stdout == nil {
-		p.Stdout = io.Discard
-	}
-	if p.Stderr == nil {
-		p.Stderr = io.Discard
-	}
-	if p.Runner == nil {
-		p.Runner = ExecRunner{}
-	}
+	p = p.withDefaults()
 
 	workDir, err := os.MkdirTemp("", "k2-kairos-rawpatch-*")
 	if err != nil {
@@ -70,6 +62,29 @@ func (p Patcher) Patch(rawFile string, resolved plan.Plan) error {
 		return err
 	}
 
+	if err := p.extractPatchInputs(rawFile, resolved, workDir); err != nil {
+		return err
+	}
+	if err := p.applyPatchOperations(partitionDir, resolved); err != nil {
+		return err
+	}
+	return p.applyPartitionChanges(rawFile, resolved, workDir, partitionDir)
+}
+
+func (p Patcher) withDefaults() Patcher {
+	if p.Stdout == nil {
+		p.Stdout = io.Discard
+	}
+	if p.Stderr == nil {
+		p.Stderr = io.Discard
+	}
+	if p.Runner == nil {
+		p.Runner = ExecRunner{}
+	}
+	return p
+}
+
+func (p Patcher) extractPatchInputs(rawFile string, resolved plan.Plan, workDir string) error {
 	work, err := preparePartitionWork(resolved.RawPatches)
 	if err != nil {
 		return err
@@ -86,13 +101,19 @@ func (p Patcher) Patch(rawFile string, resolved plan.Plan) error {
 			return err
 		}
 	}
+	return nil
+}
 
+func (p Patcher) applyPatchOperations(partitionDir string, resolved plan.Plan) error {
 	for _, patch := range resolved.RawPatches {
 		if err := p.applyPatchOperation(partitionDir, resolved, patch); err != nil {
 			return err
 		}
 	}
+	return nil
+}
 
+func (p Patcher) applyPartitionChanges(rawFile string, resolved plan.Plan, workDir string, partitionDir string) error {
 	beforeApply, err := os.Stat(rawFile)
 	if err != nil {
 		return err
