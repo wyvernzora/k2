@@ -51,6 +51,7 @@ notes/
 # Kairos image build local artifacts
 /kairos/artifacts/
 /kairos/notes/
+/kairos/testvm/cache/
 /kairos/testvm/*.vdi
 /kairos/testvm/vm-*/
 /kairos/vm/

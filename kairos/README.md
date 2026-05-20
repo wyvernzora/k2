@@ -54,6 +54,11 @@ earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-
 earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-qemu-k3s
 ```
 
+`kairos/testvm/k2-vbox create` prefers those local artifacts when present. If
+there is no local `kairos/artifacts/<target>/*.raw.xz`, it reads the public S3
+`latest/<target>/manifest.json`, downloads the matching raw artifact, verifies
+its SHA256, and caches it under `kairos/testvm/cache/artifacts/` for later VMs.
+
 That target runs the Go tests and vet checks, builds the OCI image, validates
 OCI expectations, runs AuroraBoot, applies raw partition patches, writes
 checksums and a manifest, validates the raw artifact, then exports the
