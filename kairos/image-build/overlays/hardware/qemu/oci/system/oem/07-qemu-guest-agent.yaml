@@ -1,0 +1,9 @@
+#cloud-config
+name: "QEMU guest agent"
+
+stages:
+  boot:
+    - name: "Enable QEMU guest agent"
+      if: 'command -v qemu-ga >/dev/null 2>&1'
+      commands:
+        - systemctl enable --now qemu-guest-agent.service

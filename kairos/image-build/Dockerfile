@@ -57,8 +57,12 @@ RUN --mount=type=bind,from=kairos-init,src=/kairos-init,dst=/kairos-init \
 
 RUN set -eux; \
     needs_persistent_tools="0"; \
+    needs_qemu_agent="0"; \
     if printf '%s' "${OVERLAYS}" | grep -Eq '(^|,)hardware/(qemu|rpi4cb)($|,)'; then \
         needs_persistent_tools="1"; \
+    fi; \
+    if printf '%s' "${OVERLAYS}" | grep -Eq '(^|,)hardware/qemu($|,)'; then \
+        needs_qemu_agent="1"; \
     fi; \
     if [ "${MODEL}" = "rpi4" ]; then \
         raspi_kernel="$(find /boot -maxdepth 1 -name 'vmlinuz-*-raspi' -printf '%f\n' | sed 's/^vmlinuz-//' | sort -V | tail -n 1)"; \
@@ -81,8 +85,10 @@ RUN set -eux; \
         apt-get autoremove -y; \
         ln -sf "/boot/vmlinuz-${raspi_kernel}" /boot/vmlinuz; \
     fi; \
-    if [ "${needs_persistent_tools}" = "1" ]; then \
+    if [ "${needs_persistent_tools}" = "1" ] || [ "${needs_qemu_agent}" = "1" ]; then \
         apt-get update; \
+    fi; \
+    if [ "${needs_persistent_tools}" = "1" ]; then \
         apt-get install -y --no-install-recommends \
             e2fsprogs \
             fdisk \
@@ -94,6 +100,9 @@ RUN set -eux; \
         printf '%s\n' \
             'install_items+=" /usr/local/bin/k2-node-init /usr/sbin/blkid /usr/bin/findmnt /usr/bin/lsblk /usr/bin/mount /usr/bin/readlink /usr/bin/sh /usr/bin/tar /usr/bin/umount /usr/sbin/e2label /usr/sbin/mkfs.ext4 /usr/sbin/modprobe /usr/sbin/parted /usr/sbin/partprobe /usr/sbin/resize2fs /usr/sbin/wipefs "' \
             > /etc/dracut.conf.d/90-k2-persistent-tools.conf; \
+    fi; \
+    if [ "${needs_qemu_agent}" = "1" ]; then \
+        apt-get install -y --no-install-recommends qemu-guest-agent; \
     fi; \
     if [ "${MODEL}" = "rpi4" ] || [ "${needs_persistent_tools}" = "1" ]; then \
         kernel="$(readlink -f /boot/vmlinuz 2>/dev/null | sed 's|.*/vmlinuz-||')"; \

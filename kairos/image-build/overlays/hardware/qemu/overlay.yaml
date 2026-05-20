@@ -6,6 +6,14 @@ inspect:
           - QEMU required second-disk COS_PERSISTENT
           - kairos-qemu-persistent
           - k2-node-init storage
+      - path: /system/oem/06-qemu-serial-console.yaml
+        contains:
+          - QEMU serial console login
+          - serial-getty@ttyS0.service
+      - path: /system/oem/07-qemu-guest-agent.yaml
+        contains:
+          - QEMU guest agent
+          - qemu-guest-agent.service
     absent:
       - /system/oem/05-rpi4cb-nvme-persistent.yaml
       - /system/oem/20-rpi4cb-nvme-data.yaml
@@ -19,6 +27,7 @@ inspect:
       - mount
       - parted
       - partprobe
+      - qemu-ga
       - readlink
       - resize2fs
       - tar
