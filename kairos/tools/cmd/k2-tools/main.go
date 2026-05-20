@@ -10,20 +10,25 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/wyvernzora/k2/kairos/provision/internal/clusterconfig"
-	"github.com/wyvernzora/k2/kairos/provision/internal/keys"
-	"github.com/wyvernzora/k2/kairos/provision/internal/kubeconfig"
-	"github.com/wyvernzora/k2/kairos/provision/internal/manifests"
-	"github.com/wyvernzora/k2/kairos/provision/internal/remote"
-	"github.com/wyvernzora/k2/kairos/provision/internal/render"
-	"github.com/wyvernzora/k2/kairos/provision/internal/ui"
-	"github.com/wyvernzora/k2/kairos/provision/internal/workspace"
+	"github.com/wyvernzora/k2/kairos/tools/internal/clusterconfig"
+	"github.com/wyvernzora/k2/kairos/tools/internal/keys"
+	"github.com/wyvernzora/k2/kairos/tools/internal/kubeconfig"
+	"github.com/wyvernzora/k2/kairos/tools/internal/manifests"
+	"github.com/wyvernzora/k2/kairos/tools/internal/remote"
+	"github.com/wyvernzora/k2/kairos/tools/internal/render"
+	"github.com/wyvernzora/k2/kairos/tools/internal/ui"
+	"github.com/wyvernzora/k2/kairos/tools/internal/workspace"
 )
 
 type cli struct {
-	RepoRoot string `name:"repo-root" env:"K2_PROVISION_REPO_ROOT" help:"Repository root. Defaults to auto-detection." type:"path"`
-	Plain    bool   `name:"plain" env:"K2_PROVISION_PLAIN" help:"Use plain log output without grouped status markers."`
+	RepoRoot string `name:"repo-root" env:"K2_TOOLS_REPO_ROOT" help:"Repository root. Defaults to auto-detection." type:"path"`
+	Plain    bool   `name:"plain" env:"K2_TOOLS_PLAIN" help:"Use plain log output without grouped status markers."`
 
+	Provision provisionCmd `cmd:"" help:"Provision Kairos-backed K3s nodes."`
+	VM        vmCmd        `cmd:"" help:"Manage local test VMs."`
+}
+
+type provisionCmd struct {
 	Bootstrap bootstrapCmd `cmd:"" help:"Provision the first K3s server over SSH."`
 	Server    serverCmd    `cmd:"" help:"Provision an additional K3s server over SSH."`
 	Worker    workerCmd    `cmd:"" help:"Provision a K3s worker over SSH."`
@@ -129,7 +134,7 @@ func main() {
 
 func run(args []string) error {
 	var app cli
-	parser, err := kong.New(&app, kong.Name("k2-provision"), kong.UsageOnError())
+	parser, err := kong.New(&app, kong.Name("k2-tools"), kong.UsageOnError())
 	if err != nil {
 		return err
 	}
@@ -190,7 +195,7 @@ func (c *bootstrapCmd) Run(ctx *runContext) error {
 	}
 
 	logf("creating local staging directory")
-	localDir, err := os.MkdirTemp("", "k2-provision-bootstrap-*")
+	localDir, err := os.MkdirTemp("", "k2-tools-bootstrap-*")
 	if err != nil {
 		return err
 	}
@@ -265,7 +270,7 @@ func provisionJoinNode(ctx *runContext, role nodeRole, flags commonJoinFlags, re
 	}
 
 	logf("creating local staging directory")
-	localDir, err := os.MkdirTemp("", "k2-provision-"+string(role)+"-*")
+	localDir, err := os.MkdirTemp("", "k2-tools-"+string(role)+"-*")
 	if err != nil {
 		return err
 	}
@@ -659,7 +664,7 @@ func joinVerificationScript(nodeName string, role nodeRole) string {
 
 func writeVerificationPrelude(buf *bytes.Buffer, nodeName string) {
 	fmt.Fprintf(buf, "set -eu\n")
-	fmt.Fprintf(buf, "verify() { label=\"$1\"; shift; echo \"k2-provision: verify: ${label}\"; \"$@\"; }\n")
+	fmt.Fprintf(buf, "verify() { label=\"$1\"; shift; echo \"k2-tools: verify: ${label}\"; \"$@\"; }\n")
 	fmt.Fprintf(buf, "verify 'hostname set' test \"$(hostname)\" = %s\n", shellQuote(nodeName))
 	fmt.Fprintf(buf, "verify 'operator authorized keys installed' sudo test -s /home/kairos/.ssh/authorized_keys\n")
 }
@@ -717,28 +722,28 @@ func resolveJoinServerURL(cfg clusterconfig.Config, clusterName string, override
 func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "set -eu\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing bootstrap files'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing bootstrap files'\n")
 	fmt.Fprintf(&buf, "sudo mkdir -p /etc/rancher/k3s/config.yaml.d /var/lib/rancher/k3s/server/manifests /oem /home/kairos/.ssh\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: activating k3s server invariants'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: activating k3s server invariants'\n")
 	fmt.Fprintf(&buf, "sudo cp /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: disabling unwanted k3s packaged manifests'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: disabling unwanted k3s packaged manifests'\n")
 	fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/traefik.yaml.skip\n")
 	fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip\n")
 	fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/metrics-server.yaml.skip\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing cluster and bootstrap config'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing cluster and bootstrap config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/20-k2-cluster.yaml /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/30-k2-bootstrap.yaml /etc/rancher/k3s/config.yaml.d/30-k2-bootstrap.yaml\n", remoteDir)
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing Kairos k3s activation cloud-config'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing Kairos k3s activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/99-k2-k3s-bootstrap.yaml /oem/99-k2-k3s-bootstrap.yaml\n", remoteDir)
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing bootstrap manifest bundle'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing bootstrap manifest bundle'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/k2-bootstrap.k8s.yaml /var/lib/rancher/k3s/server/manifests/k2-bootstrap.yaml\n", remoteDir)
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing operator SSH keys'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing operator SSH keys'\n")
 	fmt.Fprintf(&buf, "sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)
-	fmt.Fprintf(&buf, "echo 'k2-provision: enabling k3s service'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: enabling k3s service'\n")
 	fmt.Fprintf(&buf, "sudo systemctl enable k3s\n")
 	if !noReboot {
-		fmt.Fprintf(&buf, "echo 'k2-provision: rebooting node'\n")
+		fmt.Fprintf(&buf, "echo 'k2-tools: rebooting node'\n")
 		fmt.Fprintf(&buf, "sudo reboot\n")
 	}
 	return buf.String()
@@ -754,30 +759,30 @@ func joinInstallScript(remoteDir string, nodeName string, role nodeRole, noReboo
 	}
 
 	fmt.Fprintf(&buf, "set -eu\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing %s files'\n", role)
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing %s files'\n", role)
 	fmt.Fprintf(&buf, "sudo mkdir -p /etc/rancher/k3s/config.yaml.d /oem /home/kairos/.ssh\n")
 	if role == nodeRoleServer {
 		fmt.Fprintf(&buf, "sudo mkdir -p /var/lib/rancher/k3s/server/manifests\n")
-		fmt.Fprintf(&buf, "echo 'k2-provision: activating k3s server invariants'\n")
+		fmt.Fprintf(&buf, "echo 'k2-tools: activating k3s server invariants'\n")
 		fmt.Fprintf(&buf, "sudo cp /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
-		fmt.Fprintf(&buf, "echo 'k2-provision: disabling unwanted k3s packaged manifests'\n")
+		fmt.Fprintf(&buf, "echo 'k2-tools: disabling unwanted k3s packaged manifests'\n")
 		fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/traefik.yaml.skip\n")
 		fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip\n")
 		fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/metrics-server.yaml.skip\n")
-		fmt.Fprintf(&buf, "echo 'k2-provision: installing cluster config'\n")
+		fmt.Fprintf(&buf, "echo 'k2-tools: installing cluster config'\n")
 		fmt.Fprintf(&buf, "sudo install -m 0644 %q/20-k2-cluster.yaml /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n", remoteDir)
 	}
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing %s join config'\n", role)
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing %s join config'\n", role)
 	fmt.Fprintf(&buf, "sudo install -m 0600 %q/%s /etc/rancher/k3s/config.yaml.d/%s\n", remoteDir, configFile, configFile)
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing Kairos k3s activation cloud-config'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing Kairos k3s activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/%s /oem/%s\n", remoteDir, activationFile, activationFile)
-	fmt.Fprintf(&buf, "echo 'k2-provision: installing operator SSH keys'\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing operator SSH keys'\n")
 	fmt.Fprintf(&buf, "sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)
-	fmt.Fprintf(&buf, "echo 'k2-provision: enabling %s service'\n", service)
+	fmt.Fprintf(&buf, "echo 'k2-tools: enabling %s service'\n", service)
 	fmt.Fprintf(&buf, "sudo systemctl enable %s\n", service)
 	if !noReboot {
-		fmt.Fprintf(&buf, "echo 'k2-provision: rebooting node'\n")
+		fmt.Fprintf(&buf, "echo 'k2-tools: rebooting node'\n")
 		fmt.Fprintf(&buf, "sudo reboot\n")
 	}
 	return buf.String()

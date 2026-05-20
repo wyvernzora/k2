@@ -1,8 +1,8 @@
-# K2 Node Provision
+# K2 Tools
 
-`k2-provision` is the client-side Kairos node provisioner for clean K2 images.
+`k2-tools` is the client-side toolbox for clean K2 Kairos images.
 It supports bootstrap-server, additional server, and worker provisioning over
-SSH for the raw image path.
+SSH for the raw image path, plus local QEMU test VM management.
 
 It assumes the target node has booted into the installed Kairos system, SSH is
 reachable, k3s is installed but disabled, and the image contains the invariant
@@ -11,10 +11,10 @@ server config under `/usr/share/k2/node-provision/k3s/`.
 ## Build And Test
 
 ```sh
-cd kairos/provision
+cd kairos/tools
 go test ./...
 go vet ./...
-go run ./cmd/k2-provision --help
+go run ./cmd/k2-tools --help
 ```
 
 ## Render Bootstrap Files
@@ -22,15 +22,15 @@ go run ./cmd/k2-provision --help
 Use render mode to inspect the exact files before touching a node:
 
 ```sh
-cd kairos/provision
-go run ./cmd/k2-provision render bootstrap \
+cd kairos/tools
+go run ./cmd/k2-tools provision render bootstrap \
   --cluster-target v3 \
   --cluster-name v3-test \
   --node-name v3-test-01 \
   --bootstrap-api-host 10.0.2.15 \
   --operator-key-file ~/.ssh/id_ed25519.pub \
   --onepassword-token-file /path/to/onepassword-service-account-token \
-  --output-dir /tmp/k2-provision-render
+  --output-dir /tmp/k2-tools-render
 ```
 
 `--cluster-target` selects the source cluster config and generated deploy tree,
@@ -66,7 +66,8 @@ export K2_PROVISION_SSH_USER=kairos
 
 Useful variables include:
 
-- `K2_PROVISION_REPO_ROOT`
+- `K2_TOOLS_REPO_ROOT`
+- `K2_TOOLS_PLAIN`
 - `K2_PROVISION_CLUSTER_TARGET`
 - `K2_PROVISION_CLUSTER_NAME`
 - `K2_PROVISION_NODE_NAME`
@@ -80,14 +81,52 @@ Useful variables include:
 - `K2_PROVISION_SERVER_URL`
 - `K2_PROVISION_ONEPASSWORD_TOKEN_FILE`
 - `K2_PROVISION_OUTPUT_DIR`
-- `K2_PROVISION_PLAIN`
 
 Command-line flags still win over environment values, so per-node fields such
 as `--host`, `--ssh-port`, and `--node-name` can stay explicit.
 
-The default output is grouped status output. Set `K2_PROVISION_PLAIN=1` or pass
-`--plain` when you need the older line-oriented `k2-provision:` output for
+The default output is grouped status output. Set `K2_TOOLS_PLAIN=1` or pass
+`--plain` when you need the older line-oriented `k2-tools:` output for
 logs or scripts.
+
+## Local QEMU VMs
+
+`k2-tools vm` manages local QEMU test VMs. The default `qemu-user` preset uses
+the host-architecture QEMU artifact, a second persistent disk, user-mode
+networking, SSH forwarding, Kubernetes API forwarding, a QEMU monitor port, and
+QEMU guest-agent wiring.
+
+Use `qemu-vmnet` for multi-node cluster tests. It uses macOS `vmnet-shared`
+networking so VMs share a subnet and keep outbound connectivity. macOS requires
+QEMU to have vmnet privileges for this backend; use `--sudo` for local test
+VMs. Do not ad-hoc sign QEMU with the `com.apple.vm.networking` entitlement:
+macOS treats that as a restricted entitlement and kills the binary before it
+can start.
+
+```sh
+cd kairos/tools
+go run ./cmd/k2-tools vm create --id v3a --start
+go run ./cmd/k2-tools vm create qemu-vmnet --id v3b --start
+go run ./cmd/k2-tools vm start --sudo v3b
+go run ./cmd/k2-tools vm status v3a
+go run ./cmd/k2-tools vm console v3a
+go run ./cmd/k2-tools vm ssh v3a
+```
+
+VM runtime state lives under `.testvm/vm-<id>/` and remains ignored by
+git. `vm create` prefers locally built `kairos/artifacts/<target>/*.raw.xz`
+files. If no local artifact exists, it reads the public S3 latest manifest,
+downloads the matching artifact, verifies its SHA256, and caches it under
+`.testvm/cache/artifacts/`.
+
+Useful VM commands:
+
+- `k2-tools vm presets`
+- `k2-tools vm list`
+- `k2-tools vm info <id>`
+- `k2-tools vm start <id>`
+- `k2-tools vm stop <id>`
+- `k2-tools vm delete --force <id>`
 
 ## Provision Bootstrap Node
 
@@ -95,8 +134,8 @@ Bootstrap provisioning connects to the node with the built-in Go SSH transport
 and uploads files with SFTP.
 
 ```sh
-cd kairos/provision
-go run ./cmd/k2-provision bootstrap \
+cd kairos/tools
+go run ./cmd/k2-tools provision bootstrap \
   --cluster-target v3 \
   --cluster-name v3-test \
   --host 127.0.0.1 \
@@ -163,8 +202,8 @@ Servers use `server-token`, activate the baked server invariant config, and get
 the automatic control-plane taint:
 
 ```sh
-cd kairos/provision
-go run ./cmd/k2-provision server \
+cd kairos/tools
+go run ./cmd/k2-tools provision server \
   --cluster-target v3 \
   --cluster-name v3-test \
   --host 10.42.0.23 \
@@ -176,8 +215,8 @@ Workers use `agent-token`, enable `k3s-agent`, and do not activate server-only
 invariants:
 
 ```sh
-cd kairos/provision
-go run ./cmd/k2-provision worker \
+cd kairos/tools
+go run ./cmd/k2-tools provision worker \
   --cluster-target v3 \
   --cluster-name v3-test \
   --host 10.42.0.31 \

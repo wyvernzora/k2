@@ -6,14 +6,14 @@ import (
 )
 
 func TestInstallScriptInstallsBootstrapFilesWithoutLockingDefaultPassword(t *testing.T) {
-	got := installScript("/tmp/k2-provision.test", "v3-test-01", true)
+	got := installScript("/tmp/k2-tools.test", "v3-test-01", true)
 	for _, want := range []string{
 		"sudo touch /var/lib/rancher/k3s/server/manifests/traefik.yaml.skip",
 		"sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip",
 		"sudo touch /var/lib/rancher/k3s/server/manifests/metrics-server.yaml.skip",
-		"sudo install -m 0644 \"/tmp/k2-provision.test\"/99-k2-k3s-bootstrap.yaml /oem/99-k2-k3s-bootstrap.yaml",
+		"sudo install -m 0644 \"/tmp/k2-tools.test\"/99-k2-k3s-bootstrap.yaml /oem/99-k2-k3s-bootstrap.yaml",
 		"sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh",
-		"sudo install -o kairos -g kairos -m 0600 \"/tmp/k2-provision.test\"/operator_authorized_keys /home/kairos/.ssh/authorized_keys",
+		"sudo install -o kairos -g kairos -m 0600 \"/tmp/k2-tools.test\"/operator_authorized_keys /home/kairos/.ssh/authorized_keys",
 		"sudo systemctl enable k3s",
 	} {
 		if !strings.Contains(got, want) {
@@ -43,12 +43,12 @@ func TestInstallScriptInstallsBootstrapFilesWithoutLockingDefaultPassword(t *tes
 }
 
 func TestJoinInstallScriptForServerActivatesInvariantConfig(t *testing.T) {
-	got := joinInstallScript("/tmp/k2-provision.test", "v3-server-02", nodeRoleServer, true)
+	got := joinInstallScript("/tmp/k2-tools.test", "v3-server-02", nodeRoleServer, true)
 	for _, want := range []string{
 		"sudo cp /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml",
-		"sudo install -m 0644 \"/tmp/k2-provision.test\"/20-k2-cluster.yaml /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml",
-		"sudo install -m 0600 \"/tmp/k2-provision.test\"/30-k2-server.yaml /etc/rancher/k3s/config.yaml.d/30-k2-server.yaml",
-		"sudo install -m 0644 \"/tmp/k2-provision.test\"/99-k2-k3s-server.yaml /oem/99-k2-k3s-server.yaml",
+		"sudo install -m 0644 \"/tmp/k2-tools.test\"/20-k2-cluster.yaml /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml",
+		"sudo install -m 0600 \"/tmp/k2-tools.test\"/30-k2-server.yaml /etc/rancher/k3s/config.yaml.d/30-k2-server.yaml",
+		"sudo install -m 0644 \"/tmp/k2-tools.test\"/99-k2-k3s-server.yaml /oem/99-k2-k3s-server.yaml",
 		"sudo systemctl enable k3s",
 	} {
 		if !strings.Contains(got, want) {
@@ -61,10 +61,10 @@ func TestJoinInstallScriptForServerActivatesInvariantConfig(t *testing.T) {
 }
 
 func TestJoinInstallScriptForWorkerUsesAgentService(t *testing.T) {
-	got := joinInstallScript("/tmp/k2-provision.test", "v3-worker-01", nodeRoleWorker, true)
+	got := joinInstallScript("/tmp/k2-tools.test", "v3-worker-01", nodeRoleWorker, true)
 	for _, want := range []string{
-		"sudo install -m 0600 \"/tmp/k2-provision.test\"/30-k2-worker.yaml /etc/rancher/k3s/config.yaml.d/30-k2-worker.yaml",
-		"sudo install -m 0644 \"/tmp/k2-provision.test\"/99-k2-k3s-worker.yaml /oem/99-k2-k3s-worker.yaml",
+		"sudo install -m 0600 \"/tmp/k2-tools.test\"/30-k2-worker.yaml /etc/rancher/k3s/config.yaml.d/30-k2-worker.yaml",
+		"sudo install -m 0644 \"/tmp/k2-tools.test\"/99-k2-k3s-worker.yaml /oem/99-k2-k3s-worker.yaml",
 		"sudo systemctl enable k3s-agent",
 	} {
 		if !strings.Contains(got, want) {

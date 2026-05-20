@@ -44,11 +44,11 @@ func (r *Reporter) print(mark string, format string, args ...any) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.plain {
-		fmt.Fprintf(r.out, "k2-provision: %s\n", message)
+		fmt.Fprintf(r.out, "k2-tools: %s\n", message)
 		return
 	}
 	r.once.Do(func() {
-		fmt.Fprintln(r.out, "k2-provision")
+		fmt.Fprintln(r.out, "k2-tools")
 	})
 	fmt.Fprintf(r.out, "  %-2s %s\n", mark, message)
 }

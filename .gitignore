@@ -25,6 +25,7 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+.envrc
 
 # IDE and Editor directories
 .idea/
@@ -51,9 +52,9 @@ notes/
 # Kairos image build local artifacts
 /kairos/artifacts/
 /kairos/notes/
-/kairos/testvm/cache/
-/kairos/testvm/*.vdi
-/kairos/testvm/vm-*/
+/kairos/testvm/
+/k2/.testvm/
+/.testvm/
 /kairos/vm/
 
 # k8s manifest output destination

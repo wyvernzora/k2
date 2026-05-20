@@ -12,17 +12,20 @@ placeholder persistent partition so QEMU artifacts stay compact.
 | Path | Purpose |
 | --- | --- |
 | `oci/system/oem/05-qemu-persistent.yaml` | Baked into the OCI rootfs as `/system/oem/05-qemu-persistent.yaml`. On active boot, it invokes `k2-node-init storage` to move `COS_PERSISTENT` to a required second disk. |
-| `oci/system/oem/06-qemu-serial-console.yaml` | Baked into the OCI rootfs as `/system/oem/06-qemu-serial-console.yaml`. On active boot, it enables `serial-getty@ttyS0.service` so VirtualBox/QEMU serial consoles remain useful after early kernel output. |
 | `oci/system/oem/07-qemu-guest-agent.yaml` | Baked into the OCI rootfs as `/system/oem/07-qemu-guest-agent.yaml`. On active boot, it enables `qemu-guest-agent.service` when `qemu-ga` is present. |
 | `overlay.yaml` | Declares inspection expectations for the QEMU profile. |
+
+Serial login is intentionally not baked into the QEMU image. Production worker
+nodes should not expose a persistent console listener by default; local test
+harnesses can attach a hypervisor console when needed.
 
 ## Inspection Expectations
 
 `overlay.yaml` asks the image-build CLI to verify that:
 
 - the QEMU persistent OEM file is present;
-- the QEMU serial console OEM file is present;
 - the QEMU guest agent OEM file is present;
+- the QEMU serial console OEM file is not present;
 - Raspberry Pi ComputeBlade-specific OEM files are not present;
 - `k2-node-init`, `qemu-ga`, and required disk utilities are available in the image.
 

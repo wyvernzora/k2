@@ -1,0 +1,29 @@
+{
+  "description": "Single-node QEMU test VM with user-mode networking, SSH/API forwards, and a second persistent disk.",
+  "target": "host-qemu",
+  "memoryMb": 4096,
+  "cpus": 2,
+  "network": {
+    "mode": "user"
+  },
+  "persistentDisk": {
+    "enabled": true,
+    "sizeMb": 8192
+  },
+  "forwards": [
+    {
+      "name": "ssh",
+      "protocol": "tcp",
+      "hostIp": "127.0.0.1",
+      "hostPort": "auto:2222-2299",
+      "guestPort": 22
+    },
+    {
+      "name": "k8s-api",
+      "protocol": "tcp",
+      "hostIp": "127.0.0.1",
+      "hostPort": "auto:6443-6543",
+      "guestPort": 6443
+    }
+  ]
+}

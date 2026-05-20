@@ -1,4 +1,4 @@
-module github.com/wyvernzora/k2/kairos/provision
+module github.com/wyvernzora/k2/kairos/tools
 
 go 1.26
 

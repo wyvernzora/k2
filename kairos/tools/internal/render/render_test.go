@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wyvernzora/k2/kairos/provision/internal/clusterconfig"
+	"github.com/wyvernzora/k2/kairos/tools/internal/clusterconfig"
 )
 
 func TestBootstrapConfigAddsAutomaticServerLabelsAndTaints(t *testing.T) {

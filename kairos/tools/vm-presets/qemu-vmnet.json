@@ -1,0 +1,14 @@
+{
+  "description": "QEMU test VM on macOS vmnet-shared networking for multi-node clusters.",
+  "target": "host-qemu",
+  "memoryMb": 4096,
+  "cpus": 2,
+  "network": {
+    "mode": "vmnet-shared"
+  },
+  "persistentDisk": {
+    "enabled": true,
+    "sizeMb": 8192
+  },
+  "forwards": []
+}

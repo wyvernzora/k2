@@ -92,21 +92,21 @@ func (c *Client) WaitForAuth(timeout time.Duration) error {
 	var lastErr error
 	for {
 		c.ResetAuth()
-		if err := c.probePassword("kairos"); err == nil {
+		passwordErr := c.probePassword("kairos")
+		if passwordErr == nil {
 			c.authMode = authModePassword
 			c.password = "kairos"
 			c.logf("using default kairos password auth")
 			return nil
-		} else {
-			lastErr = err
 		}
-		if err := c.probeLocalSSH(); err == nil {
+
+		localErr := c.probeLocalSSH()
+		if localErr == nil {
 			c.authMode = authModeLocalSSH
 			c.logf("using local SSH agent/key auth")
 			return nil
-		} else {
-			lastErr = err
 		}
+		lastErr = errors.Join(passwordErr, localErr)
 
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out waiting for SSH auth to %s: %w", c.Address(), lastErr)
@@ -159,7 +159,7 @@ func (c *Client) UploadDir(localDir string) (string, error) {
 		return "", err
 	}
 	c.logf("ssh create remote temp dir on %s", c.Address())
-	remoteDirBytes, err := c.runCapture("mktemp -d /tmp/k2-provision.XXXXXX")
+	remoteDirBytes, err := c.runCapture("mktemp -d /tmp/k2-tools.XXXXXX")
 	if err != nil {
 		return "", err
 	}
@@ -474,7 +474,7 @@ func (c *Client) logf(format string, args ...any) {
 		c.Logger(format, args...)
 		return
 	}
-	fmt.Fprintf(writer(c.Stderr), "k2-provision: "+format+"\n", args...)
+	fmt.Fprintf(writer(c.Stderr), "k2-tools: "+format+"\n", args...)
 }
 
 func isSSHDisconnect(err error) bool {
@@ -501,8 +501,7 @@ func isSSHDisconnect(err error) bool {
 }
 
 func isLoopbackHost(host string) bool {
-	switch strings.ToLower(host) {
-	case "localhost":
+	if strings.EqualFold(host, "localhost") {
 		return true
 	}
 	ip := net.ParseIP(strings.Trim(host, "[]"))

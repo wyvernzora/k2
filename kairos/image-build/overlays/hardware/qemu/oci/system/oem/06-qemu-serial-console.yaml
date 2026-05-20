@@ -1,9 +1,0 @@
-#cloud-config
-name: "QEMU serial console login"
-
-stages:
-  boot:
-    - name: "Enable ttyS0 login"
-      if: '[ -e "/dev/ttyS0" ]'
-      commands:
-        - systemctl enable --now serial-getty@ttyS0.service

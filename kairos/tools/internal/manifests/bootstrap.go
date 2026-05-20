@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wyvernzora/k2/kairos/provision/internal/clusterconfig"
+	"github.com/wyvernzora/k2/kairos/tools/internal/clusterconfig"
 	"gopkg.in/yaml.v3"
 )
 
