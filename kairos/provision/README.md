@@ -52,6 +52,38 @@ Operator keys must be literal `ssh-ed25519` public keys. `github:` key sources
 are intentionally rejected; callers can fetch and review those keys before
 passing them in.
 
+## Common Environment Defaults
+
+Most flags can be supplied through environment variables, which keeps repeated
+test provisioning commands short. For example:
+
+```sh
+export K2_PROVISION_CLUSTER_TARGET=v3
+export K2_PROVISION_CLUSTER_NAME=v3-test
+export K2_PROVISION_OPERATOR_KEY_FILE=$HOME/.ssh/id_ed25519.pub
+export K2_PROVISION_SSH_USER=kairos
+```
+
+Useful variables include:
+
+- `K2_PROVISION_REPO_ROOT`
+- `K2_PROVISION_CLUSTER_TARGET`
+- `K2_PROVISION_CLUSTER_NAME`
+- `K2_PROVISION_NODE_NAME`
+- `K2_PROVISION_HOST`
+- `K2_PROVISION_SSH_PORT`
+- `K2_PROVISION_SSH_USER`
+- `K2_PROVISION_OPERATOR_KEY`
+- `K2_PROVISION_OPERATOR_KEY_FILE`
+- `K2_PROVISION_LABEL`
+- `K2_PROVISION_TAINT`
+- `K2_PROVISION_SERVER_URL`
+- `K2_PROVISION_ONEPASSWORD_TOKEN_FILE`
+- `K2_PROVISION_OUTPUT_DIR`
+
+Command-line flags still win over environment values, so per-node fields such
+as `--host`, `--ssh-port`, and `--node-name` can stay explicit.
+
 ## Provision Bootstrap Node
 
 Bootstrap provisioning shells out to local OpenSSH tools. The CLI checks for

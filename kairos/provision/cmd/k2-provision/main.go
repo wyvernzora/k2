@@ -21,7 +21,7 @@ import (
 )
 
 type cli struct {
-	RepoRoot string `name:"repo-root" help:"Repository root. Defaults to auto-detection." type:"path"`
+	RepoRoot string `name:"repo-root" env:"K2_PROVISION_REPO_ROOT" help:"Repository root. Defaults to auto-detection." type:"path"`
 
 	Bootstrap bootstrapCmd `cmd:"" help:"Provision the first K3s server over SSH."`
 	Server    serverCmd    `cmd:"" help:"Provision an additional K3s server over SSH."`
@@ -34,45 +34,45 @@ type renderCmd struct {
 }
 
 type commonBootstrapFlags struct {
-	ClusterTarget    string   `name:"cluster-target" required:"" help:"Cluster config/deploy target, such as v3."`
-	ClusterName      string   `name:"cluster-name" help:"Local cluster instance name. Defaults to cluster-target."`
-	NodeName         string   `name:"node-name" required:"" help:"Kubernetes node name."`
-	OperatorKey      []string `name:"operator-key" help:"Literal ssh-ed25519 operator public key. Repeatable."`
-	OperatorFiles    []string `name:"operator-key-file" help:"File containing literal operator public keys. Repeatable." type:"path"`
-	Label            []string `name:"label" help:"Additional K3s node-label value. Repeatable."`
-	Taint            []string `name:"taint" help:"Additional K3s node-taint value. Repeatable."`
-	BootstrapAPIHost string   `name:"bootstrap-api-host" help:"Kubernetes API host for bootstrap-only Cilium manifests. Bootstrap provisioning auto-detects the node IP when omitted."`
+	ClusterTarget    string   `name:"cluster-target" env:"K2_PROVISION_CLUSTER_TARGET" required:"" help:"Cluster config/deploy target, such as v3."`
+	ClusterName      string   `name:"cluster-name" env:"K2_PROVISION_CLUSTER_NAME" help:"Local cluster instance name. Defaults to cluster-target."`
+	NodeName         string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" required:"" help:"Kubernetes node name."`
+	OperatorKey      []string `name:"operator-key" env:"K2_PROVISION_OPERATOR_KEY" help:"Literal ssh-ed25519 operator public key. Repeatable."`
+	OperatorFiles    []string `name:"operator-key-file" env:"K2_PROVISION_OPERATOR_KEY_FILE" help:"File containing literal operator public keys. Repeatable." type:"path"`
+	Label            []string `name:"label" env:"K2_PROVISION_LABEL" help:"Additional K3s node-label value. Repeatable."`
+	Taint            []string `name:"taint" env:"K2_PROVISION_TAINT" help:"Additional K3s node-taint value. Repeatable."`
+	BootstrapAPIHost string   `name:"bootstrap-api-host" env:"K2_PROVISION_BOOTSTRAP_API_HOST" help:"Kubernetes API host for bootstrap-only Cilium manifests. Bootstrap provisioning auto-detects the node IP when omitted."`
 
-	OnePasswordTokenFile string `name:"onepassword-token-file" help:"Optional 1Password service account token file to include as bootstrap Secret." type:"path"`
-	SecretNamespace      string `name:"bootstrap-secret-namespace" default:"secrets" help:"Namespace for optional bootstrap Secret."`
-	SecretName           string `name:"bootstrap-secret-name" default:"onepassword-service-account-token" help:"Name for optional bootstrap Secret."`
+	OnePasswordTokenFile string `name:"onepassword-token-file" env:"K2_PROVISION_ONEPASSWORD_TOKEN_FILE" help:"Optional 1Password service account token file to include as bootstrap Secret." type:"path"`
+	SecretNamespace      string `name:"bootstrap-secret-namespace" env:"K2_PROVISION_BOOTSTRAP_SECRET_NAMESPACE" default:"secrets" help:"Namespace for optional bootstrap Secret."`
+	SecretName           string `name:"bootstrap-secret-name" env:"K2_PROVISION_BOOTSTRAP_SECRET_NAME" default:"onepassword-service-account-token" help:"Name for optional bootstrap Secret."`
 }
 
 type bootstrapCmd struct {
 	commonBootstrapFlags
 
-	Host     string `name:"host" required:"" help:"SSH host for the clean Kairos node."`
-	SSHPort  int    `name:"ssh-port" default:"22" help:"SSH port."`
-	SSHUser  string `name:"ssh-user" default:"kairos" help:"SSH user."`
-	NoReboot bool   `name:"no-reboot" help:"Install files and enable k3s, but do not reboot."`
+	Host     string `name:"host" env:"K2_PROVISION_HOST" required:"" help:"SSH host for the clean Kairos node."`
+	SSHPort  int    `name:"ssh-port" env:"K2_PROVISION_SSH_PORT" default:"22" help:"SSH port."`
+	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
+	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
 }
 
 type commonJoinFlags struct {
-	ClusterTarget string   `name:"cluster-target" required:"" help:"Cluster config/deploy target, such as v3."`
-	ClusterName   string   `name:"cluster-name" help:"Local cluster instance name. Defaults to cluster-target."`
-	NodeName      string   `name:"node-name" required:"" help:"Kubernetes node name."`
-	OperatorKey   []string `name:"operator-key" help:"Literal ssh-ed25519 operator public key. Repeatable."`
-	OperatorFiles []string `name:"operator-key-file" help:"File containing literal operator public keys. Repeatable." type:"path"`
-	Label         []string `name:"label" help:"Additional K3s node-label value. Repeatable."`
-	Taint         []string `name:"taint" help:"Additional K3s node-taint value. Repeatable."`
-	ServerURL     string   `name:"server-url" help:"K3s API URL for joining. Defaults to ~/.kube/k2/<cluster-name>/server-url, then the API VIP from clusters/<target>.yaml."`
+	ClusterTarget string   `name:"cluster-target" env:"K2_PROVISION_CLUSTER_TARGET" required:"" help:"Cluster config/deploy target, such as v3."`
+	ClusterName   string   `name:"cluster-name" env:"K2_PROVISION_CLUSTER_NAME" help:"Local cluster instance name. Defaults to cluster-target."`
+	NodeName      string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" required:"" help:"Kubernetes node name."`
+	OperatorKey   []string `name:"operator-key" env:"K2_PROVISION_OPERATOR_KEY" help:"Literal ssh-ed25519 operator public key. Repeatable."`
+	OperatorFiles []string `name:"operator-key-file" env:"K2_PROVISION_OPERATOR_KEY_FILE" help:"File containing literal operator public keys. Repeatable." type:"path"`
+	Label         []string `name:"label" env:"K2_PROVISION_LABEL" help:"Additional K3s node-label value. Repeatable."`
+	Taint         []string `name:"taint" env:"K2_PROVISION_TAINT" help:"Additional K3s node-taint value. Repeatable."`
+	ServerURL     string   `name:"server-url" env:"K2_PROVISION_SERVER_URL" help:"K3s API URL for joining. Defaults to ~/.kube/k2/<cluster-name>/server-url, then the API VIP from clusters/<target>.yaml."`
 }
 
 type commonRemoteFlags struct {
-	Host     string `name:"host" required:"" help:"SSH host for the clean Kairos node."`
-	SSHPort  int    `name:"ssh-port" default:"22" help:"SSH port."`
-	SSHUser  string `name:"ssh-user" default:"kairos" help:"SSH user."`
-	NoReboot bool   `name:"no-reboot" help:"Install files and enable k3s, but do not reboot."`
+	Host     string `name:"host" env:"K2_PROVISION_HOST" required:"" help:"SSH host for the clean Kairos node."`
+	SSHPort  int    `name:"ssh-port" env:"K2_PROVISION_SSH_PORT" default:"22" help:"SSH port."`
+	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
+	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
 }
 
 type serverCmd struct {
@@ -88,7 +88,7 @@ type workerCmd struct {
 type renderBootstrapCmd struct {
 	commonBootstrapFlags
 
-	OutputDir string `name:"output-dir" required:"" help:"Directory to write rendered files into." type:"path"`
+	OutputDir string `name:"output-dir" env:"K2_PROVISION_OUTPUT_DIR" required:"" help:"Directory to write rendered files into." type:"path"`
 }
 
 type runContext struct {
