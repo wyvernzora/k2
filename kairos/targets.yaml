@@ -16,8 +16,8 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
-        diskSize: 16384
-        diskStateSize: 8192
+        diskSize: 8192
+        diskStateSize: 4096
 
   ubuntu-24.04-standard-arm64-qemu-k3s:
     enabled: true
@@ -36,8 +36,8 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
-        diskSize: 16384
-        diskStateSize: 8192
+        diskSize: 8192
+        diskStateSize: 4096
 
   ubuntu-24.04-standard-arm64-rpi4cb-k3s:
     enabled: true

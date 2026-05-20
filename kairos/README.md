@@ -29,8 +29,8 @@ Both build Ubuntu 24.04, Kairos v4.1.0 images with k3s v1.36.0+k3s1.
 
 - `qemu` targets are generic Kairos images for local VM provisioning tests.
   Use `amd64` on x86 hosts and `arm64` on Apple Silicon or other ARM hosts.
-  They generate 16 GiB disks with an 8 GiB Kairos state partition, leaving the
-  remainder for persistent K3s and provisioning state.
+  They generate 8 GiB boot disks with a 4 GiB Kairos state partition and require
+  a second disk for persistent K3s and provisioning state.
 - `rpi4cb` is an arm64 Raspberry Pi 4 model image for Raspberry Pi CM4 modules
   on ComputeBlade.
 

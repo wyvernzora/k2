@@ -65,9 +65,9 @@ Build a generic QEMU raw artifact for local VM provisioning tests:
 (cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-qemu-k3s)
 ```
 
-QEMU targets generate 16 GiB disks with an 8 GiB Kairos state partition, leaving
-the remainder for persistent K3s state, containerd, kubelet, and repeated
-experiments.
+QEMU targets generate 8 GiB boot disks with a 4 GiB Kairos state partition and
+only a small placeholder persistent partition. The QEMU hardware overlay
+requires a second disk for real `COS_PERSISTENT` state during active boot.
 
 Build the OCI image, raw artifact, raw patches, checksums, manifest, and
 inspection inside Earthly's Linux/Docker environment:

@@ -3,7 +3,7 @@ inspect:
     files:
       - path: /system/oem/05-qemu-persistent.yaml
         contains:
-          - QEMU optional second-disk COS_PERSISTENT
+          - QEMU required second-disk COS_PERSISTENT
           - kairos-qemu-persistent
           - k2-node-init storage
     absent:

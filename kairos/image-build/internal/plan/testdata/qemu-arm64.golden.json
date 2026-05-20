@@ -24,7 +24,7 @@
           "source": "overlay:hardware/qemu",
           "path": "/system/oem/05-qemu-persistent.yaml",
           "contains": [
-            "QEMU optional second-disk COS_PERSISTENT",
+            "QEMU required second-disk COS_PERSISTENT",
             "kairos-qemu-persistent"
           ]
         },
@@ -87,8 +87,8 @@
   },
   "artifactOptions": {
     "raw": {
-      "diskStateSize": 8192,
-      "diskSize": 16384
+      "diskStateSize": 4096,
+      "diskSize": 8192
     }
   },
   "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-qemu-k3s-v1.36.0-k3s1-rev0",

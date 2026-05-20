@@ -2,16 +2,16 @@
 
 This overlay defines the K2 hardware profile for local QEMU/KVM test VMs.
 
-It keeps the VM target close to a generic Kairos disk image, but adds one
-test-friendly persistence behavior: if a second disk is present during active
-boot, that disk becomes `COS_PERSISTENT`; if no second disk is present, the
-original persistent partition is kept and grown to the end of its disk.
+It keeps the VM target close to a generic Kairos disk image, but requires one
+test-friendly persistence behavior: a second disk must be present during active
+boot, and that disk becomes `COS_PERSISTENT`. The boot disk keeps only a small
+placeholder persistent partition so QEMU artifacts stay compact.
 
 ## Files
 
 | Path | Purpose |
 | --- | --- |
-| `oci/system/oem/05-qemu-persistent.yaml` | Baked into the OCI rootfs as `/system/oem/05-qemu-persistent.yaml`. On active boot, it invokes `k2-node-init storage` to move `COS_PERSISTENT` to a second disk when available, otherwise grow the existing persistent partition. |
+| `oci/system/oem/05-qemu-persistent.yaml` | Baked into the OCI rootfs as `/system/oem/05-qemu-persistent.yaml`. On active boot, it invokes `k2-node-init storage` to move `COS_PERSISTENT` to a required second disk. |
 | `overlay.yaml` | Declares inspection expectations for the QEMU profile. |
 
 ## Inspection Expectations

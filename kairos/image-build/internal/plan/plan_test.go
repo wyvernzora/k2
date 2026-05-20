@@ -113,8 +113,8 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
-        diskSize: 16384
-        diskStateSize: 8192
+        diskSize: 8192
+        diskStateSize: 4096
 
   ubuntu-24.04-standard-arm64-qemu-k3s:
     enabled: true
@@ -133,8 +133,8 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
-        diskSize: 16384
-        diskStateSize: 8192
+        diskSize: 8192
+        diskStateSize: 4096
 
   ubuntu-24.04-standard-arm64-rpi4cb-k3s:
     enabled: true
@@ -242,8 +242,8 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
-        diskSize: 16384
-        diskStateSize: 8192
+        diskSize: 8192
+        diskStateSize: 4096
 
   ubuntu-24.04-standard-arm64-qemu-k3s:
     enabled: true
@@ -262,8 +262,8 @@ targets:
       - kubernetes/k3s
     artifactOptions:
       raw:
-        diskSize: 16384
-        diskStateSize: 8192
+        diskSize: 8192
+        diskStateSize: 4096
 
   ubuntu-24.04-standard-arm64-rpi4cb-k3s:
     enabled: true
@@ -298,7 +298,7 @@ inspect:
     files:
       - path: /system/oem/05-qemu-persistent.yaml
         contains:
-          - QEMU optional second-disk COS_PERSISTENT
+          - QEMU required second-disk COS_PERSISTENT
           - kairos-qemu-persistent
     absent:
       - /system/oem/05-rpi4cb-nvme-persistent.yaml
@@ -307,7 +307,7 @@ inspect:
       - parted
       - resize2fs
 `)+"\n")
-	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "qemu", "oci", "system", "oem", "05-qemu-persistent.yaml"), "#cloud-config\nname: QEMU optional second-disk COS_PERSISTENT\n# kairos-qemu-persistent\n")
+	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "qemu", "oci", "system", "oem", "05-qemu-persistent.yaml"), "#cloud-config\nname: QEMU required second-disk COS_PERSISTENT\n# kairos-qemu-persistent\n")
 	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt"), "dtparam=pciex1\n")
 	mustWrite(t, filepath.Join(buildRoot, "overlays", "hardware", "rpi4cb", "raw", "COS_OEM", "01_reset.yaml.patch"), strings.TrimSpace(`
 - op: test
