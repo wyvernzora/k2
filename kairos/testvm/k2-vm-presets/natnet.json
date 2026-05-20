@@ -10,6 +10,10 @@
     "graphicsController": "vmsvga",
     "vramMb": 16
   },
+  "serial": {
+    "enabled": true,
+    "hostPort": "auto:23000-23999"
+  },
   "persistentDisk": {
     "enabled": true,
     "sizeMb": 8192
@@ -17,7 +21,7 @@
   "network": {
     "mode": "natnetwork",
     "name": "k2-testvm",
-    "cidr": "10.42.0.0/24",
+    "cidr": "10.44.0.0/24",
     "dhcp": true,
     "guestIp": "auto"
   },

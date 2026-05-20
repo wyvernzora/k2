@@ -16,6 +16,8 @@ Usage:
   k2-vbox start <id|vm-dir>
   k2-vbox stop <id|vm-dir>
   k2-vbox ssh <id|vm-dir>
+  k2-vbox enable-console <id|vm-dir> [port|auto]
+  k2-vbox console <id|vm-dir>
   k2-vbox delete [--force] <id|vm-dir>
 
 Create options:
@@ -143,6 +145,7 @@ write_metadata() {
     printf 'persistent_vdi=%s\n' "$(quote_value "${persistent_vdi}")"
     printf 'ssh_port=%s\n' "$(quote_value "${ssh_port}")"
     printf 'api_port=%s\n' "$(quote_value "${api_port}")"
+    printf 'serial_port=%s\n' "$(quote_value "${serial_port}")"
     printf 'memory_mb=%s\n' "$(quote_value "${memory_mb}")"
     printf 'cpus=%s\n' "$(quote_value "${cpus}")"
     printf 'network_mode=%s\n' "$(quote_value "${network_mode}")"
@@ -420,6 +423,7 @@ const target = p.target === "host-qemu" ? "__HOST_QEMU__" : (p.target ?? "");
 const persistent = p.persistentDisk ?? {};
 const network = p.network ?? {};
 const display = p.display ?? {};
+const serial = p.serial ?? {};
 const forwards = p.forwards ?? [];
 
 emit("preset_description", p.description ?? "");
@@ -431,6 +435,8 @@ emit("ostype", p.ostype ?? "host-ubuntu");
 emit("firmware", p.firmware ?? "efi");
 emit("graphics_controller", display.graphicsController ?? "");
 emit("vram_mb", display.vramMb ?? "");
+emit("serial_enabled", bool(serial.enabled, false) ? "1" : "0");
+emit("serial_port", serial.hostPort ?? "");
 emit("with_persistent", bool(persistent.enabled, false) ? "1" : "0");
 emit("persistent_size_mb", persistent.sizeMb ?? 8192);
 emit("network_mode", network.mode ?? "nat");
@@ -490,6 +496,33 @@ ensure_vm_absent() {
   fi
 }
 
+natnetwork_prefix() {
+  local cidr="$1"
+  if [[ "${cidr}" =~ ^([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+/24$ ]]; then
+    printf '%s\n' "${BASH_REMATCH[1]}"
+  else
+    die "only /24 NAT network CIDRs are supported: ${cidr}"
+  fi
+}
+
+ensure_natnetwork_dhcp() {
+  local name="$1"
+  local cidr="$2"
+  local prefix
+
+  prefix="$(natnetwork_prefix "${cidr}")"
+  VBoxManage dhcpserver modify \
+    "--network=${name}" \
+    "--server-ip=${prefix}.2" \
+    "--lower-ip=${prefix}.3" \
+    "--upper-ip=${prefix}.254" \
+    --netmask=255.255.255.0 \
+    --enable \
+    --global \
+    --set-opt=3 "${prefix}.1" \
+    --set-opt=6 10.10.10.8 >/dev/null
+}
+
 ensure_natnetwork() {
   local name="$1"
   local cidr="$2"
@@ -499,9 +532,21 @@ ensure_natnetwork() {
   [[ -n "${cidr}" ]] || die "natnetwork preset requires network.cidr"
 
   if VBoxManage natnetwork list 2>/dev/null | grep -Eq "^Name:[[:space:]]+${name}$"; then
+    local existing_cidr
+    existing_cidr="$(VBoxManage natnetwork list | awk -v wanted="${name}" '
+      $1 == "Name:" && $2 == wanted { in_network = 1; next }
+      in_network && $1 == "Network:" { print $2; exit }
+      in_network && $1 == "Name:" { exit }
+    ')"
+    if [[ -n "${existing_cidr}" && "${existing_cidr}" != "${cidr}" ]]; then
+      die "NAT network ${name} already exists with CIDR ${existing_cidr}, but preset wants ${cidr}
+Delete or rename the existing VirtualBox NAT network before creating more VMs:
+  VBoxManage natnetwork remove --netname ${name}"
+    fi
     VBoxManage natnetwork modify --netname "${name}" --enable
     if [[ "${dhcp}" == "1" ]]; then
       VBoxManage natnetwork modify --netname "${name}" --dhcp on
+      ensure_natnetwork_dhcp "${name}" "${cidr}"
     else
       VBoxManage natnetwork modify --netname "${name}" --dhcp off
     fi
@@ -512,6 +557,9 @@ ensure_natnetwork() {
   [[ "${dhcp}" == "1" ]] && dhcp_arg="on"
   log "creating NAT network ${name} (${cidr})"
   VBoxManage natnetwork add --netname "${name}" --network "${cidr}" --enable --dhcp "${dhcp_arg}"
+  if [[ "${dhcp}" == "1" ]]; then
+    ensure_natnetwork_dhcp "${name}" "${cidr}"
+  fi
 }
 
 resolve_forward_port() {
@@ -593,6 +641,18 @@ apply_network() {
   esac
 }
 
+apply_serial_console() {
+  local vm_name="$1"
+
+  if [[ "${serial_enabled}" != "1" ]]; then
+    return
+  fi
+
+  [[ -n "${serial_port}" ]] || die "serial console is enabled but serial.hostPort is empty"
+  serial_port="$(resolve_forward_port "${serial_port}")"
+  VBoxManage modifyvm "${vm_name}" --uart1 0x3F8 4 --uart-mode1 tcpserver "${serial_port}" --uart-type1 16550A
+}
+
 configure_guest_ip() {
   local vm_name="$1"
 
@@ -617,6 +677,12 @@ delete_natnetwork_forward() {
   local network="$1"
   local rule="$2"
   VBoxManage natnetwork modify --netname "${network}" --port-forward-4 delete "${rule}" >/dev/null 2>&1 || true
+}
+
+delete_natnetwork_dhcp_config() {
+  local network="$1"
+  local vm="$2"
+  VBoxManage dhcpserver modify "--network=${network}" "--vm=${vm}" --nic=1 --remove-config >/dev/null 2>&1 || true
 }
 
 apply_forwards() {
@@ -784,6 +850,9 @@ create_vm() {
   if [[ "${api_port}" == "auto" ]]; then
     api_port="$(find_free_port 6443 6543)"
   fi
+  if [[ "${serial_enabled}" == "1" && "${serial_port}" == "auto" ]]; then
+    serial_port="$(find_free_port 23000 23999)"
+  fi
 
   mkdir -p "${vm_dir}"
   raw_tmp="${vm_dir}/kairos-${id}.raw"
@@ -821,6 +890,7 @@ create_vm() {
     VBoxManage modifyvm "${name}" --vram "${vram_mb}"
   fi
   apply_network "${name}"
+  apply_serial_console "${name}"
   configure_guest_ip "${name}"
   apply_forwards "${id}" "${name}"
   VBoxManage storagectl "${name}" --name "SATA" --add sata --controller IntelAhci --portcount 2
@@ -835,6 +905,7 @@ create_vm() {
   log "directory: ${vm_dir}"
   log "ssh: ssh -p ${ssh_port} kairos@127.0.0.1"
   [[ -n "${api_port}" ]] && log "api: https://127.0.0.1:${api_port}"
+  [[ -n "${serial_port:-}" ]] && log "console: ${script_dir}/k2-vbox console ${id}"
 
   if [[ "${start_after}" == "1" ]]; then
     start_vm "${id}"
@@ -860,8 +931,8 @@ info_vm() {
   local id
   id="$(vm_id_from_arg "$1")"
   load_metadata "${id}"
-  printf 'id=%s\nname=%s\npreset=%s\ntarget=%s\nraw_xz=%s\nvm_dir=%s\nkairos_vdi=%s\npersistent_vdi=%s\nssh_port=%s\napi_port=%s\nmemory_mb=%s\ncpus=%s\nnetwork_mode=%s\nnetwork_name=%s\nguest_ip=%s\n' \
-    "${id}" "${name}" "${preset:-unknown}" "${target}" "${raw_xz}" "${vm_dir}" "${kairos_vdi}" "${persistent_vdi}" "${ssh_port}" "${api_port}" "${memory_mb}" "${cpus}" "${network_mode:-}" "${network_name:-}" "${guest_ip:-}"
+  printf 'id=%s\nname=%s\npreset=%s\ntarget=%s\nraw_xz=%s\nvm_dir=%s\nkairos_vdi=%s\npersistent_vdi=%s\nssh_port=%s\napi_port=%s\nserial_port=%s\nmemory_mb=%s\ncpus=%s\nnetwork_mode=%s\nnetwork_name=%s\nguest_ip=%s\n' \
+    "${id}" "${name}" "${preset:-unknown}" "${target}" "${raw_xz}" "${vm_dir}" "${kairos_vdi}" "${persistent_vdi}" "${ssh_port}" "${api_port}" "${serial_port:-}" "${memory_mb}" "${cpus}" "${network_mode:-}" "${network_name:-}" "${guest_ip:-}"
 }
 
 start_vm() {
@@ -869,7 +940,7 @@ start_vm() {
   local id
   id="$(vm_id_from_arg "$1")"
   load_metadata "${id}"
-  VBoxManage startvm "${name}" --type gui
+  VBoxManage startvm "${name}" --type "${K2_VBOX_START_TYPE:-headless}"
 }
 
 stop_vm() {
@@ -885,6 +956,30 @@ ssh_vm() {
   id="$(vm_id_from_arg "$1")"
   load_metadata "${id}"
   printf 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p %s kairos@127.0.0.1\n' "${ssh_port}"
+}
+
+enable_console_vm() {
+  need VBoxManage
+  local id requested_port
+  id="$(vm_id_from_arg "$1")"
+  requested_port="${2:-auto:23000-23999}"
+  load_metadata "${id}"
+
+  serial_port="$(resolve_forward_port "${requested_port}")"
+  VBoxManage modifyvm "${name}" --uart1 0x3F8 4 --uart-mode1 tcpserver "${serial_port}" --uart-type1 16550A
+  write_metadata "${id}"
+  log "enabled ${name} serial console on 127.0.0.1:${serial_port}"
+  log "connect with: ${script_dir}/k2-vbox console ${id}"
+}
+
+console_vm() {
+  need nc
+  local id
+  id="$(vm_id_from_arg "$1")"
+  load_metadata "${id}"
+  [[ -n "${serial_port:-}" ]] || die "VM ${id} has no serial console configured"
+  log "connecting to ${name} serial console on 127.0.0.1:${serial_port}; press Ctrl-C to detach"
+  exec nc 127.0.0.1 "${serial_port}"
 }
 
 delete_vm() {
@@ -913,6 +1008,9 @@ delete_vm() {
     for rule in ${port_forward_rules}; do
       delete_natnetwork_forward "${network_name}" "${rule}"
     done
+  fi
+  if [[ "${network_mode:-}" == "natnetwork" && -n "${network_name:-}" ]]; then
+    delete_natnetwork_dhcp_config "${network_name}" "${name}"
   fi
   VBoxManage unregistervm "${name}" --delete >/dev/null 2>&1 || true
   rm -rf "${vm_dir}"
@@ -955,6 +1053,16 @@ main() {
       shift
       [[ $# -eq 1 ]] || die "ssh requires <id|vm-dir>"
       ssh_vm "$1"
+      ;;
+    enable-console)
+      shift
+      [[ $# -eq 1 || $# -eq 2 ]] || die "enable-console requires <id|vm-dir> [port|auto]"
+      enable_console_vm "$@"
+      ;;
+    console)
+      shift
+      [[ $# -eq 1 ]] || die "console requires <id|vm-dir>"
+      console_vm "$1"
       ;;
     delete)
       shift
