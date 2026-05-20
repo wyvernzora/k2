@@ -40,11 +40,13 @@ type ImageMetadata struct {
 	Hardware string `yaml:"hardware"`
 }
 
-type activationUser struct {
-	Name              string   `yaml:"name"`
-	Groups            []string `yaml:"groups,omitempty"`
-	Passwd            string   `yaml:"passwd"`
-	SSHAuthorizedKeys []string `yaml:"ssh_authorized_keys,omitempty"`
+type activationStages struct {
+	Initramfs []activationStage `yaml:"initramfs,omitempty"`
+}
+
+type activationStage struct {
+	Name     string `yaml:"name"`
+	Hostname string `yaml:"hostname"`
 }
 
 func ClusterConfig(c clusterconfig.Config) ([]byte, error) {
@@ -120,18 +122,17 @@ func JoinConfig(in JoinInput) ([]byte, error) {
 
 func ServerActivationCloudConfig(hostname string, operatorKeys []string) []byte {
 	type config struct {
-		Name     string           `yaml:"name"`
-		Hostname string           `yaml:"hostname"`
-		Users    []activationUser `yaml:"users"`
-		K3s      struct {
+		Name   string           `yaml:"name"`
+		Stages activationStages `yaml:"stages"`
+		K3s    struct {
 			Enabled bool `yaml:"enabled"`
 		} `yaml:"k3s"`
 	}
 	out := config{
-		Name:     "K2 K3s server activation",
-		Hostname: hostname,
-		Users:    kairosUsers(operatorKeys),
+		Name:   "K2 K3s server activation",
+		Stages: hostnameStages(hostname),
 	}
+	_ = operatorKeys
 	out.K3s.Enabled = true
 
 	data, err := yaml.Marshal(out)
@@ -144,17 +145,16 @@ func ServerActivationCloudConfig(hostname string, operatorKeys []string) []byte 
 func AgentActivationCloudConfig(hostname string, operatorKeys []string) []byte {
 	type config struct {
 		Name     string           `yaml:"name"`
-		Hostname string           `yaml:"hostname"`
-		Users    []activationUser `yaml:"users"`
+		Stages   activationStages `yaml:"stages"`
 		K3sAgent struct {
 			Enabled bool `yaml:"enabled"`
 		} `yaml:"k3s-agent"`
 	}
 	out := config{
-		Name:     "K2 K3s worker activation",
-		Hostname: hostname,
-		Users:    kairosUsers(operatorKeys),
+		Name:   "K2 K3s worker activation",
+		Stages: hostnameStages(hostname),
 	}
+	_ = operatorKeys
 	out.K3sAgent.Enabled = true
 
 	data, err := yaml.Marshal(out)
@@ -168,13 +168,13 @@ func ActivationCloudConfig(hostname string, operatorKeys []string) []byte {
 	return ServerActivationCloudConfig(hostname, operatorKeys)
 }
 
-func kairosUsers(operatorKeys []string) []activationUser {
-	return []activationUser{
-		{
-			Name:              "kairos",
-			Groups:            []string{"admin", "sudo"},
-			Passwd:            "!",
-			SSHAuthorizedKeys: operatorKeys,
+func hostnameStages(hostname string) activationStages {
+	return activationStages{
+		Initramfs: []activationStage{
+			{
+				Name:     "Set local hostname",
+				Hostname: hostname,
+			},
 		},
 	}
 }

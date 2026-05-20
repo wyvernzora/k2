@@ -100,6 +100,12 @@ The saved kubeconfig has its server URL rewritten from the node-local
 `https://127.0.0.1:6443` endpoint to the API endpoint from
 `clusters/<target>.yaml`.
 
+After credentials are harvested, the provisioner SSHes back into the node and
+verifies the expected post-reboot state: hostname, operator SSH keys, active
+K3s config files, disabled stock Kairos credentials, disabled packaged
+manifests, enabled and active `k3s`, and generated K3s credentials. The command
+fails if those checks do not converge.
+
 SSH authentication is selected once at the start and reused for all SSH/SCP
 calls. The provisioner first tries the clean Kairos default password
 `kairos`, then tries local SSH config in batch mode, then prompts for a
@@ -147,6 +153,12 @@ Both commands default the join endpoint from
 the API DNS name, because cluster DNS depends on Kubernetes already being
 healthy. Use `--server-url https://<host>:6443` when a test network needs nodes
 to join through a bootstrap node address rather than the cluster API VIP.
+
+After reboot, server and worker provisioning SSH back into the node and verify
+role-specific state. Servers must have the invariant server config, cluster
+config, packaged-manifest skip files, and active `k3s`. Workers must have only
+worker join config, no server-only invariant or cluster config, and active
+`k3s-agent`.
 
 ## Current Limits
 

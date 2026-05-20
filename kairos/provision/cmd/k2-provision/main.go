@@ -224,6 +224,12 @@ func (c *bootstrapCmd) Run(ctx *runContext) error {
 		if err := harvestBootstrapCredentials(&client, cfg, clusterName); err != nil {
 			return err
 		}
+		if err := verifyRemoteProvisioning(&client, "bootstrap node "+c.NodeName, bootstrapVerificationScript(c.NodeName), 5*time.Minute); err != nil {
+			return err
+		}
+		if err := hardenRemoteDefaultAccess(&client); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -292,6 +298,12 @@ func provisionJoinNode(ctx *runContext, role nodeRole, flags commonJoinFlags, re
 		return err
 	}
 	logf("%s node %s accepted SSH after reboot", role, flags.NodeName)
+	if err := verifyRemoteProvisioning(&client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 5*time.Minute); err != nil {
+		return err
+	}
+	if err := hardenRemoteDefaultAccess(&client); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -568,6 +580,99 @@ func waitForK3sCredentials(client *remote.Client, timeout time.Duration) error {
 	}
 }
 
+func verifyRemoteProvisioning(client *remote.Client, description string, script string, timeout time.Duration) error {
+	logf("verifying %s provisioning", description)
+	deadline := time.Now().Add(timeout)
+	var lastErr error
+	for {
+		err := client.Run(script)
+		if err == nil {
+			logf("%s provisioning verified", description)
+			return nil
+		}
+		lastErr = err
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timed out verifying %s provisioning: %w", description, lastErr)
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func hardenRemoteDefaultAccess(client *remote.Client) error {
+	logf("hardening default kairos access")
+	script := strings.Join([]string{
+		"set -eu",
+		"if sudo test -f /oem/90_custom.yaml; then sudo mv /oem/90_custom.yaml /oem/90_custom.yaml.k2-disabled; fi",
+		"sudo passwd -l kairos",
+		"sudo test ! -e /oem/90_custom.yaml",
+	}, "\n")
+	if err := client.Run(script); err != nil {
+		return fmt.Errorf("harden default kairos access: %w", err)
+	}
+	successf("default kairos access hardened")
+	return nil
+}
+
+func bootstrapVerificationScript(nodeName string) string {
+	var buf bytes.Buffer
+	writeVerificationPrelude(&buf, nodeName)
+	fmt.Fprintf(&buf, "verify 'server invariant config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
+	fmt.Fprintf(&buf, "verify 'cluster config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n")
+	fmt.Fprintf(&buf, "verify 'bootstrap config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/30-k2-bootstrap.yaml\n")
+	fmt.Fprintf(&buf, "verify 'bootstrap activation installed' sudo test -s /oem/99-k2-k3s-bootstrap.yaml\n")
+	fmt.Fprintf(&buf, "verify 'k3s service enabled' systemctl is-enabled --quiet k3s\n")
+	fmt.Fprintf(&buf, "verify 'k3s service active' systemctl is-active --quiet k3s\n")
+	fmt.Fprintf(&buf, "verify 'k3s kubeconfig exists' sudo test -s /etc/rancher/k3s/k3s.yaml\n")
+	fmt.Fprintf(&buf, "verify 'server token exists' sudo test -s /var/lib/rancher/k3s/server/token\n")
+	fmt.Fprintf(&buf, "verify 'node token exists' sudo test -s /var/lib/rancher/k3s/server/node-token\n")
+	fmt.Fprintf(&buf, "verify 'agent token exists' sudo test -s /var/lib/rancher/k3s/server/agent-token\n")
+	writeServerPackagedManifestChecks(&buf)
+	return buf.String()
+}
+
+func joinVerificationScript(nodeName string, role nodeRole) string {
+	var buf bytes.Buffer
+	writeVerificationPrelude(&buf, nodeName)
+	configFile := "30-k2-" + string(role) + ".yaml"
+	activationFile := "99-k2-k3s-" + string(role) + ".yaml"
+	fmt.Fprintf(&buf, "verify '%s join config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/%s\n", role, configFile)
+	fmt.Fprintf(&buf, "verify '%s activation installed' sudo test -s /oem/%s\n", role, activationFile)
+	if role == nodeRoleServer {
+		fmt.Fprintf(&buf, "verify 'server invariant config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
+		fmt.Fprintf(&buf, "verify 'cluster config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n")
+		fmt.Fprintf(&buf, "verify 'k3s service enabled' systemctl is-enabled --quiet k3s\n")
+		fmt.Fprintf(&buf, "verify 'k3s service active' systemctl is-active --quiet k3s\n")
+		fmt.Fprintf(&buf, "verify 'k3s kubeconfig exists' sudo test -s /etc/rancher/k3s/k3s.yaml\n")
+		writeServerPackagedManifestChecks(&buf)
+	} else {
+		fmt.Fprintf(&buf, "verify 'server invariant config absent on worker' sudo test ! -e /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
+		fmt.Fprintf(&buf, "verify 'cluster config absent on worker' sudo test ! -e /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n")
+		fmt.Fprintf(&buf, "verify 'k3s-agent service enabled' systemctl is-enabled --quiet k3s-agent\n")
+		fmt.Fprintf(&buf, "verify 'k3s-agent service active' systemctl is-active --quiet k3s-agent\n")
+	}
+	return buf.String()
+}
+
+func writeVerificationPrelude(buf *bytes.Buffer, nodeName string) {
+	fmt.Fprintf(buf, "set -eu\n")
+	fmt.Fprintf(buf, "verify() { label=\"$1\"; shift; echo \"k2-provision: verify: ${label}\"; \"$@\"; }\n")
+	fmt.Fprintf(buf, "verify 'hostname set' test \"$(hostname)\" = %s\n", shellQuote(nodeName))
+	fmt.Fprintf(buf, "verify 'operator authorized keys installed' sudo test -s /home/kairos/.ssh/authorized_keys\n")
+}
+
+func writeServerPackagedManifestChecks(buf *bytes.Buffer) {
+	fmt.Fprintf(buf, "verify 'traefik packaged manifest disabled' sudo test -f /var/lib/rancher/k3s/server/manifests/traefik.yaml.skip\n")
+	fmt.Fprintf(buf, "verify 'local-storage packaged manifest disabled' sudo test -f /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip\n")
+	fmt.Fprintf(buf, "verify 'metrics-server packaged manifest disabled' sudo test -f /var/lib/rancher/k3s/server/manifests/metrics-server.yaml.skip\n")
+}
+
+func shellQuote(value string) string {
+	if value == "" {
+		return "''"
+	}
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
+}
+
 func clusterCredentialsDir(clusterName string) (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -610,11 +715,6 @@ func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	fmt.Fprintf(&buf, "set -eu\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: installing bootstrap files'\n")
 	fmt.Fprintf(&buf, "sudo mkdir -p /etc/rancher/k3s/config.yaml.d /var/lib/rancher/k3s/server/manifests /oem /home/kairos/.ssh\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: updating local host resolution'\n")
-	fmt.Fprintf(&buf, "sudo sed -i.bak -E '/[[:space:]](kairos|%s)([[:space:]]|$)/d' /etc/hosts\n", nodeName)
-	fmt.Fprintf(&buf, "printf '127.0.1.1 %s kairos\\n' | sudo tee -a /etc/hosts >/dev/null\n", nodeName)
-	fmt.Fprintf(&buf, "echo 'k2-provision: setting hostname'\n")
-	fmt.Fprintf(&buf, "sudo hostnamectl set-hostname %q\n", nodeName)
 	fmt.Fprintf(&buf, "echo 'k2-provision: activating k3s server invariants'\n")
 	fmt.Fprintf(&buf, "sudo cp /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: disabling unwanted k3s packaged manifests'\n")
@@ -626,14 +726,11 @@ func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/30-k2-bootstrap.yaml /etc/rancher/k3s/config.yaml.d/30-k2-bootstrap.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "echo 'k2-provision: installing Kairos k3s activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/99-k2-k3s-bootstrap.yaml /oem/99-k2-k3s-bootstrap.yaml\n", remoteDir)
-	fmt.Fprintf(&buf, "if sudo test -f /oem/90_custom.yaml; then echo 'k2-provision: disabling stock Kairos default credentials cloud-config'; sudo mv /oem/90_custom.yaml /oem/90_custom.yaml.k2-disabled; fi\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: installing bootstrap manifest bundle'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/k2-bootstrap.k8s.yaml /var/lib/rancher/k3s/server/manifests/k2-bootstrap.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "echo 'k2-provision: installing operator SSH keys'\n")
+	fmt.Fprintf(&buf, "sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)
-	fmt.Fprintf(&buf, "sudo chmod 0700 /home/kairos/.ssh\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: locking default kairos password'\n")
-	fmt.Fprintf(&buf, "sudo passwd -l kairos\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: enabling k3s service'\n")
 	fmt.Fprintf(&buf, "sudo systemctl enable k3s\n")
 	if !noReboot {
@@ -655,11 +752,6 @@ func joinInstallScript(remoteDir string, nodeName string, role nodeRole, noReboo
 	fmt.Fprintf(&buf, "set -eu\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: installing %s files'\n", role)
 	fmt.Fprintf(&buf, "sudo mkdir -p /etc/rancher/k3s/config.yaml.d /oem /home/kairos/.ssh\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: updating local host resolution'\n")
-	fmt.Fprintf(&buf, "sudo sed -i.bak -E '/[[:space:]](kairos|%s)([[:space:]]|$)/d' /etc/hosts\n", nodeName)
-	fmt.Fprintf(&buf, "printf '127.0.1.1 %s kairos\\n' | sudo tee -a /etc/hosts >/dev/null\n", nodeName)
-	fmt.Fprintf(&buf, "echo 'k2-provision: setting hostname'\n")
-	fmt.Fprintf(&buf, "sudo hostnamectl set-hostname %q\n", nodeName)
 	if role == nodeRoleServer {
 		fmt.Fprintf(&buf, "sudo mkdir -p /var/lib/rancher/k3s/server/manifests\n")
 		fmt.Fprintf(&buf, "echo 'k2-provision: activating k3s server invariants'\n")
@@ -675,12 +767,9 @@ func joinInstallScript(remoteDir string, nodeName string, role nodeRole, noReboo
 	fmt.Fprintf(&buf, "sudo install -m 0600 %q/%s /etc/rancher/k3s/config.yaml.d/%s\n", remoteDir, configFile, configFile)
 	fmt.Fprintf(&buf, "echo 'k2-provision: installing Kairos k3s activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/%s /oem/%s\n", remoteDir, activationFile, activationFile)
-	fmt.Fprintf(&buf, "if sudo test -f /oem/90_custom.yaml; then echo 'k2-provision: disabling stock Kairos default credentials cloud-config'; sudo mv /oem/90_custom.yaml /oem/90_custom.yaml.k2-disabled; fi\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: installing operator SSH keys'\n")
+	fmt.Fprintf(&buf, "sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)
-	fmt.Fprintf(&buf, "sudo chmod 0700 /home/kairos/.ssh\n")
-	fmt.Fprintf(&buf, "echo 'k2-provision: locking default kairos password'\n")
-	fmt.Fprintf(&buf, "sudo passwd -l kairos\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: enabling %s service'\n", service)
 	fmt.Fprintf(&buf, "sudo systemctl enable %s\n", service)
 	if !noReboot {

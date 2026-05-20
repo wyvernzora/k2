@@ -119,18 +119,22 @@ func TestActivationCloudConfigSetsHostnameAndEnablesK3s(t *testing.T) {
 	for _, want := range []string{
 		"#cloud-config",
 		"name: K2 K3s server activation",
+		"stages:",
+		"initramfs:",
+		"name: Set local hostname",
 		"hostname: v3-test-01",
-		"users:",
-		"name: kairos",
-		"passwd: '!'",
-		"ssh_authorized_keys:",
-		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFake operator",
 		"k3s:",
 		"enabled: true",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("activation config missing %q:\n%s", want, got)
 		}
+	}
+	if strings.Contains(got, "passwd:") {
+		t.Fatalf("activation config should not lock the default password before verification:\n%s", got)
+	}
+	if strings.Contains(got, "users:") {
+		t.Fatalf("activation config should not mutate user state:\n%s", got)
 	}
 }
 
@@ -194,6 +198,9 @@ func TestAgentActivationCloudConfigEnablesK3sAgent(t *testing.T) {
 	for _, want := range []string{
 		"#cloud-config",
 		"name: K2 K3s worker activation",
+		"stages:",
+		"initramfs:",
+		"name: Set local hostname",
 		"hostname: worker-01",
 		"k3s-agent:",
 		"enabled: true",
