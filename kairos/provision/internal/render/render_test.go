@@ -118,7 +118,7 @@ func TestActivationCloudConfigSetsHostnameAndEnablesK3s(t *testing.T) {
 	got := string(ActivationCloudConfig("v3-test-01", []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFake operator"}))
 	for _, want := range []string{
 		"#cloud-config",
-		"name: K2 K3s bootstrap activation",
+		"name: K2 K3s server activation",
 		"hostname: v3-test-01",
 		"users:",
 		"name: kairos",
@@ -130,6 +130,76 @@ func TestActivationCloudConfigSetsHostnameAndEnablesK3s(t *testing.T) {
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("activation config missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestJoinConfigRendersServerJoinWithControlPlaneTaint(t *testing.T) {
+	data, err := JoinConfig(JoinInput{
+		NodeName:     "server-02",
+		ServerURL:    "https://10.10.9.1:6443",
+		Token:        "server-token",
+		ControlPlane: true,
+		ImageMetadata: ImageMetadata{
+			Target:   "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+			Arch:     "arm64",
+			Hardware: "rpi4cb",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(data)
+	for _, want := range []string{
+		"server: https://10.10.9.1:6443",
+		"token: server-token",
+		"node-name: server-02",
+		"k2.wyvernzora.io/hardware=rpi4cb",
+		"node-role.kubernetes.io/control-plane=true:NoSchedule",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("server join config missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestJoinConfigRendersWorkerWithoutControlPlaneTaint(t *testing.T) {
+	data, err := JoinConfig(JoinInput{
+		NodeName:  "worker-01",
+		ServerURL: "https://10.10.9.1:6443",
+		Token:     "agent-token",
+		Taints:    []string{"example.com/gpu=true:NoSchedule"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(data)
+	for _, want := range []string{
+		"server: https://10.10.9.1:6443",
+		"token: agent-token",
+		"node-name: worker-01",
+		"example.com/gpu=true:NoSchedule",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("worker join config missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "node-role.kubernetes.io/control-plane") {
+		t.Fatalf("worker join config unexpectedly has control-plane taint:\n%s", got)
+	}
+}
+
+func TestAgentActivationCloudConfigEnablesK3sAgent(t *testing.T) {
+	got := string(AgentActivationCloudConfig("worker-01", []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFake operator"}))
+	for _, want := range []string{
+		"#cloud-config",
+		"name: K2 K3s worker activation",
+		"hostname: worker-01",
+		"k3s-agent:",
+		"enabled: true",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("agent activation config missing %q:\n%s", want, got)
 		}
 	}
 }

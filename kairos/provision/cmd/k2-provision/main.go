@@ -24,6 +24,8 @@ type cli struct {
 	RepoRoot string `name:"repo-root" help:"Repository root. Defaults to auto-detection." type:"path"`
 
 	Bootstrap bootstrapCmd `cmd:"" help:"Provision the first K3s server over SSH."`
+	Server    serverCmd    `cmd:"" help:"Provision an additional K3s server over SSH."`
+	Worker    workerCmd    `cmd:"" help:"Provision a K3s worker over SSH."`
 	Render    renderCmd    `cmd:"" help:"Render provisioning files locally."`
 }
 
@@ -55,6 +57,34 @@ type bootstrapCmd struct {
 	NoReboot bool   `name:"no-reboot" help:"Install files and enable k3s, but do not reboot."`
 }
 
+type commonJoinFlags struct {
+	ClusterTarget string   `name:"cluster-target" required:"" help:"Cluster config/deploy target, such as v3."`
+	ClusterName   string   `name:"cluster-name" help:"Local cluster instance name. Defaults to cluster-target."`
+	NodeName      string   `name:"node-name" required:"" help:"Kubernetes node name."`
+	OperatorKey   []string `name:"operator-key" help:"Literal ssh-ed25519 operator public key. Repeatable."`
+	OperatorFiles []string `name:"operator-key-file" help:"File containing literal operator public keys. Repeatable." type:"path"`
+	Label         []string `name:"label" help:"Additional K3s node-label value. Repeatable."`
+	Taint         []string `name:"taint" help:"Additional K3s node-taint value. Repeatable."`
+	ServerURL     string   `name:"server-url" help:"K3s API URL for joining. Defaults to ~/.kube/k2/<cluster-name>/server-url, then the API VIP from clusters/<target>.yaml."`
+}
+
+type commonRemoteFlags struct {
+	Host     string `name:"host" required:"" help:"SSH host for the clean Kairos node."`
+	SSHPort  int    `name:"ssh-port" default:"22" help:"SSH port."`
+	SSHUser  string `name:"ssh-user" default:"kairos" help:"SSH user."`
+	NoReboot bool   `name:"no-reboot" help:"Install files and enable k3s, but do not reboot."`
+}
+
+type serverCmd struct {
+	commonJoinFlags
+	commonRemoteFlags
+}
+
+type workerCmd struct {
+	commonJoinFlags
+	commonRemoteFlags
+}
+
 type renderBootstrapCmd struct {
 	commonBootstrapFlags
 
@@ -72,6 +102,20 @@ type bundle struct {
 	AuthorizedKeys  []byte
 	Manifests       []byte
 }
+
+type joinBundle struct {
+	ClusterConfig  []byte
+	JoinConfig     []byte
+	Activation     []byte
+	AuthorizedKeys []byte
+}
+
+type nodeRole string
+
+const (
+	nodeRoleServer nodeRole = "server"
+	nodeRoleWorker nodeRole = "worker"
+)
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -184,6 +228,73 @@ func (c *bootstrapCmd) Run(ctx *runContext) error {
 	return nil
 }
 
+func (c *serverCmd) Run(ctx *runContext) error {
+	return provisionJoinNode(ctx, nodeRoleServer, c.commonJoinFlags, c.commonRemoteFlags)
+}
+
+func (c *workerCmd) Run(ctx *runContext) error {
+	return provisionJoinNode(ctx, nodeRoleWorker, c.commonJoinFlags, c.commonRemoteFlags)
+}
+
+func provisionJoinNode(ctx *runContext, role nodeRole, flags commonJoinFlags, remoteFlags commonRemoteFlags) error {
+	logf("checking local command prerequisites")
+	if err := prereq.Require("ssh", "scp"); err != nil {
+		return err
+	}
+
+	client := remote.Client{
+		Host:   remoteFlags.Host,
+		Port:   remoteFlags.SSHPort,
+		User:   remoteFlags.SSHUser,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+
+	logf("provision %s node %s via %s", role, flags.NodeName, client.Address())
+	logf("reading remote image metadata")
+	metadata, err := readRemoteMetadata(&client)
+	if err != nil {
+		return fmt.Errorf("%w; rebuild the image with baked metadata support", err)
+	}
+
+	bundle, err := buildJoinBundle(ctx.repoRoot, role, flags, metadata)
+	if err != nil {
+		return err
+	}
+
+	logf("creating local staging directory")
+	localDir, err := os.MkdirTemp("", "k2-provision-"+string(role)+"-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(localDir)
+	if err := writeJoinBundle(localDir, role, bundle); err != nil {
+		return err
+	}
+	logf("staged %s bundle in %s", role, localDir)
+
+	remoteDir, err := client.UploadDir(localDir)
+	if err != nil {
+		return err
+	}
+	logf("uploaded %s bundle to %s", role, remoteDir)
+	if err := client.RunAllowDisconnect(joinInstallScript(remoteDir, flags.NodeName, role, remoteFlags.NoReboot)); err != nil {
+		return err
+	}
+	if remoteFlags.NoReboot {
+		logf("remote install complete; reboot skipped")
+		return nil
+	}
+	logf("remote install complete; node should be rebooting")
+	logf("waiting for node to reboot and accept SSH")
+	time.Sleep(10 * time.Second)
+	if err := client.WaitForAuth(5 * time.Minute); err != nil {
+		return err
+	}
+	logf("%s node %s accepted SSH after reboot", role, flags.NodeName)
+	return nil
+}
+
 func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.ImageMetadata) (bundle, error) {
 	logf("loading cluster config clusters/%s.yaml", flags.ClusterTarget)
 	cfg, err := clusterconfig.Load(repoRoot, flags.ClusterTarget)
@@ -235,6 +346,73 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	}, nil
 }
 
+func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, metadata render.ImageMetadata) (joinBundle, error) {
+	logf("loading cluster config clusters/%s.yaml", flags.ClusterTarget)
+	cfg, err := clusterconfig.Load(repoRoot, flags.ClusterTarget)
+	if err != nil {
+		return joinBundle{}, err
+	}
+	clusterName := flags.ClusterName
+	if clusterName == "" {
+		clusterName = flags.ClusterTarget
+	}
+	logf("using cluster name %s", clusterName)
+	logf("loading operator SSH keys")
+	operatorKeys, err := keys.Load(flags.OperatorKey, flags.OperatorFiles)
+	if err != nil {
+		return joinBundle{}, err
+	}
+	logf("loaded %d operator SSH key(s)", len(operatorKeys))
+
+	serverURL, err := resolveJoinServerURL(cfg, clusterName, flags.ServerURL)
+	if err != nil {
+		return joinBundle{}, err
+	}
+	tokenName := "agent-token"
+	if role == nodeRoleServer {
+		tokenName = "server-token"
+	}
+	token, err := readClusterCredential(clusterName, tokenName)
+	if err != nil {
+		return joinBundle{}, err
+	}
+
+	logf("rendering k3s %s join config", role)
+	joinConfig, err := render.JoinConfig(render.JoinInput{
+		NodeName:      flags.NodeName,
+		ServerURL:     serverURL,
+		Token:         token,
+		Labels:        flags.Label,
+		Taints:        flags.Taint,
+		ImageMetadata: metadata,
+		ControlPlane:  role == nodeRoleServer,
+	})
+	if err != nil {
+		return joinBundle{}, err
+	}
+
+	var clusterConfig []byte
+	if role == nodeRoleServer {
+		logf("rendering k3s cluster config")
+		clusterConfig, err = render.ClusterConfig(cfg)
+		if err != nil {
+			return joinBundle{}, err
+		}
+	}
+
+	activation := render.AgentActivationCloudConfig(flags.NodeName, operatorKeys)
+	if role == nodeRoleServer {
+		activation = render.ServerActivationCloudConfig(flags.NodeName, operatorKeys)
+	}
+
+	return joinBundle{
+		ClusterConfig:  clusterConfig,
+		JoinConfig:     joinConfig,
+		Activation:     activation,
+		AuthorizedKeys: render.AuthorizedKeys(operatorKeys),
+	}, nil
+}
+
 func writeBundle(dir string, bundle bundle) error {
 	files := map[string][]byte{
 		"20-k2-cluster.yaml":       bundle.ClusterConfig,
@@ -242,6 +420,26 @@ func writeBundle(dir string, bundle bundle) error {
 		"99-k2-k3s-bootstrap.yaml": bundle.Activation,
 		"operator_authorized_keys": bundle.AuthorizedKeys,
 		"k2-bootstrap.k8s.yaml":    bundle.Manifests,
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	for name, data := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func writeJoinBundle(dir string, role nodeRole, bundle joinBundle) error {
+	files := map[string][]byte{
+		"30-k2-" + string(role) + ".yaml":     bundle.JoinConfig,
+		"99-k2-k3s-" + string(role) + ".yaml": bundle.Activation,
+		"operator_authorized_keys":            bundle.AuthorizedKeys,
+	}
+	if role == nodeRoleServer {
+		files["20-k2-cluster.yaml"] = bundle.ClusterConfig
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
@@ -338,7 +536,7 @@ func harvestBootstrapCredentials(client *remote.Client, cfg clusterconfig.Config
 		"server-token": []byte(strings.TrimSpace(string(serverToken)) + "\n"),
 		"node-token":   []byte(strings.TrimSpace(string(nodeToken)) + "\n"),
 		"agent-token":  []byte(strings.TrimSpace(string(agentToken)) + "\n"),
-		"server-url":   []byte(cfg.APIServerURL() + "\n"),
+		"server-url":   []byte(cfg.APIVIPURL() + "\n"),
 	}
 	for name, data := range files {
 		if err := os.WriteFile(filepath.Join(dir, name), data, 0o600); err != nil {
@@ -378,6 +576,35 @@ func clusterCredentialsDir(clusterName string) (string, error) {
 	return filepath.Join(home, ".kube", "k2", clusterName), nil
 }
 
+func readClusterCredential(clusterName string, name string) (string, error) {
+	dir, err := clusterCredentialsDir(clusterName)
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(dir, name)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("read cluster credential %s: %w", path, err)
+	}
+	value := strings.TrimSpace(string(data))
+	if value == "" {
+		return "", fmt.Errorf("cluster credential %s is empty", path)
+	}
+	return value, nil
+}
+
+func resolveJoinServerURL(cfg clusterconfig.Config, clusterName string, override string) (string, error) {
+	if strings.TrimSpace(override) != "" {
+		return strings.TrimSpace(override), nil
+	}
+	value, err := readClusterCredential(clusterName, "server-url")
+	if err == nil {
+		return value, nil
+	}
+	logf("could not read saved server-url for cluster %s: %v; using cluster config API VIP URL", clusterName, err)
+	return cfg.APIVIPURL(), nil
+}
+
 func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "set -eu\n")
@@ -409,6 +636,53 @@ func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	fmt.Fprintf(&buf, "sudo passwd -l kairos\n")
 	fmt.Fprintf(&buf, "echo 'k2-provision: enabling k3s service'\n")
 	fmt.Fprintf(&buf, "sudo systemctl enable k3s\n")
+	if !noReboot {
+		fmt.Fprintf(&buf, "echo 'k2-provision: rebooting node'\n")
+		fmt.Fprintf(&buf, "sudo reboot\n")
+	}
+	return buf.String()
+}
+
+func joinInstallScript(remoteDir string, nodeName string, role nodeRole, noReboot bool) string {
+	var buf bytes.Buffer
+	configFile := "30-k2-" + string(role) + ".yaml"
+	activationFile := "99-k2-k3s-" + string(role) + ".yaml"
+	service := "k3s-agent"
+	if role == nodeRoleServer {
+		service = "k3s"
+	}
+
+	fmt.Fprintf(&buf, "set -eu\n")
+	fmt.Fprintf(&buf, "echo 'k2-provision: installing %s files'\n", role)
+	fmt.Fprintf(&buf, "sudo mkdir -p /etc/rancher/k3s/config.yaml.d /oem /home/kairos/.ssh\n")
+	fmt.Fprintf(&buf, "echo 'k2-provision: updating local host resolution'\n")
+	fmt.Fprintf(&buf, "sudo sed -i.bak -E '/[[:space:]](kairos|%s)([[:space:]]|$)/d' /etc/hosts\n", nodeName)
+	fmt.Fprintf(&buf, "printf '127.0.1.1 %s kairos\\n' | sudo tee -a /etc/hosts >/dev/null\n", nodeName)
+	fmt.Fprintf(&buf, "echo 'k2-provision: setting hostname'\n")
+	fmt.Fprintf(&buf, "sudo hostnamectl set-hostname %q\n", nodeName)
+	if role == nodeRoleServer {
+		fmt.Fprintf(&buf, "sudo mkdir -p /var/lib/rancher/k3s/server/manifests\n")
+		fmt.Fprintf(&buf, "echo 'k2-provision: activating k3s server invariants'\n")
+		fmt.Fprintf(&buf, "sudo cp /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
+		fmt.Fprintf(&buf, "echo 'k2-provision: disabling unwanted k3s packaged manifests'\n")
+		fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/traefik.yaml.skip\n")
+		fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip\n")
+		fmt.Fprintf(&buf, "sudo touch /var/lib/rancher/k3s/server/manifests/metrics-server.yaml.skip\n")
+		fmt.Fprintf(&buf, "echo 'k2-provision: installing cluster config'\n")
+		fmt.Fprintf(&buf, "sudo install -m 0644 %q/20-k2-cluster.yaml /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n", remoteDir)
+	}
+	fmt.Fprintf(&buf, "echo 'k2-provision: installing %s join config'\n", role)
+	fmt.Fprintf(&buf, "sudo install -m 0600 %q/%s /etc/rancher/k3s/config.yaml.d/%s\n", remoteDir, configFile, configFile)
+	fmt.Fprintf(&buf, "echo 'k2-provision: installing Kairos k3s activation cloud-config'\n")
+	fmt.Fprintf(&buf, "sudo install -m 0644 %q/%s /oem/%s\n", remoteDir, activationFile, activationFile)
+	fmt.Fprintf(&buf, "if sudo test -f /oem/90_custom.yaml; then echo 'k2-provision: disabling stock Kairos default credentials cloud-config'; sudo mv /oem/90_custom.yaml /oem/90_custom.yaml.k2-disabled; fi\n")
+	fmt.Fprintf(&buf, "echo 'k2-provision: installing operator SSH keys'\n")
+	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)
+	fmt.Fprintf(&buf, "sudo chmod 0700 /home/kairos/.ssh\n")
+	fmt.Fprintf(&buf, "echo 'k2-provision: locking default kairos password'\n")
+	fmt.Fprintf(&buf, "sudo passwd -l kairos\n")
+	fmt.Fprintf(&buf, "echo 'k2-provision: enabling %s service'\n", service)
+	fmt.Fprintf(&buf, "sudo systemctl enable %s\n", service)
 	if !noReboot {
 		fmt.Fprintf(&buf, "echo 'k2-provision: rebooting node'\n")
 		fmt.Fprintf(&buf, "sudo reboot\n")

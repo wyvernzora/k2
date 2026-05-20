@@ -24,10 +24,27 @@ type BootstrapInput struct {
 	ImageMetadata ImageMetadata
 }
 
+type JoinInput struct {
+	NodeName      string
+	ServerURL     string
+	Token         string
+	Labels        []string
+	Taints        []string
+	ImageMetadata ImageMetadata
+	ControlPlane  bool
+}
+
 type ImageMetadata struct {
 	Target   string `yaml:"target"`
 	Arch     string `yaml:"arch"`
 	Hardware string `yaml:"hardware"`
+}
+
+type activationUser struct {
+	Name              string   `yaml:"name"`
+	Groups            []string `yaml:"groups,omitempty"`
+	Passwd            string   `yaml:"passwd"`
+	SSHAuthorizedKeys []string `yaml:"ssh_authorized_keys,omitempty"`
 }
 
 func ClusterConfig(c clusterconfig.Config) ([]byte, error) {
@@ -71,32 +88,49 @@ func BootstrapConfig(in BootstrapInput) ([]byte, error) {
 	})
 }
 
-func ActivationCloudConfig(hostname string, operatorKeys []string) []byte {
-	type user struct {
-		Name              string   `yaml:"name"`
-		Groups            []string `yaml:"groups,omitempty"`
-		Passwd            string   `yaml:"passwd"`
-		SSHAuthorizedKeys []string `yaml:"ssh_authorized_keys,omitempty"`
+func JoinConfig(in JoinInput) ([]byte, error) {
+	labels, err := mergeValues(autoLabels(in.ImageMetadata), in.Labels, "label", labelKey)
+	if err != nil {
+		return nil, err
 	}
+	taints := in.Taints
+	if in.ControlPlane {
+		taints = append(autoControlPlaneTaints(), taints...)
+	}
+	taints, err = mergeValues(nil, taints, "taint", taintKey)
+	if err != nil {
+		return nil, err
+	}
+
 	type config struct {
-		Name     string `yaml:"name"`
-		Hostname string `yaml:"hostname"`
-		Users    []user `yaml:"users"`
+		Server    string   `yaml:"server"`
+		Token     string   `yaml:"token"`
+		NodeName  string   `yaml:"node-name"`
+		NodeLabel []string `yaml:"node-label,omitempty"`
+		NodeTaint []string `yaml:"node-taint,omitempty"`
+	}
+	return yaml.Marshal(config{
+		Server:    in.ServerURL,
+		Token:     in.Token,
+		NodeName:  in.NodeName,
+		NodeLabel: labels,
+		NodeTaint: taints,
+	})
+}
+
+func ServerActivationCloudConfig(hostname string, operatorKeys []string) []byte {
+	type config struct {
+		Name     string           `yaml:"name"`
+		Hostname string           `yaml:"hostname"`
+		Users    []activationUser `yaml:"users"`
 		K3s      struct {
 			Enabled bool `yaml:"enabled"`
 		} `yaml:"k3s"`
 	}
 	out := config{
-		Name:     "K2 K3s bootstrap activation",
+		Name:     "K2 K3s server activation",
 		Hostname: hostname,
-		Users: []user{
-			{
-				Name:              "kairos",
-				Groups:            []string{"admin", "sudo"},
-				Passwd:            "!",
-				SSHAuthorizedKeys: operatorKeys,
-			},
-		},
+		Users:    kairosUsers(operatorKeys),
 	}
 	out.K3s.Enabled = true
 
@@ -105,6 +139,44 @@ func ActivationCloudConfig(hostname string, operatorKeys []string) []byte {
 		panic(err)
 	}
 	return []byte("#cloud-config\n" + string(data))
+}
+
+func AgentActivationCloudConfig(hostname string, operatorKeys []string) []byte {
+	type config struct {
+		Name     string           `yaml:"name"`
+		Hostname string           `yaml:"hostname"`
+		Users    []activationUser `yaml:"users"`
+		K3sAgent struct {
+			Enabled bool `yaml:"enabled"`
+		} `yaml:"k3s-agent"`
+	}
+	out := config{
+		Name:     "K2 K3s worker activation",
+		Hostname: hostname,
+		Users:    kairosUsers(operatorKeys),
+	}
+	out.K3sAgent.Enabled = true
+
+	data, err := yaml.Marshal(out)
+	if err != nil {
+		panic(err)
+	}
+	return []byte("#cloud-config\n" + string(data))
+}
+
+func ActivationCloudConfig(hostname string, operatorKeys []string) []byte {
+	return ServerActivationCloudConfig(hostname, operatorKeys)
+}
+
+func kairosUsers(operatorKeys []string) []activationUser {
+	return []activationUser{
+		{
+			Name:              "kairos",
+			Groups:            []string{"admin", "sudo"},
+			Passwd:            "!",
+			SSHAuthorizedKeys: operatorKeys,
+		},
+	}
 }
 
 func AuthorizedKeys(keys []string) []byte {

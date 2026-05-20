@@ -1,8 +1,8 @@
 # K2 Node Provision
 
 `k2-provision` is the client-side Kairos node provisioner for clean K2 images.
-The first version supports bootstrap-server provisioning over SSH for the raw
-image path.
+It supports bootstrap-server, additional server, and worker provisioning over
+SSH for the raw image path.
 
 It assumes the target node has booted into the installed Kairos system, SSH is
 reachable, k3s is installed but disabled, and the image contains the invariant
@@ -110,8 +110,45 @@ kube-vip, namespace manifests, an optional 1Password service-account Secret,
 and the Argo CD root Application. Normal GitOps sync is expected to take over
 after Argo CD is running.
 
+## Provision Additional Nodes
+
+Additional server and worker provisioning uses the local operator state written
+by bootstrap provisioning under `~/.kube/k2/<cluster-name>/`.
+
+Servers use `server-token`, activate the baked server invariant config, and get
+the automatic control-plane taint:
+
+```sh
+cd kairos/provision
+go run ./cmd/k2-provision server \
+  --cluster-target v3 \
+  --cluster-name v3-test \
+  --host 10.42.0.23 \
+  --node-name v3-test-02 \
+  --operator-key-file ~/.ssh/id_ed25519.pub
+```
+
+Workers use `agent-token`, enable `k3s-agent`, and do not activate server-only
+invariants:
+
+```sh
+cd kairos/provision
+go run ./cmd/k2-provision worker \
+  --cluster-target v3 \
+  --cluster-name v3-test \
+  --host 10.42.0.31 \
+  --node-name v3-test-worker-01 \
+  --operator-key-file ~/.ssh/id_ed25519.pub
+```
+
+Both commands default the join endpoint from
+`~/.kube/k2/<cluster-name>/server-url`, falling back to the API VIP from
+`clusters/<target>.yaml`. The saved join URL intentionally uses the VIP IP, not
+the API DNS name, because cluster DNS depends on Kubernetes already being
+healthy. Use `--server-url https://<host>:6443` when a test network needs nodes
+to join through a bootstrap node address rather than the cluster API VIP.
+
 ## Current Limits
 
-- bootstrap role only
 - raw-image reboot path only; live ISO `manual-install` is deferred
 - system `ssh` and `scp` are used for transport

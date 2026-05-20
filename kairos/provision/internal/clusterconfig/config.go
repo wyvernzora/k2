@@ -73,6 +73,14 @@ func (c Config) APIServerURL() string {
 	return fmt.Sprintf("https://%s:%d", host, port)
 }
 
+func (c Config) APIVIPURL() string {
+	port := c.Kubernetes.API.Port
+	if port == 0 {
+		port = 6443
+	}
+	return fmt.Sprintf("https://%s:%d", c.Kubernetes.API.VIP, port)
+}
+
 func (c Config) validate(path string, target string) error {
 	if c.ID == "" {
 		return fmt.Errorf("%s: id is required", path)
