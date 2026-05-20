@@ -14,7 +14,6 @@ import (
 	"github.com/wyvernzora/k2/kairos/provision/internal/keys"
 	"github.com/wyvernzora/k2/kairos/provision/internal/kubeconfig"
 	"github.com/wyvernzora/k2/kairos/provision/internal/manifests"
-	"github.com/wyvernzora/k2/kairos/provision/internal/prereq"
 	"github.com/wyvernzora/k2/kairos/provision/internal/remote"
 	"github.com/wyvernzora/k2/kairos/provision/internal/render"
 	"github.com/wyvernzora/k2/kairos/provision/internal/ui"
@@ -160,11 +159,6 @@ func (c *renderBootstrapCmd) Run(ctx *runContext) error {
 }
 
 func (c *bootstrapCmd) Run(ctx *runContext) error {
-	logf("checking local command prerequisites")
-	if err := prereq.Require("ssh", "scp"); err != nil {
-		return err
-	}
-
 	client := remote.Client{
 		Host:   c.Host,
 		Port:   c.SSHPort,
@@ -249,11 +243,6 @@ func (c *workerCmd) Run(ctx *runContext) error {
 }
 
 func provisionJoinNode(ctx *runContext, role nodeRole, flags commonJoinFlags, remoteFlags commonRemoteFlags) error {
-	logf("checking local command prerequisites")
-	if err := prereq.Require("ssh", "scp"); err != nil {
-		return err
-	}
-
 	client := remote.Client{
 		Host:   remoteFlags.Host,
 		Port:   remoteFlags.SSHPort,

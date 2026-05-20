@@ -1,17 +1,23 @@
 package remote
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net"
 	"os"
-	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/crypto/ssh/knownhosts"
 	"golang.org/x/term"
 )
 
@@ -54,13 +60,13 @@ func (c *Client) EnsureAuth() error {
 		c.logf("default kairos password auth did not succeed: %v", err)
 	}
 
-	c.logf("probing SSH auth with local SSH config")
+	c.logf("probing SSH auth with local SSH agent and keys")
 	if err := c.probeLocalSSH(); err == nil {
 		c.authMode = authModeLocalSSH
-		c.logf("using local SSH config auth")
+		c.logf("using local SSH agent/key auth")
 		return nil
 	} else {
-		c.logf("local SSH config auth did not succeed: %v", err)
+		c.logf("local SSH agent/key auth did not succeed: %v", err)
 	}
 
 	password, err := c.promptPassword()
@@ -96,7 +102,7 @@ func (c *Client) WaitForAuth(timeout time.Duration) error {
 		}
 		if err := c.probeLocalSSH(); err == nil {
 			c.authMode = authModeLocalSSH
-			c.logf("using local SSH config auth")
+			c.logf("using local SSH agent/key auth")
 			return nil
 		} else {
 			lastErr = err
@@ -109,24 +115,24 @@ func (c *Client) WaitForAuth(timeout time.Duration) error {
 	}
 }
 
-func (c *Client) ReadFile(path string) ([]byte, error) {
+func (c *Client) ReadFile(file string) ([]byte, error) {
 	if err := c.EnsureAuth(); err != nil {
 		return nil, err
 	}
-	c.logf("ssh read %s:%s", c.Address(), path)
-	out, err := c.runCapture("cat " + shellQuote(path))
+	c.logf("ssh read %s:%s", c.Address(), file)
+	out, err := c.runCapture("cat " + shellQuote(file))
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *Client) ReadSudoFile(path string) ([]byte, error) {
+func (c *Client) ReadSudoFile(file string) ([]byte, error) {
 	if err := c.EnsureAuth(); err != nil {
 		return nil, err
 	}
-	c.logf("ssh sudo read %s:%s", c.Address(), path)
-	out, err := c.runCapture("sudo cat " + shellQuote(path))
+	c.logf("ssh sudo read %s:%s", c.Address(), file)
+	out, err := c.runCapture("sudo cat " + shellQuote(file))
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +167,8 @@ func (c *Client) UploadDir(localDir string) (string, error) {
 	if remoteDir == "" {
 		return "", fmt.Errorf("remote mktemp returned empty path")
 	}
-	c.logf("scp upload %s -> %s:%s", localDir, c.Address(), remoteDir)
-	if err := c.scp(localDir+string(filepath.Separator)+".", remoteDir+"/"); err != nil {
+	c.logf("sftp upload %s -> %s:%s", localDir, c.Address(), remoteDir)
+	if err := c.sftpUploadDir(localDir, remoteDir); err != nil {
 		return "", err
 	}
 	return remoteDir, nil
@@ -178,63 +184,276 @@ func (c *Client) Run(script string) error {
 
 func (c *Client) RunAllowDisconnect(script string) error {
 	err := c.Run(script)
-	if err == nil || isSSHDisconnectExit(err) {
+	if err == nil || isSSHDisconnect(err) {
 		return nil
 	}
 	return err
 }
 
 func (c *Client) run(script string) error {
-	cmd := exec.Command("ssh", c.sshArgs(script)...)
-	cmd.Stdout = writer(c.Stdout)
-	cmd.Stderr = writer(c.Stderr)
-	cleanup, err := c.configureCommandAuth(cmd)
-	if err != nil {
-		return err
-	}
-	defer cleanup()
-	return cmd.Run()
+	return c.runWithWriters(script, writer(c.Stdout), writer(c.Stderr))
 }
 
 func (c *Client) runCapture(script string) ([]byte, error) {
-	cmd := exec.Command("ssh", c.sshArgs(script)...)
-	cmd.Stderr = writer(c.Stderr)
-	cleanup, err := c.configureCommandAuth(cmd)
+	var out bytes.Buffer
+	err := c.runWithWriters(script, &out, writer(c.Stderr))
 	if err != nil {
 		return nil, err
 	}
-	defer cleanup()
-	out, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("ssh %s failed: %w", c.Address(), err)
-	}
-	return out, nil
+	return out.Bytes(), nil
 }
 
-func (c *Client) probePassword(password string) error {
-	cmd := exec.Command("ssh", c.sshArgsWithOptions("true", passwordSSHOptions(), false)...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = writer(c.Stderr)
-	cleanup, err := withPasswordAskpass(cmd, password)
+func (c *Client) runWithWriters(script string, stdout io.Writer, stderr io.Writer) error {
+	client, err := c.dialSelectedAuth()
 	if err != nil {
 		return err
 	}
-	defer cleanup()
-	if err := cmd.Run(); err != nil {
+	defer client.Close()
+
+	session, err := client.NewSession()
+	if err != nil {
+		return fmt.Errorf("open SSH session to %s: %w", c.Address(), err)
+	}
+	defer session.Close()
+
+	session.Stdout = stdout
+	session.Stderr = stderr
+	if err := session.Run("sh -lc " + shellQuote(script)); err != nil {
+		return fmt.Errorf("ssh %s failed: %w", c.Address(), err)
+	}
+	return nil
+}
+
+func (c *Client) sftpUploadDir(localDir string, remoteDir string) error {
+	client, err := c.dialSelectedAuth()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	sftpClient, err := sftp.NewClient(client)
+	if err != nil {
+		return fmt.Errorf("open SFTP session to %s: %w", c.Address(), err)
+	}
+	defer sftpClient.Close()
+
+	return filepath.WalkDir(localDir, func(localPath string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		rel, err := filepath.Rel(localDir, localPath)
+		if err != nil {
+			return err
+		}
+		if rel == "." {
+			return nil
+		}
+		remotePath := path.Join(remoteDir, filepath.ToSlash(rel))
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			return sftpClient.MkdirAll(remotePath)
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		if err := sftpClient.MkdirAll(path.Dir(remotePath)); err != nil {
+			return err
+		}
+		return uploadFile(sftpClient, localPath, remotePath, info.Mode().Perm())
+	})
+}
+
+func uploadFile(client *sftp.Client, localPath string, remotePath string, mode fs.FileMode) error {
+	local, err := os.Open(localPath)
+	if err != nil {
+		return err
+	}
+	defer local.Close()
+
+	remote, err := client.OpenFile(remotePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY)
+	if err != nil {
+		return err
+	}
+	defer remote.Close()
+
+	if _, err := io.Copy(remote, local); err != nil {
+		return err
+	}
+	return client.Chmod(remotePath, mode)
+}
+
+func (c *Client) probePassword(password string) error {
+	client, err := c.dial(passwordAuthMethods(password))
+	if err != nil {
 		return fmt.Errorf("ssh password probe failed: %w", err)
 	}
+	client.Close()
 	return nil
 }
 
 func (c *Client) probeLocalSSH() error {
-	cmd := exec.Command("ssh", c.sshArgsWithOptions("true", localSSHOptions(), true)...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = writer(c.Stderr)
-	cmd.Stdin = nil
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("ssh local config probe failed: %w", err)
+	auth, err := localSSHAuthMethods()
+	if err != nil {
+		return err
 	}
+	client, err := c.dial(auth)
+	if err != nil {
+		return fmt.Errorf("ssh local key probe failed: %w", err)
+	}
+	client.Close()
 	return nil
+}
+
+func (c *Client) dialSelectedAuth() (*ssh.Client, error) {
+	switch c.authMode {
+	case authModePassword:
+		return c.dial(passwordAuthMethods(c.password))
+	case authModeLocalSSH:
+		auth, err := localSSHAuthMethods()
+		if err != nil {
+			return nil, err
+		}
+		return c.dial(auth)
+	default:
+		return nil, fmt.Errorf("SSH auth has not been selected")
+	}
+}
+
+func (c *Client) dial(auth []ssh.AuthMethod) (*ssh.Client, error) {
+	hostKeyCallback, err := c.hostKeyCallback()
+	if err != nil {
+		return nil, err
+	}
+	config := &ssh.ClientConfig{
+		User:            c.User,
+		Auth:            auth,
+		HostKeyCallback: hostKeyCallback,
+		Timeout:         10 * time.Second,
+	}
+	return ssh.Dial("tcp", c.networkAddress(), config)
+}
+
+func passwordAuthMethods(password string) []ssh.AuthMethod {
+	return []ssh.AuthMethod{
+		ssh.Password(password),
+		ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
+			answers := make([]string, len(questions))
+			for i := range answers {
+				answers[i] = password
+			}
+			return answers, nil
+		}),
+	}
+}
+
+func localSSHAuthMethods() ([]ssh.AuthMethod, error) {
+	var auth []ssh.AuthMethod
+	if sock := os.Getenv("SSH_AUTH_SOCK"); sock != "" {
+		conn, err := net.Dial("unix", sock)
+		if err == nil {
+			auth = append(auth, ssh.PublicKeysCallback(agent.NewClient(conn).Signers))
+		}
+	}
+
+	signers := defaultPrivateKeySigners()
+	if len(signers) > 0 {
+		auth = append(auth, ssh.PublicKeys(signers...))
+	}
+	if len(auth) == 0 {
+		return nil, fmt.Errorf("no SSH agent or unencrypted default private keys are available")
+	}
+	return auth, nil
+}
+
+func defaultPrivateKeySigners() []ssh.Signer {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil
+	}
+	var signers []ssh.Signer
+	for _, name := range []string{"id_ed25519", "id_ecdsa", "id_rsa"} {
+		data, err := os.ReadFile(filepath.Join(home, ".ssh", name))
+		if err != nil {
+			continue
+		}
+		signer, err := ssh.ParsePrivateKey(data)
+		if err != nil {
+			continue
+		}
+		signers = append(signers, signer)
+	}
+	return signers
+}
+
+func (c *Client) hostKeyCallback() (ssh.HostKeyCallback, error) {
+	if isLoopbackHost(c.Host) {
+		return ssh.InsecureIgnoreHostKey(), nil
+	}
+
+	knownHostsFile, err := knownHostsPath()
+	if err != nil {
+		return nil, err
+	}
+	if err := os.MkdirAll(filepath.Dir(knownHostsFile), 0o700); err != nil {
+		return nil, err
+	}
+	file, err := os.OpenFile(knownHostsFile, os.O_CREATE|os.O_APPEND, 0o600)
+	if err != nil {
+		return nil, fmt.Errorf("prepare known_hosts file: %w", err)
+	}
+	file.Close()
+
+	callback, err := knownhosts.New(knownHostsFile)
+	if err != nil {
+		return nil, fmt.Errorf("load known_hosts: %w", err)
+	}
+	return func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		err := callback(hostname, remote, key)
+		if err == nil {
+			return nil
+		}
+		var keyErr *knownhosts.KeyError
+		if errors.As(err, &keyErr) && len(keyErr.Want) == 0 {
+			if appendErr := appendKnownHost(knownHostsFile, knownHostTarget(c.Host, c.Port), key); appendErr != nil {
+				return appendErr
+			}
+			c.logf("accepted new SSH host key for %s", c.Host)
+			return nil
+		}
+		return err
+	}, nil
+}
+
+func knownHostsPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".ssh", "known_hosts"), nil
+}
+
+func appendKnownHost(file string, target string, key ssh.PublicKey) error {
+	handle, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	defer handle.Close()
+	_, err = fmt.Fprintln(handle, knownhosts.Line([]string{target}, key))
+	return err
+}
+
+func knownHostTarget(host string, port int) string {
+	if port == 22 {
+		return host
+	}
+	return knownhosts.Normalize(net.JoinHostPort(strings.Trim(host, "[]"), strconv.Itoa(port)))
+}
+
+func (c *Client) networkAddress() string {
+	return net.JoinHostPort(strings.Trim(c.Host, "[]"), strconv.Itoa(c.Port))
 }
 
 func (c *Client) promptPassword() (string, error) {
@@ -258,69 +477,27 @@ func (c *Client) logf(format string, args ...any) {
 	fmt.Fprintf(writer(c.Stderr), "k2-provision: "+format+"\n", args...)
 }
 
-func (c *Client) scp(local string, remote string) error {
-	args := []string{
-		"-P", strconv.Itoa(c.Port),
-	}
-	args = append(args, c.authOptions()...)
-	args = append(args, c.hostKeyOptions(c.authMode == authModeLocalSSH)...)
-	args = append(args,
-		"-o", "ConnectTimeout=10",
-		"-o", "NumberOfPasswordPrompts=1",
-		"-r",
-		local,
-		c.Address()+":"+remote,
-	)
-	cmd := exec.Command("scp", args...)
-	cmd.Stdout = writer(c.Stdout)
-	cmd.Stderr = writer(c.Stderr)
-	cleanup, err := c.configureCommandAuth(cmd)
-	if err != nil {
-		return err
-	}
-	defer cleanup()
-	return cmd.Run()
-}
-
-func (c *Client) sshArgs(script string) []string {
-	return c.sshArgsWithOptions(script, c.authOptions(), c.authMode == authModeLocalSSH)
-}
-
-func (c *Client) sshArgsWithOptions(script string, options []string, localSSHConfig bool) []string {
-	args := []string{
-		"-p", strconv.Itoa(c.Port),
-	}
-	args = append(args, options...)
-	args = append(args, c.hostKeyOptions(localSSHConfig)...)
-	args = append(args,
-		"-o", "ConnectTimeout=10",
-		"-o", "NumberOfPasswordPrompts=1",
-		c.Address(),
-		"sh -lc "+shellQuote(script),
-	)
-	return args
-}
-
-func (c *Client) hostKeyOptions(localSSHConfig bool) []string {
-	if localSSHConfig || isLoopbackHost(c.Host) {
-		return []string{
-			"-o", "StrictHostKeyChecking=no",
-			"-o", "UserKnownHostsFile=/dev/null",
-			"-o", "LogLevel=ERROR",
-		}
-	}
-	return []string{
-		"-o", "StrictHostKeyChecking=accept-new",
-	}
-}
-
-func isSSHDisconnectExit(err error) bool {
-	exitErr, ok := err.(*exec.ExitError)
-	if !ok {
+func isSSHDisconnect(err error) bool {
+	if err == nil {
 		return false
 	}
-	status, ok := exitErr.Sys().(syscall.WaitStatus)
-	return ok && status.ExitStatus() == 255
+	var missing *ssh.ExitMissingError
+	if errors.As(err, &missing) {
+		return true
+	}
+	message := err.Error()
+	for _, part := range []string{
+		"EOF",
+		"connection lost",
+		"connection reset",
+		"use of closed network connection",
+		"broken pipe",
+	} {
+		if strings.Contains(message, part) {
+			return true
+		}
+	}
+	return false
 }
 
 func isLoopbackHost(host string) bool {
@@ -330,65 +507,6 @@ func isLoopbackHost(host string) bool {
 	}
 	ip := net.ParseIP(strings.Trim(host, "[]"))
 	return ip != nil && ip.IsLoopback()
-}
-
-func (c *Client) authOptions() []string {
-	switch c.authMode {
-	case authModePassword:
-		return passwordSSHOptions()
-	case authModeLocalSSH:
-		return localSSHOptions()
-	default:
-		return nil
-	}
-}
-
-func (c *Client) configureCommandAuth(cmd *exec.Cmd) (func(), error) {
-	switch c.authMode {
-	case authModePassword:
-		return withPasswordAskpass(cmd, c.password)
-	case authModeLocalSSH:
-		cmd.Stdin = nil
-		return func() {}, nil
-	default:
-		cmd.Stdin = os.Stdin
-		return func() {}, nil
-	}
-}
-
-func passwordSSHOptions() []string {
-	return []string{
-		"-o", "PreferredAuthentications=password",
-		"-o", "PubkeyAuthentication=no",
-	}
-}
-
-func localSSHOptions() []string {
-	return []string{
-		"-o", "BatchMode=yes",
-	}
-}
-
-func withPasswordAskpass(cmd *exec.Cmd, password string) (func(), error) {
-	dir, err := os.MkdirTemp("", "k2-provision-askpass-*")
-	if err != nil {
-		return nil, fmt.Errorf("create SSH askpass helper: %w", err)
-	}
-	path := filepath.Join(dir, "askpass")
-	script := "#!/bin/sh\nprintf '%s\\n' " + shellQuote(password) + "\n"
-	if err := os.WriteFile(path, []byte(script), 0o700); err != nil {
-		os.RemoveAll(dir)
-		return nil, fmt.Errorf("write SSH askpass helper: %w", err)
-	}
-	cmd.Stdin = nil
-	cmd.Env = append(os.Environ(),
-		"SSH_ASKPASS="+path,
-		"SSH_ASKPASS_REQUIRE=force",
-		"DISPLAY=k2-provision",
-	)
-	return func() {
-		_ = os.RemoveAll(dir)
-	}, nil
 }
 
 func writer(w io.Writer) io.Writer {

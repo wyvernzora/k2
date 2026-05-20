@@ -1,115 +1,57 @@
 package remote
 
 import (
-	"slices"
+	"errors"
+	"io"
 	"testing"
+
+	"golang.org/x/crypto/ssh"
 )
 
-func TestSSHArgsQuoteRemoteScriptAsSingleCommand(t *testing.T) {
-	client := Client{
-		Host: "127.0.0.1",
-		Port: 2222,
-		User: "kairos",
-	}
-
-	got := client.sshArgs("cat '/usr/share/k2/image-build/metadata.yaml'")
-	want := []string{
-		"-p",
-		"2222",
-		"-o",
-		"StrictHostKeyChecking=no",
-		"-o",
-		"UserKnownHostsFile=/dev/null",
-		"-o",
-		"LogLevel=ERROR",
-		"-o",
-		"ConnectTimeout=10",
-		"-o",
-		"NumberOfPasswordPrompts=1",
-		"kairos@127.0.0.1",
-		"sh -lc 'cat '\"'\"'/usr/share/k2/image-build/metadata.yaml'\"'\"''",
-	}
-
-	if !slices.Equal(got, want) {
-		t.Fatalf("ssh args:\n got: %#v\nwant: %#v", got, want)
-	}
-}
-
-func TestSSHArgsUseAcceptNewHostKeyCheckingForNonLoopback(t *testing.T) {
-	client := Client{
-		Host: "10.10.9.10",
-		Port: 22,
-		User: "kairos",
-	}
-
-	got := client.sshArgs("true")
-	if !slices.Contains(got, "StrictHostKeyChecking=accept-new") {
-		t.Fatalf("ssh args missing accept-new host key mode: %#v", got)
-	}
-	if slices.Contains(got, "UserKnownHostsFile=/dev/null") {
-		t.Fatalf("ssh args disabled known-hosts for non-loopback target: %#v", got)
-	}
-}
-
-func TestSSHArgsDisableHostKeyCheckingForLocalhost(t *testing.T) {
-	client := Client{
-		Host: "localhost",
-		Port: 2222,
-		User: "kairos",
-	}
-
-	got := client.sshArgs("true")
-	for _, want := range []string{
-		"StrictHostKeyChecking=no",
-		"UserKnownHostsFile=/dev/null",
-		"LogLevel=ERROR",
-	} {
-		if !slices.Contains(got, want) {
-			t.Fatalf("ssh args missing %q: %#v", want, got)
+func TestLoopbackHostDetection(t *testing.T) {
+	for _, host := range []string{"localhost", "127.0.0.1", "[127.0.0.1]", "::1", "[::1]"} {
+		if !isLoopbackHost(host) {
+			t.Fatalf("expected %q to be loopback", host)
 		}
 	}
-}
-
-func TestSSHArgsIncludePasswordOptionsWhenPasswordAuthSelected(t *testing.T) {
-	client := Client{
-		Host:     "127.0.0.1",
-		Port:     2222,
-		User:     "kairos",
-		authMode: authModePassword,
-		password: "kairos",
-	}
-
-	got := client.sshArgs("true")
-	for _, want := range []string{
-		"PreferredAuthentications=password",
-		"PubkeyAuthentication=no",
-		"NumberOfPasswordPrompts=1",
-	} {
-		if !slices.Contains(got, want) {
-			t.Fatalf("ssh args missing %q: %#v", want, got)
-		}
+	if isLoopbackHost("10.10.9.10") {
+		t.Fatalf("non-loopback host detected as loopback")
 	}
 }
 
-func TestSSHArgsIncludeBatchModeWhenLocalSSHSelected(t *testing.T) {
-	client := Client{
-		Host:     "k2-vbox",
-		Port:     2222,
-		User:     "kairos",
-		authMode: authModeLocalSSH,
+func TestKnownHostTargetUsesBracketedPortForNonDefaultPort(t *testing.T) {
+	got := knownHostTarget("10.10.9.10", 2222)
+	want := "[10.10.9.10]:2222"
+	if got != want {
+		t.Fatalf("known host target = %q, want %q", got, want)
 	}
+}
 
-	got := client.sshArgs("true")
-	if !slices.Contains(got, "BatchMode=yes") {
-		t.Fatalf("ssh args missing BatchMode option: %#v", got)
+func TestKnownHostTargetUsesPlainHostForDefaultPort(t *testing.T) {
+	got := knownHostTarget("10.10.9.10", 22)
+	want := "10.10.9.10"
+	if got != want {
+		t.Fatalf("known host target = %q, want %q", got, want)
 	}
-	for _, want := range []string{
-		"StrictHostKeyChecking=no",
-		"UserKnownHostsFile=/dev/null",
-		"LogLevel=ERROR",
-	} {
-		if !slices.Contains(got, want) {
-			t.Fatalf("ssh args missing %q for local SSH config mode: %#v", want, got)
-		}
+}
+
+func TestRunAllowDisconnectAcceptsSSHDisconnect(t *testing.T) {
+	if !isSSHDisconnect(io.EOF) {
+		t.Fatalf("EOF should be treated as SSH disconnect")
+	}
+	var missing *ssh.ExitMissingError
+	if !isSSHDisconnect(missing) {
+		t.Fatalf("missing exit status should be treated as SSH disconnect")
+	}
+	if isSSHDisconnect(errors.New("remote command failed")) {
+		t.Fatalf("ordinary error should not be treated as SSH disconnect")
+	}
+}
+
+func TestShellQuoteEscapesSingleQuotes(t *testing.T) {
+	got := shellQuote("cat '/tmp/file'")
+	want := "'cat '\"'\"'/tmp/file'\"'\"''"
+	if got != want {
+		t.Fatalf("shellQuote = %q, want %q", got, want)
 	}
 }

@@ -91,9 +91,8 @@ logs or scripts.
 
 ## Provision Bootstrap Node
 
-Bootstrap provisioning shells out to local OpenSSH tools. The CLI checks for
-`ssh` and `scp` on startup and fails before touching the node if either is
-missing.
+Bootstrap provisioning connects to the node with the built-in Go SSH transport
+and uploads files with SFTP.
 
 ```sh
 cd kairos/provision
@@ -143,10 +142,12 @@ K3s config files, disabled stock Kairos credentials, disabled packaged
 manifests, enabled and active `k3s`, and generated K3s credentials. The command
 fails if those checks do not converge.
 
-SSH authentication is selected once at the start and reused for all SSH/SCP
-calls. The provisioner first tries the clean Kairos default password
-`kairos`, then tries local SSH config in batch mode, then prompts for a
-password and caches it for the rest of the run.
+SSH authentication is selected once at the start and reused for the rest of the
+run. The provisioner first tries the clean Kairos default password `kairos`,
+then tries the local SSH agent and unencrypted default private keys, then
+prompts for a password and caches it for the rest of the run. Loopback targets
+skip host-key checks for VM port-forward convenience; non-loopback targets use
+`~/.ssh/known_hosts` with accept-new behavior for first contact.
 
 The bootstrap manifest bundle is intentionally small: Cilium, Argo CD,
 kube-vip, namespace manifests, an optional 1Password service-account Secret,
@@ -200,4 +201,5 @@ worker join config, no server-only invariant or cluster config, and active
 ## Current Limits
 
 - raw-image reboot path only; live ISO `manual-install` is deferred
-- system `ssh` and `scp` are used for transport
+- local SSH config host aliases and encrypted key passphrases are not parsed by
+  the built-in SSH transport
