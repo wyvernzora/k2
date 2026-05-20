@@ -27,15 +27,26 @@ func (r Runner) List() error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(r.stdout(), "%-12s %-20s %-10s %-8s %-8s %s\n", "ID", "PRESET", "STATE", "SSH", "API", "DIR")
+	fmt.Fprintf(r.stdout(), "%-12s %-20s %-10s %-15s %s\n", "ID", "PRESET", "STATE", "IP", "DIR")
 	for _, meta := range metas {
 		state := "stopped"
 		if isRunning(meta) {
 			state = "running"
 		}
-		fmt.Fprintf(r.stdout(), "%-12s %-20s %-10s %-8d %-8d %s\n", meta.ID, meta.Preset, state, meta.SSHPort, meta.APIPort, meta.VMDir)
+		fmt.Fprintf(r.stdout(), "%-12s %-20s %-10s %-15s %s\n", meta.ID, meta.Preset, state, listIP(meta), meta.VMDir)
 	}
 	return nil
+}
+
+func listIP(meta Metadata) string {
+	if !isRunning(meta) {
+		return "-"
+	}
+	ip, err := firstGuestIPv4(meta)
+	if err != nil {
+		return "-"
+	}
+	return ip
 }
 
 func (r Runner) Create(opts CreateOptions) error {

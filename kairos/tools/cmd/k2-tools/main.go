@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"net"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"github.com/wyvernzora/k2/kairos/tools/internal/remote"
 	"github.com/wyvernzora/k2/kairos/tools/internal/render"
 	"github.com/wyvernzora/k2/kairos/tools/internal/ui"
+	testvm "github.com/wyvernzora/k2/kairos/tools/internal/vm"
 	"github.com/wyvernzora/k2/kairos/tools/internal/workspace"
 )
 
@@ -42,7 +44,7 @@ type renderCmd struct {
 type commonBootstrapFlags struct {
 	ClusterTarget    string   `name:"cluster-target" env:"K2_PROVISION_CLUSTER_TARGET" required:"" help:"Cluster config/deploy target, such as v3."`
 	ClusterName      string   `name:"cluster-name" env:"K2_PROVISION_CLUSTER_NAME" help:"Local cluster instance name. Defaults to cluster-target."`
-	NodeName         string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" required:"" help:"Kubernetes node name."`
+	NodeName         string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" help:"Kubernetes node name. Defaults to --test-vm when provided."`
 	OperatorKey      []string `name:"operator-key" env:"K2_PROVISION_OPERATOR_KEY" help:"Literal ssh-ed25519 operator public key. Repeatable."`
 	OperatorFiles    []string `name:"operator-key-file" env:"K2_PROVISION_OPERATOR_KEY_FILE" help:"File containing literal operator public keys. Repeatable." type:"path"`
 	Label            []string `name:"label" env:"K2_PROVISION_LABEL" help:"Additional K3s node-label value. Repeatable."`
@@ -52,12 +54,15 @@ type commonBootstrapFlags struct {
 	OnePasswordTokenFile string `name:"onepassword-token-file" env:"K2_PROVISION_ONEPASSWORD_TOKEN_FILE" help:"Optional 1Password service account token file to include as bootstrap Secret." type:"path"`
 	SecretNamespace      string `name:"bootstrap-secret-namespace" env:"K2_PROVISION_BOOTSTRAP_SECRET_NAMESPACE" default:"secrets" help:"Namespace for optional bootstrap Secret."`
 	SecretName           string `name:"bootstrap-secret-name" env:"K2_PROVISION_BOOTSTRAP_SECRET_NAME" default:"onepassword-service-account-token" help:"Name for optional bootstrap Secret."`
+
+	testKubeVIP string
 }
 
 type bootstrapCmd struct {
 	commonBootstrapFlags
 
-	Host     string `name:"host" env:"K2_PROVISION_HOST" required:"" help:"SSH host for the clean Kairos node."`
+	TestVM   string `name:"test-vm" env:"K2_PROVISION_TEST_VM" help:"Provision the local test VM id, defaulting host and cluster-name for VM swarm tests."`
+	Host     string `name:"host" env:"K2_PROVISION_HOST" help:"SSH host for the clean Kairos node."`
 	SSHPort  int    `name:"ssh-port" env:"K2_PROVISION_SSH_PORT" default:"22" help:"SSH port."`
 	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
 	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
@@ -66,7 +71,7 @@ type bootstrapCmd struct {
 type commonJoinFlags struct {
 	ClusterTarget string   `name:"cluster-target" env:"K2_PROVISION_CLUSTER_TARGET" required:"" help:"Cluster config/deploy target, such as v3."`
 	ClusterName   string   `name:"cluster-name" env:"K2_PROVISION_CLUSTER_NAME" help:"Local cluster instance name. Defaults to cluster-target."`
-	NodeName      string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" required:"" help:"Kubernetes node name."`
+	NodeName      string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" help:"Kubernetes node name. Defaults to --test-vm when provided."`
 	OperatorKey   []string `name:"operator-key" env:"K2_PROVISION_OPERATOR_KEY" help:"Literal ssh-ed25519 operator public key. Repeatable."`
 	OperatorFiles []string `name:"operator-key-file" env:"K2_PROVISION_OPERATOR_KEY_FILE" help:"File containing literal operator public keys. Repeatable." type:"path"`
 	Label         []string `name:"label" env:"K2_PROVISION_LABEL" help:"Additional K3s node-label value. Repeatable."`
@@ -75,7 +80,8 @@ type commonJoinFlags struct {
 }
 
 type commonRemoteFlags struct {
-	Host     string `name:"host" env:"K2_PROVISION_HOST" required:"" help:"SSH host for the clean Kairos node."`
+	TestVM   string `name:"test-vm" env:"K2_PROVISION_TEST_VM" help:"Provision the local test VM id, defaulting host and cluster-name for VM swarm tests."`
+	Host     string `name:"host" env:"K2_PROVISION_HOST" help:"SSH host for the clean Kairos node."`
 	SSHPort  int    `name:"ssh-port" env:"K2_PROVISION_SSH_PORT" default:"22" help:"SSH port."`
 	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
 	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
@@ -117,6 +123,12 @@ type joinBundle struct {
 }
 
 type nodeRole string
+
+type testVMProvisionTarget struct {
+	Enabled bool
+	GuestIP string
+	KubeVIP string
+}
 
 const (
 	nodeRoleServer nodeRole = "server"
@@ -164,6 +176,11 @@ func (c *renderBootstrapCmd) Run(ctx *runContext) error {
 }
 
 func (c *bootstrapCmd) Run(ctx *runContext) error {
+	testTarget, err := c.prepareTestVM(ctx)
+	if err != nil {
+		return err
+	}
+
 	client := remote.Client{
 		Host:   c.Host,
 		Port:   c.SSHPort,
@@ -216,27 +233,58 @@ func (c *bootstrapCmd) Run(ctx *runContext) error {
 	if c.NoReboot {
 		successf("remote install complete; reboot skipped")
 		logf("skipping credential harvest because --no-reboot leaves k3s stopped")
-	} else {
-		successf("remote install complete; node should be rebooting")
-		cfg, err := clusterconfig.Load(ctx.repoRoot, c.ClusterTarget)
-		if err != nil {
-			return err
-		}
-		clusterName := c.ClusterName
-		if clusterName == "" {
-			clusterName = c.ClusterTarget
-		}
-		if err := harvestBootstrapCredentials(&client, cfg, clusterName); err != nil {
-			return err
-		}
-		if err := verifyRemoteProvisioning(&client, "bootstrap node "+c.NodeName, bootstrapVerificationScript(c.NodeName), 5*time.Minute); err != nil {
-			return err
-		}
-		if err := hardenRemoteDefaultAccess(&client); err != nil {
+		return nil
+	}
+	return c.completeAfterBootstrapReboot(ctx, &client, testTarget)
+}
+
+func (c *bootstrapCmd) prepareTestVM(ctx *runContext) (testVMProvisionTarget, error) {
+	testTarget, err := applyProvisionTestVM(ctx.repoRoot, c.ClusterTarget, &c.ClusterName, &c.NodeName, &c.Host, &c.SSHPort, c.TestVM)
+	if err != nil {
+		return testVMProvisionTarget{}, err
+	}
+	if c.NodeName == "" {
+		return testVMProvisionTarget{}, fmt.Errorf("missing node name; pass --node-name or --test-vm")
+	}
+	if !testTarget.Enabled {
+		return testTarget, nil
+	}
+	if testTarget.GuestIP == "" || testTarget.KubeVIP == "" {
+		return testVMProvisionTarget{}, fmt.Errorf("bootstrap --test-vm requires a guest IPv4 address from qemu guest agent")
+	}
+	c.commonBootstrapFlags.testKubeVIP = testTarget.KubeVIP
+	if c.BootstrapAPIHost == "" {
+		c.BootstrapAPIHost = testTarget.GuestIP
+	}
+	logf("using test VM %s: ssh %s:%d, cluster %s, bootstrap VIP %s", c.TestVM, c.Host, c.SSHPort, c.ClusterName, testTarget.KubeVIP)
+	return testTarget, nil
+}
+
+func (c *bootstrapCmd) completeAfterBootstrapReboot(ctx *runContext, client *remote.Client, testTarget testVMProvisionTarget) error {
+	successf("remote install complete; node should be rebooting")
+	cfg, err := clusterconfig.Load(ctx.repoRoot, c.ClusterTarget)
+	if err != nil {
+		return err
+	}
+	if testTarget.KubeVIP != "" {
+		applyTestKubeVIP(&cfg, testTarget.KubeVIP)
+	}
+	clusterName := c.ClusterName
+	if clusterName == "" {
+		clusterName = c.ClusterTarget
+	}
+	if err := harvestBootstrapCredentials(client, cfg, clusterName); err != nil {
+		return err
+	}
+	if testTarget.KubeVIP != "" {
+		if err := patchRemoteKubeVIP(client, testTarget.KubeVIP, 3*time.Minute); err != nil {
 			return err
 		}
 	}
-	return nil
+	if err := verifyRemoteProvisioning(client, "bootstrap node "+c.NodeName, bootstrapVerificationScript(c.NodeName), 5*time.Minute); err != nil {
+		return err
+	}
+	return hardenRemoteDefaultAccess(client)
 }
 
 func (c *serverCmd) Run(ctx *runContext) error {
@@ -248,6 +296,17 @@ func (c *workerCmd) Run(ctx *runContext) error {
 }
 
 func provisionJoinNode(ctx *runContext, role nodeRole, flags commonJoinFlags, remoteFlags commonRemoteFlags) error {
+	testTarget, err := applyProvisionTestVM(ctx.repoRoot, flags.ClusterTarget, &flags.ClusterName, &flags.NodeName, &remoteFlags.Host, &remoteFlags.SSHPort, remoteFlags.TestVM)
+	if err != nil {
+		return err
+	}
+	if flags.NodeName == "" {
+		return fmt.Errorf("missing node name; pass --node-name or --test-vm")
+	}
+	if testTarget.Enabled {
+		logf("using test VM %s: ssh %s:%d, cluster %s", remoteFlags.TestVM, remoteFlags.Host, remoteFlags.SSHPort, flags.ClusterName)
+	}
+
 	client := remote.Client{
 		Host:   remoteFlags.Host,
 		Port:   remoteFlags.SSHPort,
@@ -314,6 +373,9 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	if err != nil {
 		return bundle{}, err
 	}
+	if flags.testKubeVIP != "" {
+		applyTestKubeVIP(&cfg, flags.testKubeVIP)
+	}
 	if flags.ClusterName == "" {
 		flags.ClusterName = flags.ClusterTarget
 	}
@@ -357,6 +419,75 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 		AuthorizedKeys:  render.AuthorizedKeys(operatorKeys),
 		Manifests:       bootstrapManifests,
 	}, nil
+}
+
+func applyProvisionTestVM(repoRoot string, clusterTarget string, clusterName *string, nodeName *string, host *string, sshPort *int, vmID string) (testVMProvisionTarget, error) {
+	if vmID == "" {
+		if *host == "" {
+			return testVMProvisionTarget{}, fmt.Errorf("missing SSH host; pass --host or --test-vm")
+		}
+		return testVMProvisionTarget{}, nil
+	}
+
+	target, err := testvm.ResolveProvisionTarget(repoRoot, vmID)
+	if err != nil {
+		return testVMProvisionTarget{}, err
+	}
+	if *clusterName == "" {
+		*clusterName = clusterTarget + "-vmtest"
+	}
+	if *nodeName == "" {
+		*nodeName = vmID
+	}
+	*host = target.Host
+	*sshPort = target.Port
+
+	out := testVMProvisionTarget{Enabled: true, GuestIP: target.GuestIPv4.Address}
+	if target.GuestIPv4.Address != "" {
+		vip, err := testKubeVIP(target.GuestIPv4.Address, target.GuestIPv4.Prefix)
+		if err != nil {
+			return testVMProvisionTarget{}, err
+		}
+		out.KubeVIP = vip
+	}
+	return out, nil
+}
+
+func applyTestKubeVIP(cfg *clusterconfig.Config, vip string) {
+	cfg.Kubernetes.API.VIP = vip
+	cfg.Kubernetes.API.DNSName = ""
+	for _, san := range cfg.Kubernetes.API.TLSSans {
+		if san == vip {
+			return
+		}
+	}
+	cfg.Kubernetes.API.TLSSans = append(cfg.Kubernetes.API.TLSSans, vip)
+}
+
+func testKubeVIP(nodeIP string, prefix int) (string, error) {
+	parsed := net.ParseIP(nodeIP).To4()
+	if parsed == nil {
+		return "", fmt.Errorf("test VM node address %q is not IPv4", nodeIP)
+	}
+	if prefix <= 0 || prefix >= 31 {
+		return "", fmt.Errorf("test VM node address %s has unsupported prefix %d", nodeIP, prefix)
+	}
+
+	ip := binary.BigEndian.Uint32(parsed)
+	mask := uint32(0xffffffff) << (32 - prefix)
+	network := ip & mask
+	broadcast := network | ^mask
+	candidate := broadcast - 1
+	if candidate == ip {
+		candidate--
+	}
+	if candidate <= network {
+		return "", fmt.Errorf("could not choose test VM kube-vip address in %s/%d", nodeIP, prefix)
+	}
+
+	var out [4]byte
+	binary.BigEndian.PutUint32(out[:], candidate)
+	return net.IP(out[:]).String(), nil
 }
 
 func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, metadata render.ImageMetadata) (joinBundle, error) {
@@ -584,6 +715,28 @@ func waitForK3sCredentials(client *remote.Client, timeout time.Duration) error {
 		lastErr = err
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out waiting for k3s credentials: %w", lastErr)
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func patchRemoteKubeVIP(client *remote.Client, vip string, timeout time.Duration) error {
+	logf("patching kube-vip VIP address for test VM bootstrap to %s", vip)
+	deadline := time.Now().Add(timeout)
+	var lastErr error
+	for {
+		err := client.Run(strings.Join([]string{
+			"sudo kubectl -n kube-vip get daemonset kube-vip >/dev/null",
+			fmt.Sprintf("sudo kubectl -n kube-vip set env daemonset/kube-vip vip_address=%s >/dev/null", vip),
+			"sudo kubectl -n kube-vip rollout status daemonset/kube-vip --timeout=120s >/dev/null",
+		}, " && "))
+		if err == nil {
+			successf("kube-vip VIP patched to %s", vip)
+			return nil
+		}
+		lastErr = err
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timed out patching kube-vip VIP address: %w", lastErr)
 		}
 		time.Sleep(5 * time.Second)
 	}

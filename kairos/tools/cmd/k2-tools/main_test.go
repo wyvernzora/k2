@@ -1,8 +1,14 @@
 package main
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/wyvernzora/k2/kairos/tools/internal/clusterconfig"
+	testvm "github.com/wyvernzora/k2/kairos/tools/internal/vm"
 )
 
 func TestInstallScriptInstallsBootstrapFilesWithoutLockingDefaultPassword(t *testing.T) {
@@ -130,5 +136,126 @@ func TestJoinVerificationScriptChecksRoleSpecificState(t *testing.T) {
 	}
 	if strings.Contains(worker, "systemctl is-active --quiet k3s\n") {
 		t.Fatalf("worker verification script unexpectedly checks server service:\n%s", worker)
+	}
+}
+
+func TestTestKubeVIPUsesLastUsableAddressInNodeCIDR(t *testing.T) {
+	got, err := testKubeVIP("192.168.64.2", 24)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "192.168.64.254" {
+		t.Fatalf("vip = %s, want 192.168.64.254", got)
+	}
+
+	got, err = testKubeVIP("192.168.64.254", 24)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "192.168.64.253" {
+		t.Fatalf("vip = %s, want 192.168.64.253", got)
+	}
+}
+
+func TestApplyTestKubeVIPPatchesVIPAndTLSSAN(t *testing.T) {
+	cfg := testClusterConfig()
+	applyTestKubeVIP(&cfg, "192.168.64.254")
+
+	if cfg.Kubernetes.API.VIP != "192.168.64.254" {
+		t.Fatalf("vip = %s, want 192.168.64.254", cfg.Kubernetes.API.VIP)
+	}
+	if cfg.Kubernetes.API.DNSName != "" {
+		t.Fatalf("dns name = %s, want empty for VM test endpoint", cfg.Kubernetes.API.DNSName)
+	}
+	if !containsString(cfg.Kubernetes.API.TLSSans, "192.168.64.254") {
+		t.Fatalf("tls sans missing test VIP: %#v", cfg.Kubernetes.API.TLSSans)
+	}
+}
+
+func TestApplyProvisionTestVMDefaultsClusterNodeAndSSH(t *testing.T) {
+	root := t.TempDir()
+	writeTestVMMetadata(t, root, testvm.Metadata{
+		Backend: "qemu",
+		ID:      "v3a",
+		VMDir:   filepath.Join(root, ".testvm", "vm-v3a"),
+		SSHPort: 2222,
+	})
+
+	clusterName := ""
+	nodeName := ""
+	host := ""
+	sshPort := 22
+	target, err := applyProvisionTestVM(root, "v3", &clusterName, &nodeName, &host, &sshPort, "v3a")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !target.Enabled {
+		t.Fatal("test VM target was not enabled")
+	}
+	if clusterName != "v3-vmtest" {
+		t.Fatalf("clusterName = %s, want v3-vmtest", clusterName)
+	}
+	if nodeName != "v3a" {
+		t.Fatalf("nodeName = %s, want v3a", nodeName)
+	}
+	if host != "127.0.0.1" {
+		t.Fatalf("host = %s, want 127.0.0.1", host)
+	}
+	if sshPort != 2222 {
+		t.Fatalf("sshPort = %d, want 2222", sshPort)
+	}
+}
+
+func TestApplyProvisionTestVMKeepsExplicitNodeName(t *testing.T) {
+	root := t.TempDir()
+	writeTestVMMetadata(t, root, testvm.Metadata{
+		Backend: "qemu",
+		ID:      "v3a",
+		VMDir:   filepath.Join(root, ".testvm", "vm-v3a"),
+		SSHPort: 2222,
+	})
+
+	clusterName := ""
+	nodeName := "custom-node"
+	host := ""
+	sshPort := 22
+	_, err := applyProvisionTestVM(root, "v3", &clusterName, &nodeName, &host, &sshPort, "v3a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if nodeName != "custom-node" {
+		t.Fatalf("nodeName = %s, want custom-node", nodeName)
+	}
+}
+
+func testClusterConfig() clusterconfig.Config {
+	cfg := clusterconfig.Config{ID: "v3"}
+	cfg.Kubernetes.API.VIP = "10.10.9.1"
+	cfg.Kubernetes.API.DNSName = "k8s-api.wyvernzora.io"
+	cfg.Kubernetes.API.TLSSans = []string{"10.10.9.1", "k8s-api.wyvernzora.io"}
+	return cfg
+}
+
+func containsString(values []string, needle string) bool {
+	for _, value := range values {
+		if value == needle {
+			return true
+		}
+	}
+	return false
+}
+
+func writeTestVMMetadata(t *testing.T, root string, meta testvm.Metadata) {
+	t.Helper()
+	if err := os.MkdirAll(meta.VMDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(meta)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(meta.VMDir, "vm.json"), data, 0o644); err != nil {
+		t.Fatal(err)
 	}
 }

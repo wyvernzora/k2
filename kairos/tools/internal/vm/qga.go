@@ -27,19 +27,27 @@ type qgaInterface struct {
 	} `json:"ip-addresses"`
 }
 
-type guestIPv4 struct {
+type GuestIPv4 struct {
 	Interface string
 	Address   string
 	Prefix    int
 }
 
 func firstGuestIPv4(meta Metadata) (string, error) {
-	ips, err := guestIPv4Candidates(meta)
+	ip, err := BestGuestIPv4(meta)
 	if err != nil {
 		return "", err
 	}
+	return ip.Address, nil
+}
+
+func BestGuestIPv4(meta Metadata) (GuestIPv4, error) {
+	ips, err := guestIPv4Candidates(meta)
+	if err != nil {
+		return GuestIPv4{}, err
+	}
 	if len(ips) == 0 {
-		return "", fmt.Errorf("no guest IPv4 address reported by qemu guest agent")
+		return GuestIPv4{}, fmt.Errorf("no guest IPv4 address reported by qemu guest agent")
 	}
 	sort.Slice(ips, func(i, j int) bool {
 		leftPhysical := isPhysicalGuestInterface(ips[i].Interface)
@@ -57,7 +65,7 @@ func firstGuestIPv4(meta Metadata) (string, error) {
 		}
 		return ips[i].Address < ips[j].Address
 	})
-	return ips[0].Address, nil
+	return ips[0], nil
 }
 
 func guestIPv4s(meta Metadata) ([]string, error) {
@@ -73,7 +81,7 @@ func guestIPv4s(meta Metadata) ([]string, error) {
 	return ips, nil
 }
 
-func guestIPv4Candidates(meta Metadata) ([]guestIPv4, error) {
+func guestIPv4Candidates(meta Metadata) ([]GuestIPv4, error) {
 	if meta.QGAPort == 0 {
 		return nil, fmt.Errorf("qemu guest agent port is not configured")
 	}
@@ -81,19 +89,19 @@ func guestIPv4Candidates(meta Metadata) ([]guestIPv4, error) {
 	if err := qgaCommand(meta, "guest-network-get-interfaces", nil, &interfaces); err != nil {
 		return nil, err
 	}
-	var ips []guestIPv4
+	var ips []GuestIPv4
 	for _, iface := range interfaces {
 		for _, addr := range iface.IPAddresses {
 			if addr.IPAddressType != "ipv4" || addr.IPAddress == "" || strings.HasPrefix(addr.IPAddress, "127.") {
 				continue
 			}
-			ips = append(ips, guestIPv4{Interface: iface.Name, Address: addr.IPAddress, Prefix: addr.Prefix})
+			ips = append(ips, GuestIPv4{Interface: iface.Name, Address: addr.IPAddress, Prefix: addr.Prefix})
 		}
 	}
 	return ips, nil
 }
 
-func isPrimaryGuestAddress(ip guestIPv4) bool {
+func isPrimaryGuestAddress(ip GuestIPv4) bool {
 	return ip.Prefix > 0 && ip.Prefix < 32
 }
 

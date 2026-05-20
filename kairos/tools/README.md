@@ -74,6 +74,7 @@ Useful variables include:
 - `K2_PROVISION_HOST`
 - `K2_PROVISION_SSH_PORT`
 - `K2_PROVISION_SSH_USER`
+- `K2_PROVISION_TEST_VM`
 - `K2_PROVISION_OPERATOR_KEY`
 - `K2_PROVISION_OPERATOR_KEY_FILE`
 - `K2_PROVISION_LABEL`
@@ -126,7 +127,9 @@ Useful VM commands:
 - `k2-tools vm info <id>`
 - `k2-tools vm start <id>`
 - `k2-tools vm stop <id>`
+- `k2-tools vm stop --all`
 - `k2-tools vm delete --force <id>`
+- `k2-tools vm delete --all --force`
 
 ## Provision Bootstrap Node
 
@@ -143,6 +146,21 @@ go run ./cmd/k2-tools provision bootstrap \
   --node-name v3-test-01 \
   --operator-key-file ~/.ssh/id_ed25519.pub \
   --onepassword-token-file /path/to/onepassword-service-account-token
+```
+
+For local VM swarm tests, use `--test-vm <id>` instead of `--host`. The
+provisioner resolves the VM SSH endpoint, defaults `--cluster-name` to
+`<cluster-target>-vmtest`, uses the guest IP for the bootstrap-only Cilium API
+patch, adds a VM-local API VIP to the bootstrap server TLS SANs, and patches the
+kube-vip DaemonSet after bootstrap so the saved kubeconfig and join URL point
+at an address in the VM subnet:
+
+```sh
+k2-tools provision bootstrap \
+  --cluster-target v3 \
+  --test-vm v3a \
+  --node-name v3a \
+  --operator-key-file ~/.ssh/id_ed25519.pub
 ```
 
 The command writes:
@@ -209,6 +227,14 @@ go run ./cmd/k2-tools provision server \
   --host 10.42.0.23 \
   --node-name v3-test-02 \
   --operator-key-file ~/.ssh/id_ed25519.pub
+```
+
+For VM swarm tests, `--test-vm` also defaults the cluster name to
+`<cluster-target>-vmtest` and uses the VM SSH endpoint:
+
+```sh
+k2-tools provision server --cluster-target v3 --test-vm v3b --node-name v3b
+k2-tools provision worker --cluster-target v3 --test-vm v3c --node-name v3c
 ```
 
 Workers use `agent-token`, enable `k3s-agent`, and do not activate server-only
