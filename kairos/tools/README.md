@@ -2,7 +2,7 @@
 
 `k2-tools` is the client-side toolbox for clean K2 Kairos images.
 It supports bootstrap-server, additional server, and worker provisioning over
-SSH for the raw image path, plus local QEMU test VM management.
+SSH for the raw image path, plus local QEMU VM management.
 
 It assumes the target node has booted into the installed Kairos system, SSH is
 reachable, k3s is installed but disabled, and the image contains the invariant
@@ -17,6 +17,12 @@ go vet ./...
 go run ./cmd/k2-tools --help
 ```
 
+Install the local CLI into your Go bin directory:
+
+```sh
+(cd kairos/tools && go install ./cmd/k2-tools)
+```
+
 ## Render Bootstrap Files
 
 Use render mode to inspect the exact files before touching a node:
@@ -29,7 +35,7 @@ go run ./cmd/k2-tools provision render bootstrap \
   --node-name v3-test-01 \
   --bootstrap-api-host 10.0.2.15 \
   --operator-key-file ~/.ssh/id_ed25519.pub \
-  --onepassword-token-file /path/to/onepassword-service-account-token \
+  --extra-manifests '/path/to/bootstrap/*.yaml' \
   --output-dir /tmp/k2-tools-render
 ```
 
@@ -80,7 +86,7 @@ Useful variables include:
 - `K2_PROVISION_LABEL`
 - `K2_PROVISION_TAINT`
 - `K2_PROVISION_SERVER_URL`
-- `K2_PROVISION_ONEPASSWORD_TOKEN_FILE`
+- `K2_PROVISION_EXTRA_MANIFESTS`
 - `K2_PROVISION_OUTPUT_DIR`
 
 Command-line flags still win over environment values, so per-node fields such
@@ -92,7 +98,8 @@ logs or scripts.
 
 ## Local QEMU VMs
 
-`k2-tools vm` manages local QEMU test VMs. The default `qemu-user` preset uses
+`k2-tools vm` manages local QEMU VMs for development and validation. The
+default `qemu-user` preset uses
 the host-architecture QEMU artifact, a second persistent disk, user-mode
 networking, SSH forwarding, Kubernetes API forwarding, a QEMU monitor port, and
 QEMU guest-agent wiring.
@@ -131,6 +138,10 @@ Useful VM commands:
 - `k2-tools vm delete --force <id>`
 - `k2-tools vm delete --all --force`
 
+`vm list` prints the best guest IP reported by the QEMU guest agent, using the
+same address selection as `vm ssh`. It prints `-` while a VM is stopped or while
+the guest agent has not reported an address yet.
+
 ## Provision Bootstrap Node
 
 Bootstrap provisioning connects to the node with the built-in Go SSH transport
@@ -145,21 +156,43 @@ go run ./cmd/k2-tools provision bootstrap \
   --ssh-port 2222 \
   --node-name v3-test-01 \
   --operator-key-file ~/.ssh/id_ed25519.pub \
-  --onepassword-token-file /path/to/onepassword-service-account-token
+  --extra-manifests '/path/to/bootstrap/*.yaml'
+```
+
+`--extra-manifests` accepts a manifest path or a glob and can be repeated. The
+matched files are appended to the bootstrap bundle verbatim, after the minimum
+Cilium, Argo CD, and kube-vip apps and before the root Argo CD Application.
+Quote globs when you want `k2-tools` to expand them deterministically instead
+of letting the shell expand them first.
+
+When an extra manifest uses `metadata.namespace`, the provisioner prepends a
+minimal generated Namespace manifest unless that namespace is already part of
+the minimum bundle. The extra manifest still applies verbatim afterward, so a
+user-supplied Namespace manifest can add labels or annotations. This makes a
+bootstrap Secret as simple as:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bootstrap-secret
+  namespace: secrets
+type: Opaque
+stringData:
+  provider-token: "..."
 ```
 
 For local VM swarm tests, use `--test-vm <id>` instead of `--host`. The
 provisioner resolves the VM SSH endpoint, defaults `--cluster-name` to
-`<cluster-target>-vmtest`, uses the guest IP for the bootstrap-only Cilium API
-patch, adds a VM-local API VIP to the bootstrap server TLS SANs, and patches the
-kube-vip DaemonSet after bootstrap so the saved kubeconfig and join URL point
-at an address in the VM subnet:
+`<cluster-target>-vmtest`, defaults `--node-name` to the VM id, uses the guest
+IP for the bootstrap-only Cilium API patch, adds a VM-local API VIP to the
+bootstrap server TLS SANs, and patches the kube-vip DaemonSet after bootstrap
+so the saved kubeconfig and join URL point at an address in the VM subnet:
 
 ```sh
 k2-tools provision bootstrap \
   --cluster-target v3 \
   --test-vm v3a \
-  --node-name v3a \
   --operator-key-file ~/.ssh/id_ed25519.pub
 ```
 
@@ -191,7 +224,8 @@ local operator state under `~/.kube/k2/<cluster-name>/`:
 
 The saved kubeconfig has its server URL rewritten from the node-local
 `https://127.0.0.1:6443` endpoint to the API endpoint from
-`clusters/<target>.yaml`.
+`clusters/<target>.yaml`. For `--test-vm` bootstrap, the saved endpoint is the
+VM-subnet kube-vip address chosen during provisioning.
 
 After credentials are harvested, the provisioner SSHes back into the node and
 verifies the expected post-reboot state: hostname, operator SSH keys, active
@@ -207,9 +241,9 @@ skip host-key checks for VM port-forward convenience; non-loopback targets use
 `~/.ssh/known_hosts` with accept-new behavior for first contact.
 
 The bootstrap manifest bundle is intentionally small: Cilium, Argo CD,
-kube-vip, namespace manifests, an optional 1Password service-account Secret,
-and the Argo CD root Application. Normal GitOps sync is expected to take over
-after Argo CD is running.
+kube-vip, namespace manifests, optional extra manifests, and the Argo CD root
+Application. Normal GitOps sync is expected to take over after Argo CD is
+running.
 
 ## Provision Additional Nodes
 
@@ -230,11 +264,12 @@ go run ./cmd/k2-tools provision server \
 ```
 
 For VM swarm tests, `--test-vm` also defaults the cluster name to
-`<cluster-target>-vmtest` and uses the VM SSH endpoint:
+`<cluster-target>-vmtest`, defaults the node name to the VM id, and uses the VM
+SSH endpoint:
 
 ```sh
-k2-tools provision server --cluster-target v3 --test-vm v3b --node-name v3b
-k2-tools provision worker --cluster-target v3 --test-vm v3c --node-name v3c
+k2-tools provision server --cluster-target v3 --test-vm v3b
+k2-tools provision worker --cluster-target v3 --test-vm v3c
 ```
 
 Workers use `agent-token`, enable `k3s-agent`, and do not activate server-only

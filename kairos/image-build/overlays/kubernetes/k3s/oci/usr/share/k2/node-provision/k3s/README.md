@@ -8,8 +8,7 @@ this directory. The provisioner copies `10-k2-invariant.yaml` into
 `/etc/rancher/k3s/config.yaml.d/` only for server roles.
 
 Active cluster-specific K3s configuration is written at provision time by
-`k2-node-provision` from a bundle or node seed derived from
-`clusters/<name>.yaml`.
+`k2-tools provision` from `clusters/<target>.yaml` and the requested node role.
 
 Cluster-owned settings include:
 

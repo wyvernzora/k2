@@ -17,14 +17,21 @@ func TestBootstrapAssemblesMinimumPayload(t *testing.T) {
 	write(t, filepath.Join(root, "deploy", "v3", "apps", "argocd", "app.k8s.yaml"), "kind: Deployment\nmetadata:\n  name: argocd\n")
 	write(t, filepath.Join(root, "deploy", "v3", "apps", "kube-vip", "app.k8s.yaml"), "kind: DaemonSet\nmetadata:\n  name: kube-vip\n")
 	write(t, filepath.Join(root, "deploy", "v3", "argocd", "app.k8s.yaml"), "kind: Application\nmetadata:\n  name: root\n")
-	tokenPath := filepath.Join(root, "token")
-	write(t, tokenPath, "op-token\n")
+	extraPath := filepath.Join(root, "extra", "bootstrap-secret.yaml")
+	write(t, extraPath, `apiVersion: v1
+kind: Secret
+metadata:
+  name: bootstrap-secret
+  namespace: secrets
+type: Opaque
+stringData:
+  provider-token: op-token
+  client-id: abc123
+`)
 
 	cfg := clusterconfig.Config{ID: "v3", DeployPath: "deploy/v3"}
 	gotBytes, err := Bootstrap(root, cfg, BootstrapOptions{
-		OnePasswordTokenFile: tokenPath,
-		SecretNamespace:      "secrets",
-		SecretName:           "onepassword-token",
+		ExtraManifestPatterns: []string{filepath.Join(root, "extra", "*.yaml")},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -35,8 +42,9 @@ func TestBootstrapAssemblesMinimumPayload(t *testing.T) {
 		"name: argocd",
 		"name: kube-vip",
 		"name: secrets",
-		"name: onepassword-token",
-		"token: b3AtdG9rZW4=",
+		"name: bootstrap-secret",
+		"stringData:",
+		"provider-token: op-token",
 		"kind: Application",
 		"name: k2-bootstrap-manifest-cleanup",
 		"rm -f /host-manifests/k2-bootstrap.yaml",

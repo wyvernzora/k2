@@ -2,11 +2,11 @@ package manifests
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/wyvernzora/k2/kairos/tools/internal/clusterconfig"
@@ -14,10 +14,8 @@ import (
 )
 
 type BootstrapOptions struct {
-	OnePasswordTokenFile string
-	SecretNamespace      string
-	SecretName           string
-	CiliumAPIHost        string
+	ExtraManifestPatterns []string
+	CiliumAPIHost         string
 }
 
 func Bootstrap(repoRoot string, cfg clusterconfig.Config, opts BootstrapOptions) ([]byte, error) {
@@ -45,19 +43,16 @@ func Bootstrap(repoRoot string, cfg clusterconfig.Config, opts BootstrapOptions)
 		return nil, err
 	}
 
-	secretNamespace := opts.SecretNamespace
-	if secretNamespace == "" {
-		secretNamespace = "secrets"
+	extraManifestPaths, err := expandExtraManifestPatterns(opts.ExtraManifestPatterns)
+	if err != nil {
+		return nil, err
 	}
-	addNamespace(&buf, secretNamespace)
-	if opts.OnePasswordTokenFile != "" {
-		secretName := opts.SecretName
-		if secretName == "" {
-			secretName = "onepassword-service-account-token"
-		}
-		if err := addBootstrapSecret(&buf, opts.OnePasswordTokenFile, secretNamespace, secretName); err != nil {
-			return nil, err
-		}
+	if err := appendExtraManifests(&buf, extraManifestPaths, map[string]bool{
+		"argocd":   true,
+		"cilium":   true,
+		"kube-vip": true,
+	}); err != nil {
+		return nil, err
 	}
 
 	if err := appendFile(&buf, filepath.Join(deployDir, "argocd", "app.k8s.yaml")); err != nil {
@@ -73,22 +68,104 @@ func addNamespace(buf *bytes.Buffer, name string) {
 	fmt.Fprintf(buf, "apiVersion: v1\nkind: Namespace\nmetadata:\n  name: %s\n", name)
 }
 
-func addBootstrapSecret(buf *bytes.Buffer, tokenFile string, namespace string, name string) error {
-	token, err := os.ReadFile(tokenFile)
-	if err != nil {
-		return fmt.Errorf("read 1Password service account token file %s: %w", tokenFile, err)
+func expandExtraManifestPatterns(patterns []string) ([]string, error) {
+	var paths []string
+	for _, pattern := range patterns {
+		if pattern == "" {
+			continue
+		}
+		if strings.ContainsAny(pattern, "*?[") {
+			matches, err := filepath.Glob(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("expand extra manifests glob %s: %w", pattern, err)
+			}
+			if len(matches) == 0 {
+				return nil, fmt.Errorf("extra manifests glob %s did not match any files", pattern)
+			}
+			sort.Strings(matches)
+			paths = append(paths, matches...)
+			continue
+		}
+		if _, err := os.Stat(pattern); err != nil {
+			return nil, fmt.Errorf("stat extra manifest %s: %w", pattern, err)
+		}
+		paths = append(paths, pattern)
 	}
-	token = []byte(strings.TrimSpace(string(token)))
-	if len(token) == 0 {
-		return fmt.Errorf("1Password service account token file %s is empty", tokenFile)
+	return paths, nil
+}
+
+func appendExtraManifests(buf *bytes.Buffer, paths []string, existingNamespaces map[string]bool) error {
+	if len(paths) == 0 {
+		return nil
 	}
-	separator(buf)
-	fmt.Fprintf(buf, "apiVersion: v1\nkind: Secret\nmetadata:\n  name: %s\n  namespace: %s\ntype: Opaque\ndata:\n  token: %s\n",
-		name,
-		namespace,
-		base64.StdEncoding.EncodeToString(token),
-	)
+
+	requiredNamespaces := map[string]bool{}
+	for _, path := range paths {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read extra manifest %s: %w", path, err)
+		}
+		namespaces, err := manifestNamespaces(data, path)
+		if err != nil {
+			return err
+		}
+		for namespace := range namespaces {
+			requiredNamespaces[namespace] = true
+		}
+	}
+
+	namespaceNames := make([]string, 0, len(requiredNamespaces))
+	for namespace := range requiredNamespaces {
+		if existingNamespaces[namespace] {
+			continue
+		}
+		namespaceNames = append(namespaceNames, namespace)
+	}
+	sort.Strings(namespaceNames)
+	for _, namespace := range namespaceNames {
+		addNamespace(buf, namespace)
+	}
+
+	for _, path := range paths {
+		if err := appendFile(buf, path); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func manifestNamespaces(data []byte, path string) (map[string]bool, error) {
+	required := map[string]bool{}
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	for {
+		var doc yaml.Node
+		err := decoder.Decode(&doc)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("parse extra manifest %s: %w", path, err)
+		}
+		if doc.Kind == 0 || len(doc.Content) == 0 {
+			continue
+		}
+		root := doc.Content[0]
+		if root.Kind != yaml.MappingNode {
+			continue
+		}
+		kind := mappingValue(root, "kind")
+		metadata := mappingNodeValue(root, "metadata")
+		if metadata == nil || metadata.Kind != yaml.MappingNode {
+			continue
+		}
+		if kind == "Namespace" {
+			continue
+		}
+		if namespace := mappingValue(metadata, "namespace"); namespace != "" {
+			required[namespace] = true
+		}
+	}
+	return required, nil
 }
 
 func addCleanupJob(buf *bytes.Buffer) {

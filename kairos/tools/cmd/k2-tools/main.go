@@ -51,9 +51,7 @@ type commonBootstrapFlags struct {
 	Taint            []string `name:"taint" env:"K2_PROVISION_TAINT" help:"Additional K3s node-taint value. Repeatable."`
 	BootstrapAPIHost string   `name:"bootstrap-api-host" env:"K2_PROVISION_BOOTSTRAP_API_HOST" help:"Kubernetes API host for bootstrap-only Cilium manifests. Bootstrap provisioning auto-detects the node IP when omitted."`
 
-	OnePasswordTokenFile string `name:"onepassword-token-file" env:"K2_PROVISION_ONEPASSWORD_TOKEN_FILE" help:"Optional 1Password service account token file to include as bootstrap Secret." type:"path"`
-	SecretNamespace      string `name:"bootstrap-secret-namespace" env:"K2_PROVISION_BOOTSTRAP_SECRET_NAMESPACE" default:"secrets" help:"Namespace for optional bootstrap Secret."`
-	SecretName           string `name:"bootstrap-secret-name" env:"K2_PROVISION_BOOTSTRAP_SECRET_NAME" default:"onepassword-service-account-token" help:"Name for optional bootstrap Secret."`
+	ExtraManifests []string `name:"extra-manifests" env:"K2_PROVISION_EXTRA_MANIFESTS" help:"Extra bootstrap manifest path or glob to append verbatim. Repeatable."`
 
 	testKubeVIP string
 }
@@ -404,10 +402,8 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	}
 	logf("assembling bootstrap manifests from %s", cfg.DeployDir(repoRoot))
 	bootstrapManifests, err := manifests.Bootstrap(repoRoot, cfg, manifests.BootstrapOptions{
-		OnePasswordTokenFile: flags.OnePasswordTokenFile,
-		SecretNamespace:      flags.SecretNamespace,
-		SecretName:           flags.SecretName,
-		CiliumAPIHost:        flags.BootstrapAPIHost,
+		ExtraManifestPatterns: flags.ExtraManifests,
+		CiliumAPIHost:         flags.BootstrapAPIHost,
 	})
 	if err != nil {
 		return bundle{}, err

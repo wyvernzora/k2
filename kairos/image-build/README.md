@@ -11,6 +11,7 @@ up in `kairos/`.
 | `../versions.env` | Shared version pins for Kairos, kairos-init, AuroraBoot, Ubuntu, k3s, and GHCR image name. |
 | `../targets.yaml` | Build matrix for enabled and planned image targets. |
 | `overlays/` | Optional reviewable OCI/raw overlays plus overlay inspection metadata. |
+| `../node-init/` | Go helper built into image targets for early-boot node initialization. |
 | `../artifacts/` | Ignored local bootable artifact output. |
 | `../Earthfile` | Earthly targets for reproducible image-build validation and artifact generation. |
 | `Dockerfile` | Image-build Dockerfile that turns Ubuntu into a Kairos+k3s OCI image. |
@@ -29,7 +30,7 @@ overlays in `targets.yaml`, not by making one-off Dockerfile edits.
 `kairosModel` is the Kairos model passed to `kairos-init`. For example,
 `rpi4cb` still uses `kairosModel: rpi4` because the ComputeBlade nodes are CM4
 systems using the Kairos Raspberry Pi 4 boot model. The `qemu` targets use
-`kairosModel: generic` for local VM provisioning tests on x86 and ARM hosts.
+`kairosModel: generic` for QEMU-backed VMs on x86 and ARM hosts.
 
 Node roles are not part of the image-build contract. Bootstrap and join intent
 comes from files written by the node provisioner before it activates K3s.
@@ -46,7 +47,20 @@ docker --version
 xz --version
 ```
 
-Build and load the PoC OCI image:
+Run the CLI from source during development:
+
+```sh
+(cd kairos/image-build && go run ./cmd/image-build --help)
+```
+
+Build a standalone `k2-image-build` binary when you want a local executable:
+
+```sh
+(cd kairos/image-build && go build -o /tmp/k2-image-build ./cmd/image-build)
+/tmp/k2-image-build --help
+```
+
+Build and load an OCI image:
 
 ```sh
 (cd kairos/image-build && go run ./cmd/image-build build oci ubuntu-24.04-standard-arm64-rpi4cb-k3s)
@@ -58,16 +72,15 @@ Build the raw artifact from the locally loaded image:
 (cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
-Build a generic QEMU raw artifact for local VM provisioning tests:
+Build a generic QEMU raw artifact:
 
 ```sh
 (cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-amd64-qemu-k3s)
 (cd kairos/image-build && go run ./cmd/image-build build artifact ubuntu-24.04-standard-arm64-qemu-k3s)
 ```
 
-QEMU targets generate 8 GiB boot disks with a 4 GiB Kairos state partition and
-only a small placeholder persistent partition. The QEMU hardware overlay
-requires a second disk for real `COS_PERSISTENT` state during active boot.
+QEMU disk and guest-agent behavior is documented in the
+[QEMU hardware overlay README](overlays/hardware/qemu/README.md).
 
 Build the OCI image, raw artifact, raw patches, checksums, manifest, and
 inspection inside Earthly's Linux/Docker environment:
@@ -109,40 +122,14 @@ Preview the resolved build plan:
 (cd kairos/image-build && go run ./cmd/image-build plan ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
-The PoC target produces this image tag:
+Resolved target image tags include the base OS, Kairos version, architecture,
+hardware profile, k3s version, and K2 image revision. For example:
 
 ```text
 ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0
 ```
 
-## rpi4cb Hardware Defaults
-
-The `rpi4cb` target is for Raspberry Pi CM4 modules on ComputeBlade hardware.
-It bakes in:
-
-- `COS_GRUB/extraconfig.txt` with `[cm4] dtparam=pciex1`, applied from the
-  overlay's `raw/COS_GRUB/extraconfig.txt` after AuroraBoot creates the raw
-  image.
-- `/system/oem/05-rpi4cb-nvme-persistent.yaml`, which runs during
-  `rootfs.before` and is copied from the overlay's
-  `oci/system/oem/05-rpi4cb-nvme-persistent.yaml` into the OCI rootfs.
-
-The NVMe persistent setup is intentionally destructive for `/dev/nvme0n1` when
-the disk does not already contain an NVMe-backed `COS_PERSISTENT` filesystem.
-This hardware profile assumes the NVMe is dedicated to Kairos mutable state.
-Any non-NVMe filesystem labeled `COS_PERSISTENT` is relabeled
-`COS_PERSIST_OLD` before Kairos applies its immutable rootfs layout, avoiding
-duplicate persistent labels.
-
-With `COS_PERSISTENT` on NVMe, Kairos' default bind mounts keep high-write paths
-such as `/var/lib/rancher`, `/var/lib/containerd`, `/var/lib/kubelet`,
-`/var/lib/etcd`, and `/var/log` on NVMe-backed `/usr/local/.state`.
-
-The rpi4cb raw artifact also applies
-`raw/COS_OEM/01_reset.yaml.patch` to AuroraBoot's generated `/oem/01_reset.yaml`
-so the first recovery boot creates only a small eMMC `COS_PERSISTENT`
-placeholder. The real persistent partition is prepared on NVMe during the first
-active boot, and the eMMC placeholder is relabeled to `COS_PERSIST_OLD`.
+## Overlays
 
 Overlay content is split by destination:
 
@@ -158,6 +145,15 @@ Go artifact inspector validates the declared raw patch outcomes and raw
 inspection expectations through a containerized partition inspection path. The
 Go OCI inspector validates rootfs expectations by running generic Docker checks
 against the resolved image tag.
+
+Hardware-specific behavior belongs in the hardware overlay README:
+
+- [QEMU](overlays/hardware/qemu/README.md)
+- [Raspberry Pi ComputeBlade](overlays/hardware/rpi4cb/README.md)
+
+Kubernetes-specific image content belongs in the Kubernetes overlay README:
+
+- [K3s](overlays/kubernetes/k3s/README.md)
 
 ## CI
 

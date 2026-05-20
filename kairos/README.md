@@ -12,12 +12,13 @@ Kubernetes overlays, live under `image-build/`.
 | `targets.yaml` | Enabled and planned image targets. Each target selects hardware, Kairos model, artifact types, overlays, and raw artifact sizing. |
 | `versions.env` | Pinned Kairos, kairos-init, AuroraBoot, Ubuntu, k3s, image revision, and registry values. |
 | `image-build/` | Self-contained Go CLI, Dockerfile, and overlays for planning, building, patching, inspecting, and flashing images. |
-| `tools/` | Client-side Go CLI for provisioning clean Kairos nodes and managing local QEMU test VMs. |
+| `node-init/` | Go helper baked into images for early-boot node initialization, currently persistent storage preparation. |
+| `tools/` | Client-side Go CLI for provisioning clean Kairos nodes and managing local QEMU VMs. |
 | `Earthfile` | Reproducible Earthly targets for Go validation, OCI builds, raw artifact generation, patching, and inspection. |
 
 ## Current Targets
 
-The active targets are:
+The active targets in `targets.yaml` are:
 
 ```text
 ubuntu-24.04-standard-amd64-qemu-k3s
@@ -25,14 +26,20 @@ ubuntu-24.04-standard-arm64-qemu-k3s
 ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
-Both build Ubuntu 24.04, Kairos v4.1.0 images with k3s v1.36.0+k3s1.
+All active targets build Ubuntu 24.04, Kairos v4.1.0 images with k3s
+v1.36.0+k3s1.
 
-- `qemu` targets are generic Kairos images for local VM provisioning tests.
-  Use `amd64` on x86 hosts and `arm64` on Apple Silicon or other ARM hosts.
-  They generate 8 GiB boot disks with a 4 GiB Kairos state partition and require
-  a second disk for persistent K3s and provisioning state.
+- `qemu` targets are generic Kairos VM images. Use `amd64` on x86 hosts and
+  `arm64` on Apple Silicon or other ARM hosts. The same target family is used
+  for local VM testing and for QEMU-backed cluster nodes in any provisioned
+  role.
 - `rpi4cb` is an arm64 Raspberry Pi 4 model image for Raspberry Pi CM4 modules
   on ComputeBlade.
+
+Hardware-specific behavior lives in the hardware overlay docs:
+
+- [QEMU overlay](image-build/overlays/hardware/qemu/README.md)
+- [Raspberry Pi ComputeBlade overlay](image-build/overlays/hardware/rpi4cb/README.md)
 
 The targets are intentionally cluster-light: they include the OS, k3s, hardware
 defaults, and invariant K2 K3s server config, but do not enable the K3s service
@@ -47,7 +54,7 @@ The preferred local artifact path is Earthly:
 earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
-For VM provisioning tests, build the QEMU target instead:
+For QEMU-backed VMs, build the QEMU target instead:
 
 ```sh
 earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-amd64-qemu-k3s
@@ -72,17 +79,24 @@ Useful direct CLI commands:
 (cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
 ```
 
+The Kairos Go tools are documented in their module READMEs:
+
+- [k2-image-build](image-build/README.md) plans, builds, patches, and inspects images.
+- [k2-node-init](node-init/README.md) runs inside images for early-boot node initialization.
+- [k2-tools](tools/README.md) provisions clean nodes and manages local QEMU VMs.
+
 ## Provisioning
 
 After a raw-image node boots into the installed Kairos system, use the
-provisioner to write bootstrap-specific config and activate k3s:
+provisioner to write role-specific config and activate k3s:
 
 ```sh
-(cd kairos/tools && go run ./cmd/k2-tools provision bootstrap --cluster-target v3 --cluster-name v3-test --host 127.0.0.1 --ssh-port 2222 --node-name v3-test-01 --operator-key-file ~/.ssh/id_ed25519.pub --onepassword-token-file /path/to/onepassword-service-account-token)
+(cd kairos/tools && go run ./cmd/k2-tools provision bootstrap --cluster-target v3 --cluster-name v3-test --host 127.0.0.1 --ssh-port 2222 --node-name v3-test-01 --operator-key-file ~/.ssh/id_ed25519.pub --extra-manifests '/path/to/bootstrap/*.yaml')
 ```
 
 Use `provision render bootstrap` first when you want to inspect the bundle
-locally. For local QEMU VM testing, use `k2-tools vm create --start`.
+locally. For local QEMU VM testing, use `k2-tools vm create --start` and
+`k2-tools provision ... --test-vm <id>`.
 
 ## Image-Build Overlay Contract
 
