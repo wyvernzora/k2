@@ -5,6 +5,7 @@ env:
 
 permissions:
   contents: read
+  id-token: write
   packages: write
   security-events: write
 
@@ -14,21 +15,33 @@ on:
     branches:
       - main
     paths:
-      - "kairos/image-build/**"
+      - "kairos/image-build/Dockerfile"
+      - "kairos/image-build/cmd/**"
+      - "kairos/image-build/go.mod"
+      - "kairos/image-build/go.sum"
+      - "kairos/image-build/internal/**"
+      - "kairos/image-build/overlays/**"
+      - "kairos/image-build/scripts/**"
+      - "kairos/node-init/**"
       - "kairos/Earthfile"
       - "kairos/targets.yaml"
       - "kairos/versions.env"
-      - "kairos/overlays/**"
       - ".github/workflows/kairos-image-build.yaml"
   pull_request:
     branches:
       - main
     paths:
-      - "kairos/image-build/**"
+      - "kairos/image-build/Dockerfile"
+      - "kairos/image-build/cmd/**"
+      - "kairos/image-build/go.mod"
+      - "kairos/image-build/go.sum"
+      - "kairos/image-build/internal/**"
+      - "kairos/image-build/overlays/**"
+      - "kairos/image-build/scripts/**"
+      - "kairos/node-init/**"
       - "kairos/Earthfile"
       - "kairos/targets.yaml"
       - "kairos/versions.env"
-      - "kairos/overlays/**"
       - ".github/workflows/kairos-image-build.yaml"
 
 concurrency:
@@ -44,6 +57,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -55,23 +70,60 @@ jobs:
         run: |
           cd kairos/image-build
           go test ./...
+          go vet ./...
           go run ./cmd/image-build plan --all --format json >/tmp/kairos-image-build-plans.json
 
-      - name: Resolve enabled targets
+      - name: Test node-init helper
+        shell: bash
+        run: |
+          cd kairos/node-init
+          go test ./...
+          go vet ./...
+
+      - name: Detect changed image inputs
+        id: changes
+        shell: bash
+        run: |
+          force_all=false
+          : >/tmp/kairos-image-build-changed-files.txt
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            force_all=true
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" > /tmp/kairos-image-build-changed-files.txt
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            if [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
+              force_all=true
+            else
+              git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" > /tmp/kairos-image-build-changed-files.txt
+            fi
+          fi
+
+          echo "force_all=${force_all}" >> "$GITHUB_OUTPUT"
+          echo "Changed image inputs:"
+          sed 's/^/  /' /tmp/kairos-image-build-changed-files.txt || true
+
+      - name: Resolve changed targets
         id: targets
         shell: bash
         run: |
-          targets=$(jq -c '[.targets[] | select(.enabled == true) | .target]' /tmp/kairos-image-build-plans.json)
+          targets=$(kairos/image-build/scripts/resolve-ci-targets.sh \
+            /tmp/kairos-image-build-plans.json \
+            /tmp/kairos-image-build-changed-files.txt \
+            "${{ steps.changes.outputs.force_all }}")
+          echo "Target matrix:"
+          echo "${targets}" | jq .
           echo "targets=${targets}" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build ${{ matrix.target }}
     needs: targets
-    runs-on: ubuntu-24.04
+    if: needs.targets.outputs.targets != '[]'
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJson(needs.targets.outputs.targets) }}
+        include: ${{ fromJson(needs.targets.outputs.targets) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -81,16 +133,11 @@ jobs:
         with:
           go-version-file: kairos/image-build/go.mod
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-        with:
-          image: tonistiigi/binfmt:latest
-          platforms: all
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Login to ghcr.io
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -114,7 +161,9 @@ jobs:
         shell: bash
         run: |
           cd kairos/image-build
-          echo "tag=$(go run ./cmd/image-build plan "${{ matrix.target }}" --format json | jq -r '.image')" >> "$GITHUB_OUTPUT"
+          mkdir -p "../../kairos/ci-metadata/${{ matrix.target }}"
+          go run ./cmd/image-build plan "${{ matrix.target }}" --format json | tee "../../kairos/ci-metadata/${{ matrix.target }}/plan.json" >/tmp/kairos-image-plan.json
+          echo "tag=$(jq -r '.image' /tmp/kairos-image-plan.json)" >> "$GITHUB_OUTPUT"
 
       - name: Trivy scan
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
@@ -132,7 +181,27 @@ jobs:
           fail-build: false
           severity-cutoff: critical
 
+      - name: Validate S3 publishing configuration
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          K2_KAIROS_IMAGE_AWS_REGION: ${{ vars.K2_KAIROS_IMAGE_AWS_REGION }}
+          K2_KAIROS_IMAGE_AWS_ROLE_ARN: ${{ vars.K2_KAIROS_IMAGE_AWS_ROLE_ARN }}
+          K2_KAIROS_IMAGE_BUCKET: ${{ vars.K2_KAIROS_IMAGE_BUCKET }}
+        run: |
+          test -n "${K2_KAIROS_IMAGE_AWS_REGION}" || { echo "Missing repository variable K2_KAIROS_IMAGE_AWS_REGION" >&2; exit 1; }
+          test -n "${K2_KAIROS_IMAGE_AWS_ROLE_ARN}" || { echo "Missing repository variable K2_KAIROS_IMAGE_AWS_ROLE_ARN" >&2; exit 1; }
+          test -n "${K2_KAIROS_IMAGE_BUCKET}" || { echo "Missing repository variable K2_KAIROS_IMAGE_BUCKET" >&2; exit 1; }
+
+      - name: Configure AWS credentials
+        if: github.event_name != 'pull_request'
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.K2_KAIROS_IMAGE_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.K2_KAIROS_IMAGE_AWS_REGION }}
+
       - name: Build and inspect bootable artifact with Earthly
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           docker run --privileged --rm \
@@ -145,16 +214,40 @@ jobs:
             --KAIROS_TARGET="${{ matrix.target }}"
 
       - name: Push OCI image
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           cd kairos/image-build
           go run ./cmd/image-build build oci "${{ matrix.target }}" --push
 
-      - name: Upload Kairos artifacts
+      - name: Publish bootable artifact to S3
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          K2_KAIROS_IMAGE_BUCKET: ${{ vars.K2_KAIROS_IMAGE_BUCKET }}
+          K2_KAIROS_IMAGE_PREFIX: ${{ vars.K2_KAIROS_IMAGE_PREFIX }}
+          K2_KAIROS_IMAGE_KEEP: ${{ vars.K2_KAIROS_IMAGE_KEEP }}
+          K2_KAIROS_PUBLISH_MANIFEST: kairos/ci-metadata/${{ matrix.target }}/publish-manifest.json
+          K2_KAIROS_IMAGE_STORAGE_CLASS: ${{ vars.K2_KAIROS_IMAGE_STORAGE_CLASS }}
+        run: |
+          kairos/image-build/scripts/publish-s3-artifact.sh \
+            "${{ matrix.target }}" \
+            "kairos/artifacts/${{ matrix.target }}"
+
+      - name: Collect Kairos metadata
+        shell: bash
+        run: |
+          metadata_dir="kairos/ci-metadata/${{ matrix.target }}"
+          artifact_dir="kairos/artifacts/${{ matrix.target }}"
+          if [[ -d "${artifact_dir}" ]]; then
+            cp "${artifact_dir}/artifact-manifest.json" "${metadata_dir}/" 2>/dev/null || true
+            cp "${artifact_dir}/SHA256SUMS" "${metadata_dir}/" 2>/dev/null || true
+          fi
+
+      - name: Upload Kairos metadata
         uses: actions/upload-artifact@v7
         with:
-          name: kairos-${{ matrix.target }}
-          path: kairos/artifacts/${{ matrix.target }}/*
+          name: kairos-metadata-${{ matrix.target }}
+          path: kairos/ci-metadata/${{ matrix.target }}/*
           if-no-files-found: error
           retention-days: 14

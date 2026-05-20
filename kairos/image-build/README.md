@@ -161,9 +161,15 @@ against the resolved image tag.
 
 ## CI
 
-`.github/workflows/kairos-image-build.yaml` builds enabled targets from
-`../targets.yaml`, pushes OCI images to GHCR, and uploads bootable artifacts plus
-checksums.
+`.github/workflows/kairos-image-build.yaml` validates enabled targets from
+`../targets.yaml`. Pull requests run Go checks, target planning, OCI build and
+inspection, and vulnerability scans, but they do not build or retain raw
+bootable image artifacts.
+
+Pushes to `main` and manual workflow dispatches additionally build raw bootable
+artifacts, push OCI images to GHCR, publish bootable artifacts to S3, update a
+per-target `latest/<target>/manifest.json` pointer, and prune older
+`images/<target>/<git-sha>/` prefixes for the same target.
 
 The workflow uses the pinned Earthly CI image to run the same reproducible
 artifact target used locally:
@@ -176,3 +182,21 @@ That Earthly target builds the target OCI image in a Linux Docker environment,
 runs AuroraBoot, applies raw overlay patches, writes checksums and the artifact
 manifest, and runs artifact inspection before exporting compressed artifacts to
 `kairos/artifacts/`.
+
+Only metadata is uploaded as a GitHub Actions artifact:
+
+- `plan.json`
+- `artifact-manifest.json` for non-PR artifact builds
+- `publish-manifest.json` for non-PR S3 publication
+- `SHA256SUMS` for non-PR artifact builds
+
+Configure S3 publishing with repository variables:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `K2_KAIROS_IMAGE_AWS_REGION` | Yes | AWS region containing the artifact bucket. |
+| `K2_KAIROS_IMAGE_AWS_ROLE_ARN` | Yes | IAM role assumed by GitHub Actions through OIDC. |
+| `K2_KAIROS_IMAGE_BUCKET` | Yes | S3 bucket for bootable image artifacts. |
+| `K2_KAIROS_IMAGE_PREFIX` | No | Optional key prefix inside the bucket. |
+| `K2_KAIROS_IMAGE_KEEP` | No | Builds to retain per target. Defaults to `3`. |
+| `K2_KAIROS_IMAGE_STORAGE_CLASS` | No | Storage class for image blobs. Defaults to `ONEZONE_IA`. |
