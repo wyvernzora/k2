@@ -80,9 +80,14 @@ Useful variables include:
 - `K2_PROVISION_SERVER_URL`
 - `K2_PROVISION_ONEPASSWORD_TOKEN_FILE`
 - `K2_PROVISION_OUTPUT_DIR`
+- `K2_PROVISION_PLAIN`
 
 Command-line flags still win over environment values, so per-node fields such
 as `--host`, `--ssh-port`, and `--node-name` can stay explicit.
+
+The default output is grouped status output. Set `K2_PROVISION_PLAIN=1` or pass
+`--plain` when you need the older line-oriented `k2-provision:` output for
+logs or scripts.
 
 ## Provision Bootstrap Node
 

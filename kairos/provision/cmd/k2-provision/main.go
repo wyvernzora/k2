@@ -17,11 +17,13 @@ import (
 	"github.com/wyvernzora/k2/kairos/provision/internal/prereq"
 	"github.com/wyvernzora/k2/kairos/provision/internal/remote"
 	"github.com/wyvernzora/k2/kairos/provision/internal/render"
+	"github.com/wyvernzora/k2/kairos/provision/internal/ui"
 	"github.com/wyvernzora/k2/kairos/provision/internal/workspace"
 )
 
 type cli struct {
 	RepoRoot string `name:"repo-root" env:"K2_PROVISION_REPO_ROOT" help:"Repository root. Defaults to auto-detection." type:"path"`
+	Plain    bool   `name:"plain" env:"K2_PROVISION_PLAIN" help:"Use plain log output without grouped status markers."`
 
 	Bootstrap bootstrapCmd `cmd:"" help:"Provision the first K3s server over SSH."`
 	Server    serverCmd    `cmd:"" help:"Provision an additional K3s server over SSH."`
@@ -117,9 +119,11 @@ const (
 	nodeRoleWorker nodeRole = "worker"
 )
 
+var reporter = ui.New(os.Stderr, false)
+
 func main() {
 	if err := run(os.Args[1:]); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		reporter.Errorf("%v", err)
 		os.Exit(1)
 	}
 }
@@ -134,6 +138,7 @@ func run(args []string) error {
 	if err != nil {
 		return err
 	}
+	reporter = ui.New(os.Stderr, app.Plain)
 	repoRoot, err := workspace.FindRepoRoot(app.RepoRoot)
 	if err != nil {
 		return err
@@ -150,7 +155,7 @@ func (c *renderBootstrapCmd) Run(ctx *runContext) error {
 	if err := writeBundle(c.OutputDir, bundle); err != nil {
 		return err
 	}
-	logf("wrote bootstrap bundle to %s", c.OutputDir)
+	successf("wrote bootstrap bundle to %s", c.OutputDir)
 	return nil
 }
 
@@ -166,6 +171,7 @@ func (c *bootstrapCmd) Run(ctx *runContext) error {
 		User:   c.SSHUser,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
+		Logger: logf,
 	}
 
 	logf("provision bootstrap node %s via %s", c.NodeName, client.Address())
@@ -204,15 +210,15 @@ func (c *bootstrapCmd) Run(ctx *runContext) error {
 	if err != nil {
 		return err
 	}
-	logf("uploaded bootstrap bundle to %s", remoteDir)
+	successf("uploaded bootstrap bundle to %s", remoteDir)
 	if err := client.RunAllowDisconnect(installScript(remoteDir, c.NodeName, c.NoReboot)); err != nil {
 		return err
 	}
 	if c.NoReboot {
-		logf("remote install complete; reboot skipped")
+		successf("remote install complete; reboot skipped")
 		logf("skipping credential harvest because --no-reboot leaves k3s stopped")
 	} else {
-		logf("remote install complete; node should be rebooting")
+		successf("remote install complete; node should be rebooting")
 		cfg, err := clusterconfig.Load(ctx.repoRoot, c.ClusterTarget)
 		if err != nil {
 			return err
@@ -254,6 +260,7 @@ func provisionJoinNode(ctx *runContext, role nodeRole, flags commonJoinFlags, re
 		User:   remoteFlags.SSHUser,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
+		Logger: logf,
 	}
 
 	logf("provision %s node %s via %s", role, flags.NodeName, client.Address())
@@ -283,21 +290,21 @@ func provisionJoinNode(ctx *runContext, role nodeRole, flags commonJoinFlags, re
 	if err != nil {
 		return err
 	}
-	logf("uploaded %s bundle to %s", role, remoteDir)
+	successf("uploaded %s bundle to %s", role, remoteDir)
 	if err := client.RunAllowDisconnect(joinInstallScript(remoteDir, flags.NodeName, role, remoteFlags.NoReboot)); err != nil {
 		return err
 	}
 	if remoteFlags.NoReboot {
-		logf("remote install complete; reboot skipped")
+		successf("remote install complete; reboot skipped")
 		return nil
 	}
-	logf("remote install complete; node should be rebooting")
+	successf("remote install complete; node should be rebooting")
 	logf("waiting for node to reboot and accept SSH")
 	time.Sleep(10 * time.Second)
 	if err := client.WaitForAuth(5 * time.Minute); err != nil {
 		return err
 	}
-	logf("%s node %s accepted SSH after reboot", role, flags.NodeName)
+	successf("%s node %s accepted SSH after reboot", role, flags.NodeName)
 	if err := verifyRemoteProvisioning(&client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 5*time.Minute); err != nil {
 		return err
 	}
@@ -465,7 +472,15 @@ func writeJoinBundle(dir string, role nodeRole, bundle joinBundle) error {
 }
 
 func logf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "k2-provision: "+format+"\n", args...)
+	reporter.Infof(format, args...)
+}
+
+func successf(format string, args ...any) {
+	reporter.Successf(format, args...)
+}
+
+func warnf(format string, args ...any) {
+	reporter.Warnf(format, args...)
 }
 
 func readRemoteMetadata(client *remote.Client) (render.ImageMetadata, error) {
@@ -555,7 +570,7 @@ func harvestBootstrapCredentials(client *remote.Client, cfg clusterconfig.Config
 			return err
 		}
 	}
-	logf("cluster credentials written; use KUBECONFIG=%s", filepath.Join(dir, "kubeconfig"))
+	successf("cluster credentials written; use KUBECONFIG=%s", filepath.Join(dir, "kubeconfig"))
 	return nil
 }
 
@@ -587,7 +602,7 @@ func verifyRemoteProvisioning(client *remote.Client, description string, script 
 	for {
 		err := client.Run(script)
 		if err == nil {
-			logf("%s provisioning verified", description)
+			successf("%s provisioning verified", description)
 			return nil
 		}
 		lastErr = err
@@ -706,7 +721,7 @@ func resolveJoinServerURL(cfg clusterconfig.Config, clusterName string, override
 	if err == nil {
 		return value, nil
 	}
-	logf("could not read saved server-url for cluster %s: %v; using cluster config API VIP URL", clusterName, err)
+	warnf("could not read saved server-url for cluster %s: %v; using cluster config API VIP URL", clusterName, err)
 	return cfg.APIVIPURL(), nil
 }
 

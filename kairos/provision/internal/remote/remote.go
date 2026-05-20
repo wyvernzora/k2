@@ -29,6 +29,7 @@ type Client struct {
 	User   string
 	Stdout io.Writer
 	Stderr io.Writer
+	Logger func(format string, args ...any)
 
 	authMode authMode
 	password string
@@ -250,6 +251,10 @@ func (c *Client) promptPassword() (string, error) {
 }
 
 func (c *Client) logf(format string, args ...any) {
+	if c.Logger != nil {
+		c.Logger(format, args...)
+		return
+	}
 	fmt.Fprintf(writer(c.Stderr), "k2-provision: "+format+"\n", args...)
 }
 
