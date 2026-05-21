@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: argocd
+  namespace: k2-core
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -25,7 +25,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: argocd
+  namespace: k2-core
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -40,7 +40,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: argocd
+  namespace: k2-core
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -55,7 +55,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -70,7 +70,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-secret
-  namespace: argocd
+  namespace: k2-core
 type: Opaque
 ---
 apiVersion: v1
@@ -85,7 +85,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-cm
-  namespace: argocd
+  namespace: k2-core
 data:
   admin.enabled: "true"
   application.instanceLabelKey: argocd.argoproj.io/instance
@@ -269,7 +269,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-cmd-params-cm
-  namespace: argocd
+  namespace: k2-core
 data:
   applicationsetcontroller.enable.leader.election: "false"
   applicationsetcontroller.log.format: text
@@ -303,7 +303,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-gpg-keys-cm
-  namespace: argocd
+  namespace: k2-core
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -317,7 +317,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-rbac-cm
-  namespace: argocd
+  namespace: k2-core
 data:
   policy.csv: ""
   policy.default: ""
@@ -335,7 +335,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-ssh-known-hosts-cm
-  namespace: argocd
+  namespace: k2-core
 data:
   ssh_known_hosts: |
     [ssh.github.com]:443 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
@@ -364,7 +364,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-tls-certs-cm
-  namespace: argocd
+  namespace: k2-core
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -378,7 +378,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-health-configmap
-  namespace: argocd
+  namespace: k2-core
 data:
   redis_liveness.sh: |
     response=$(
@@ -419,7 +419,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: argocd
+  namespace: k2-core
 rules:
   - apiGroups:
       - "*"
@@ -444,7 +444,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 rules:
   - apiGroups:
       - "*"
@@ -503,7 +503,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: argocd
+  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -511,7 +511,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-application-controller
-    namespace: argocd
+    namespace: k2-core
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -525,7 +525,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -533,7 +533,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-server
-    namespace: argocd
+    namespace: k2-core
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -547,7 +547,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: argocd
+  namespace: k2-core
 rules:
   - apiGroups:
       - ""
@@ -600,7 +600,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: argocd
+  namespace: k2-core
 rules:
   - apiGroups:
       - argoproj.io
@@ -700,7 +700,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: argocd
+  namespace: k2-core
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -714,7 +714,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 rules:
   - apiGroups:
       - ""
@@ -763,7 +763,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: argocd
+  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -771,7 +771,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-application-controller
-    namespace: argocd
+    namespace: k2-core
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -785,7 +785,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: argocd
+  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -793,7 +793,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-applicationset-controller
-    namespace: argocd
+    namespace: k2-core
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -807,7 +807,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: argocd
+  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -815,7 +815,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-repo-server
-    namespace: argocd
+    namespace: k2-core
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -829,7 +829,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -837,7 +837,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-server
-    namespace: argocd
+    namespace: k2-core
 ---
 apiVersion: v1
 kind: Service
@@ -851,7 +851,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: argocd
+  namespace: k2-core
 spec:
   ports:
     - name: http-webhook
@@ -874,7 +874,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: argocd
+  namespace: k2-core
 spec:
   ports:
     - name: tcp-repo-server
@@ -897,7 +897,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 spec:
   ports:
     - name: http
@@ -926,7 +926,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis
-  namespace: argocd
+  namespace: k2-core
 spec:
   ports:
     - name: redis
@@ -948,7 +948,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-applicationset-controller
-  namespace: argocd
+  namespace: k2-core
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -959,7 +959,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
+        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
       labels:
         app.kubernetes.io/component: applicationset-controller
         app.kubernetes.io/instance: argocd
@@ -970,14 +970,13 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        nodeAffinity:
+        podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: DoesNotExist
-                  - key: node-role.kubernetes.io/master
-                    operator: DoesNotExist
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: argocd-applicationset-controller
+                topologyKey: kubernetes.io/hostname
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -1196,13 +1195,6 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-applicationset-controller
       terminationGracePeriodSeconds: 30
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
       volumes:
         - configMap:
             name: argocd-ssh-known-hosts-cm
@@ -1248,7 +1240,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-repo-server
-  namespace: argocd
+  namespace: k2-core
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -1259,8 +1251,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: 02aa7d2c551f2f43a04c5c1b506f66db2f2eb31cdb27bfdeb24acd3eff251269
-        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
+        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
+        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
       labels:
         app.kubernetes.io/component: repo-server
         app.kubernetes.io/instance: argocd
@@ -1271,14 +1263,13 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        nodeAffinity:
+        podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: DoesNotExist
-                  - key: node-role.kubernetes.io/master
-                    operator: DoesNotExist
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: argocd-repo-server
+                topologyKey: kubernetes.io/hostname
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -1629,13 +1620,6 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-repo-server
       terminationGracePeriodSeconds: 30
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
       volumes:
         - emptyDir: {}
           name: helm-working-dir
@@ -1680,7 +1664,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -1691,8 +1675,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: 02aa7d2c551f2f43a04c5c1b506f66db2f2eb31cdb27bfdeb24acd3eff251269
-        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
+        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
+        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
       labels:
         app.kubernetes.io/component: server
         app.kubernetes.io/instance: argocd
@@ -1703,14 +1687,13 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        nodeAffinity:
+        podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: DoesNotExist
-                  - key: node-role.kubernetes.io/master
-                    operator: DoesNotExist
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: argocd-server
+                topologyKey: kubernetes.io/hostname
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -2087,13 +2070,6 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-server
       terminationGracePeriodSeconds: 30
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
       volumes:
         - emptyDir: {}
           name: plugins-home
@@ -2149,7 +2125,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis
-  namespace: argocd
+  namespace: k2-core
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -2168,14 +2144,13 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        nodeAffinity:
+        podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: DoesNotExist
-                  - key: node-role.kubernetes.io/master
-                    operator: DoesNotExist
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: argocd-redis
+                topologyKey: kubernetes.io/hostname
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -2218,13 +2193,6 @@ spec:
           type: RuntimeDefault
       serviceAccountName: default
       terminationGracePeriodSeconds: 30
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
       volumes:
         - configMap:
             defaultMode: 493
@@ -2243,7 +2211,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-application-controller
-  namespace: argocd
+  namespace: k2-core
 spec:
   replicas: 1
   revisionHistoryLimit: 5
@@ -2255,8 +2223,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: 02aa7d2c551f2f43a04c5c1b506f66db2f2eb31cdb27bfdeb24acd3eff251269
-        checksum/cmd-params: c807023a56961c0edeff85427df092027677d6b918751948d9edd394d8e85c53
+        checksum/cm: aa0b57b68e5241bcac1ed6bdbc21e26bfeeb69a6c49191c90cbea836a03f4d99
+        checksum/cmd-params: 15ea0247bd560516d98ddc68cd27f8142b8a6442e3c2ed58d676c58170758a20
       labels:
         app.kubernetes.io/component: application-controller
         app.kubernetes.io/instance: argocd
@@ -2267,14 +2235,13 @@ spec:
         helm.sh/chart: argo-cd-9.5.14
     spec:
       affinity:
-        nodeAffinity:
+        podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: DoesNotExist
-                  - key: node-role.kubernetes.io/master
-                    operator: DoesNotExist
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: argocd-application-controller
+                topologyKey: kubernetes.io/hostname
               weight: 100
       automountServiceAccountToken: true
       containers:
@@ -2605,13 +2572,6 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: argocd-application-controller
       terminationGracePeriodSeconds: 30
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
       volumes:
         - emptyDir: {}
           name: argocd-home
@@ -2651,7 +2611,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-server
-  namespace: argocd
+  namespace: k2-core
 spec:
   rules:
     - host: deploy.wyvernzora.io
@@ -2680,7 +2640,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: argocd
+  namespace: k2-core
 automountServiceAccountToken: true
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2698,7 +2658,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: argocd
+  namespace: k2-core
 rules:
   - apiGroups:
       - ""
@@ -2730,7 +2690,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: argocd
+  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -2754,7 +2714,7 @@ metadata:
     app.kubernetes.io/version: v3.4.2
     helm.sh/chart: argo-cd-9.5.14
   name: argocd-redis-secret-init
-  namespace: argocd
+  namespace: k2-core
 spec:
   template:
     metadata:
@@ -2798,11 +2758,4 @@ spec:
         kubernetes.io/os: linux
       restartPolicy: OnFailure
       serviceAccountName: argocd-redis-secret-init
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
   ttlSecondsAfterFinished: 60

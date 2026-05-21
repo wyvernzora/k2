@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: kube-vip
+  namespace: k2-network
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -16,7 +16,7 @@ metadata:
   annotations:
     rbac.authorization.kubernetes.io/autoupdate: "true"
   name: kube-vip
-  namespace: kube-vip
+  namespace: k2-network
 rules:
   - apiGroups:
       - ""
@@ -80,7 +80,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: kube-vip
+  namespace: k2-network
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -88,7 +88,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kube-vip
-    namespace: kube-vip
+    namespace: k2-network
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -100,7 +100,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: kube-vip
+  namespace: k2-network
 rules:
   - apiGroups:
       - ""
@@ -120,7 +120,7 @@ metadata:
     app.kubernetes.io/version: v1.0.4
     helm.sh/chart: kube-vip-0.9.9
   name: kube-vip
-  namespace: kube-vip
+  namespace: k2-network
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -128,13 +128,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kube-vip
-    namespace: kube-vip
+    namespace: k2-network
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-vip
-  namespace: kube-vip
+  namespace: k2-network
 spec:
   selector:
     matchLabels:
@@ -161,7 +161,7 @@ spec:
             - manager
           env:
             - name: vip_address
-              value: 10.10.9.1
+              value: 10.10.8.2
             - name: cp_enable
               value: "true"
             - name: lb_enable
@@ -204,9 +204,6 @@ spec:
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
-          operator: Exists
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
           operator: Exists
   updateStrategy:
     rollingUpdate:
