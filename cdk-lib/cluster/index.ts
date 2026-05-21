@@ -9,7 +9,6 @@ import { CLUSTER_TARGETS } from "./target.js";
 import type { ClusterTarget } from "./target.js";
 
 export * from "./argo.js";
-export * from "./cilium.js";
 export * from "./config.js";
 export * from "./context.js";
 export * from "./deployment.js";

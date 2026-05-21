@@ -1,5 +1,5 @@
 id: legacy
-deployPath: deploy/legacy
+deployPath: deploy
 apexDomain: wyvernzora.io
 
 onePassword:
@@ -24,8 +24,6 @@ argo:
   server: https://kubernetes.default.svc
   repoUrl: https://github.com/wyvernzora/k2
   repoBranch: deploy
-  appsPath: legacy/apps
-  rootPath: legacy/argocd
   autoSync: true
   syncOptions:
     CreateNamespace: true

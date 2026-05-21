@@ -1,2 +1,2 @@
-export const CLUSTER_TARGETS = ["legacy", "v3"] as const;
+export const CLUSTER_TARGETS = ["legacy"] as const;
 export type ClusterTarget = (typeof CLUSTER_TARGETS)[number];

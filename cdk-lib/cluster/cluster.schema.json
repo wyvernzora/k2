@@ -8,7 +8,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "enum": ["legacy", "v3"]
+      "enum": ["legacy"]
     },
     "deployPath": {
       "type": "string",
@@ -87,42 +87,10 @@
         }
       }
     },
-    "cilium": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["loadBalancerPool"],
-      "properties": {
-        "loadBalancerPool": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["start", "stop"],
-          "properties": {
-            "start": {
-              "type": "string",
-              "minLength": 1
-            },
-            "stop": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
-        }
-      }
-    },
     "argo": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "namespace",
-        "project",
-        "server",
-        "repoUrl",
-        "repoBranch",
-        "appsPath",
-        "rootPath",
-        "autoSync",
-        "syncOptions"
-      ],
+      "required": ["namespace", "project", "server", "repoUrl", "repoBranch", "autoSync", "syncOptions"],
       "properties": {
         "namespace": {
           "type": "string",
@@ -145,12 +113,7 @@
           "minLength": 1
         },
         "appsPath": {
-          "type": "string",
-          "minLength": 1
-        },
-        "rootPath": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "autoSync": {
           "type": "boolean"

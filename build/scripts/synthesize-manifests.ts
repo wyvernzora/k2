@@ -79,7 +79,7 @@ async function synthTarget(
 
   console.log(`Synthesizing ${cluster.id} manifests`);
 
-  await fs.rm(path.resolve("deploy", cluster.id), { recursive: true, force: true });
+  await cleanCluster(cluster, loadedApps);
   await Promise.all(enabledApps.map(app => limit(() => synthTargetAppManifest(cluster, app))));
   await synthTargetArgoManifest(
     cluster,
@@ -87,9 +87,28 @@ async function synthTarget(
   );
 }
 
+/**
+ * Surgical cleanup: wipe each app's output directory and the Argo bundle file
+ * from a previous run, but leave sibling directories alone (so writing to
+ * `deploy/` doesn't nuke `deploy/legacy/` or other mirrors).
+ */
+async function cleanCluster(cluster: ClusterConfig, loadedApps: LoadedApp[]): Promise<void> {
+  const appsBase = appsDir(cluster);
+  await Promise.all(loadedApps.map(app => fs.rm(path.join(appsBase, app.appName), { recursive: true, force: true })));
+  await fs.rm(bundleFile(cluster), { force: true });
+}
+
+function appsDir(cluster: ClusterConfig): string {
+  return path.join(cluster.deployPath, cluster.argo.appsPath ?? "");
+}
+
+function bundleFile(cluster: ClusterConfig): string {
+  return path.join(cluster.deployPath, "app.k8s.yaml");
+}
+
 async function synthTargetAppManifest(cluster: ClusterConfig, app: EnabledApp): Promise<void> {
-  const outFile = path.resolve("deploy", cluster.id, "apps", app.appName, "app.k8s.yaml");
-  const ctx = makeSynthContext(cluster, app, outFile, path.resolve("deploy", cluster.id, "argocd", "app.k8s.yaml"));
+  const outFile = path.resolve(appsDir(cluster), app.appName, "app.k8s.yaml");
+  const ctx = makeSynthContext(cluster, app, outFile, path.resolve(bundleFile(cluster)));
 
   if (!app.mod.createAppResources) {
     throw new Error(`${app.appName}: missing createAppResources export`);
@@ -101,12 +120,12 @@ async function synthTargetAppManifest(cluster: ClusterConfig, app: EnabledApp): 
     .use(cdkApp => createAppResources(cdkApp, ctx))
     .synthToFile(outFile);
 
-  await copyCrdManifest(app.appPath, path.resolve("deploy", cluster.id, "apps", app.appName, "crds.k8s.yaml"));
+  await copyCrdManifest(app.appPath, path.resolve(appsDir(cluster), app.appName, "crds.k8s.yaml"));
 }
 
 async function synthTargetArgoManifest(cluster: ClusterConfig, enabledApps: EnabledApp[]): Promise<void> {
   console.log(`Synthesizing ${cluster.id} ArgoCD manifest`);
-  const outFile = path.resolve("deploy", cluster.id, "argocd", "app.k8s.yaml");
+  const outFile = path.resolve(bundleFile(cluster));
   const app = new App()
     .use(ClusterContext, cluster)
     .use(OnePassword.withVault(cluster.onePassword.vaultId))
@@ -263,7 +282,7 @@ function selectedClusters(clusters: Record<ClusterTarget, ClusterConfig>): Clust
 }
 
 function isClusterTarget(target: string): target is ClusterTarget {
-  return CLUSTER_TARGETS.includes(target as ClusterTarget);
+  return (CLUSTER_TARGETS as readonly string[]).includes(target);
 }
 
 function isNodeError(err: unknown): err is NodeJS.ErrnoException {

@@ -1,28 +1,15 @@
-import { AppResourceFunc, ArgoCDResourceFunc, defineDeployment, HelmCharts, Namespace, Toleration } from "@k2/cdk-lib";
+import { AppResourceFunc, ArgoCDResourceFunc, defineDeployment, HelmCharts, Namespace } from "@k2/cdk-lib";
 import { ContinuousDeployment } from "@k2/argocd";
 
 export const deployment = defineDeployment({
   targets: {
     legacy: true,
-    v3: {
-      enabled: true,
-      bootstrap: true,
-      argo: true,
-    },
   },
 });
 
-function namespaceForTarget(target: Parameters<AppResourceFunc>[1]["target"]): string {
-  return target === "v3" ? "kube-vip" : "k2-network";
-}
-
-function extraValuesForTarget(target: Parameters<AppResourceFunc>[1]["target"]) {
-  return target === "v3" ? { tolerations: Toleration.ALLOW_CONTROL_PLANE } : {};
-}
-
 /* Export deployment chart factory */
 export const createAppResources: AppResourceFunc = (app, ctx) => {
-  app.use(Namespace, namespaceForTarget(ctx.target));
+  app.use(Namespace, "k2-network");
   const helm = HelmCharts.of(app);
   const KubeVip = helm.asChart("kube-vip");
 
@@ -37,7 +24,6 @@ export const createAppResources: AppResourceFunc = (app, ctx) => {
         svc_enable: "false",
         vip_leaderelection: "true",
       },
-      ...extraValuesForTarget(ctx.target),
       resources: {
         limits: {
           cpu: "200m",
@@ -77,6 +63,6 @@ export const createAppResources: AppResourceFunc = (app, ctx) => {
 };
 
 /* Export ArgoCD application factory */
-export const createArgoCdResources: ArgoCDResourceFunc = (chart, ctx) => {
-  new ContinuousDeployment(chart, "kube-vip", { namespace: namespaceForTarget(ctx.target) });
+export const createArgoCdResources: ArgoCDResourceFunc = chart => {
+  new ContinuousDeployment(chart, "kube-vip", { namespace: "k2-network" });
 };

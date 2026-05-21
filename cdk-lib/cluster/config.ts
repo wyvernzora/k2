@@ -1,5 +1,4 @@
 import type { ClusterArgoConfig } from "./argo.js";
-import type { ClusterCiliumConfig } from "./cilium.js";
 import type { ClusterKubernetesConfig } from "./kubernetes.js";
 import type { ClusterOnePasswordConfig } from "./one-password.js";
 import type { ClusterTarget } from "./target.js";
@@ -10,7 +9,6 @@ export interface ClusterConfig {
   readonly apexDomain: string;
   readonly onePassword: ClusterOnePasswordConfig;
   readonly kubernetes: ClusterKubernetesConfig;
-  readonly cilium?: ClusterCiliumConfig;
   readonly argo: ClusterArgoConfig;
 }
 
