@@ -33,6 +33,9 @@ out/
 *.sublime-workspace
 *.sublime-project
 
+# Agent settings
+.claude/*.local.json
+
 # Logs
 logs/
 *.log
