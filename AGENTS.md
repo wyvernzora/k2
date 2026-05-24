@@ -5,7 +5,8 @@ user-global rules first:
 
 - `~/.agents/AGENTS.md` - universal agent-behavior rules, if present.
 - `~/.agents/typescript.md` - TypeScript engineering rules, if present.
-- `~/.agents/go.md` - Go engineering rules, if present, for `kairos/image-build`.
+- `~/.agents/go.md` - Go engineering rules, if present, for
+  `kairos/image-build`.
 
 This file holds K2-specific context, hard boundaries, and accumulated project
 learnings. Global rules apply unless this file explicitly overrides them.
@@ -33,10 +34,14 @@ learnings. Global rules apply unless this file explicitly overrides them.
   is available.
 - Put CRD manifests under the owning app at `apps/<name>/crds/crds.k8s.yaml`.
 - Generate TypeScript bindings with `earthly +crd-constructs`.
-- CRD-specific helpers live with the owning app and are exported through
-  `@k2/<app>`. They do not belong in generic `cdk-lib`.
+- Use generated TypeScript bindings for custom resources.
+- CRD-specific helpers live with the owning app. They do not belong in generic
+  `cdk-lib`.
+- Raw generated CRD constructs exported from an app package must be namespaced
+  behind `crd`, e.g. `import { crd } from "@k2/external-secrets"`.
 - Generated CRD bindings may be ignored by Git; regenerate them before lint or
-  synth when needed.
+  synth when needed. Do not edit generated bindings directly when regeneration
+  is the right fix.
 
 ### Commit Hygiene
 
@@ -58,8 +63,8 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - **Domain:** personal homelab infrastructure-as-code.
 - **Purpose:** manage Kubernetes applications, cluster bootstrap, and Kairos
   bare-metal images with typed, reviewable source.
-- **Current source branch:** `main-v3`, a greenfield v3 branch. Legacy v2 source
-  remains on `main` until cutover.
+- **Current source branch:** `main-v3`, a greenfield v3 branch. Legacy v2
+  source remains on `main` until cutover.
 - **Current deploy branch target:** `deploy-v3`.
 
 ### Stack
@@ -71,17 +76,18 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - **CRDs:** generated CDK8s TypeScript bindings from app-owned CRD manifests.
 - **Build system:** Earthly v0.8+ with Docker or Podman.
 - **Kairos image work:** Go CLI under `kairos/image-build`.
-- **Secrets and TLS direction:** secrets should come from 1Password-backed app
-  helpers; cert-manager concerns should live in `@k2/cert-manager` when that
-  app exists, not in generic cluster config.
+- **Secrets and TLS:** backend-neutral secret helpers live in
+  `@k2/external-secrets`; certificate defaults and replication live in the
+  cert-manager app; AWS runtime access should prefer WebIdentity.
 
 ### Repository Map
 
 - `apps/<name>/` - one Kubernetes app module. The directory name is the app
   name and namespace.
-- `apps/<name>/components/` - app deployment constructs.
+- `apps/<name>/components/` - deployable app components. Each direct item is a
+  logical deployable unit, roughly a Kubernetes `Chart`.
 - `apps/<name>/lib/` - app-owned reusable helpers exported through
-  `@k2/<app>`.
+  `@k2/<app>` for other apps to import.
 - `apps/<name>/crds/` - upstream CRD manifest and generated bindings for that
   app.
 - `cdk-lib/` - shared app-agnostic CDK8s primitives, contexts, scheduling,
@@ -92,7 +98,8 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - `deploy/` - ignored generated manifests from `earthly +k8s-manifests`.
 - `kairos/` - Kairos image targets, versions, Earthly targets, and image build
   tooling.
-- `notes/` - ignored design checkpoints and local planning notes.
+- `notes/` and `.checkpoint/` - ignored design checkpoints and local planning
+  notes.
 
 ### Commands
 
@@ -119,39 +126,58 @@ Earthly for K2 CDK8s, manifests, lint, and CRD workflows.
 
 ## 3. CDK8s v3 Architecture
 
-### App Shape
+### App Model
 
 - One `apps/<name>/` directory equals one Kubernetes namespace named `<name>`.
 - One app directory synthesizes through one `cdk8s.App`.
 - `K2App` uses `YamlOutputType.FILE_PER_APP`, producing
-  `deploy/apps/<name>/app.k8s.yaml`.
-- App CRDs, if present, are copied to `deploy/apps/<name>/crds.k8s.yaml`.
+  `deploy/<name>/app.k8s.yaml`. The root app-of-apps bundle synthesizes to
+  `deploy/app.k8s.yaml`.
+- App CRDs, if present, are copied to `deploy/<name>/crds.k8s.yaml`.
 - Argo CD Application names are exactly the app directory names. Do not add a
   `v3-` prefix.
-
-### App Exports
-
-Every `apps/<name>/index.ts` exports typed named constants:
+- Every `apps/<name>/index.ts` exports one typed named constant:
 
 ```ts
 export const createAppResources: AppResourceFunc = app => {
   // create component charts/resources
 };
-
-export const createArgoCdApp: ArgoCdAppFunc = defaultArgoCdAppFunc({
-  // optional app-specific Argo settings
-});
 ```
 
 - Do not export loose untyped functions.
+- Do not export `createArgoCdApp`; synth derives Argo CD Applications
+  uniformly from the app directory and cluster config.
 - Do not add `defineDeployment`.
 - Do not add `export const deployment`.
-- Cluster bootstrap (provisioning, initial control-plane setup, installing
-  cilium/kube-vip/argocd before GitOps takes over) is handled by the
-  provisioner CLI in `kairos/`, *not* by the cdk8s layer. Synthesized
-  manifests do not encode bootstrap ordering and do not emit Argo CD
-  sync-wave annotations. Kubernetes converges eventually; the manifest
-  layer treats every app identically.
+
+### Component Layout
+
+- Every direct item under `apps/<name>/components/` is a logical deployable
+  unit wired by `createAppResources`.
+- Prefer `apps/<name>/components/<component>/index.ts` plus neighboring
+  construct files for components with multiple resources or more than about 100
+  SLOC.
+- A simple component may stay as a single `components/<component>.ts` file to
+  avoid pointless nesting.
+- App-local constructs used only by an app's own component stay under that
+  app's `components/`; reserve `apps/<name>/lib/` for constructs intentionally
+  imported by other apps through `@k2/<name>`.
+- Wire only the component facade from the app module. Component internals
+  should be imported by neighboring files inside the component subtree.
+
+### Resource Construction Style
+
+- Top-level component constructors should read as orchestration, not a wall of
+  manifest shape.
+- When a constructor both orchestrates several things and instantiates a
+  resource with a large props object, especially a raw CRD, wrap that resource
+  in a named construct extending the resource type and put it in a dedicated
+  component-local file.
+- Alias excessively long generated CRD enum/type names near the top of the
+  dedicated resource file so the props body remains readable.
+- Object literals nested more than about three levels deep should usually move
+  into named helper functions in the same file, unless the whole file is already
+  a dedicated resource wrapper.
 
 ### Contexts
 
@@ -192,18 +218,61 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 - Split broad helper families by type. Volumes live under `cdk-lib/volumes/`
   with separate files for ephemeral, NFS, replicated, and shared base types.
 
+### Secrets, TLS, And AWS
+
+- App-facing secret constructs must stay backend-neutral. Do not expose whether
+  ordinary secrets currently come from 1Password, AWS Secrets Manager, or
+  another backend.
+- Shared secret provider auth and stores belong to `external-secrets`, and all
+  secret-related provider infrastructure should live in the `external-secrets`
+  namespace.
+- Final app-consumed Kubernetes Secrets may still exist in app namespaces
+  because Kubernetes Secret consumption is namespace-scoped.
+- Prefer WebIdentity for AWS runtime access. Do not add a generic AWS
+  credential Secret construct until a concrete workload requires literal SigV4
+  keys.
+- Cert-manager Route53 DNS01 uses K2's public service-account OIDC issuer and
+  cert-manager `auth.kubernetes.serviceAccountRef`; do not route DNS01 through
+  ESO or `aws-sts-bootstrap`.
+- Default certificate names and TLS replication behavior belong in the
+  cert-manager app, not cluster config.
+
 ### Network Policy
 
 - Cilium owns the network policy DSL because it depends on Cilium CRDs.
 - Use generated `CiliumNetworkPolicy` bindings from `apps/cilium/crds/`.
-- The synth layer does not apply default-deny automatically. Apps that
-  want a namespace-wide default-deny opt in by instantiating
-  `DefaultDenyNetworkPolicy` from `@k2/cilium` in their own
-  `createAppResources`. Apps that need exceptions (e.g. cilium itself,
-  hostNetwork pods) simply do not instantiate it, or pair it with
-  explicit allow `CiliumNetworkPolicy` rules.
+- Treat namespaces as the default trust boundary. Apps opt into enforcement by
+  instantiating `NamespaceBoundaryPolicy` from `@k2/cilium`.
+- A namespace boundary allows same-namespace traffic and kube-apiserver access;
+  cross-namespace and outside-cluster relationships need explicit allow
+  policies.
+- Caller/callee relationships are normally owned by the caller. For
+  one-to-many relationships, each spoke owns its own edge. True peer
+  relationships are `REVISIT` until there is a real case.
+- The app that owns a K2 pod owns policies for that pod's traffic to or from
+  outside-cluster peers.
 - Cross-cutting presets such as DNS, API server, ingress controller, and
   monitoring access should be typed helpers in `@k2/cilium`.
+
+### Scheduling
+
+- Movable workloads should prefer worker nodes.
+- Movable-but-critical data-plane workloads should prefer workers and tolerate
+  control-plane nodes only as fallback.
+- Host/control-plane style workloads, such as `kube-vip`, may remain
+  control-plane pinned.
+
+### Bootstrap And GitOps
+
+- Cluster bootstrap is the provisioner CLI's concern, not the cdk8s layer's.
+- Synthesized manifests do not encode bootstrap ordering and do not emit Argo
+  CD sync-wave annotations. Kubernetes converges eventually; the manifest layer
+  treats every app identically.
+- Bootstrap provisioning must apply the root Argo CD app-of-apps after the Argo
+  Application CRD is established; do not rely on K3s static manifest ordering
+  for Argo `Application` custom resources.
+- The root Argo CD app-of-apps should not auto-sync; generated child
+  Applications should own normal auto-sync behavior.
 
 ---
 
@@ -223,10 +292,12 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 ### Adding An App
 
 1. Create `apps/<name>/Chart.yaml` for Helm dependencies, if any.
-2. Put deployment constructs under `apps/<name>/components/`.
+2. Put deployment components under `apps/<name>/components/`; use a component
+   subdirectory with `index.ts` when the component needs multiple construct
+   files.
 3. Put reusable app-owned helpers under `apps/<name>/lib/` and export them
    from `apps/<name>/index.ts` when other apps should import them.
-4. Export typed named `createAppResources` and `createArgoCdApp`.
+4. Export typed named `createAppResources: AppResourceFunc`.
 5. Add app CRDs under `apps/<name>/crds/` when the app owns custom resources.
 6. Run the Earthly validation loop.
 
@@ -236,6 +307,13 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 2. Run `earthly +crd-constructs`.
 3. Use the generated TypeScript binding for custom resources.
 4. Run `earthly +lint` and `earthly +k8s-manifests`.
+
+### Live Cluster Diagnostics
+
+- For live v3 cluster diagnostics, use the explicit kubeconfig at
+  `/Users/wyvernzora/.kube/k2/k2/kubeconfig`; the ambient context may point at
+  the legacy API VIP.
+- Do not reveal Secret values in command output or summaries.
 
 ### Kairos Image Work
 
@@ -251,9 +329,8 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 - Raw `ApiObject` for any custom resource with an available CRD.
 - Cilium CRD helpers in `cdk-lib`.
 - Generic auth/cert/network contexts in `cdk-lib`.
-- Bootstrap-aware logic in the manifest synth (sync waves, bootstrap
-  policy maps, default-deny opt-out lists, etc.). Bootstrap is the
-  provisioner CLI's job, not the cdk8s layer's.
+- Bootstrap-aware logic in the manifest synth, including sync waves, bootstrap
+  policy maps, and default-deny opt-out lists.
 - `v3-` prefixes on Argo CD Application names.
 - `FILE_PER_CHART` output for app manifests.
 - Nested `cdk-lib/constructs/`.
@@ -264,61 +341,11 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 
 ---
 
-## 6. Project Learnings
+## 6. Project Learnings Inbox
 
-**Accumulated corrections. This section is for the agent to maintain, not just
-the human.**
+This section is intentionally short. When the user corrects your approach,
+either tighten the stable rule above or append one concrete one-line rule here
+before ending the session. During grooming, promote durable rules into the
+proper section above and remove the inbox duplicate.
 
-When the user corrects your approach, append a one-line rule here before ending
-the session. Write it concretely ("Always use X for Y"), never abstractly ("be
-careful with Y"). If an existing line already covers the correction, tighten it
-instead of adding a new one. Remove lines when the underlying issue goes away.
-
-- Argo CD Application names are the app directory names; never prefix them with
-  the cluster name.
-- App factories receive the `K2App` only; constructs read cluster/app facts
-  with `Context.of(this)`.
-- App module shape is typed named exports:
-  `createAppResources: AppResourceFunc` and `createArgoCdApp: ArgoCdAppFunc`.
-- `createArgoCdApp` should usually be assigned with
-  `defaultArgoCdAppFunc({ ... })`.
-- Cluster bootstrap is the provisioner CLI's concern, not the cdk8s
-  layer's. Do not reintroduce bootstrap maps or sync-wave annotations
-  into synth.
-- One app directory means one app manifest file; keep `YamlOutputType.FILE_PER_APP`.
-- Keep `cdk-lib` flat and app-agnostic; do not recreate a
-  `cdk-lib/constructs` subtree.
-- Split volume implementations by type under `cdk-lib/volumes`.
-- App-local constructs used only by an app's own `components/` stay under that
-  app's `components/`; reserve `apps/<name>/lib/` for constructs imported by
-  other apps through `@k2/<name>`.
-- Do not add `AuthContext`, `CertContext`, or `NetworkContext`; import concrete
-  helpers from the owning app packages.
-- Network policy helpers live in `@k2/cilium` and use generated Cilium CRD
-  bindings.
-- Host-side npm dependencies are for dev-time editor/type assistance only; all
-  real validation is through Earthly.
-- Cluster YAML is for real cluster-wide Kubernetes context only; app-configured
-  values stay app-side.
-- Keep ingress defaults and load-balancer pools out of cluster YAML until a
-  concrete app needs them.
-- Default certificate names belong in `@k2/cert-manager`, not cluster config.
-- App-facing secret constructs must stay backend-neutral; do not expose whether
-  ordinary secrets currently come from 1Password, AWS Secrets Manager, or
-  another backend.
-- Shared secret provider auth and stores belong to `external-secrets`. Prefer
-  WebIdentity for AWS runtime access; do not add a generic AWS credential
-  Secret construct until a concrete workload requires literal SigV4 keys.
-- For live v3 cluster diagnostics, use the explicit kubeconfig at
-  `/Users/wyvernzora/.kube/k2/k2/kubeconfig`; the ambient context may point at
-  the legacy API VIP.
-- Cert-manager Route53 DNS01 uses K2's public service-account OIDC issuer and
-  cert-manager `auth.kubernetes.serviceAccountRef`; do not route DNS01 through
-  ESO or `aws-sts-bootstrap`.
-- Raw generated CRD constructs exported from an app package must be namespaced
-  behind `crd`, e.g. `import { crd } from "@k2/external-secrets"`.
-- Bootstrap provisioning must apply the root Argo CD app-of-apps after the
-  Argo Application CRD is established; do not rely on K3s static manifest
-  ordering for Argo `Application` custom resources.
-- The root Argo CD app-of-apps should not auto-sync; generated child
-  Applications should own normal auto-sync behavior.
+No ungroomed learnings currently.
