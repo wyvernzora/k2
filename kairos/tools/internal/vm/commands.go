@@ -15,10 +15,11 @@ func (r Runner) Presets() error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(r.stdout(), "%-20s %s\n", "PRESET", "DESCRIPTION")
+	rows := make([][]string, 0, len(presets))
 	for _, preset := range presets {
-		fmt.Fprintf(r.stdout(), "%-20s %s\n", preset.name, preset.Description)
+		rows = append(rows, []string{preset.name, preset.Description})
 	}
+	r.Reporter.Table([]string{"PRESET", "DESCRIPTION"}, rows)
 	return nil
 }
 
@@ -27,14 +28,15 @@ func (r Runner) List() error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(r.stdout(), "%-12s %-20s %-10s %-15s %s\n", "ID", "PRESET", "STATE", "IP", "DIR")
+	rows := make([][]string, 0, len(metas))
 	for _, meta := range metas {
 		state := "stopped"
 		if isRunning(meta) {
 			state = "running"
 		}
-		fmt.Fprintf(r.stdout(), "%-12s %-20s %-10s %-15s %s\n", meta.ID, meta.Preset, state, listIP(meta), meta.VMDir)
+		rows = append(rows, []string{meta.ID, meta.Preset, state, listIP(meta), meta.VMDir})
 	}
+	r.Reporter.Table([]string{"ID", "PRESET", "STATE", "IP", "DIR"}, rows)
 	return nil
 }
 
@@ -134,6 +136,7 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 		PIDFile:         filepath.Join(vmDir, "qemu.pid"),
 		QEMULog:         filepath.Join(vmDir, "qemu.log"),
 		ConsoleLog:      filepath.Join(vmDir, "console.log"),
+		ConsoleSocket:   filepath.Join(vmDir, "console.sock"),
 	}
 	return meta, preset, rawXZ, nil
 }
@@ -166,7 +169,7 @@ func (r Runner) Info(id string) error {
 	if err != nil {
 		return err
 	}
-	printInfo(r.stdout(), meta)
+	r.Reporter.KeyValues(infoFields(meta)...)
 	return nil
 }
 
@@ -200,7 +203,7 @@ func (r Runner) Status(id string) error {
 	if err != nil {
 		return err
 	}
-	printStatus(r.stdout(), meta)
+	r.Reporter.KeyValues(statusFields(meta)...)
 	return nil
 }
 
@@ -227,12 +230,7 @@ func (r Runner) Console(id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(meta.ConsoleLog); errors.Is(err, os.ErrNotExist) {
-		if err := os.WriteFile(meta.ConsoleLog, nil, 0o644); err != nil {
-			return err
-		}
-	}
-	return r.runInteractive(exec.Command("tail", "-f", meta.ConsoleLog))
+	return r.attachConsole(meta)
 }
 
 func (r Runner) Monitor(id string) error {

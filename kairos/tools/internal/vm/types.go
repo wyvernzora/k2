@@ -125,6 +125,7 @@ type Metadata struct {
 	PIDFile         string `json:"pidFile"`
 	QEMULog         string `json:"qemuLog"`
 	ConsoleLog      string `json:"consoleLog"`
+	ConsoleSocket   string `json:"consoleSocket"`
 }
 
 type artifactManifest struct {

@@ -37,6 +37,14 @@ func loadMetadata(repoRoot string, id string) (Metadata, error) {
 	if err := json.Unmarshal(data, &meta); err != nil {
 		return Metadata{}, err
 	}
+	// Back-fill fields added after the metadata file was first written.
+	// Older VMs don't have ConsoleSocket persisted; derive it so callers
+	// have a stable path to use once the VM is restarted under the new
+	// QEMU args. The VM still needs a restart for the socket to actually
+	// be created — QEMU args are baked at boot time.
+	if meta.ConsoleSocket == "" && meta.VMDir != "" {
+		meta.ConsoleSocket = filepath.Join(meta.VMDir, "console.sock")
+	}
 	return meta, nil
 }
 

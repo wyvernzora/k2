@@ -41,6 +41,10 @@ func resolvePort(spec string) (int, error) {
 	if spec == "" {
 		return 0, fmt.Errorf("empty port spec")
 	}
+	// `auto:START-END` is the preset-file form meaning "find a free
+	// port in this range." The range-search behavior below already
+	// implements that, so strip the prefix and fall through.
+	spec = strings.TrimPrefix(spec, "auto:")
 	if strings.Contains(spec, "-") {
 		parts := strings.SplitN(spec, "-", 2)
 		if len(parts) != 2 {

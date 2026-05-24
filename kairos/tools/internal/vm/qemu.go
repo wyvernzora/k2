@@ -29,6 +29,12 @@ func (r Runner) start(meta Metadata, sudo bool) error {
 		return err
 	}
 	_ = os.Remove(meta.PIDFile)
+	// QEMU's `-chardev socket,server=on` does not unlink an existing
+	// socket on bind, so a stale file from a previous run would make
+	// it fail with EADDRINUSE. Remove it preemptively.
+	if meta.ConsoleSocket != "" {
+		_ = os.Remove(meta.ConsoleSocket)
+	}
 
 	netdev, err := netdevArg(meta)
 	if err != nil {
@@ -44,6 +50,9 @@ func (r Runner) start(meta Metadata, sudo bool) error {
 	if err := runCommand(cmd); err != nil {
 		return qemuStartError(meta, err, sudo)
 	}
+	if err := r.ensureConsoleSocketReady(meta, sudo); err != nil {
+		r.logf("warning: console may be unusable: %v", err)
+	}
 	r.successf("started %s%s", meta.Name, pidSuffix(meta))
 	r.logf("ssh: k2-tools vm ssh %s", meta.ID)
 	if meta.APIPort != 0 {
@@ -51,6 +60,32 @@ func (r Runner) start(meta Metadata, sudo bool) error {
 	}
 	r.logf("console: k2-tools vm console %s", meta.ID)
 	return nil
+}
+
+// ensureConsoleSocketReady waits up to a few seconds for QEMU's
+// chardev socket to appear on disk, then — when QEMU was launched via
+// sudo — relaxes its mode to 0660 so the local operator (in group
+// `staff` on macOS) can connect. Connecting to a unix-domain socket
+// needs write permission on the file; without this fixup the operator
+// gets EACCES against a root:staff 0750 socket for every vmnet-shared
+// VM. The chmod runs through sudo so it works regardless of who owns
+// the socket; sudo creds are still cached from the QEMU launch a
+// moment ago, so no extra prompt.
+func (r Runner) ensureConsoleSocketReady(meta Metadata, sudo bool) error {
+	if meta.ConsoleSocket == "" {
+		return nil
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(meta.ConsoleSocket); err == nil {
+			if !sudo {
+				return nil
+			}
+			return runCommand(exec.Command("sudo", "chmod", "0660", meta.ConsoleSocket))
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	return fmt.Errorf("console socket %s did not appear within 5s", meta.ConsoleSocket)
 }
 
 func qemuArgs(meta Metadata, firmware string, netdev string) []string {
@@ -69,7 +104,12 @@ func qemuArgs(meta Metadata, firmware string, netdev string) []string {
 		"-chardev", fmt.Sprintf("socket,host=127.0.0.1,port=%d,server=on,wait=off,id=qga0", meta.QGAPort),
 		"-device", "virtserialport,chardev=qga0,name=org.qemu.guest_agent.0",
 		"-monitor", fmt.Sprintf("tcp:127.0.0.1:%d,server=on,wait=off", meta.MonitorPort),
-		"-serial", "file:" + meta.ConsoleLog,
+		// Bidirectional serial: QEMU listens on a unix-domain socket,
+		// `k2-tools vm console` dials in. logfile= keeps the persistent
+		// log so tailing `console.log` directly still works for passive
+		// observation when nobody is attached.
+		"-chardev", fmt.Sprintf("socket,id=console0,path=%s,server=on,wait=off,logfile=%s,logappend=on", meta.ConsoleSocket, meta.ConsoleLog),
+		"-serial", "chardev:console0",
 		"-display", "none",
 		"-pidfile", meta.PIDFile,
 		"-D", meta.QEMULog,
