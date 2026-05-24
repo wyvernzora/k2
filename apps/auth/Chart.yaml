@@ -1,7 +1,0 @@
-apiVersion: v2
-name: auth
-version: 1.0.0
-dependencies:
-  - name: authelia
-    repository: https://charts.authelia.com
-    version: 0.11.5

@@ -1,3 +1,0 @@
-- name: update initramfs image
-  command:
-    cmd: update-initramfs -u -k all
