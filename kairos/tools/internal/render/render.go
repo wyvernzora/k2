@@ -58,11 +58,11 @@ func ClusterConfig(c clusterconfig.Config) ([]byte, error) {
 		TLSSAN        []string `yaml:"tls-san,omitempty"`
 	}
 	return yaml.Marshal(config{
-		ClusterCIDR:   c.Kubernetes.Networking.PodCIDR,
-		ServiceCIDR:   c.Kubernetes.Networking.ServiceCIDR,
-		ClusterDNS:    c.Kubernetes.Networking.ClusterDNS,
-		ClusterDomain: c.Kubernetes.Networking.ClusterDomain,
-		TLSSAN:        c.Kubernetes.API.TLSSans,
+		ClusterCIDR:   c.Kubernetes.Subnets.Pods,
+		ServiceCIDR:   c.Kubernetes.Subnets.Services,
+		ClusterDNS:    c.Kubernetes.DNS,
+		ClusterDomain: c.Kubernetes.Domain,
+		TLSSAN:        []string{c.Kubernetes.API},
 	})
 }
 

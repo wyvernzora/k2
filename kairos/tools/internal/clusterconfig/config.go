@@ -2,39 +2,32 @@ package clusterconfig
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"gopkg.in/yaml.v3"
 )
 
+const apiServerPort = 6443
+
 type Config struct {
-	ID          string `yaml:"id"`
-	DeployPath  string `yaml:"deployPath"`
-	ApexDomain  string `yaml:"apexDomain"`
-	OnePassword struct {
-		VaultID string `yaml:"vaultId"`
-	} `yaml:"onePassword"`
+	ID         string     `yaml:"id"`
+	ApexDomain string     `yaml:"apexDomain"`
 	Kubernetes Kubernetes `yaml:"kubernetes"`
 }
 
 type Kubernetes struct {
-	API        API        `yaml:"api"`
-	Networking Networking `yaml:"networking"`
+	API     string  `yaml:"api"`
+	DNS     string  `yaml:"dns"`
+	Domain  string  `yaml:"domain"`
+	Subnets Subnets `yaml:"subnets"`
 }
 
-type API struct {
-	VIP     string   `yaml:"vip"`
-	DNSName string   `yaml:"dnsName"`
-	Port    int      `yaml:"port"`
-	TLSSans []string `yaml:"tlsSans"`
-}
-
-type Networking struct {
-	PodCIDR       string `yaml:"podCidr"`
-	ServiceCIDR   string `yaml:"serviceCidr"`
-	ClusterDNS    string `yaml:"clusterDns"`
-	ClusterDomain string `yaml:"clusterDomain"`
+type Subnets struct {
+	Pods     string `yaml:"pods"`
+	Services string `yaml:"services"`
 }
 
 func Load(repoRoot string, target string) (Config, error) {
@@ -55,31 +48,14 @@ func Load(repoRoot string, target string) (Config, error) {
 }
 
 func (c Config) DeployDir(repoRoot string) string {
-	if c.DeployPath == "" {
-		return filepath.Join(repoRoot, "deploy", c.ID)
-	}
-	return filepath.Join(repoRoot, c.DeployPath)
+	return filepath.Join(repoRoot, "deploy")
 }
 
 func (c Config) APIServerURL() string {
-	port := c.Kubernetes.API.Port
-	if port == 0 {
-		port = 6443
-	}
-	host := c.Kubernetes.API.DNSName
-	if host == "" {
-		host = c.Kubernetes.API.VIP
-	}
-	return fmt.Sprintf("https://%s:%d", host, port)
+	return fmt.Sprintf("https://%s:%d", c.Kubernetes.API, apiServerPort)
 }
 
-func (c Config) APIVIPURL() string {
-	port := c.Kubernetes.API.Port
-	if port == 0 {
-		port = 6443
-	}
-	return fmt.Sprintf("https://%s:%d", c.Kubernetes.API.VIP, port)
-}
+var cidrPattern = regexp.MustCompile(`^(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}$`)
 
 func (c Config) validate(path string, target string) error {
 	if c.ID == "" {
@@ -88,20 +64,44 @@ func (c Config) validate(path string, target string) error {
 	if c.ID != target {
 		return fmt.Errorf("%s: id %q does not match cluster target %q", path, c.ID, target)
 	}
-	if c.Kubernetes.API.VIP == "" {
-		return fmt.Errorf("%s: kubernetes.api.vip is required", path)
+	if err := requireIPv4(c.Kubernetes.API, path+".kubernetes.api"); err != nil {
+		return err
 	}
-	if c.Kubernetes.Networking.PodCIDR == "" {
-		return fmt.Errorf("%s: kubernetes.networking.podCidr is required", path)
+	if err := requireIPv4(c.Kubernetes.DNS, path+".kubernetes.dns"); err != nil {
+		return err
 	}
-	if c.Kubernetes.Networking.ServiceCIDR == "" {
-		return fmt.Errorf("%s: kubernetes.networking.serviceCidr is required", path)
+	if c.Kubernetes.Domain == "" {
+		return fmt.Errorf("%s.kubernetes.domain: must not be empty", path)
 	}
-	if c.Kubernetes.Networking.ClusterDNS == "" {
-		return fmt.Errorf("%s: kubernetes.networking.clusterDns is required", path)
+	if err := requireCIDR(c.Kubernetes.Subnets.Pods, path+".kubernetes.subnets.pods"); err != nil {
+		return err
 	}
-	if c.Kubernetes.Networking.ClusterDomain == "" {
-		return fmt.Errorf("%s: kubernetes.networking.clusterDomain is required", path)
+	if err := requireCIDR(c.Kubernetes.Subnets.Services, path+".kubernetes.subnets.services"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func requireIPv4(value string, fieldPath string) error {
+	if value == "" {
+		return fmt.Errorf("%s: must not be empty", fieldPath)
+	}
+	parsed := net.ParseIP(value)
+	if parsed == nil || parsed.To4() == nil {
+		return fmt.Errorf("%s: %q is not an IPv4 address", fieldPath, value)
+	}
+	return nil
+}
+
+func requireCIDR(value string, fieldPath string) error {
+	if value == "" {
+		return fmt.Errorf("%s: must not be empty", fieldPath)
+	}
+	if !cidrPattern.MatchString(value) {
+		return fmt.Errorf("%s: %q is not CIDR notation", fieldPath, value)
+	}
+	if _, _, err := net.ParseCIDR(value); err != nil {
+		return fmt.Errorf("%s: %w", fieldPath, err)
 	}
 	return nil
 }

@@ -45,6 +45,38 @@ func (c Client) Address() string {
 	return c.User + "@" + c.Host
 }
 
+// SwapIO redirects this Client's Stdout, Stderr, and Logger to write
+// into `w`. Returns a func that restores the previous IO. The
+// canonical use is inside a ui.Workflow Shell step, where the
+// bubbletea-managed io.Writer owns the terminal region for the
+// duration:
+//
+//	wf.Shell("Upload bundle", func(ctx context.Context, sh ui.Step) error {
+//	    defer client.SwapIO(sh)()
+//	    return client.UploadDir(localDir)
+//	})
+//
+// Without the redirection, the Client's Stdout/Stderr writes to
+// os.Stdout/os.Stderr race with bubbletea's terminal management and
+// corrupt the spinner/scrollback display.
+func (c *Client) SwapIO(w io.Writer) func() {
+	prevStdout, prevStderr, prevLogger := c.Stdout, c.Stderr, c.Logger
+	c.Stdout = w
+	c.Stderr = w
+	c.Logger = func(format string, args ...any) {
+		line := fmt.Sprintf(format, args...)
+		if !strings.HasSuffix(line, "\n") {
+			line += "\n"
+		}
+		_, _ = w.Write([]byte(line))
+	}
+	return func() {
+		c.Stdout = prevStdout
+		c.Stderr = prevStderr
+		c.Logger = prevLogger
+	}
+}
+
 func (c *Client) EnsureAuth() error {
 	if c.authMode != authModeUnknown {
 		return nil
@@ -469,12 +501,16 @@ func (c *Client) promptPassword() (string, error) {
 	return string(password), nil
 }
 
+// logf is the remote client's narration channel. Callers are expected
+// to wire `Logger` to ui.Reporter (or another sink) at construction
+// time. When unset we silently discard rather than emit a raw
+// `k2-tools: ...` line: that would bypass the Reporter's plain-mode
+// discipline (the Reporter is the single source of `k2-tools:`
+// prefixed output across the binary).
 func (c *Client) logf(format string, args ...any) {
 	if c.Logger != nil {
 		c.Logger(format, args...)
-		return
 	}
-	fmt.Fprintf(writer(c.Stderr), "k2-tools: "+format+"\n", args...)
 }
 
 func isSSHDisconnect(err error) bool {

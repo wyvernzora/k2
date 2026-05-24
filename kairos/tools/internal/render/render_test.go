@@ -89,11 +89,11 @@ func TestBootstrapConfigAllowsWhitelistedKubeletReservedLabel(t *testing.T) {
 
 func TestClusterConfig(t *testing.T) {
 	cfg := clusterconfig.Config{}
-	cfg.Kubernetes.API.TLSSans = []string{"10.10.9.1", "k8s-api.wyvernzora.io"}
-	cfg.Kubernetes.Networking.PodCIDR = "10.42.0.0/16"
-	cfg.Kubernetes.Networking.ServiceCIDR = "10.43.0.0/16"
-	cfg.Kubernetes.Networking.ClusterDNS = "10.43.0.10"
-	cfg.Kubernetes.Networking.ClusterDomain = "cluster.local"
+	cfg.Kubernetes.API = "10.10.9.1"
+	cfg.Kubernetes.DNS = "10.43.0.10"
+	cfg.Kubernetes.Domain = "cluster.local"
+	cfg.Kubernetes.Subnets.Pods = "10.42.0.0/16"
+	cfg.Kubernetes.Subnets.Services = "10.43.0.0/16"
 
 	data, err := ClusterConfig(cfg)
 	if err != nil {
@@ -106,7 +106,6 @@ func TestClusterConfig(t *testing.T) {
 		"cluster-dns: 10.43.0.10",
 		"cluster-domain: cluster.local",
 		"- 10.10.9.1",
-		"- k8s-api.wyvernzora.io",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("cluster config missing %q:\n%s", want, got)

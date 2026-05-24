@@ -23,39 +23,42 @@ func Bootstrap(repoRoot string, cfg clusterconfig.Config, opts BootstrapOptions)
 	var buf bytes.Buffer
 
 	addNamespace(&buf, "cilium")
-	if err := appendFile(&buf, filepath.Join(deployDir, "apps", "cilium", "crds.k8s.yaml")); err != nil {
+	if err := appendFile(&buf, filepath.Join(deployDir, "cilium", "crds.k8s.yaml")); err != nil {
 		return nil, err
 	}
-	if err := appendCiliumApp(&buf, filepath.Join(deployDir, "apps", "cilium", "app.k8s.yaml"), opts.CiliumAPIHost); err != nil {
+	if err := appendCiliumApp(&buf, filepath.Join(deployDir, "cilium", "app.k8s.yaml"), opts.CiliumAPIHost); err != nil {
 		return nil, err
 	}
 
 	addNamespace(&buf, "argocd")
-	if err := appendFile(&buf, filepath.Join(deployDir, "apps", "argocd", "crds.k8s.yaml")); err != nil {
+	if err := appendFile(&buf, filepath.Join(deployDir, "argocd", "crds.k8s.yaml")); err != nil {
 		return nil, err
 	}
-	if err := appendFile(&buf, filepath.Join(deployDir, "apps", "argocd", "app.k8s.yaml")); err != nil {
+	if err := appendFile(&buf, filepath.Join(deployDir, "argocd", "app.k8s.yaml")); err != nil {
 		return nil, err
 	}
 
 	addNamespace(&buf, "kube-vip")
-	if err := appendFile(&buf, filepath.Join(deployDir, "apps", "kube-vip", "app.k8s.yaml")); err != nil {
+	if err := appendFile(&buf, filepath.Join(deployDir, "kube-vip", "app.k8s.yaml")); err != nil {
 		return nil, err
 	}
+
+	addNamespace(&buf, "external-secrets")
 
 	extraManifestPaths, err := expandExtraManifestPatterns(opts.ExtraManifestPatterns)
 	if err != nil {
 		return nil, err
 	}
 	if err := appendExtraManifests(&buf, extraManifestPaths, map[string]bool{
-		"argocd":   true,
-		"cilium":   true,
-		"kube-vip": true,
+		"argocd":           true,
+		"cilium":           true,
+		"kube-vip":         true,
+		"external-secrets": true,
 	}); err != nil {
 		return nil, err
 	}
 
-	if err := appendFile(&buf, filepath.Join(deployDir, "argocd", "app.k8s.yaml")); err != nil {
+	if err := appendFile(&buf, filepath.Join(deployDir, "app.k8s.yaml")); err != nil {
 		return nil, err
 	}
 	addCleanupJob(&buf)

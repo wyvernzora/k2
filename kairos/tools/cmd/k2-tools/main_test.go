@@ -157,18 +157,12 @@ func TestTestKubeVIPUsesLastUsableAddressInNodeCIDR(t *testing.T) {
 	}
 }
 
-func TestApplyTestKubeVIPPatchesVIPAndTLSSAN(t *testing.T) {
+func TestApplyTestKubeVIPRewritesAPI(t *testing.T) {
 	cfg := testClusterConfig()
 	applyTestKubeVIP(&cfg, "192.168.64.254")
 
-	if cfg.Kubernetes.API.VIP != "192.168.64.254" {
-		t.Fatalf("vip = %s, want 192.168.64.254", cfg.Kubernetes.API.VIP)
-	}
-	if cfg.Kubernetes.API.DNSName != "" {
-		t.Fatalf("dns name = %s, want empty for VM test endpoint", cfg.Kubernetes.API.DNSName)
-	}
-	if !containsString(cfg.Kubernetes.API.TLSSans, "192.168.64.254") {
-		t.Fatalf("tls sans missing test VIP: %#v", cfg.Kubernetes.API.TLSSans)
+	if cfg.Kubernetes.API != "192.168.64.254" {
+		t.Fatalf("api = %s, want 192.168.64.254", cfg.Kubernetes.API)
 	}
 }
 
@@ -231,19 +225,12 @@ func TestApplyProvisionTestVMKeepsExplicitNodeName(t *testing.T) {
 
 func testClusterConfig() clusterconfig.Config {
 	cfg := clusterconfig.Config{ID: "v3"}
-	cfg.Kubernetes.API.VIP = "10.10.9.1"
-	cfg.Kubernetes.API.DNSName = "k8s-api.wyvernzora.io"
-	cfg.Kubernetes.API.TLSSans = []string{"10.10.9.1", "k8s-api.wyvernzora.io"}
+	cfg.Kubernetes.API = "10.10.9.1"
+	cfg.Kubernetes.DNS = "10.43.0.10"
+	cfg.Kubernetes.Domain = "cluster.local"
+	cfg.Kubernetes.Subnets.Pods = "10.42.0.0/16"
+	cfg.Kubernetes.Subnets.Services = "10.43.0.0/16"
 	return cfg
-}
-
-func containsString(values []string, needle string) bool {
-	for _, value := range values {
-		if value == needle {
-			return true
-		}
-	}
-	return false
 }
 
 func writeTestVMMetadata(t *testing.T, root string, meta testvm.Metadata) {
