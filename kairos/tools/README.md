@@ -2,7 +2,8 @@
 
 `k2-tools` is the client-side toolbox for clean K2 Kairos images.
 It supports bootstrap-server, additional server, and worker provisioning over
-SSH for the raw image path, plus local QEMU VM management.
+SSH for the raw image path, local QEMU VM management, and CM4 / ComputeBlade
+eMMC flashing.
 
 It assumes the target node has booted into the installed Kairos system, SSH is
 reachable, k3s is installed but disabled, and the image contains the invariant
@@ -298,8 +299,35 @@ config, packaged-manifest skip files, and active `k3s`. Workers must have only
 worker join config, no server-only invariant or cluster config, and active
 `k3s-agent`.
 
+## Flash CM4 / ComputeBlade eMMC
+
+`k2-tools flash rpi4cb` writes a built `*-arm64-rpi4cb-k3s` artifact to the
+CM4 eMMC exposed through `rpiboot`. Build the artifact first
+(`earthly --allow-privileged ./kairos+image-build-artifact
+--KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s`), then with the
+CM4 disconnected:
+
+```sh
+k2-tools flash rpi4cb --zero-nvme
+```
+
+The flasher snapshots existing external disks, runs `rpiboot` (asking
+you to hold nRPIBOOT and connect USB-C), waits for the new disks to
+appear, classifies them by size (≈32 GB → eMMC, ≈256 GB → NVMe), shows
+a plan, and waits for a `FLASH` confirmation. After write it re-reads
+the eMMC and confirms the SHA256 matches the artifact manifest. `--yes`
+skips the prompt; `--skip-rpiboot` reuses currently-attached disks;
+`--skip-verify` omits the readback. The macOS path needs `rpiboot`,
+`diskutil`, `dd`, and `xz` on `PATH` — install rpiboot via
+`brew install rpiboot` (and `brew install xz` if it's not already
+there) or build rpiboot from
+[raspberrypi/usbboot](https://github.com/raspberrypi/usbboot). Linux is
+not yet supported; the Platform abstraction is built so a future Linux
+implementation can plug in alongside `platform_darwin.go`.
+
 ## Current Limits
 
 - raw-image reboot path only; live ISO `manual-install` is deferred
 - local SSH config host aliases and encrypted key passphrases are not parsed by
   the built-in SSH transport
+- `k2-tools flash rpi4cb` is macOS-only today; Linux support pending
