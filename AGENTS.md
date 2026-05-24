@@ -317,3 +317,8 @@ instead of adding a new one. Remove lines when the underlying issue goes away.
   ESO or `aws-sts-bootstrap`.
 - Raw generated CRD constructs exported from an app package must be namespaced
   behind `crd`, e.g. `import { crd } from "@k2/external-secrets"`.
+- Bootstrap provisioning must apply the root Argo CD app-of-apps after the
+  Argo Application CRD is established; do not rely on K3s static manifest
+  ordering for Argo `Application` custom resources.
+- The root Argo CD app-of-apps should not auto-sync; generated child
+  Applications should own normal auto-sync behavior.

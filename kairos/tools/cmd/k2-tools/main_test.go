@@ -18,6 +18,7 @@ func TestInstallScriptInstallsBootstrapFilesWithoutLockingDefaultPassword(t *tes
 		"sudo touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip",
 		"sudo touch /var/lib/rancher/k3s/server/manifests/metrics-server.yaml.skip",
 		"sudo install -m 0644 \"/tmp/k2-tools.test\"/99-k2-k3s-bootstrap.yaml /oem/99-k2-k3s-bootstrap.yaml",
+		"sudo install -m 0644 \"/tmp/k2-tools.test\"/k2-root-argocd-app.k8s.yaml /var/lib/rancher/k3s/server/k2-root-argocd-app.k8s.yaml",
 		"sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh",
 		"sudo install -o kairos -g kairos -m 0600 \"/tmp/k2-tools.test\"/operator_authorized_keys /home/kairos/.ssh/authorized_keys",
 		"sudo systemctl enable k3s",
@@ -97,6 +98,8 @@ func TestBootstrapVerificationScriptChecksExpectedState(t *testing.T) {
 		"sudo test -s /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml",
 		"sudo test -s /etc/rancher/k3s/config.yaml.d/30-k2-bootstrap.yaml",
 		"sudo test -s /oem/99-k2-k3s-bootstrap.yaml",
+		"sudo test -s /var/lib/rancher/k3s/server/k2-root-argocd-app.k8s.yaml",
+		"sudo kubectl -n argocd get application k2 >/dev/null",
 		"systemctl is-enabled --quiet k3s",
 		"systemctl is-active --quiet k3s",
 		"sudo test -s /var/lib/rancher/k3s/server/token",
@@ -105,6 +108,40 @@ func TestBootstrapVerificationScriptChecksExpectedState(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Fatalf("bootstrap verification script missing %q:\n%s", want, got)
 		}
+	}
+}
+
+func TestRootArgoAppApplyScriptWaitsForCRDThenApplies(t *testing.T) {
+	got := rootArgoAppApplyScript("/var/lib/rancher/k3s/server/k2-root-argocd-app.k8s.yaml")
+	for _, want := range []string{
+		"sudo kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=30s >/dev/null",
+		"sudo kubectl apply -f '/var/lib/rancher/k3s/server/k2-root-argocd-app.k8s.yaml'",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("root Argo app apply script missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestWriteBundleIncludesRootArgoAppManifest(t *testing.T) {
+	dir := t.TempDir()
+	err := writeBundle(dir, bundle{
+		ClusterConfig:   []byte("cluster"),
+		BootstrapConfig: []byte("bootstrap"),
+		Activation:      []byte("activation"),
+		AuthorizedKeys:  []byte("keys"),
+		Manifests:       []byte("manifests"),
+		RootArgoApp:     []byte("root-app"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "k2-root-argocd-app.k8s.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "root-app" {
+		t.Fatalf("root app manifest = %q, want root-app", string(got))
 	}
 }
 

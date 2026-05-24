@@ -58,12 +58,73 @@ func Bootstrap(repoRoot string, cfg clusterconfig.Config, opts BootstrapOptions)
 		return nil, err
 	}
 
-	if err := appendFile(&buf, filepath.Join(deployDir, "app.k8s.yaml")); err != nil {
-		return nil, err
-	}
 	addCleanupJob(&buf)
 
 	return buf.Bytes(), nil
+}
+
+func RootArgoApp(cfg clusterconfig.Config) ([]byte, error) {
+	type metadata struct {
+		Name      string `yaml:"name"`
+		Namespace string `yaml:"namespace"`
+	}
+	type sourceDirectory struct {
+		Recurse bool   `yaml:"recurse"`
+		Include string `yaml:"include"`
+	}
+	type source struct {
+		RepoURL        string          `yaml:"repoURL"`
+		TargetRevision string          `yaml:"targetRevision"`
+		Path           string          `yaml:"path"`
+		Directory      sourceDirectory `yaml:"directory"`
+	}
+	type destination struct {
+		Server    string `yaml:"server"`
+		Namespace string `yaml:"namespace"`
+	}
+	type syncPolicy struct {
+		SyncOptions []string `yaml:"syncOptions"`
+	}
+	type spec struct {
+		Project     string      `yaml:"project"`
+		Source      source      `yaml:"source"`
+		Destination destination `yaml:"destination"`
+		SyncPolicy  syncPolicy  `yaml:"syncPolicy"`
+	}
+	type application struct {
+		APIVersion string   `yaml:"apiVersion"`
+		Kind       string   `yaml:"kind"`
+		Metadata   metadata `yaml:"metadata"`
+		Spec       spec     `yaml:"spec"`
+	}
+
+	return yaml.Marshal(application{
+		APIVersion: "argoproj.io/v1alpha1",
+		Kind:       "Application",
+		Metadata: metadata{
+			Name:      "k2",
+			Namespace: cfg.Argo.Namespace,
+		},
+		Spec: spec{
+			Project: cfg.Argo.Project,
+			Source: source{
+				RepoURL:        cfg.Argo.RepoURL,
+				TargetRevision: cfg.Argo.RepoBranch,
+				Path:           ".",
+				Directory: sourceDirectory{
+					Recurse: false,
+					Include: "app.k8s.yaml",
+				},
+			},
+			Destination: destination{
+				Server:    "https://kubernetes.default.svc",
+				Namespace: cfg.Argo.Namespace,
+			},
+			SyncPolicy: syncPolicy{
+				SyncOptions: []string{"CreateNamespace=true", "ServerSideApply=true", "ApplyOutOfSyncOnly=true"},
+			},
+		},
+	})
 }
 
 func addNamespace(buf *bytes.Buffer, name string) {

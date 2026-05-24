@@ -18,6 +18,7 @@ type Config struct {
 	ApexDomain string     `yaml:"apexDomain"`
 	AWS        AWS        `yaml:"aws"`
 	Kubernetes Kubernetes `yaml:"kubernetes"`
+	Argo       Argo       `yaml:"argo"`
 }
 
 type AWS struct {
@@ -41,6 +42,13 @@ type Kubernetes struct {
 type Subnets struct {
 	Pods     string `yaml:"pods"`
 	Services string `yaml:"services"`
+}
+
+type Argo struct {
+	Namespace  string `yaml:"namespace"`
+	Project    string `yaml:"project"`
+	RepoURL    string `yaml:"repoUrl"`
+	RepoBranch string `yaml:"repoBranch"`
 }
 
 func Load(repoRoot string, target string) (Config, error) {
@@ -68,40 +76,80 @@ func (c Config) APIServerURL() string {
 	return fmt.Sprintf("https://%s:%d", c.Kubernetes.API, apiServerPort)
 }
 
-var cidrPattern = regexp.MustCompile(`^(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}$`)
+var (
+	accountIDPattern = regexp.MustCompile(`^\d{12}$`)
+	cidrPattern      = regexp.MustCompile(`^(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}$`)
+)
 
 func (c Config) validate(path string, target string) error {
+	if err := c.validateIdentity(path, target); err != nil {
+		return err
+	}
+	if err := c.AWS.validate(path + ".aws"); err != nil {
+		return err
+	}
+	if err := c.Kubernetes.validate(path + ".kubernetes"); err != nil {
+		return err
+	}
+	return c.Argo.validate(path + ".argo")
+}
+
+func (c Config) validateIdentity(path string, target string) error {
 	if c.ID == "" {
 		return fmt.Errorf("%s: id is required", path)
 	}
 	if c.ID != target {
 		return fmt.Errorf("%s: id %q does not match cluster target %q", path, c.ID, target)
 	}
-	if c.AWS.AccountID != "" && !regexp.MustCompile(`^\d{12}$`).MatchString(c.AWS.AccountID) {
-		return fmt.Errorf("%s.aws.accountId: must be a 12-digit AWS account id", path)
+	return nil
+}
+
+func (a AWS) validate(fieldPath string) error {
+	if a.AccountID != "" && !accountIDPattern.MatchString(a.AccountID) {
+		return fmt.Errorf("%s.accountId: must be a 12-digit AWS account id", fieldPath)
 	}
-	if c.AWS.OIDCIssuer.URL != "" || c.AWS.OIDCIssuer.JWKSURI != "" {
-		if err := requireHTTPSURL(c.AWS.OIDCIssuer.URL, path+".aws.oidcIssuer.url"); err != nil {
+	if a.OIDCIssuer.URL != "" || a.OIDCIssuer.JWKSURI != "" {
+		if err := requireHTTPSURL(a.OIDCIssuer.URL, fieldPath+".oidcIssuer.url"); err != nil {
 			return err
 		}
-		if err := requireHTTPSURL(c.AWS.OIDCIssuer.JWKSURI, path+".aws.oidcIssuer.jwksUri"); err != nil {
+		if err := requireHTTPSURL(a.OIDCIssuer.JWKSURI, fieldPath+".oidcIssuer.jwksUri"); err != nil {
 			return err
 		}
 	}
-	if err := requireIPv4(c.Kubernetes.API, path+".kubernetes.api"); err != nil {
+	return nil
+}
+
+func (k Kubernetes) validate(fieldPath string) error {
+	if err := requireIPv4(k.API, fieldPath+".api"); err != nil {
 		return err
 	}
-	if err := requireIPv4(c.Kubernetes.DNS, path+".kubernetes.dns"); err != nil {
+	if err := requireIPv4(k.DNS, fieldPath+".dns"); err != nil {
 		return err
 	}
-	if c.Kubernetes.Domain == "" {
-		return fmt.Errorf("%s.kubernetes.domain: must not be empty", path)
+	if k.Domain == "" {
+		return fmt.Errorf("%s.domain: must not be empty", fieldPath)
 	}
-	if err := requireCIDR(c.Kubernetes.Subnets.Pods, path+".kubernetes.subnets.pods"); err != nil {
+	if err := requireCIDR(k.Subnets.Pods, fieldPath+".subnets.pods"); err != nil {
 		return err
 	}
-	if err := requireCIDR(c.Kubernetes.Subnets.Services, path+".kubernetes.subnets.services"); err != nil {
+	if err := requireCIDR(k.Subnets.Services, fieldPath+".subnets.services"); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (a Argo) validate(fieldPath string) error {
+	if a.Namespace == "" {
+		return fmt.Errorf("%s.namespace: must not be empty", fieldPath)
+	}
+	if a.Project == "" {
+		return fmt.Errorf("%s.project: must not be empty", fieldPath)
+	}
+	if a.RepoURL == "" {
+		return fmt.Errorf("%s.repoUrl: must not be empty", fieldPath)
+	}
+	if a.RepoBranch == "" {
+		return fmt.Errorf("%s.repoBranch: must not be empty", fieldPath)
 	}
 	return nil
 }

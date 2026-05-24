@@ -116,6 +116,7 @@ type bundle struct {
 	Activation      []byte
 	AuthorizedKeys  []byte
 	Manifests       []byte
+	RootArgoApp     []byte
 }
 
 type joinBundle struct {
@@ -136,6 +137,8 @@ type testVMProvisionTarget struct {
 const (
 	nodeRoleServer nodeRole = "server"
 	nodeRoleWorker nodeRole = "worker"
+
+	remoteRootArgoAppManifestPath = "/var/lib/rancher/k3s/server/k2-root-argocd-app.k8s.yaml"
 )
 
 var reporter = ui.New(os.Stderr, false)
@@ -263,6 +266,8 @@ func (c *bootstrapCmd) buildBootstrapWorkflow(wf *ui.Workflow, rcx *runContext, 
 	wf.Section("Post-install").Unless(!postInstall)
 	wf.Shell("Harvest bootstrap credentials", c.stepHarvest(rcx, s)).
 		Unless(!postInstall)
+	wf.Shell("Apply root Argo CD app", c.stepApplyRootArgoApp(s)).
+		Unless(!postInstall)
 	wf.Shell("Patch remote kube-vip", c.stepPatchKubeVIP(s)).
 		Unless(!postInstall || s.testTarget.KubeVIP == "")
 	wf.Shell("Verify provisioning", c.stepVerify(s)).
@@ -381,6 +386,13 @@ func (c *bootstrapCmd) stepPatchKubeVIP(s *bootstrapState) func(context.Context,
 	return func(ctx context.Context, sh ui.Step) error {
 		defer s.client.SwapIO(sh)()
 		return patchRemoteKubeVIP(s.client, s.testTarget.KubeVIP, 3*time.Minute)
+	}
+}
+
+func (c *bootstrapCmd) stepApplyRootArgoApp(s *bootstrapState) func(context.Context, ui.Step) error {
+	return func(ctx context.Context, sh ui.Step) error {
+		defer s.client.SwapIO(sh)()
+		return applyRootArgoApp(s.client, 5*time.Minute)
 	}
 }
 
@@ -757,12 +769,17 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	if err != nil {
 		return bundle{}, err
 	}
+	rootArgoApp, err := manifests.RootArgoApp(cfg)
+	if err != nil {
+		return bundle{}, err
+	}
 	return bundle{
 		ClusterConfig:   clusterConfig,
 		BootstrapConfig: bootstrapConfig,
 		Activation:      render.ActivationCloudConfig(flags.NodeName, operatorKeys),
 		AuthorizedKeys:  render.AuthorizedKeys(operatorKeys),
 		Manifests:       bootstrapManifests,
+		RootArgoApp:     rootArgoApp,
 	}, nil
 }
 
@@ -897,11 +914,12 @@ func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, meta
 
 func writeBundle(dir string, bundle bundle) error {
 	files := map[string][]byte{
-		"20-k2-cluster.yaml":       bundle.ClusterConfig,
-		"30-k2-bootstrap.yaml":     bundle.BootstrapConfig,
-		"99-k2-k3s-bootstrap.yaml": bundle.Activation,
-		"operator_authorized_keys": bundle.AuthorizedKeys,
-		"k2-bootstrap.k8s.yaml":    bundle.Manifests,
+		"20-k2-cluster.yaml":          bundle.ClusterConfig,
+		"30-k2-bootstrap.yaml":        bundle.BootstrapConfig,
+		"99-k2-k3s-bootstrap.yaml":    bundle.Activation,
+		"operator_authorized_keys":    bundle.AuthorizedKeys,
+		"k2-bootstrap.k8s.yaml":       bundle.Manifests,
+		"k2-root-argocd-app.k8s.yaml": bundle.RootArgoApp,
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
@@ -1080,6 +1098,32 @@ func patchRemoteKubeVIP(client *remote.Client, vip string, timeout time.Duration
 	}
 }
 
+func applyRootArgoApp(client *remote.Client, timeout time.Duration) error {
+	logf("applying root Argo CD app manifest")
+	deadline := time.Now().Add(timeout)
+	var lastErr error
+	for {
+		err := client.Run(rootArgoAppApplyScript(remoteRootArgoAppManifestPath))
+		if err == nil {
+			successf("root Argo CD app manifest applied")
+			return nil
+		}
+		lastErr = err
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timed out applying root Argo CD app manifest: %w", lastErr)
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func rootArgoAppApplyScript(manifestPath string) string {
+	return strings.Join([]string{
+		"set -eu",
+		"sudo kubectl wait --for=condition=Established crd/applications.argoproj.io --timeout=30s >/dev/null",
+		fmt.Sprintf("sudo kubectl apply -f %s", shellQuote(manifestPath)),
+	}, "\n")
+}
+
 func verifyRemoteProvisioning(client *remote.Client, description string, script string, timeout time.Duration) error {
 	logf("verifying %s provisioning", description)
 	deadline := time.Now().Add(timeout)
@@ -1126,6 +1170,8 @@ func bootstrapVerificationScript(nodeName string) string {
 	fmt.Fprintf(&buf, "verify 'server token exists' sudo test -s /var/lib/rancher/k3s/server/token\n")
 	fmt.Fprintf(&buf, "verify 'node token exists' sudo test -s /var/lib/rancher/k3s/server/node-token\n")
 	fmt.Fprintf(&buf, "verify 'agent token exists' sudo test -s /var/lib/rancher/k3s/server/agent-token\n")
+	fmt.Fprintf(&buf, "verify 'root Argo CD app manifest staged' sudo test -s %s\n", remoteRootArgoAppManifestPath)
+	fmt.Fprintf(&buf, "verify 'root Argo CD Application applied' sudo kubectl -n argocd get application k2 >/dev/null\n")
 	writeServerPackagedManifestChecks(&buf)
 	return buf.String()
 }
@@ -1228,6 +1274,8 @@ func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/99-k2-k3s-bootstrap.yaml /oem/99-k2-k3s-bootstrap.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing bootstrap manifest bundle'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/k2-bootstrap.k8s.yaml /var/lib/rancher/k3s/server/manifests/k2-bootstrap.yaml\n", remoteDir)
+	fmt.Fprintf(&buf, "echo 'k2-tools: staging root Argo CD app manifest'\n")
+	fmt.Fprintf(&buf, "sudo install -m 0644 %q/k2-root-argocd-app.k8s.yaml %s\n", remoteDir, remoteRootArgoAppManifestPath)
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing operator SSH keys'\n")
 	fmt.Fprintf(&buf, "sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)

@@ -162,9 +162,11 @@ go run ./cmd/k2-tools provision bootstrap \
 
 `--extra-manifests` accepts a manifest path or a glob and can be repeated. The
 matched files are appended to the bootstrap bundle verbatim, after the minimum
-Cilium, Argo CD, and kube-vip apps and before the root Argo CD Application.
-Quote globs when you want `k2-tools` to expand them deterministically instead
-of letting the shell expand them first.
+Cilium, Argo CD, and kube-vip apps. The root Argo CD app-of-apps is staged
+separately and applied after the Argo Application CRD is established; it does
+not auto-sync, while generated child Applications use the cluster config's
+auto-sync setting. Quote globs when you want `k2-tools` to expand them
+deterministically instead of letting the shell expand them first.
 
 When an extra manifest uses `metadata.namespace`, the provisioner prepends a
 minimal generated Namespace manifest unless that namespace is already part of

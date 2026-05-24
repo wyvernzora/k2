@@ -64,7 +64,7 @@ argo:
   project: default
   repoUrl: https://github.com/wyvernzora/k2.git
   repoBranch: deploy-v3
-  autoSync: false
+  autoSync: true
 
 # NFS server for K2NfsVolume. zone is the optional node-attraction label;
 # omit it when NFS is uniformly reachable from all workers.
