@@ -1,128 +1,67 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
-import * as base from "cdk8s";
-import { ApiObject, Chart, ChartProps } from "cdk8s";
-import * as findUp from "find-up";
-import * as yaml from "js-yaml";
-import { Construct } from "constructs";
+import { Helm, type HelmProps } from "cdk8s";
+import type { Construct, IConstruct } from "constructs";
+import { parse } from "yaml";
 
-import { AppOption } from "@k2/cdk-lib";
+import { Context } from "./base.js";
+import { Namespace } from "./namespace.js";
 
-import { Context } from "../context.js";
+interface ChartYaml {
+  readonly dependencies?: HelmDependency[];
+}
 
-import { AppRoot } from "./app-root.js";
+interface HelmDependency {
+  readonly name: string;
+  readonly alias?: string;
+  readonly repository?: string;
+  readonly version?: string;
+}
 
 export class HelmCharts extends Context {
-  get ContextKey() {
-    return "@k2/cdk-lib:helm-charts";
-  }
+  public static readonly contextKey = "k2.helmCharts";
+  public readonly key = HelmCharts.contextKey;
+  private readonly dependencies = new Map<string, HelmDependency>();
 
-  private readonly _charts: Partial<Record<string, ChartDependency[]>>;
-
-  constructor(dependencies: ChartDependency[]) {
+  public constructor(appPath: string) {
     super();
-    this._charts = {
-      // Allow charts to be referred by their full name (repo + chart)
-      ...Object.groupBy(dependencies, c => dependencyKey(c)),
-      // ...also allow them to be referred by just chart name, unless there is a collision
-      ...Object.groupBy(dependencies, c => c.name),
-      // ...also alias, where present, to avoid collisions
-      ...Object.groupBy(
-        dependencies.filter(c => !!c.alias),
-        c => c.alias!,
-      ),
-    };
-  }
-
-  public asConstruct(name: string): Helm {
-    const ref = this.findDependency(name);
-    return class extends base.Helm {
-      constructor(scope: Construct, id: string, props: HelmProps) {
-        super(scope, id, {
-          ...helmChartSource(ref),
-          version: ref.version,
-          releaseName: id,
-          ...props,
-        });
-        removeCustomResourceDefinitions(this);
+    const chartFile = join(appPath, "Chart.yaml");
+    try {
+      const chart = parse(readFileSync(chartFile, "utf8")) as ChartYaml;
+      for (const dependency of chart.dependencies ?? []) {
+        this.dependencies.set(dependency.alias ?? dependency.name, dependency);
       }
-    };
-  }
-
-  public asChart(name: string): HelmChart {
-    const GeneratedHelmType = this.asConstruct(name);
-    return class extends Chart {
-      constructor(scope: Construct, id: string, props: ChartProps & HelmProps) {
-        super(scope, id, props);
-        new GeneratedHelmType(this, id, props);
+    } catch (cause) {
+      if ((cause as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw cause;
       }
+    }
+  }
+
+  public asProps(alias: string, values?: HelmProps["values"]): HelmProps {
+    const dependency = this.dependencies.get(alias);
+    if (dependency === undefined) {
+      throw new Error(`No Helm dependency named ${alias}`);
+    }
+
+    return {
+      chart: dependency.name,
+      repo: dependency.repository,
+      version: dependency.version,
+      values,
     };
   }
 
-  private findDependency(name: string): ChartDependency {
-    const refs = this._charts[name];
-    if (!refs || refs.length === 0) {
-      throw new Error(`Chart not in dependencies: ${name}`);
-    }
-    if (refs.length > 1) {
-      throw new Error(`Conflicting charts for name: ${name}; use full name or set unique aliases`);
-    }
-    return refs[0];
+  public asChart(scope: Construct, id: string, alias = id, values?: HelmProps["values"]): Helm {
+    return new Helm(scope, id, {
+      namespace: Namespace.of(scope).namespace,
+      releaseName: id,
+      ...this.asProps(alias, values),
+    });
   }
 
-  public static with(): AppOption {
-    return app => {
-      const { appRoot } = AppRoot.of(app);
-      const dependencies = getDependencyCharts(appRoot);
-      const instance = new HelmCharts(dependencies);
-      app.node.setContext(instance.ContextKey, instance);
-    };
-  }
-}
-
-export type HelmProps = Omit<base.HelmProps, "chart" | "repo" | "version">;
-
-export type HelmChart = {
-  new (scope: Construct, id: string, props: ChartProps & HelmProps): base.Chart;
-};
-
-export type Helm = {
-  new (scope: Construct, id: string, props: HelmProps): base.Helm;
-};
-
-export interface ChartDependency {
-  name: string;
-  version?: string;
-  repository: string;
-  alias?: string;
-}
-
-function dependencyKey(ref: ChartDependency): string {
-  return `${ref.repository.replace(/\/+$/, "")}/${ref.name}`;
-}
-
-function helmChartSource(ref: ChartDependency): Pick<base.HelmProps, "chart" | "repo"> {
-  if (ref.repository.startsWith("oci://")) {
-    return { chart: dependencyKey(ref) };
-  }
-  return { chart: ref.name, repo: ref.repository };
-}
-
-function getDependencyCharts(root: string): Array<ChartDependency> {
-  const chartYamlPath = findUp.sync(["Chart.yaml"], { cwd: root });
-  if (!chartYamlPath) {
-    return []; // No Chart.yaml is equivalent to having no Helm dependencies
-  }
-  const chartData = yaml.load(readFileSync(chartYamlPath, "utf-8")) as {
-    readonly dependencies?: Array<ChartDependency>;
-  };
-  return chartData.dependencies ?? [];
-}
-
-function removeCustomResourceDefinitions<T extends base.Helm>(helm: T): void {
-  for (const child of helm.node.children) {
-    if (ApiObject.isApiObject(child) && child.kind === "CustomResourceDefinition") {
-      helm.node.tryRemoveChild(child.node.id);
-    }
+  public static of(scope: IConstruct): HelmCharts {
+    return Context.get(scope, HelmCharts.contextKey);
   }
 }

@@ -1,15 +1,20 @@
-import { Context } from "../context.js";
+import type { IConstruct } from "constructs";
+
+import { Context } from "./base.js";
 
 export class ApexDomain extends Context {
-  get ContextKey() {
-    return "@k2/cdk-lib:apex-domain";
-  }
+  public static readonly contextKey = "k2.apexDomain";
+  public readonly key = ApexDomain.contextKey;
 
-  constructor(public readonly apexDomain: string) {
+  public constructor(public readonly apexDomain: string) {
     super();
   }
 
   public subdomain(name: string): string {
     return `${name}.${this.apexDomain}`;
+  }
+
+  public static of(scope: IConstruct): ApexDomain {
+    return Context.get(scope, ApexDomain.contextKey);
   }
 }

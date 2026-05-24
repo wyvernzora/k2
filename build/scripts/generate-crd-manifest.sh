@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 
 # Ensure that at least one argument is provided
 if [ "$#" -lt 1 ]; then
@@ -10,7 +9,7 @@ fi
 
 # Define variables
 APP_PATH="$1"  # First argument should be the path to an app
-OUTPUT_DIR="crds"
+OUTPUT_DIR="$APP_PATH/crds"
 OUTPUT_FILE="crds.k8s.yaml"
 
 # Shift removes the first argument so that "$@" now contains only additional arguments for helm template

@@ -1,0 +1,64 @@
+# Cluster instance id. Drives provisioner --cluster-target and is asserted in
+# the cdk-lib validator. Stays "v3" permanently (it's a cluster name, not a
+# transition label).
+id: v3
+
+# Apex DNS domain. Used by app constructs to derive per-app hostnames
+# (e.g. argocd.<apexDomain>).
+apexDomain: wyvernzora.io
+
+# 1Password vault that ESO's ClusterSecretStore reads through. Vault names
+# are case-sensitive in the 1Password SDK — must match the vault as it
+# appears in the 1Password UI (NOT lowercased).
+onePassword:
+  vault: K2
+
+# Kubernetes / k3s networking facts.
+#   api      — kube-vip VIP IP. Used as the Kubernetes API endpoint and the
+#              cdk-lib kube-vip Helm value. Read by both cdk8s and the
+#              provisioner (k3s tls-san + bootstrap Cilium KUBERNETES_SERVICE_HOST).
+#   dns      — CoreDNS ClusterIP. PROVISIONER-ONLY (k3s --cluster-dns). Must lie
+#              inside subnets.services. Standard k3s default = 10.43.0.10.
+#   domain   — In-cluster DNS suffix. PROVISIONER-ONLY (k3s --cluster-domain).
+#              Standard k3s default = cluster.local.
+#   subnets.pods     — Pod CIDR. Read by cdk8s (Cilium clusterPoolIPv4PodCIDRList)
+#                      AND the provisioner (k3s --cluster-cidr).
+#   subnets.services — Service CIDR. PROVISIONER-ONLY (k3s --service-cidr).
+#                      Standard k3s default = 10.43.0.0/16.
+#
+# The PROVISIONER-ONLY fields are not consumed by cdk8s today. They live here
+# so cluster networking has one source of truth instead of being duplicated as
+# defaults inside the Go provisioner. DO NOT delete on the basis of
+# "cdk8s never reads this".
+kubernetes:
+  api: 10.10.9.1
+  dns: 10.43.0.10
+  domain: cluster.local
+  subnets:
+    pods: 10.42.0.0/16
+    services: 10.43.0.0/16
+
+# Cilium L2-announcement LoadBalancer IP pools, both within the 10.10/16
+# infra subnet:
+#   - privileged: firewalled to infra + privileged VLAN only.
+#   - sandbox:    additionally reachable from the default VLAN.
+loadBalancerPools:
+  - name: privileged
+    cidr: 10.10.13.0/24
+  - name: sandbox
+    cidr: 10.10.14.0/24
+
+# Argo CD topology. repoBranch is what the synth pipeline targets when
+# emitting per-app Application sources.
+argo:
+  namespace: argocd
+  project: default
+  repoUrl: https://github.com/wyvernzora/k2.git
+  repoBranch: deploy-v3
+  autoSync: false
+
+# NFS server for K2NfsVolume. zone is the optional node-attraction label;
+# omit it when NFS is uniformly reachable from all workers.
+nfs:
+  server: 10.10.8.1
+  zone: roxy

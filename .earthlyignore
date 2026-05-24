@@ -1,4 +1,5 @@
 .git
+.main
 .nx
 charts
 dist

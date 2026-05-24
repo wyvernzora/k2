@@ -1,16 +1,18 @@
-import { Context } from "../context.js";
+import type { IConstruct } from "constructs";
+
+import { Context } from "../context/base.js";
 
 import type { ClusterConfig } from "./config.js";
 
 export class ClusterContext extends Context {
-  get ContextKey() {
-    return "@k2/cluster:context";
+  public static readonly contextKey = "k2.cluster";
+  public readonly key = ClusterContext.contextKey;
+
+  public constructor(public readonly config: ClusterConfig) {
+    super();
   }
 
-  readonly cluster: ClusterConfig;
-
-  constructor(clusterConfig: ClusterConfig) {
-    super();
-    this.cluster = clusterConfig;
+  public static of(scope: IConstruct): ClusterContext {
+    return Context.get(scope, ClusterContext.contextKey);
   }
 }

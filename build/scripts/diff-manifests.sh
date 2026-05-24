@@ -14,10 +14,18 @@ if [ ! -d "deploy" ]; then
     exit 2
 fi
 
-# 1) Clone only the 'deploy' branch into a temp directory
+# 1) Clone only the 'deploy-v3' branch into a temp directory. If the
+#    branch doesn't exist on origin yet (first push of this generation),
+#    leave $TMPDIR empty — the subsequent `git diff --no-index` then
+#    reports every local manifest as an Add, which renders correctly as
+#    a full initial deploy in the diff output.
 TMPDIR="$(mktemp -d)"
-git clone --branch deploy --depth 1 "$REMOTE_URL" "$TMPDIR" >/dev/null 2>&1
-rm -rf "$TMPDIR/.git"
+if git ls-remote --exit-code --heads "$REMOTE_URL" deploy-v3 >/dev/null 2>&1; then
+    git clone --branch deploy-v3 --depth 1 "$REMOTE_URL" "$TMPDIR" >/dev/null 2>&1
+    rm -rf "$TMPDIR/.git"
+else
+    echo "🆕 Remote 'deploy-v3' branch does not exist yet — treating all local manifests as new." 1>&2
+fi
 
 # 2) Build exclude arguments from .dyffignore
 excludes=()

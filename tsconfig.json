@@ -1,12 +1,13 @@
 {
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@k2/cdk-lib": ["cdk-lib/index.js"],
+      "@k2/cdk-lib": ["cdk-lib/index.ts"],
       "@k2/*": ["apps/*/index.ts"]
     },
-    "target": "es2020",
+    "target": "ES2024",
     "lib": ["ES2024"],
     "module": "nodenext",
     "moduleResolution": "nodenext",

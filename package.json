@@ -37,5 +37,7 @@
     "arrowParens": "avoid",
     "printWidth": 120
   },
-  "scripts": {}
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
 }

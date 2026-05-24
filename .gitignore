@@ -33,8 +33,15 @@ out/
 *.sublime-workspace
 *.sublime-project
 
-# Agent settings
+# Claude Code agent state
+# Tracked:  .claude/{settings.json,hooks/,commands/,skills/,agents/,CLAUDE.md}
+# Ignored:  user-local config overrides, runtime locks, checkpoint notes
+.checkpoint/
 .claude/*.local.json
+.claude/*.lock
+
+# Cross-branch reference worktree (git worktree add .main main)
+/.main/
 
 # Logs
 logs/

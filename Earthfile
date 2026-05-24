@@ -2,17 +2,6 @@ VERSION 0.8
 ARG TAG="latest"
 
 #
-# +ansible-images: Creates the ansible playbook image
-#
-ansible-image:
-    BUILD --platform=linux/amd64 --platform=linux/arm64 +ansible-image-base
-
-ansible-image-base:
-    ARG TAG="latest"
-    FROM ./ansible+image
-    SAVE IMAGE ghcr.io/wyvernzora/k2-ansible:${TAG}
-
-#
 # +build-image: Creates the base image for all cdk8s builds
 #
 build-image:
@@ -22,6 +11,21 @@ build-image-base:
     ARG TAG="latest"
     FROM ./build+image
     SAVE IMAGE ghcr.io/wyvernzora/k2-build:${TAG}
+
+#
+# +crd-manifest: Extracts CRDs from an app's Helm chart dependencies into
+# apps/<name>/crds/crds.k8s.yaml. Run per-app when introducing a new chart
+# or bumping its version. Output is committed; +crd-constructs reads it.
+#
+# Usage: earthly +crd-manifest --APP_ROOT=apps/<name>
+#
+crd-manifest:
+    ARG TAG="latest"
+    ARG APP_ROOT
+    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    COPY . .
+    RUN build/scripts/generate-crd-manifest.sh "$APP_ROOT"
+    SAVE ARTIFACT $APP_ROOT/crds/crds.k8s.yaml AS LOCAL $APP_ROOT/crds/crds.k8s.yaml
 
 #
 # +crd-constructs: Generates TypeScript cdk8s constructs for each app based on its CRD manifest
@@ -47,11 +51,11 @@ crd-constructs-base:
 #
 k8s-manifests:
     ARG TAG="latest"
-    ARG K2_CLUSTER="all"
     FROM --pass-args +npm-install
     COPY . .
     RUN rm -rf deploy
-    RUN K2_CLUSTER="$K2_CLUSTER" npx tsx build/scripts/synthesize-manifests.ts
+    RUN for APP_ROOT in $(ls -d apps/*/crds/crds.k8s.yaml 2>/dev/null | sed 's#/crds/crds.k8s.yaml$##'); do build/scripts/generate-crd-constructs.sh "$APP_ROOT"; done
+    RUN npx tsx build/scripts/synthesize-manifests.ts
     SAVE ARTIFACT deploy AS LOCAL deploy
 
 #
@@ -71,6 +75,8 @@ lint:
     ARG TAG="latest"
     FROM --pass-args +npm-install
     COPY . .
+    RUN for APP_ROOT in $(ls -d apps/*/crds/crds.k8s.yaml 2>/dev/null | sed 's#/crds/crds.k8s.yaml$##'); do build/scripts/generate-crd-constructs.sh "$APP_ROOT"; done
+    RUN npx tsc --noEmit
     RUN npx eslint
 
 npm-install:
