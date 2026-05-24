@@ -1,127 +1,302 @@
-# AGENTS
+# AGENTS.md
 
-## Mission & Tech Stack
-- **K2** manages a personal homelab through typed infrastructure-as-code: CDK8s (TypeScript) drives Kubernetes apps, Ansible configures hosts, and Kairos cloud-config templates bootstrap bare metal.
-- Runtime stack: Node.js/TypeScript with `tsc`, `tsx`, `cdk8s`, and `cdk8s-plus-32`; Helm charts rendered through the `HelmCharts` context; all secrets are injected from 1Password and TLS from cert-manager.
+Drop-in operating instructions for coding agents working on **K2**. Read the
+user-global rules first:
 
-## Toolchain & Environment
-- Install Node 20+, `npm`/`npx`, `tsx`, and `typescript`. Dependencies live in `package.json`; linting/prettier rules sit in `eslint.config.ts` and `package.json.prettier`.
-- Earthly (v0.8+) plus Docker/Podman runs every reproducible build defined in `Earthfile`.
-- Additional CLIs: `cdk8s`, `helm`, `yq`, `dyff`, `git`, `op` (1Password CLI), and `aws` creds for cert/Ansible roles.
-- TypeScript is configured in `tsconfig.json` with path aliases `@k2/cdk-lib` and `@k2/*`, `moduleResolution: nodenext`, strict compiler flags, and ES2024 libs.
+- `~/.agents/AGENTS.md` - universal agent-behavior rules, if present.
+- `~/.agents/typescript.md` - TypeScript engineering rules, if present.
+- `~/.agents/go.md` - Go engineering rules, if present, for `kairos/image-build`.
 
-## Repository Map
-| Path | Purpose |
-| --- | --- |
-| `apps/<name>/` | Each application module with `Chart.yaml` dependencies, `index.ts` factories, CRD bindings, components, and optional `lib/` helpers. |
-| `build/scripts/` | Utility scripts (manifest synth, CRD import, diffing) that the Earthly targets invoke. |
-| `cdk-lib/` | Shared CDK8s contexts (`AppRoot`, `HelmCharts`, `Namespace`, `ApexDomain`), constructs (config maps, scheduling, volumes), and helper types for apps. |
-| `deploy/` | Generated manifest output under cluster-specific `legacy/` and `v3/` trees. |
-| `ansible/` | Containerized Ansible runtime (`Earthfile`, `entrypoint.sh`, roles, playbooks) for host bootstrap and TLS refresh. |
-| `kairos/` | Kairos image target definitions, pinned versions, Earthly image-build targets, ignored artifacts, and notes. |
-| `kairos/image-build/` | Self-contained Go CLI, Dockerfile, and overlays for Ubuntu+k3s Kairos OCI images and bootable artifacts. |
-| `Earthfile` | Defines reusable Earthly targets for builds, linting, manifest synthesis, CRD imports, and Docker image publishing. |
-| `deploy-diff.md` | Generated report from `build/scripts/diff-manifests.sh`. |
-| `package.json`, `package-lock.json`, `node_modules/` | Node dependencies for CDK8s synthesis and linting. |
-| `tsconfig.json`, `eslint.config.ts` | Compiler and lint rules that new TypeScript code must follow. |
+This file holds K2-specific context, hard boundaries, and accumulated project
+learnings. Global rules apply unless this file explicitly overrides them.
 
-## Build & Validation Workflows
+---
 
-> **Important:** Build, lint, manifest synthesis, CRD generation, and diff workflows must be run through `earthly` targets. The scripts under `build/scripts/` are implementation details for those targets and often require the containerized build environment from `ghcr.io/wyvernzora/k2-build`; invoking them directly from the host shell can fail due to missing CLIs, Node tooling, or expected filesystem/runtime setup.
+## 1. Project-Specific Overrides
 
-### Earthly Targets
-- `earthly +k8s-manifests` → runs manifest synthesis inside the Earthly build environment from a clean `deploy/`, writing target-specific `deploy/legacy/` and `deploy/v3/` output. Pass `--K2_CLUSTER=legacy` or `--K2_CLUSTER=v3` to focus on one target.
-- `earthly +diff-manifests` → compares freshly synthesized manifests against the remote `deploy` branch via `build/scripts/diff-manifests.sh`, honoring `.dyffignore`. Always run this only after a fresh `+k8s-manifests` pass.
-- `earthly +lint` → executes `npx eslint` with the project config (CRD outputs excluded).
-- `earthly +crd-constructs` → loops over every `apps/*/crds/crds.k8s.yaml`, runs `build/scripts/generate-crd-constructs.sh`, and stores regenerated TypeScript bindings.
-- `earthly +build-image` / `+ansible-image` publish the reusable build/Ansible container images.
+### Earthly Is The Build Interface
 
-### Development Loop
-1. Use `earthly +lint` to lint TypeScript sources.
-2. Run `earthly +k8s-manifests` to regenerate manifests from a clean generated output tree.
-3. Run `earthly +diff-manifests` only after synthesis, and review `deploy-diff.md`.
-4. Commit `deploy/` differences to the `deploy` branch (ArgoCD watches that branch).
+- Build, lint, manifest synthesis, CRD construct generation, manifest diffing,
+  and image workflows must run through `earthly` targets.
+- Host-side Node/npm installs are for editor/dev-time type checking only. Do
+  not use host `npm`, `npx`, `tsx`, `tsc`, eslint, or direct scripts as the
+  source of validation.
+- Scripts under `build/scripts/` are target implementation details. Do not
+  invoke them directly for normal validation unless the user explicitly asks
+  for script-level debugging.
+- If Earthly fails because Docker/Podman/network access is unavailable, say so
+  plainly and report what was not validated.
 
-### CRD Workflow
-- If an upstream Helm release adds/changes CRDs: update or regenerate the app CRD manifest, then run `earthly +crd-constructs` to regenerate TypeScript bindings under `apps/<name>/crds/*.ts`. Generated files stay ignored by ESLint.
-- Re-run `+k8s-manifests` afterward to ensure manifests pick up the new CRDs.
+### CRD Bindings Are Mandatory
 
-### Diffing & Promotion
-- Use `earthly +diff-manifests` after synthesis to review manifest changes; it clones the remote `deploy` branch into a temp dir, strips `.git`, and prints Markdown diffs, respecting `.dyffignore`.
-- For a reliable manifest diff, run `earthly +k8s-manifests`, then run `earthly +diff-manifests`.
-- Promote changes by opening PRs against both `main` (source) and the generated `deploy` branch as appropriate.
+- Never hand-write raw `ApiObject` for a Kubernetes custom resource when a CRD
+  is available.
+- Put CRD manifests under the owning app at `apps/<name>/crds/crds.k8s.yaml`.
+- Generate TypeScript bindings with `earthly +crd-constructs`.
+- CRD-specific helpers live with the owning app and are exported through
+  `@k2/<app>`. They do not belong in generic `cdk-lib`.
+- Generated CRD bindings may be ignored by Git; regenerate them before lint or
+  synth when needed.
 
-## CDK8s Architecture & Conventions
+### Commit Hygiene
 
-### App Composition
-- `cdk-lib/App` extends `cdk8s.App`, adds `.use()` to apply `AppOption`s or `Context` classes, and provides `synthToFile()` to write YAML per app.
-- `build/scripts/synthesize-manifests.ts` dynamically imports each `apps/<name>/index.ts`, resolves per-cluster deployment metadata, creates a new `App`, applies contexts, and writes enabled app manifests plus ArgoCD application bundles for each target.
-- Always export both `createAppResources` (configure Kubernetes resources) and `createArgoCdResources` (register a `ContinuousDeployment` Argo app) from each `index.ts`.
+- Keep review-distinct changes in separate commits when the user asks for
+  commits or history surgery.
+- When amending a stack, preserve user edits and unrelated dirty files. Do not
+  reset or revert work you did not make unless the user explicitly requests it.
+- Generated `deploy/` output is ignored on the source branch. Commit source
+  changes here; promote generated manifests through the deploy branch workflow
+  when that is part of the task.
 
-### Context Pipeline
-- `AppRoot` exposes the current app path; `HelmCharts.with()` reads the closest `Chart.yaml` to instantiate chart factories for dependencies and strips CRDs before synthesis.
-- `Namespace`/`ApexDomain` contexts let components infer namespaces and domain names without repeated wiring.
-- `@k2/1password` provides `VaultContext`/`K2Secret` to pull secrets from the shared vault and surface them as `cdk8s-plus` secrets.
-- `@k2/argocd` exposes `ArgoCdContext` and `ContinuousDeployment` constructs wired to repo `deploy` branch, namespace `k2-core`, and auto-sync backoff.
+---
 
-### Scheduling & Storage Helpers
-- `cdk-lib/constructs/scheduling.ts` exports reusable tolerations, pod spreads, and node affinities for control-plane workloads.
-- `cdk-lib/constructs/volume.ts` layers `K2Volume` factories: `ephemeral`, `replicated` (Longhorn-backed), and `bulk` (NFS-backed, zone-aware).
-- `@k2/cert-manager` supplies `K2Issuer` and `K2Certificate` to issue/replicate wildcard TLS using Let’s Encrypt DNS01 via Route53; Traefik’s default `TlsStore` points at `K2Certificate.Name`.
+## 2. Project Context
 
-### App Layout Guidelines
-- Keep Helm dependencies declared in each app’s `Chart.yaml`; `HelmCharts.of(app).asChart("<alias>")` returns chart classes configured with the matching dependency entry.
-- Place constructs and objects to be exported under `apps/<name>/lib/`; actual app deployment constructs under `components/`.
-- CRD bindings from upstream charts belong in `apps/<name>/crds/` and should be regenerated via the scripts above.
-- Export extra constructs (`export * from "./lib/...";`) when they are intended for reuse in other apps.
+### About K2
 
-### Path Aliases & Imports
-- Use `@k2/<app>` imports (configured in `tsconfig.json`) to reuse constructs between apps. Keep import ordering compliant with the ESLint `import/order` rule.
+- **Name:** K2.
+- **Domain:** personal homelab infrastructure-as-code.
+- **Purpose:** manage Kubernetes applications, cluster bootstrap, and Kairos
+  bare-metal images with typed, reviewable source.
+- **Current source branch:** `main-v3`, a greenfield v3 branch. Legacy v2 source
+  remains on `main` until cutover.
+- **Current deploy branch target:** `deploy-v3`.
 
-## Secrets, Auth & TLS
-- 1Password Connect + Operator live in `apps/1password`; the operator runs in `k2-core` with control-plane tolerations. Use `new K2Secret(scope, id, { itemId })` whenever you need Kubernetes secrets.
-- Authentication is centralized via Authelia (`apps/auth`) using Traefik ForwardAuth. Reuse `Auth.MiddlewareAnnotation` or `AuthenticatedIngress` for Traefik ingress resources to enforce SSO.
-- Authelia uses its file authentication backend. User records are supplied from a 1Password-backed `authelia-users` secret mounted at `/secrets/users/users.yml`; the 1Password item must expose a key named `users.yml` containing Authelia users database YAML. Because the chart renders `watch: false`, restart/roll Authelia after changing users.
-- `apps/cert-manager` deploys cert-manager, reflector, Route53-based issuer, and the replicated default TLS certificate.
-- Traefik (`apps/traefik`) references the default certificate secret and enables CRD providers, dashboard ingress, and Prometheus annotations; keep middleware names consistent with the auth module.
+### Stack
 
-## Application Catalog (per `apps/*/index.ts`)
-| App | Namespace | Highlights |
-| --- | --- | --- |
-| `1password` | `k2-core` | Deploys 1Password Connect + operator with control-plane tolerations for vault-backed secrets. |
-| `argocd` | `k2-core` | Renders the Argo CD Helm chart, disables built-in auth in favor of Authelia, and exposes `/deploy` via Traefik TLS. |
-| `auth` | `auth` | Deploys Authelia with a 1Password-backed file users database and Traefik ForwardAuth middleware. |
-| `cert-manager` | `k2-core` | Installs cert-manager, reflector, Route53-based issuer, and the replicated default TLS certificate. |
-| `cilium` | `cilium` | v3-only CNI with kube-proxy replacement, L2 announcements, and `10.10.9.16-10.10.9.255` LoadBalancer IPAM. |
-| `dns` | `dns` | Deploys k8s-gateway + Blocky with custom block lists, static DNS overrides, and fixed service IP. |
-| `gen-ai` | `gen-ai` | Hosts AnythingLLM under `ai.wyvernzora.io`, isolating namespace and apex domain. |
-| `home-automation` | `home-automation` | Wraps Home Assistant, Mosquitto, Zigbee2MQTT, etc., with replicated volumes and Zigbee coordinator address. |
-| `kube-vip` | `k2-network` / `kube-vip` | Schedules kube-vip only on control-plane nodes with legacy VIP `10.10.8.2` or v3 API VIP `10.10.9.1`. |
-| `longhorn` | `k2-storage` | Installs Longhorn and secures its UI with the Authelia middleware. |
-| `media` | (per component) | Manages qBittorrent, Prowlarr, Sonarr, and Kavita, wiring replicated PVCs plus NAS-backed bulk storage. |
-| `metallb` | `k2-network` | Sets default (`10.10.12.0/24`) and sandbox (`10.10.10.0/24`) address pools with L2 advertisements. |
-| `n8n` | `n8n` | Deploys the n8n automation stack with replicated storage and public URL. |
-| `plex` | `plex` | Configures Plex with large replicated config storage and read-only media mounts from NAS bulk volumes. |
-| `postgresql` | `postgresql` | Installs CloudNativePG operator plus opinionated Nexus cluster resources. |
-| `tailscale` | `tailscale` | Manages the Tailscale operator and connector components in a dedicated namespace. |
-| `traefik` | `k2-network` | Deploys Traefik with dual-stack services, CRD + ingress providers, dashboard ingress, and TLS store tied to `default-certificate`. |
+- **Kubernetes IaC:** CDK8s in TypeScript, using `cdk8s`, `cdk8s-plus-32`,
+  `tsx`, and strict `tsconfig.json` settings.
+- **Helm integration:** app `Chart.yaml` dependencies are loaded through the
+  `HelmCharts` context.
+- **CRDs:** generated CDK8s TypeScript bindings from app-owned CRD manifests.
+- **Build system:** Earthly v0.8+ with Docker or Podman.
+- **Kairos image work:** Go CLI under `kairos/image-build`.
+- **Secrets and TLS direction:** secrets should come from 1Password-backed app
+  helpers; cert-manager concerns should live in `@k2/cert-manager` when that
+  app exists, not in generic cluster config.
 
-## Supporting IaC & Provisioning
+### Repository Map
 
-### Ansible
-- Run `docker run --rm -v $PWD/ansible:/ansible ... ghcr.io/wyvernzora/k2-ansible <playbook>`; the entrypoint enumerates playbooks and expects inventory under `/ansible/inventory`, SSH keys under `/root/.ssh`, and AWS credentials for TLS sync.
-- Roles (`k2.fish`, `k2.tls`, `k2.user`, `k2.vfio`, `pve.nosub`) are described in `README.md` and are consumed by the `pve-bootstrap` and `update-certs` playbooks.
-- The Ansible `Earthfile` builds a container image off `willhallonline/ansible`, installs Galaxy requirements, and sets `/ansible/entrypoint.sh` as the entrypoint.
+- `apps/<name>/` - one Kubernetes app module. The directory name is the app
+  name and namespace.
+- `apps/<name>/components/` - app deployment constructs.
+- `apps/<name>/lib/` - app-owned reusable helpers exported through
+  `@k2/<app>`.
+- `apps/<name>/crds/` - upstream CRD manifest and generated bindings for that
+  app.
+- `cdk-lib/` - shared app-agnostic CDK8s primitives, contexts, scheduling,
+  workload helpers, and volume helpers.
+- `cdk-lib/volumes/` - volume base and one file per concrete volume type.
+- `build/scripts/` - Earthly target implementation scripts.
+- `clusters/v3.yaml` - the single v3 cluster config file.
+- `deploy/` - ignored generated manifests from `earthly +k8s-manifests`.
+- `kairos/` - Kairos image targets, versions, Earthly targets, and image build
+  tooling.
+- `notes/` - ignored design checkpoints and local planning notes.
 
-### Kairos
-- Kairos image configuration lives under `kairos/`: `targets.yaml`, `versions.env`, `Earthfile`, ignored `artifacts/`, and notes. Image-build-only overlays live under `kairos/image-build/overlays/`.
-- Kairos build logic lives under `kairos/image-build/`. Prefer direct CLI invocation with `(cd kairos/image-build && go run ./cmd/image-build ...)`, or use the reproducible Earthly artifact path `earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=<target>`.
+### Commands
 
-## Tips & Gotchas
-- Context order matters: `AppRoot` must be registered before `HelmCharts.with()`, and the default synth pipeline already does this—mirror it in tests and scripts.
-- Generated CRD bindings under `apps/*/crds/*.ts` should not be edited by hand; regenerate with the scripts and keep them out of lint scope.
-- When adding a new app, always create both `createAppResources` and `createArgoCdResources`, list Helm dependencies in `Chart.yaml`, and export any shared constructs from `lib/`.
-- Secrets should come from `K2Secret`; direct `Secret` objects break the 1Password workflow.
-- Use `ContinuousDeployment` for Argo apps so they inherit the default repo/branch/project, unless you intentionally override `namespace` or `path`.
-- `+k8s-manifests` rebuilds `deploy/` from a clean generated output tree.
-- After synthesizing manifests, run the diff script before opening PRs to catch unexpected drift.
+```sh
+earthly +crd-constructs      # generate app CRD TypeScript bindings
+earthly +lint                # regenerate CRD bindings in-container, typecheck, lint
+earthly +k8s-manifests       # synthesize deploy/ from a clean generated tree
+earthly +diff-manifests      # compare fresh deploy/ against remote deploy-v3
+earthly +build-image         # publish the reusable K2 build image
+```
+
+For Kairos image-build development:
+
+```sh
+cd kairos/image-build
+go test ./...
+go run ./cmd/image-build --help
+```
+
+Use Go commands directly only for the Go-only Kairos image-build module. Use
+Earthly for K2 CDK8s, manifests, lint, and CRD workflows.
+
+---
+
+## 3. CDK8s v3 Architecture
+
+### App Shape
+
+- One `apps/<name>/` directory equals one Kubernetes namespace named `<name>`.
+- One app directory synthesizes through one `cdk8s.App`.
+- `K2App` uses `YamlOutputType.FILE_PER_APP`, producing
+  `deploy/apps/<name>/app.k8s.yaml`.
+- App CRDs, if present, are copied to `deploy/apps/<name>/crds.k8s.yaml`.
+- Argo CD Application names are exactly the app directory names. Do not add a
+  `v3-` prefix.
+
+### App Exports
+
+Every `apps/<name>/index.ts` exports typed named constants:
+
+```ts
+export const createAppResources: AppResourceFunc = app => {
+  // create component charts/resources
+};
+
+export const createArgoCdApp: ArgoCdAppFunc = defaultArgoCdAppFunc({
+  // optional app-specific Argo settings
+});
+```
+
+- Do not export loose untyped functions.
+- Do not add `defineDeployment`.
+- Do not add `export const deployment`.
+- Cluster bootstrap (provisioning, initial control-plane setup, installing
+  cilium/kube-vip/argocd before GitOps takes over) is handled by the
+  provisioner CLI in `kairos/`, *not* by the cdk8s layer. Synthesized
+  manifests do not encode bootstrap ordering and do not emit Argo CD
+  sync-wave annotations. Kubernetes converges eventually; the manifest
+  layer treats every app identically.
+
+### Contexts
+
+- Pass construct-time facts through `Context.of(this)` inside constructs.
+- Do not pass a synthetic context object like `K2SynthContext` into app
+  factories.
+- Keep `cdk-lib/context/` narrow and app-agnostic: current examples are
+  `AppRoot`, `HelmCharts`, `Namespace`, `ApexDomain`, and `NfsContext`.
+- Do not add generic `AuthContext`, `CertContext`, or `NetworkContext`.
+  Import app-owned helpers from `@k2/auth`, `@k2/cert-manager`,
+  `@k2/cilium`, etc.
+
+### Cluster Config Boundary
+
+`clusters/v3.yaml` is only for truly cluster-wide values that matter to
+multiple constructs inside Kubernetes context.
+
+Keep out of cluster YAML:
+
+- ingress defaults
+- load-balancer pools until there is a concrete app need
+- default certificate names
+- auth middleware names
+- Cilium policy defaults
+- application-side configuration
+- bootstrap membership
+
+Default cert details belong in `@k2/cert-manager`. Auth details belong in
+`@k2/auth`. Cilium CRD resources and network policy helpers belong in
+`@k2/cilium`.
+
+### Shared Library Layout
+
+- `cdk-lib/` is already a construct/helper library. Do not create a nested
+  `cdk-lib/constructs/` namespace.
+- Keep shared code app-agnostic. If a helper depends on an app CRD, move it to
+  that app.
+- Split broad helper families by type. Volumes live under `cdk-lib/volumes/`
+  with separate files for ephemeral, NFS, replicated, and shared base types.
+
+### Network Policy
+
+- Cilium owns the network policy DSL because it depends on Cilium CRDs.
+- Use generated `CiliumNetworkPolicy` bindings from `apps/cilium/crds/`.
+- The synth layer does not apply default-deny automatically. Apps that
+  want a namespace-wide default-deny opt in by instantiating
+  `DefaultDenyNetworkPolicy` from `@k2/cilium` in their own
+  `createAppResources`. Apps that need exceptions (e.g. cilium itself,
+  hostNetwork pods) simply do not instantiate it, or pair it with
+  explicit allow `CiliumNetworkPolicy` rules.
+- Cross-cutting presets such as DNS, API server, ingress controller, and
+  monitoring access should be typed helpers in `@k2/cilium`.
+
+---
+
+## 4. Workflows
+
+### Normal Validation Loop
+
+1. Run `earthly +crd-constructs` after CRD manifest changes or when ignored
+   generated bindings are missing.
+2. Run `earthly +lint`.
+3. Run `earthly +k8s-manifests`.
+4. Run `earthly +diff-manifests` after a fresh synth when the remote
+   `deploy-v3` branch exists.
+5. Inspect generated manifests when behavior matters; do not rely only on
+   source-level reasoning.
+
+### Adding An App
+
+1. Create `apps/<name>/Chart.yaml` for Helm dependencies, if any.
+2. Put deployment constructs under `apps/<name>/components/`.
+3. Put reusable app-owned helpers under `apps/<name>/lib/` and export them
+   from `apps/<name>/index.ts` when other apps should import them.
+4. Export typed named `createAppResources` and `createArgoCdApp`.
+5. Add app CRDs under `apps/<name>/crds/` when the app owns custom resources.
+6. Run the Earthly validation loop.
+
+### Updating CRDs
+
+1. Update `apps/<name>/crds/crds.k8s.yaml`.
+2. Run `earthly +crd-constructs`.
+3. Use the generated TypeScript binding for custom resources.
+4. Run `earthly +lint` and `earthly +k8s-manifests`.
+
+### Kairos Image Work
+
+- Kairos v3 image work is authoritative on `main-v3`.
+- Prefer the reproducible Earthly image artifact path for image outputs.
+- Direct Go commands are acceptable inside `kairos/image-build` while iterating
+  on that Go CLI.
+
+---
+
+## 5. Forbidden
+
+- Raw `ApiObject` for any custom resource with an available CRD.
+- Cilium CRD helpers in `cdk-lib`.
+- Generic auth/cert/network contexts in `cdk-lib`.
+- Bootstrap-aware logic in the manifest synth (sync waves, bootstrap
+  policy maps, default-deny opt-out lists, etc.). Bootstrap is the
+  provisioner CLI's job, not the cdk8s layer's.
+- `v3-` prefixes on Argo CD Application names.
+- `FILE_PER_CHART` output for app manifests.
+- Nested `cdk-lib/constructs/`.
+- App-side configuration in `clusters/v3.yaml`.
+- Host-side npm/node commands as build/lint/synth validation.
+- Direct edits to generated CRD bindings when regeneration is the right fix.
+- Reverting user changes or unrelated dirty files during history surgery.
+
+---
+
+## 6. Project Learnings
+
+**Accumulated corrections. This section is for the agent to maintain, not just
+the human.**
+
+When the user corrects your approach, append a one-line rule here before ending
+the session. Write it concretely ("Always use X for Y"), never abstractly ("be
+careful with Y"). If an existing line already covers the correction, tighten it
+instead of adding a new one. Remove lines when the underlying issue goes away.
+
+- Argo CD Application names are the app directory names; never prefix them with
+  the cluster name.
+- App factories receive the `K2App` only; constructs read cluster/app facts
+  with `Context.of(this)`.
+- App module shape is typed named exports:
+  `createAppResources: AppResourceFunc` and `createArgoCdApp: ArgoCdAppFunc`.
+- `createArgoCdApp` should usually be assigned with
+  `defaultArgoCdAppFunc({ ... })`.
+- Cluster bootstrap is the provisioner CLI's concern, not the cdk8s
+  layer's. Do not reintroduce bootstrap maps or sync-wave annotations
+  into synth.
+- One app directory means one app manifest file; keep `YamlOutputType.FILE_PER_APP`.
+- Keep `cdk-lib` flat and app-agnostic; do not recreate a
+  `cdk-lib/constructs` subtree.
+- Split volume implementations by type under `cdk-lib/volumes`.
+- Do not add `AuthContext`, `CertContext`, or `NetworkContext`; import concrete
+  helpers from the owning app packages.
+- Network policy helpers live in `@k2/cilium` and use generated Cilium CRD
+  bindings.
+- Host-side npm dependencies are for dev-time editor/type assistance only; all
+  real validation is through Earthly.
+- Cluster YAML is for real cluster-wide Kubernetes context only; app-configured
+  values stay app-side.
+- Keep ingress defaults and load-balancer pools out of cluster YAML until a
+  concrete app needs them.
+- Default certificate names belong in `@k2/cert-manager`, not cluster config.
