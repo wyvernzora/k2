@@ -300,3 +300,10 @@ instead of adding a new one. Remove lines when the underlying issue goes away.
 - Keep ingress defaults and load-balancer pools out of cluster YAML until a
   concrete app needs them.
 - Default certificate names belong in `@k2/cert-manager`, not cluster config.
+- App-facing secret constructs must stay backend-neutral; do not expose whether
+  ordinary secrets currently come from 1Password, AWS Secrets Manager, or
+  another backend.
+- Shared secret provider auth and stores belong to `external-secrets`.
+  Parameterized generators may live with the construct that consumes them
+  (e.g. `AwsCredentials` owns its STS generator); app pods should receive only
+  final Kubernetes Secrets they consume.
