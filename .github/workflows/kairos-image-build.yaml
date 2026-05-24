@@ -14,6 +14,7 @@ on:
   push:
     branches:
       - main
+      - main-v3
     paths:
       - "kairos/image-build/Dockerfile"
       - "kairos/image-build/cmd/**"
@@ -30,6 +31,7 @@ on:
   pull_request:
     branches:
       - main
+      - main-v3
     paths:
       - "kairos/image-build/Dockerfile"
       - "kairos/image-build/cmd/**"
@@ -92,10 +94,17 @@ jobs:
           elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" > /tmp/kairos-image-build-changed-files.txt
           elif [[ "${{ github.event_name }}" == "push" ]]; then
-            if [[ "${{ github.event.before }}" =~ ^0+$ ]]; then
+            before="${{ github.event.before }}"
+            if [[ "$before" =~ ^0+$ ]]; then
+              force_all=true
+            elif ! git cat-file -e "${before}^{commit}" 2>/dev/null; then
+              # Force-push / rebase orphaned the previous tip — can't
+              # diff against it. Fall back to a full rebuild rather than
+              # silently skipping work.
+              echo "Previous commit ${before} not present (force-push?); treating as full rebuild." >&2
               force_all=true
             else
-              git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" > /tmp/kairos-image-build-changed-files.txt
+              git diff --name-only "$before" "${{ github.sha }}" > /tmp/kairos-image-build-changed-files.txt
             fi
           fi
 

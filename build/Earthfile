@@ -7,9 +7,24 @@ image:
     RUN apk update && apk add --no-cache bash curl git jq helm yq-go
     RUN npm install -g cdk8s-cli
 
-    # Install things not in package registries
-    COPY ./provision /provision
-    RUN /provision/install-dyff.sh
+    # Install dyff from a pinned GitHub release asset. Do not use the
+    # GitHub releases API here: multi-arch CI builds can exhaust the
+    # unauthenticated API rate limit while resolving "latest" and assets.
+    ARG DYFF_VERSION=1.12.0
+    RUN set -eux; \
+        case "$(apk --print-arch)" in \
+            x86_64) dyff_arch=amd64 ;; \
+            aarch64) dyff_arch=arm64 ;; \
+            *) echo "unsupported dyff architecture: $(apk --print-arch)" >&2; exit 1 ;; \
+        esac; \
+        dyff_archive="dyff_${DYFF_VERSION}_linux_${dyff_arch}.tar.gz"; \
+        dyff_base_url="https://github.com/homeport/dyff/releases/download/v${DYFF_VERSION}"; \
+        curl -fsSLO "${dyff_base_url}/${dyff_archive}"; \
+        curl -fsSLO "${dyff_base_url}/checksums.txt"; \
+        grep " ${dyff_archive}$" checksums.txt | sha256sum -c -; \
+        tar -xzf "${dyff_archive}" -C /usr/local/bin dyff; \
+        rm "${dyff_archive}" checksums.txt; \
+        dyff version
 
     # Set up user and workdir
     RUN adduser -D builder

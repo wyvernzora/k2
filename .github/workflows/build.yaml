@@ -3,17 +3,12 @@ name: 🏗️ Build
 permissions:
   contents: write
   packages: write
-  pull-requests: write
-  issues: write
 
 on:
   push:
     branches:
-      - main
+      - main-v3
       - renovate/*
-  pull_request:
-    branches:
-      - main
   schedule:
     - cron: "0 3 * * 0" # every Sunday 03:00 UTC
   workflow_dispatch:
@@ -95,7 +90,7 @@ jobs:
           docker push "${BUILDER_IMAGE_REPO}:$SHA"
 
       - name: 🏷️ Tag & push :latest
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main-v3'
         shell: bash
         run: |
           echo "Pushing ${BUILDER_IMAGE_REPO}:latest"
@@ -156,112 +151,11 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # 4) Handle PR lifecycle
-  pr-lifecycle:
-    name: 🔁 Handle PR lifecycle
-    needs: manifests
-    if: github.event_name == 'pull_request' && !failure() && !cancelled()
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Download deploy-diff.md
-        uses: actions/download-artifact@v8
-        with:
-          name: deploy-diff
-          path: artifacts
-
-      - name: 🛂 Guard PR conditions
-        id: guard
-        shell: bash
-        run: |
-          echo "enable_merge=false" >> "$GITHUB_OUTPUT"
-          if [ "${{ github.event.pull_request.head.repo.fork }}" = "true" ]; then
-            echo "⛳ PR from fork → will comment but NOT enable auto-merge."
-            exit 0
-          fi
-
-          echo "enable_merge=true" >> "$GITHUB_OUTPUT"
-          echo "✅ PR OK → continuing."
-
-      - name: 🧮 Check diff & build sticky comment (with truncation + footer)
-        id: diff
-        shell: bash
-        env:
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          ART_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          FILE="artifacts/deploy-diff.md"
-          TS="$(date -u +'%Y-%m-%d %H:%M:%SZ')"
-          SHA="${HEAD_SHA:0:8}"
-          MAX=56000  # leave room for headers/links/fences
-
-          : > comment-body.md
-
-          footer() {
-            echo
-            echo "_Generated on ${TS} for commit \`${SHA}\`._"
-            echo "[View workflow run](${RUN_URL}) · [Artifacts](${ART_URL})"
-          }
-
-          if [ ! -f "$FILE" ]; then
-            echo "merge=false" >> "$GITHUB_OUTPUT"
-            echo "❌ No deploy-diff.md artifact found."
-            {
-              echo "## ⚠️ Could not find \`deploy-diff.md\` artifact"
-              footer
-            } >> comment-body.md
-            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ -s "$FILE" ]; then
-            echo "merge=false" >> "$GITHUB_OUTPUT"
-            echo "file=$FILE" >> "$GITHUB_OUTPUT"
-            echo "📝 Non-empty diff → will comment."
-            {
-              echo "## 📝 Changes to the k8s manifests"
-              echo
-              if [ "$(wc -c < "$FILE")" -gt "$MAX" ]; then
-                head -c "$MAX" "$FILE"
-                echo
-                echo "..."
-              else
-                cat "$FILE"
-              fi
-              footer
-            } >> comment-body.md
-            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
-          else
-            echo "merge=true" >> "$GITHUB_OUTPUT"
-            echo "✅ Empty diff → enabling auto-merge."
-            {
-              echo "## ✅ No manifest changes — enabling auto-merge"
-              footer
-            } >> comment-body.md
-            echo "comment_body=comment-body.md" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 💬 Sticky PR comment
-        uses: marocchino/sticky-pull-request-comment@v3.0.4
-        with:
-          number: ${{ github.event.pull_request.number }}
-          header: deploy-diff
-          path: ${{ steps.diff.outputs.comment_body }}
-
-      - name: 🔁 Enable auto-merge (rebase)
-        if: steps.guard.outputs.enable_merge == 'true' && steps.diff.outputs.merge == 'true'
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          pull-request-number: ${{ github.event.pull_request.number }}
-          merge-method: rebase
-          token: ${{ secrets.PAT_AUTOMERGE }}
-
-  # 5) Push manifests to deploy branch if push to main
+  # 4) Push manifests to deploy-v3 branch if push to main-v3
   deploy:
     name: 🚀 Deploy k8s manifests
     needs: manifests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !failure() && !cancelled()
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main-v3' && !failure() && !cancelled()
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download k8s manifests
@@ -270,11 +164,11 @@ jobs:
           name: k8s-manifests
           path: artifacts
 
-      - name: 🚢 Push to deploy branch
+      - name: 🚢 Push to deploy-v3 branch
         uses: s0/git-publish-subdir-action@v2.6.0
         env:
           REPO: self
-          BRANCH: deploy
+          BRANCH: deploy-v3
           FOLDER: artifacts
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_EMPTY_COMMITS: true
