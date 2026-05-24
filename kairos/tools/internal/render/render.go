@@ -51,18 +51,29 @@ type activationStage struct {
 
 func ClusterConfig(c clusterconfig.Config) ([]byte, error) {
 	type config struct {
-		ClusterCIDR   string   `yaml:"cluster-cidr"`
-		ServiceCIDR   string   `yaml:"service-cidr"`
-		ClusterDNS    string   `yaml:"cluster-dns"`
-		ClusterDomain string   `yaml:"cluster-domain"`
-		TLSSAN        []string `yaml:"tls-san,omitempty"`
+		ClusterCIDR       string   `yaml:"cluster-cidr"`
+		ServiceCIDR       string   `yaml:"service-cidr"`
+		ClusterDNS        string   `yaml:"cluster-dns"`
+		ClusterDomain     string   `yaml:"cluster-domain"`
+		TLSSAN            []string `yaml:"tls-san,omitempty"`
+		KubeAPIServerArgs []string `yaml:"kube-apiserver-arg,omitempty"`
+	}
+	kubeAPIServerArgs := []string{}
+	if c.AWS.OIDCIssuer.URL != "" && c.AWS.OIDCIssuer.JWKSURI != "" {
+		kubeAPIServerArgs = append(
+			kubeAPIServerArgs,
+			"service-account-issuer="+c.AWS.OIDCIssuer.URL,
+			"service-account-issuer=https://kubernetes.default.svc."+c.Kubernetes.Domain,
+			"service-account-jwks-uri="+c.AWS.OIDCIssuer.JWKSURI,
+		)
 	}
 	return yaml.Marshal(config{
-		ClusterCIDR:   c.Kubernetes.Subnets.Pods,
-		ServiceCIDR:   c.Kubernetes.Subnets.Services,
-		ClusterDNS:    c.Kubernetes.DNS,
-		ClusterDomain: c.Kubernetes.Domain,
-		TLSSAN:        []string{c.Kubernetes.API},
+		ClusterCIDR:       c.Kubernetes.Subnets.Pods,
+		ServiceCIDR:       c.Kubernetes.Subnets.Services,
+		ClusterDNS:        c.Kubernetes.DNS,
+		ClusterDomain:     c.Kubernetes.Domain,
+		TLSSAN:            []string{c.Kubernetes.API},
+		KubeAPIServerArgs: kubeAPIServerArgs,
 	})
 }
 

@@ -289,6 +289,9 @@ instead of adding a new one. Remove lines when the underlying issue goes away.
 - Keep `cdk-lib` flat and app-agnostic; do not recreate a
   `cdk-lib/constructs` subtree.
 - Split volume implementations by type under `cdk-lib/volumes`.
+- App-local constructs used only by an app's own `components/` stay under that
+  app's `components/`; reserve `apps/<name>/lib/` for constructs imported by
+  other apps through `@k2/<name>`.
 - Do not add `AuthContext`, `CertContext`, or `NetworkContext`; import concrete
   helpers from the owning app packages.
 - Network policy helpers live in `@k2/cilium` and use generated Cilium CRD
@@ -303,7 +306,14 @@ instead of adding a new one. Remove lines when the underlying issue goes away.
 - App-facing secret constructs must stay backend-neutral; do not expose whether
   ordinary secrets currently come from 1Password, AWS Secrets Manager, or
   another backend.
-- Shared secret provider auth and stores belong to `external-secrets`.
-  Parameterized generators may live with the construct that consumes them
-  (e.g. `AwsCredentials` owns its STS generator); app pods should receive only
-  final Kubernetes Secrets they consume.
+- Shared secret provider auth and stores belong to `external-secrets`. Prefer
+  WebIdentity for AWS runtime access; do not add a generic AWS credential
+  Secret construct until a concrete workload requires literal SigV4 keys.
+- For live v3 cluster diagnostics, use the explicit kubeconfig at
+  `/Users/wyvernzora/.kube/k2/k2/kubeconfig`; the ambient context may point at
+  the legacy API VIP.
+- Cert-manager Route53 DNS01 uses K2's public service-account OIDC issuer and
+  cert-manager `auth.kubernetes.serviceAccountRef`; do not route DNS01 through
+  ESO or `aws-sts-bootstrap`.
+- Raw generated CRD constructs exported from an app package must be namespaced
+  behind `crd`, e.g. `import { crd } from "@k2/external-secrets"`.

@@ -18,6 +18,17 @@ function validateClusterConfig(value: unknown, path: string): asserts value is C
   requireConst(root, "id", "v3", path);
   requireNonEmptyString(root, "apexDomain", path);
 
+  if (root.aws !== undefined) {
+    const aws = requireObject(root.aws, `${path}.aws`);
+    requireAwsAccountId(aws, "accountId", `${path}.aws`);
+    requireNonEmptyString(aws, "region", `${path}.aws`);
+    if (aws.oidcIssuer !== undefined) {
+      const oidcIssuer = requireObject(aws.oidcIssuer, `${path}.aws.oidcIssuer`);
+      requireHttpsUrl(oidcIssuer, "url", `${path}.aws.oidcIssuer`);
+      requireHttpsUrl(oidcIssuer, "jwksUri", `${path}.aws.oidcIssuer`);
+    }
+  }
+
   const op = requireObject(root.onePassword, `${path}.onePassword`);
   requireNonEmptyString(op, "vault", `${path}.onePassword`);
 
@@ -54,6 +65,7 @@ function validateClusterConfig(value: unknown, path: string): asserts value is C
   const exhaustive: Record<keyof ClusterConfig, true> = {
     id: true,
     apexDomain: true,
+    aws: true,
     onePassword: true,
     kubernetes: true,
     argo: true,
@@ -90,6 +102,13 @@ function requireNonEmptyString(obj: Record<string, unknown>, key: string, path: 
 function requireBoolean(obj: Record<string, unknown>, key: string, path: string): void {
   if (typeof obj[key] !== "boolean") {
     throw new Error(`${path}.${key}: must be a boolean`);
+  }
+}
+
+function requireAwsAccountId(obj: Record<string, unknown>, key: string, path: string): void {
+  const value = obj[key];
+  if (typeof value !== "string" || !/^\d{12}$/.test(value)) {
+    throw new Error(`${path}.${key}: must be a 12-digit AWS account id`);
   }
 }
 

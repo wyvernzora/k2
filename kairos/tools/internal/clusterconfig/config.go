@@ -3,6 +3,7 @@ package clusterconfig
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,7 +16,19 @@ const apiServerPort = 6443
 type Config struct {
 	ID         string     `yaml:"id"`
 	ApexDomain string     `yaml:"apexDomain"`
+	AWS        AWS        `yaml:"aws"`
 	Kubernetes Kubernetes `yaml:"kubernetes"`
+}
+
+type AWS struct {
+	AccountID  string     `yaml:"accountId"`
+	Region     string     `yaml:"region"`
+	OIDCIssuer OIDCIssuer `yaml:"oidcIssuer"`
+}
+
+type OIDCIssuer struct {
+	URL     string `yaml:"url"`
+	JWKSURI string `yaml:"jwksUri"`
 }
 
 type Kubernetes struct {
@@ -64,6 +77,17 @@ func (c Config) validate(path string, target string) error {
 	if c.ID != target {
 		return fmt.Errorf("%s: id %q does not match cluster target %q", path, c.ID, target)
 	}
+	if c.AWS.AccountID != "" && !regexp.MustCompile(`^\d{12}$`).MatchString(c.AWS.AccountID) {
+		return fmt.Errorf("%s.aws.accountId: must be a 12-digit AWS account id", path)
+	}
+	if c.AWS.OIDCIssuer.URL != "" || c.AWS.OIDCIssuer.JWKSURI != "" {
+		if err := requireHTTPSURL(c.AWS.OIDCIssuer.URL, path+".aws.oidcIssuer.url"); err != nil {
+			return err
+		}
+		if err := requireHTTPSURL(c.AWS.OIDCIssuer.JWKSURI, path+".aws.oidcIssuer.jwksUri"); err != nil {
+			return err
+		}
+	}
 	if err := requireIPv4(c.Kubernetes.API, path+".kubernetes.api"); err != nil {
 		return err
 	}
@@ -102,6 +126,17 @@ func requireCIDR(value string, fieldPath string) error {
 	}
 	if _, _, err := net.ParseCIDR(value); err != nil {
 		return fmt.Errorf("%s: %w", fieldPath, err)
+	}
+	return nil
+}
+
+func requireHTTPSURL(value string, fieldPath string) error {
+	if value == "" {
+		return fmt.Errorf("%s: must not be empty", fieldPath)
+	}
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Scheme != "https" || parsed.Host == "" {
+		return fmt.Errorf("%s: must be a valid https:// URL", fieldPath)
 	}
 	return nil
 }

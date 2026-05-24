@@ -1,0 +1,6 @@
+# Used by build/scripts/generate-crd-manifest.sh when rendering this wrapper
+# chart for CRD extraction. The deployed cert-manager release is rendered from
+# the dependency directly in components/cert-manager/index.ts with crds.enabled=false.
+cert-manager:
+  crds:
+    enabled: true

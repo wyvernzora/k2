@@ -5,6 +5,7 @@ import { NetworkPolicy } from "./components/network-policy.js";
 import { SecretStores } from "./components/secret-stores.js";
 
 export { ManagedSecret, type ManagedSecretProps } from "./lib/managed-secret.js";
+export * as crd from "./lib/crd.js";
 
 export const createAppResources: AppResourceFunc = app => {
   new ExternalSecrets(app, "external-secrets");

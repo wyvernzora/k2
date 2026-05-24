@@ -45,6 +45,14 @@ export class HelmCharts extends Context {
       throw new Error(`No Helm dependency named ${alias}`);
     }
 
+    if (dependency.repository?.startsWith("oci://") === true) {
+      return {
+        chart: `${dependency.repository}/${dependency.name}`,
+        version: dependency.version,
+        values,
+      };
+    }
+
     return {
       chart: dependency.name,
       repo: dependency.repository,

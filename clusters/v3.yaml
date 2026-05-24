@@ -7,6 +7,15 @@ id: v3
 # (e.g. argocd.<apexDomain>).
 apexDomain: wyvernzora.io
 
+# AWS account defaults plus the public service-account OIDC issuer used for
+# AWS WebIdentity federation.
+aws:
+  accountId: "843805466351"
+  region: us-west-2
+  oidcIssuer:
+    url: https://oidc.k2.wyvernzora.io/v3
+    jwksUri: https://oidc.k2.wyvernzora.io/v3/openid/v1/jwks
+
 # 1Password vault that ESO's ClusterSecretStore reads through. Vault names
 # are case-sensitive in the 1Password SDK — must match the vault as it
 # appears in the 1Password UI (NOT lowercased).

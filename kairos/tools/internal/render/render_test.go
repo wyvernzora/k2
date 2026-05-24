@@ -94,6 +94,8 @@ func TestClusterConfig(t *testing.T) {
 	cfg.Kubernetes.Domain = "cluster.local"
 	cfg.Kubernetes.Subnets.Pods = "10.42.0.0/16"
 	cfg.Kubernetes.Subnets.Services = "10.43.0.0/16"
+	cfg.AWS.OIDCIssuer.URL = "https://oidc.k2.wyvernzora.io/v3"
+	cfg.AWS.OIDCIssuer.JWKSURI = "https://oidc.k2.wyvernzora.io/v3/openid/v1/jwks"
 
 	data, err := ClusterConfig(cfg)
 	if err != nil {
@@ -106,6 +108,9 @@ func TestClusterConfig(t *testing.T) {
 		"cluster-dns: 10.43.0.10",
 		"cluster-domain: cluster.local",
 		"- 10.10.9.1",
+		"- service-account-issuer=https://oidc.k2.wyvernzora.io/v3",
+		"- service-account-issuer=https://kubernetes.default.svc.cluster.local",
+		"- service-account-jwks-uri=https://oidc.k2.wyvernzora.io/v3/openid/v1/jwks",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("cluster config missing %q:\n%s", want, got)

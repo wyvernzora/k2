@@ -15,17 +15,26 @@ OUTPUT_FILE="crds.k8s.yaml"
 # Shift removes the first argument so that "$@" now contains only additional arguments for helm template
 shift
 
-# Extract repositories and names from Chart.yaml using yq
-REPOS=$(yq eval '.dependencies | .[] | .repository' "$APP_PATH/Chart.yaml" | sort | uniq)
+# Extract index-backed repositories from Chart.yaml using yq. OCI
+# dependencies are resolved directly by `helm dependency build` and cannot be
+# added with `helm repo add`.
+REPOS=$(yq eval '.dependencies[]?.repository // ""' "$APP_PATH/Chart.yaml" | sort | uniq)
+HAS_HELM_REPOS=false
 
 # Add all necessary repositories
 for repo in $REPOS; do
+  if [ -z "$repo" ] || [[ "$repo" == oci://* ]]; then
+    continue
+  fi
   # Helm will not throw an error if the repository is already added
   helm repo add $(echo $repo | awk -F'/' '{print $NF}') $repo
+  HAS_HELM_REPOS=true
 done
 
 # Update repository cache
-helm repo update
+if [ "$HAS_HELM_REPOS" = true ]; then
+  helm repo update
+fi
 
 # Create output directory if it doesn't exist
 mkdir -p "$OUTPUT_DIR"

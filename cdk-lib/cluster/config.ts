@@ -1,11 +1,23 @@
 export interface ClusterConfig {
   readonly id: "v3";
   readonly apexDomain: string;
+  readonly aws?: AwsConfig;
   readonly onePassword: OnePasswordConfig;
   readonly kubernetes: KubernetesConfig;
   readonly argo: ArgoConfig;
   readonly nfs: NfsConfig;
   readonly loadBalancerPools: LoadBalancerPoolConfig[];
+}
+
+export interface AwsConfig {
+  readonly accountId: string;
+  readonly region: string;
+  readonly oidcIssuer?: AwsOidcIssuerConfig;
+}
+
+export interface AwsOidcIssuerConfig {
+  readonly url: string;
+  readonly jwksUri: string;
 }
 
 export interface OnePasswordConfig {
