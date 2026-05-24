@@ -31,6 +31,7 @@ jobs:
         uses: dorny/paths-filter@v4
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             run-k2-build:
               - 'Earthfile'
