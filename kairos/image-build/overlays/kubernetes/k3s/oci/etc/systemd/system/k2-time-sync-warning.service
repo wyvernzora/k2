@@ -1,0 +1,6 @@
+[Unit]
+Description=K2 banner — NTP did not complete before time-sync.target deadline
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger -p syslog.err -t k2 "NTP sync did not complete within 60s. k3s will NOT start (Requires=time-sync.target) — clock skew can mint x509 certs in the wrong era and corrupt TLS across the cluster. Investigate outbound UDP/123 + DNS, then 'sudo systemctl restart systemd-time-wait-sync k3s' (or k3s-agent on workers) once NTP is reachable."

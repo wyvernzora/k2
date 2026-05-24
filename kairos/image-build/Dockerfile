@@ -135,6 +135,35 @@ RUN set -eux; \
         printf 'imageRevision: %s\n' "${IMAGE_REVISION}"; \
     } > /usr/share/k2/image-build/metadata.yaml
 
+# ----------------------------------------------------------------
+# k2-rescue: UART-only emergency recovery user.
+#
+# Baked into both COS_ACTIVE and COS_RECOVERY rootfs so it survives
+# `kairos-agent reset` (incl. `--reset-oem`) and any provisioner-
+# hardening that disables /oem cloud-configs. Required because
+# COS_PERSISTENT (operator SSH key, /home/kairos) gets wiped by
+# reset; without an OS-rootfs-resident fallback, a failed reset
+# bricks the node to reflash-only.
+#
+# Network access denied unconditionally (DenyUsers in sshd_config.d
+# below): use is UART-at-the-rack only. On active boot, the user is
+# additionally locked + de-sudo'd by a yip cloud-config stage
+# shipped alongside the k3s overlay; effective access is recovery-
+# boot only.
+#
+# Cleartext password lives on a laser-engraved metal plate kept with
+# the operator's 2FA recovery codes. Not in any password manager,
+# not anywhere else digital. Rotation = edit the hash literal below,
+# rebuild image, re-engrave plate.
+# ----------------------------------------------------------------
+RUN set -eux; \
+    useradd --create-home --shell /bin/bash k2-rescue; \
+    echo 'k2-rescue:$y$j9T$5oZ2TfT8.Q38aVPqk2jPT/$SLyChcYpT3rj1KjRU4giE2MLifEXwiW1jg/bv5J/a71' | chpasswd -e; \
+    printf '%s\n' 'k2-rescue ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99-k2-rescue; \
+    chmod 0440 /etc/sudoers.d/99-k2-rescue; \
+    mkdir -p /etc/ssh/sshd_config.d; \
+    printf '%s\n' 'DenyUsers k2-rescue' > /etc/ssh/sshd_config.d/99-k2-rescue-block.conf
+
 COPY kairos/image-build/overlays /k2-overlays
 
 RUN set -eux; \

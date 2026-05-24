@@ -16,7 +16,7 @@ up in `kairos/`.
 | `../Earthfile` | Earthly targets for reproducible image-build validation and artifact generation. |
 | `Dockerfile` | Image-build Dockerfile that turns Ubuntu into a Kairos+k3s OCI image. |
 | `cmd/image-build/` | Go CLI for target planning, OCI builds, artifact builds, and validation. |
-| `scripts/flash-rpi4cb-macos.sh` | Host-local flashing helper for CM4 eMMC exposed through rpiboot on macOS. |
+| `../tools/cmd/k2-tools/flash.go` | CM4/ComputeBlade eMMC flasher; invoke as `k2-tools flash rpi4cb`. Replaces the legacy `scripts/flash-rpi4cb-macos.sh`. |
 
 ## Target Strategy
 
