@@ -77,6 +77,7 @@ lint:
     COPY . .
     RUN for APP_ROOT in $(ls -d apps/*/crds/crds.k8s.yaml 2>/dev/null | sed 's#/crds/crds.k8s.yaml$##'); do build/scripts/generate-crd-constructs.sh "$APP_ROOT"; done
     RUN npx tsc --noEmit
+    RUN npm run test:eslint-rules
     RUN npx eslint
 
 npm-install:

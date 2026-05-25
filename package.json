@@ -38,6 +38,7 @@
     "printWidth": 120
   },
   "scripts": {
+    "test:eslint-rules": "tsx build/eslint/rules/*.test.ts",
     "typecheck": "tsc --noEmit"
   }
 }
