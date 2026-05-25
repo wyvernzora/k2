@@ -4,6 +4,8 @@ export interface ClusterConfig {
   readonly aws?: AwsConfig;
   readonly onePassword: OnePasswordConfig;
   readonly kubernetes: KubernetesConfig;
+  readonly network: NetworkConfig;
+  readonly dns: DnsConfig;
   readonly argo: ArgoConfig;
   readonly nfs: NfsConfig;
   readonly loadBalancerPools: LoadBalancerPoolConfig[];
@@ -34,6 +36,25 @@ export interface KubernetesConfig {
 export interface KubernetesSubnetsConfig {
   readonly pods: string;
   readonly services: string;
+}
+
+export interface NetworkConfig {
+  readonly vlans: VlanConfig[];
+}
+
+export interface VlanConfig {
+  readonly name: string;
+  readonly id: number;
+  readonly cidr: string;
+}
+
+export interface DnsConfig {
+  readonly staticRecords: DnsStaticRecordConfig[];
+}
+
+export interface DnsStaticRecordConfig {
+  readonly name: string;
+  readonly address: string;
 }
 
 export interface ArgoConfig {

@@ -1,3 +1,4 @@
+export * from "./cidr.js";
 export * from "./default-deny-network-policy.js";
 export * from "./egress.js";
 export * from "./endpoint.js";

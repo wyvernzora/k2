@@ -40,6 +40,23 @@ function validateClusterConfig(value: unknown, path: string): asserts value is C
   requireCidr(subnets, "pods", `${path}.kubernetes.subnets`);
   requireCidr(subnets, "services", `${path}.kubernetes.subnets`);
 
+  const network = requireObject(root.network, `${path}.network`);
+  const vlans = requireArray(network.vlans, `${path}.network.vlans`);
+  vlans.forEach((entry, index) => {
+    const vlan = requireObject(entry, `${path}.network.vlans[${index}]`);
+    requireNonEmptyString(vlan, "name", `${path}.network.vlans[${index}]`);
+    requireInteger(vlan, "id", `${path}.network.vlans[${index}]`, 1, 4094);
+    requireCidr(vlan, "cidr", `${path}.network.vlans[${index}]`);
+  });
+
+  const dns = requireObject(root.dns, `${path}.dns`);
+  const staticRecords = requireArray(dns.staticRecords, `${path}.dns.staticRecords`);
+  staticRecords.forEach((entry, index) => {
+    const record = requireObject(entry, `${path}.dns.staticRecords[${index}]`);
+    requireNonEmptyString(record, "name", `${path}.dns.staticRecords[${index}]`);
+    requireIpv4Address(record, "address", `${path}.dns.staticRecords[${index}]`);
+  });
+
   const argo = requireObject(root.argo, `${path}.argo`);
   requireNonEmptyString(argo, "namespace", `${path}.argo`);
   requireNonEmptyString(argo, "project", `${path}.argo`);
@@ -68,6 +85,8 @@ function validateClusterConfig(value: unknown, path: string): asserts value is C
     aws: true,
     onePassword: true,
     kubernetes: true,
+    network: true,
+    dns: true,
     argo: true,
     nfs: true,
     loadBalancerPools: true,
@@ -105,6 +124,13 @@ function requireBoolean(obj: Record<string, unknown>, key: string, path: string)
   }
 }
 
+function requireInteger(obj: Record<string, unknown>, key: string, path: string, min: number, max: number): void {
+  const value = obj[key];
+  if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) {
+    throw new Error(`${path}.${key}: must be an integer from ${min} to ${max}`);
+  }
+}
+
 function requireAwsAccountId(obj: Record<string, unknown>, key: string, path: string): void {
   const value = obj[key];
   if (typeof value !== "string" || !/^\d{12}$/.test(value)) {
@@ -124,6 +150,26 @@ function requireCidr(obj: Record<string, unknown>, key: string, path: string): v
   }
   for (const octet of address.split(".")) {
     const n = Number(octet);
+    if (n < 0 || n > 255) {
+      throw new Error(`${path}.${key}: octet out of range in ${value}`);
+    }
+  }
+}
+
+function requireIpv4Address(obj: Record<string, unknown>, key: string, path: string): void {
+  const value = obj[key];
+  if (typeof value !== "string") {
+    throw new Error(`${path}.${key}: must be an IPv4 address`);
+  }
+  const parts = value.split(".");
+  if (parts.length !== 4) {
+    throw new Error(`${path}.${key}: must be an IPv4 address`);
+  }
+  for (const part of parts) {
+    if (!/^\d+$/.test(part)) {
+      throw new Error(`${path}.${key}: must be an IPv4 address`);
+    }
+    const n = Number(part);
     if (n < 0 || n > 255) {
       throw new Error(`${path}.${key}: octet out of range in ${value}`);
     }
