@@ -169,15 +169,18 @@ export const createAppResources: AppResourceFunc = app => {
 
 - Top-level component constructors should read as orchestration, not a wall of
   manifest shape.
+- Keep object literals inline when they are reasonably sized: about 25 SLOC or
+  less and no more than three levels deep. Do not split them into single-use
+  helpers just to reduce visible nesting.
 - When a constructor both orchestrates several things and instantiates a
   resource with a large props object, especially a raw CRD, wrap that resource
   in a named construct extending the resource type and put it in a dedicated
   component-local file.
 - Alias excessively long generated CRD enum/type names near the top of the
   dedicated resource file so the props body remains readable.
-- Object literals nested more than about three levels deep should usually move
-  into named helper functions in the same file, unless the whole file is already
-  a dedicated resource wrapper.
+- Object literals larger than about 25 SLOC or nested more than about three
+  levels deep should usually move into a named helper in the same file, unless
+  the whole file is already a dedicated resource wrapper.
 
 ### Contexts
 
