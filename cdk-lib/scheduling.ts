@@ -52,6 +52,25 @@ export const Scheduling = {
     };
   },
 
+  workersPreferred(): SchedulingProfile {
+    return {
+      tolerations: [
+        { key: "node-role.kubernetes.io/control-plane", operator: "Exists", effect: "NoSchedule" },
+        { key: "CriticalAddonsOnly", operator: "Exists" },
+      ],
+      affinity: {
+        nodeAffinity: {
+          preferredDuringSchedulingIgnoredDuringExecution: [
+            {
+              weight: 100,
+              preference: WORKER_MATCH,
+            },
+          ],
+        },
+      },
+    };
+  },
+
   controlPlanePreferred(): SchedulingProfile {
     return {
       tolerations: [

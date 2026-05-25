@@ -45,7 +45,7 @@ helm dependency build "$APP_PATH"
 
 # Use Helm to template the complete chart, including dependencies, passing additional args
 tmplt_output=$(mktemp)  # Create a temporary file to capture output
-helm template "$APP_PATH" "$@" > "$tmplt_output"
+helm template "$APP_PATH" --include-crds "$@" > "$tmplt_output"
 
 # Extract CRDs using yq and save to the output file
 echo "Extracting CRDs..."

@@ -7,7 +7,7 @@ import {
   DEFAULT_CERTIFICATE_SECRET_NAME,
 } from "../cert-manager/constants.js";
 
-const TARGET_NAMESPACES = ["plex"];
+const TARGET_NAMESPACES = ["plex", "traefik"];
 const {
   ClusterExternalSecret,
   ClusterExternalSecretSpecExternalSecretSpecDataRemoteRefConversionStrategy: RemoteRefConversionStrategy,
