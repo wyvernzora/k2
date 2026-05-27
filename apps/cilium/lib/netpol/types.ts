@@ -33,6 +33,7 @@ export interface EndpointNetworkPolicyProps {
 export interface NamespaceBoundaryPolicyProps {
   readonly namespace?: string;
   readonly name?: string;
+  readonly allowDns?: boolean;
 }
 
 export interface IngressRule {
