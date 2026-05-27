@@ -27,7 +27,8 @@ else
     echo "🆕 Remote 'deploy-v3' branch does not exist yet — treating all local manifests as new." 1>&2
 fi
 
-# 2) Build exclude arguments from .dyffignore
+# 2) Build exclude arguments from .dyffignore. Entries are dyff --exclude
+#    paths; keep the leading slash convention used by dyff's human output.
 excludes=()
 DYFFIGNORE=".dyffignore"
 if [[ -f "$DYFFIGNORE" ]]; then
@@ -35,7 +36,7 @@ if [[ -f "$DYFFIGNORE" ]]; then
     # skip empty lines & comments
     [[ -z "$ptr" || "$ptr" =~ ^# ]] && continue
 
-    # ensure it starts with a slash (JSON Pointer)
+    # ensure it starts with a slash
     [[ "$ptr" != /* ]] && ptr="/$ptr"
 
     excludes+=( "--exclude" "$ptr" )

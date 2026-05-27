@@ -1,6 +1,9 @@
-import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { copyFile, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 
 import { Chart } from "cdk8s";
 import fg from "fast-glob";
@@ -20,6 +23,7 @@ import {
 } from "@k2/cdk-lib";
 import { makeDefaultArgoApplication } from "@k2/argocd";
 
+const execFileAsync = promisify(execFile);
 const cluster = await loadClusterConfig();
 const deployRoot = resolve("deploy");
 
@@ -43,7 +47,7 @@ for (const [appPath, mod] of modules) {
   app.synth();
   const appOutdir = join(deployRoot, appName);
   const hasCrdManifest = await copyCrdManifest(appPath, appOutdir);
-  await stripSynthesizedCrds(appPath, appOutdir, hasCrdManifest);
+  await validateAndStripSynthesizedCrds(appPath, appOutdir, hasCrdManifest);
 
   makeDefaultArgoApplication(argoChart, appInfo);
 
@@ -129,7 +133,11 @@ async function copyCrdManifest(appPath: string, outdir: string): Promise<boolean
   }
 }
 
-async function stripSynthesizedCrds(appPath: string, outdir: string, hasCrdManifest: boolean): Promise<void> {
+async function validateAndStripSynthesizedCrds(
+  appPath: string,
+  outdir: string,
+  hasCrdManifest: boolean,
+): Promise<void> {
   const appName = basename(appPath);
   const manifestPath = join(outdir, "app.k8s.yaml");
   let manifest: string;
@@ -144,10 +152,12 @@ async function stripSynthesizedCrds(appPath: string, outdir: string, hasCrdManif
 
   const documents = YAML.parseAllDocuments(manifest);
   const keptDocuments: YAML.Document[] = [];
+  const crdDocuments: YAML.Document[] = [];
   const crdNames: string[] = [];
   for (const document of documents) {
     if (document.get("kind") === "CustomResourceDefinition") {
       const name = document.getIn(["metadata", "name"]);
+      crdDocuments.push(document);
       crdNames.push(typeof name === "string" ? name : "(unnamed)");
       continue;
     }
@@ -163,8 +173,87 @@ async function stripSynthesizedCrds(appPath: string, outdir: string, hasCrdManif
         `but apps/${appName}/crds/crds.k8s.yaml is missing. Commit upstream CRDs there instead.`,
     );
   }
+  await verifyCommittedCrdsMatchRendered(appPath, crdDocuments);
 
   const rendered = keptDocuments.map(document => document.toString()).join("---\n");
   await writeFile(manifestPath, rendered.endsWith("\n") ? rendered : `${rendered}\n`);
   console.warn(`[${appName}] stripped ${crdNames.length} CRD(s) from app.k8s.yaml; using crds.k8s.yaml instead`);
+}
+
+async function verifyCommittedCrdsMatchRendered(appPath: string, crdDocuments: YAML.Document[]): Promise<void> {
+  const appName = basename(appPath);
+  const committedPath = join(appPath, "crds", "crds.k8s.yaml");
+  const rendered = crdDocuments.map(document => document.toString()).join("---\n");
+  const tempDir = await mkdtemp(join(tmpdir(), `k2-${appName}-crds-`));
+  const renderedPath = join(tempDir, "rendered-crds.k8s.yaml");
+  try {
+    await writeFile(renderedPath, rendered.endsWith("\n") ? rendered : `${rendered}\n`);
+    await dyffCrds(appName, committedPath, renderedPath);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function dyffCrds(appName: string, committedPath: string, renderedPath: string): Promise<void> {
+  const args = ["between", "-ibs", ...(await dyffIgnoreArgs()), committedPath, renderedPath];
+  try {
+    await execFileAsync("dyff", args, { maxBuffer: 20 * 1024 * 1024 });
+  } catch (cause) {
+    const error = cause as ExecFileError;
+    if (error.code === 1) {
+      throw new Error(
+        [
+          `[${appName}] Helm chart CRDs differ from apps/${appName}/crds/crds.k8s.yaml.`,
+          `Refusing to synthesize manifests so CRD upgrades can be reviewed and sequenced manually.`,
+          `Run: earthly +crd-manifest --APP_ROOT=apps/${appName}`,
+          "",
+          commandOutput(error.stdout),
+          commandOutput(error.stderr),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+    throw new Error(`dyff CRD drift check failed for ${appName}: ${error.message}`, { cause });
+  }
+}
+
+async function dyffIgnoreArgs(): Promise<string[]> {
+  const ignoreFiles = await Promise.all([readDyffIgnore(".dyffignore"), readDyffIgnore(".crd.dyffignore")]);
+  return ignoreFiles.flatMap(ignoreFile =>
+    ignoreFile
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line !== "" && !line.startsWith("#"))
+      .flatMap(pointer => ["--exclude", pointer.startsWith("/") ? pointer : `/${pointer}`]),
+  );
+}
+
+async function readDyffIgnore(path: string): Promise<string> {
+  let ignoreFile: string;
+  try {
+    ignoreFile = await readFile(path, "utf8");
+  } catch (cause) {
+    if ((cause as NodeJS.ErrnoException).code === "ENOENT") {
+      return "";
+    }
+    throw cause;
+  }
+  return ignoreFile;
+}
+
+interface ExecFileError extends Error {
+  readonly code?: number | string;
+  readonly stdout?: unknown;
+  readonly stderr?: unknown;
+}
+
+function commandOutput(output: unknown): string {
+  if (typeof output === "string") {
+    return output.trim();
+  }
+  if (Buffer.isBuffer(output)) {
+    return output.toString("utf8").trim();
+  }
+  return "";
 }
