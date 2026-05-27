@@ -4,7 +4,7 @@ FROM node:alpine
 image:
     # Enable community repo and install packages needed for build
     RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-    RUN apk update && apk add --no-cache bash curl git jq helm yq-go
+    RUN apk update && apk add --no-cache bash curl git go jq helm yq-go
     RUN npm install -g cdk8s-cli
 
     # Install dyff from a pinned GitHub release asset. Do not use the

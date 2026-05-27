@@ -11,9 +11,14 @@ on:
     paths:
       - ".github/workflows/go.yaml"
       - ".golangci.yml"
-      - "kairos/image-build/**"
+      - "tools/**"
+      - "kairos/Dockerfile"
+      - "kairos/overlays/**"
+      - "kairos/scripts/**"
       - "kairos/node-init/**"
       - "kairos/tools/**"
+      - "kairos/targets.yaml"
+      - "kairos/versions.env"
   pull_request:
     branches:
       - main
@@ -21,9 +26,14 @@ on:
     paths:
       - ".github/workflows/go.yaml"
       - ".golangci.yml"
-      - "kairos/image-build/**"
+      - "tools/**"
+      - "kairos/Dockerfile"
+      - "kairos/overlays/**"
+      - "kairos/scripts/**"
       - "kairos/node-init/**"
       - "kairos/tools/**"
+      - "kairos/targets.yaml"
+      - "kairos/versions.env"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
@@ -37,9 +47,8 @@ jobs:
       fail-fast: false
       matrix:
         module:
-          - kairos/image-build
+          - tools
           - kairos/node-init
-          - kairos/tools
     defaults:
       run:
         working-directory: ${{ matrix.module }}

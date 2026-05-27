@@ -1,6 +1,10 @@
 apiVersion: v2
 name: cilium
 version: 1.0.0
+annotations:
+  # The Cilium chart does not expose its CRDs through helm template --include-crds.
+  # Keep the committed CRD bundle as the explicit source until that changes.
+  k2.wyvernzora.io/allow-crd-empty-render: "true"
 dependencies:
   - name: cilium
     repository: https://helm.cilium.io

@@ -1,6 +1,0 @@
-# CRD drift checks compare upstream chart-emitted CRDs with committed
-# apps/<app>/crds/crds.k8s.yaml copies. Helm/CDK8s metadata varies by render
-# context; CRD drift safety cares about the CRD names and specs.
-/metadata
-/metadata/labels
-/metadata/labels/app.kubernetes.io/instance

@@ -9,6 +9,7 @@
     },
     "target": "ES2024",
     "lib": ["ES2024"],
+    "types": ["node"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "declaration": true,

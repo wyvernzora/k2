@@ -1,0 +1,9 @@
+VERSION 0.8
+
+k2-tools-cli:
+    FROM ../build+image
+    COPY go.mod go.sum ./
+    RUN GOMODCACHE=/tmp/go-mod-cache GOCACHE=/tmp/go-build go mod download
+    COPY . .
+    RUN GOMODCACHE=/tmp/go-mod-cache GOCACHE=/tmp/go-build CGO_ENABLED=0 go build -o k2-tools ./cmd/k2-tools
+    SAVE ARTIFACT k2-tools

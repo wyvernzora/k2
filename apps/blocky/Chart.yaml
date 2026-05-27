@@ -1,6 +1,10 @@
 apiVersion: v2
 name: blocky
 version: 1.0.0
+annotations:
+  # The k8s-gateway chart requires domain values even for a CRD probe, and it
+  # does not ship CRDs. This keeps the build guardrail fail-closed by default.
+  k2.wyvernzora.io/allow-crd-template-failure: "true"
 dependencies:
   - name: k8s-gateway
     repository: https://k8s-gateway.github.io/k8s_gateway

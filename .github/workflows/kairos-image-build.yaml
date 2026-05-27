@@ -16,13 +16,10 @@ on:
       - main
       - main-v3
     paths:
-      - "kairos/image-build/Dockerfile"
-      - "kairos/image-build/cmd/**"
-      - "kairos/image-build/go.mod"
-      - "kairos/image-build/go.sum"
-      - "kairos/image-build/internal/**"
-      - "kairos/image-build/overlays/**"
-      - "kairos/image-build/scripts/**"
+      - "tools/**"
+      - "kairos/Dockerfile"
+      - "kairos/overlays/**"
+      - "kairos/scripts/**"
       - "kairos/node-init/**"
       - "kairos/Earthfile"
       - "kairos/targets.yaml"
@@ -33,13 +30,10 @@ on:
       - main
       - main-v3
     paths:
-      - "kairos/image-build/Dockerfile"
-      - "kairos/image-build/cmd/**"
-      - "kairos/image-build/go.mod"
-      - "kairos/image-build/go.sum"
-      - "kairos/image-build/internal/**"
-      - "kairos/image-build/overlays/**"
-      - "kairos/image-build/scripts/**"
+      - "tools/**"
+      - "kairos/Dockerfile"
+      - "kairos/overlays/**"
+      - "kairos/scripts/**"
       - "kairos/node-init/**"
       - "kairos/Earthfile"
       - "kairos/targets.yaml"
@@ -65,15 +59,20 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: kairos/image-build/go.mod
+          go-version-file: tools/go.mod
+          cache-dependency-path: |
+            tools/go.sum
+            kairos/node-init/go.sum
 
-      - name: Test image-build CLI
+      - name: Test k2-tools image command
         shell: bash
         run: |
-          cd kairos/image-build
-          go test ./...
-          go vet ./...
-          go run ./cmd/image-build plan --all --format json >/tmp/kairos-image-build-plans.json
+          cd tools
+          go test ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
+          go vet ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
+          go build -o k2-tools ./cmd/k2-tools
+          cd ..
+          ./tools/k2-tools image plan --all --format json >/tmp/kairos-image-build-plans.json
 
       - name: Test node-init helper
         shell: bash
@@ -116,7 +115,7 @@ jobs:
         id: targets
         shell: bash
         run: |
-          targets=$(kairos/image-build/scripts/resolve-ci-targets.sh \
+          targets=$(kairos/scripts/resolve-ci-targets.sh \
             /tmp/kairos-image-build-plans.json \
             /tmp/kairos-image-build-changed-files.txt \
             "${{ steps.changes.outputs.force_all }}")
@@ -140,7 +139,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: kairos/image-build/go.mod
+          go-version-file: tools/go.mod
+
+      - name: Build k2-tools image command
+        shell: bash
+        run: |
+          cd tools
+          go build -o k2-tools ./cmd/k2-tools
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -155,23 +160,18 @@ jobs:
 
       - name: Build OCI image locally
         shell: bash
-        run: |
-          cd kairos/image-build
-          go run ./cmd/image-build build oci "${{ matrix.target }}"
+        run: ./tools/k2-tools image build oci "${{ matrix.target }}"
 
       - name: Inspect OCI image
         shell: bash
-        run: |
-          cd kairos/image-build
-          go run ./cmd/image-build inspect oci "${{ matrix.target }}"
+        run: ./tools/k2-tools image inspect oci "${{ matrix.target }}"
 
       - name: Resolve image tag
         id: image
         shell: bash
         run: |
-          cd kairos/image-build
-          mkdir -p "../../kairos/ci-metadata/${{ matrix.target }}"
-          go run ./cmd/image-build plan "${{ matrix.target }}" --format json | tee "../../kairos/ci-metadata/${{ matrix.target }}/plan.json" >/tmp/kairos-image-plan.json
+          mkdir -p "kairos/ci-metadata/${{ matrix.target }}"
+          ./tools/k2-tools image plan "${{ matrix.target }}" --format json | tee "kairos/ci-metadata/${{ matrix.target }}/plan.json" >/tmp/kairos-image-plan.json
           echo "tag=$(jq -r '.image' /tmp/kairos-image-plan.json)" >> "$GITHUB_OUTPUT"
 
       - name: Trivy scan
@@ -225,9 +225,7 @@ jobs:
       - name: Push OCI image
         if: github.event_name != 'pull_request'
         shell: bash
-        run: |
-          cd kairos/image-build
-          go run ./cmd/image-build build oci "${{ matrix.target }}" --push
+        run: ./tools/k2-tools image build oci "${{ matrix.target }}" --push
 
       - name: Publish bootable artifact to S3
         if: github.event_name != 'pull_request'
@@ -239,7 +237,7 @@ jobs:
           K2_KAIROS_PUBLISH_MANIFEST: kairos/ci-metadata/${{ matrix.target }}/publish-manifest.json
           K2_KAIROS_IMAGE_STORAGE_CLASS: ${{ vars.K2_KAIROS_IMAGE_STORAGE_CLASS }}
         run: |
-          kairos/image-build/scripts/publish-s3-artifact.sh \
+          kairos/scripts/publish-s3-artifact.sh \
             "${{ matrix.target }}" \
             "kairos/artifacts/${{ matrix.target }}"
 

@@ -1,0 +1,13 @@
+[app]
+/metadata/labels/app.kubernetes.io\/version
+/metadata/labels/helm.sh\/chart
+/spec/template/metadata/labels/app.kubernetes.io\/version
+/spec/template/metadata/labels/helm.sh\/chart
+
+[crd]
+# CRD drift checks compare upstream chart-emitted CRDs with committed
+# apps/<app>/crds/crds.k8s.yaml copies. Helm/CDK8s metadata varies by render
+# context; CRD drift safety cares about the CRD names and specs.
+/metadata/creationTimestamp
+/metadata/labels
+/metadata/namespace

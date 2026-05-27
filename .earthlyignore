@@ -5,3 +5,4 @@ charts
 dist
 node_modules
 .tmp-earthly-out
+/tools/k2-tools

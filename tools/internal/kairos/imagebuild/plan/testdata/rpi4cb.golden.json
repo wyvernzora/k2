@@ -1,0 +1,163 @@
+{
+  "target": "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+  "enabled": true,
+  "flavor": "ubuntu",
+  "flavorRelease": "24.04",
+  "variant": "standard",
+  "arch": "arm64",
+  "platform": "linux/arm64",
+  "hardware": "rpi4cb",
+  "kairosModel": "rpi4",
+  "kubernetesDistro": "k3s",
+  "artifacts": [
+    "raw"
+  ],
+  "overlays": [
+    "hardware/rpi4cb",
+    "kubernetes/k3s"
+  ],
+  "rawPatches": [
+    {
+      "type": "copy-to-partition",
+      "overlay": "hardware/rpi4cb",
+      "source": "raw/COS_GRUB/extraconfig.txt",
+      "partitionLabel": "COS_GRUB",
+      "path": "extraconfig.txt"
+    },
+    {
+      "type": "yaml-json-patch",
+      "overlay": "hardware/rpi4cb",
+      "source": "raw/COS_OEM/01_reset.yaml.patch",
+      "partitionLabel": "COS_OEM",
+      "path": "01_reset.yaml.patch",
+      "targetPath": "01_reset.yaml",
+      "operations": [
+        {
+          "op": "test",
+          "path": "/stages/rootfs.before/0/layout/add_partitions/1/fsLabel",
+          "value": "COS_PERSISTENT"
+        },
+        {
+          "op": "add",
+          "path": "/stages/rootfs.before/0/layout/add_partitions/1/size",
+          "value": 500
+        }
+      ]
+    }
+  ],
+  "inspection": {
+    "oci": {
+      "files": [
+        {
+          "source": "overlay:hardware/rpi4cb",
+          "path": "/system/oem/05-rpi4cb-nvme-persistent.yaml",
+          "contains": [
+            "#cloud-config"
+          ]
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/usr/share/k2/node-provision/k3s/10-k2-invariant.yaml",
+          "contains": [
+            "flannel-backend: none",
+            "disable-kube-proxy: true",
+            "secrets-encryption-provider: secretbox"
+          ]
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/usr/share/k2/node-provision/k3s/README.md",
+          "contains": [
+            "K2 K3s Node Provisioning Overlay",
+            "Active cluster-specific K3s configuration is written at provision time"
+          ]
+        }
+      ],
+      "absent": [
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/etc/rancher/k3s/config.yaml"
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml"
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml"
+        },
+        {
+          "source": "overlay:hardware/rpi4cb",
+          "path": "/system/oem/20-rpi4cb-nvme-data.yaml"
+        },
+        {
+          "source": "overlay:kubernetes/k3s",
+          "path": "/system/oem/30-k2-k3s-provider.yaml"
+        }
+      ],
+      "commands": [
+        {
+          "source": "overlay:hardware/rpi4cb",
+          "name": "parted"
+        }
+      ]
+    },
+    "raw": {
+      "partitions": [
+        {
+          "label": "COS_GRUB",
+          "files": [
+            {
+              "source": "overlay:hardware/rpi4cb",
+              "path": "extraconfig.txt",
+              "contains": [
+                "dtparam=pciex1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "COS_OEM",
+          "files": [
+            {
+              "source": "overlay:hardware/rpi4cb",
+              "path": "01_reset.yaml",
+              "structuredTests": [
+                {
+                  "op": "test",
+                  "path": "/stages/rootfs.before/0/layout/add_partitions/1/size",
+                  "value": 500
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "artifactOptions": {
+    "raw": {
+      "diskStateSize": 8192
+    }
+  },
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0",
+  "artifactStem": "ubuntu-24.04-standard-v4.1.0-arm64-rpi4cb-k3s-v1.36.0-k3s1-rev0",
+  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+  "versions": {
+    "kairosVersion": "v4.1.0",
+    "kairosInitVersion": "v0.13.0",
+    "aurorabootVersion": "v0.19.4",
+    "baseImage": "ubuntu:24.04",
+    "k3sVersion": "v1.36.0+k3s1",
+    "imageRevision": "rev0",
+    "registryImage": "ghcr.io/wyvernzora/k2-kairos"
+  },
+  "paths": {
+    "buildRoot": "$FIXTURE/kairos",
+    "kairosRoot": "$FIXTURE/kairos",
+    "targetsFile": "$FIXTURE/kairos/targets.yaml",
+    "versionsFile": "$FIXTURE/kairos/versions.env",
+    "overlaysDir": "$FIXTURE/kairos/overlays",
+    "artifactsDir": "$FIXTURE/kairos/artifacts"
+  }
+}

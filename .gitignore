@@ -66,6 +66,7 @@ notes/
 /k2/.testvm/
 /.testvm/
 /kairos/vm/
+/tools/k2-tools
 
 # k8s manifest output destination
 /deploy/

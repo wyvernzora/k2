@@ -22,9 +22,10 @@ build-image-base:
 crd-manifest:
     ARG TAG="latest"
     ARG APP_ROOT
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    FROM ./build+image
+    COPY ./tools+k2-tools-cli/k2-tools /usr/local/bin/k2-tools
     COPY . .
-    RUN build/scripts/generate-crd-manifest.sh "$APP_ROOT"
+    RUN k2-tools build crd-manifest "$APP_ROOT"
     SAVE ARTIFACT $APP_ROOT/crds/crds.k8s.yaml AS LOCAL $APP_ROOT/crds/crds.k8s.yaml
 
 #
@@ -34,16 +35,17 @@ crd-constructs:
     LOCALLY
     WAIT
         FOR APP_ROOT IN $(ls -d apps/*/crds/crds.k8s.yaml 2>/dev/null | sed 's#/crds/crds.k8s.yaml$##')
-            BUILD --pass-args +crd-constructs-base --APP_ROOT=$APP_ROOT
+            BUILD +crd-constructs-base --APP_ROOT=$APP_ROOT
         END
     END
 
 crd-constructs-base:
     ARG TAG="latest"
     ARG APP_ROOT
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    FROM ./build+image
+    COPY ./tools+k2-tools-cli/k2-tools /usr/local/bin/k2-tools
     COPY . .
-    RUN build/scripts/generate-crd-constructs.sh "$APP_ROOT"
+    RUN k2-tools build crd-constructs "$APP_ROOT"
     SAVE ARTIFACT $APP_ROOT/crds/*.ts AS LOCAL $APP_ROOT/crds/
 
 #
@@ -52,10 +54,11 @@ crd-constructs-base:
 k8s-manifests:
     ARG TAG="latest"
     FROM --pass-args +npm-install
+    COPY ./tools+k2-tools-cli/k2-tools /usr/local/bin/k2-tools
     COPY . .
     RUN rm -rf deploy
-    RUN for APP_ROOT in $(ls -d apps/*/crds/crds.k8s.yaml 2>/dev/null | sed 's#/crds/crds.k8s.yaml$##'); do build/scripts/generate-crd-constructs.sh "$APP_ROOT"; done
-    RUN npx tsx build/scripts/synthesize-manifests.ts
+    RUN k2-tools build crd-constructs
+    RUN k2-tools build manifests
     SAVE ARTIFACT deploy AS LOCAL deploy
 
 #
@@ -63,9 +66,10 @@ k8s-manifests:
 #
 diff-manifests:
     ARG TAG="latest"
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    FROM ./build+image
+    COPY ./tools+k2-tools-cli/k2-tools /usr/local/bin/k2-tools
     COPY . .
-    RUN build/scripts/diff-manifests.sh https://github.com/wyvernzora/k2.git > deploy-diff.md
+    RUN k2-tools build diff-manifests https://github.com/wyvernzora/k2.git
     SAVE ARTIFACT deploy-diff.md AS LOCAL deploy-diff.md
 
 #
@@ -74,14 +78,83 @@ diff-manifests:
 lint:
     ARG TAG="latest"
     FROM --pass-args +npm-install
+    COPY ./tools+k2-tools-cli/k2-tools /usr/local/bin/k2-tools
     COPY . .
-    RUN for APP_ROOT in $(ls -d apps/*/crds/crds.k8s.yaml 2>/dev/null | sed 's#/crds/crds.k8s.yaml$##'); do build/scripts/generate-crd-constructs.sh "$APP_ROOT"; done
-    RUN npx tsc --noEmit
-    RUN npm run test:eslint-rules
-    RUN npx eslint
+    RUN k2-tools build lint
 
 npm-install:
     ARG TAG="latest"
-    FROM ghcr.io/wyvernzora/k2-build:${TAG}
+    FROM ./build+image
     COPY package.json package-lock.json ./
     RUN NO_UPDATE_NOTIFIER=true npm ci
+
+#
+# +kairos-image-build-unit: tests and validates the root k2-tools image builder
+#
+kairos-image-build-unit:
+    FROM golang:1.26-bookworm
+    WORKDIR /src
+    COPY tools/go.mod tools/go.sum ./tools/
+    RUN --mount=type=cache,target=/go/pkg/mod cd tools && go mod download
+    COPY tools ./tools
+    COPY kairos/Dockerfile ./kairos/Dockerfile
+    COPY kairos/overlays ./kairos/overlays
+    COPY kairos/scripts ./kairos/scripts
+    COPY kairos/tools/vm-presets ./kairos/tools/vm-presets
+    COPY kairos/targets.yaml kairos/versions.env ./kairos/
+    COPY kairos/node-init ./kairos/node-init
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd tools && go test ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd tools && go vet ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd tools && CGO_ENABLED=0 go build -o k2-tools ./cmd/k2-tools
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd /src/kairos/node-init && go test ./...
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd /src/kairos/node-init && go vet ./...
+    RUN /src/tools/k2-tools --repo-root /src image --build-root /src/kairos --kairos-root /src/kairos plan --all --format json >/tmp/kairos-image-build-plans.json
+
+#
+# +kairos-image-build-cli: builds the k2-tools CLI used by Earthly artifact targets
+#
+kairos-image-build-cli:
+    FROM --pass-args +kairos-image-build-unit
+    WORKDIR /src
+    SAVE ARTIFACT /src/tools/k2-tools
+
+#
+# +kairos-image-build-artifact: builds, patches, inspects, and exports Kairos boot artifacts in Linux
+#
+kairos-image-build-artifact:
+    ARG KAIROS_TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s"
+    FROM earthly/dind:ubuntu-23.04-docker-25.0.2-1
+    WORKDIR /src
+    RUN command -v bash && command -v xz && command -v docker && command -v dockerd
+    COPY kairos/Dockerfile ./kairos/Dockerfile
+    COPY kairos/overlays ./kairos/overlays
+    COPY kairos/node-init ./kairos/node-init
+    COPY kairos/targets.yaml kairos/versions.env ./kairos/
+    COPY +kairos-image-build-cli/k2-tools /usr/local/bin/k2-tools
+    WITH DOCKER
+        RUN --mount=type=cache,target=/var/cache/k2-kairos-image set -eu; \
+            docker run --privileged --rm tonistiigi/binfmt:latest --install all; \
+            docker buildx rm k2-earthly-builder >/dev/null 2>&1 || true; \
+            docker buildx create --name k2-earthly-builder --driver docker-container --use >/dev/null; \
+            docker buildx inspect --bootstrap >/dev/null; \
+            cache_root="/var/cache/k2-kairos-image/oci/${KAIROS_TARGET}"; \
+            cache_current="${cache_root}/current"; \
+            cache_next="${cache_root}/next"; \
+            mkdir -p "${cache_current}"; \
+            rm -rf "${cache_next}"; \
+            mkdir -p "${cache_next}"; \
+            cache_from_args=""; \
+            if [ -f "${cache_current}/index.json" ]; then \
+                cache_from_args="--cache-from type=local,src=${cache_current}"; \
+            fi; \
+            k2-tools --repo-root /src image --build-root /src/kairos --kairos-root /src/kairos --artifacts /out build oci \
+                ${cache_from_args} \
+                --cache-to "type=local,dest=${cache_next},mode=max" \
+                "$KAIROS_TARGET"; \
+            rm -rf "${cache_current}"; \
+            mv "${cache_next}" "${cache_current}"; \
+            k2-tools --repo-root /src image --build-root /src/kairos --kairos-root /src/kairos --artifacts /out inspect oci "$KAIROS_TARGET"; \
+            k2-tools --repo-root /src image --build-root /src/kairos --kairos-root /src/kairos --artifacts /out build artifact "$KAIROS_TARGET"; \
+            k2-tools --repo-root /src image --build-root /src/kairos --kairos-root /src/kairos --artifacts /out inspect artifact "$KAIROS_TARGET"
+    END
+    SAVE ARTIFACT /out/$KAIROS_TARGET AS LOCAL kairos/artifacts/$KAIROS_TARGET
