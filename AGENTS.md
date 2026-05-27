@@ -5,8 +5,7 @@ user-global rules first:
 
 - `~/.agents/AGENTS.md` - universal agent-behavior rules, if present.
 - `~/.agents/typescript.md` - TypeScript engineering rules, if present.
-- `~/.agents/go.md` - Go engineering rules, if present, for
-  `kairos/image-build`.
+- `~/.agents/go.md` - Go engineering rules, if present, for K2 tooling.
 
 This file holds K2-specific context, hard boundaries, and accumulated project
 learnings. Global rules apply unless this file explicitly overrides them.
@@ -22,9 +21,9 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - Host-side Node/npm installs are for editor/dev-time type checking only. Do
   not use host `npm`, `npx`, `tsx`, `tsc`, eslint, or direct scripts as the
   source of validation.
-- Scripts under `build/scripts/` are target implementation details. Do not
-  invoke them directly for normal validation unless the user explicitly asks
-  for script-level debugging.
+- `tools/` owns the Go toolbox for build/lint/synth/diff implementation and
+  operator-side commands. Earthly remains the public interface; invoke the
+  built toolbox directly only for tool-level debugging.
 - If Earthly fails because Docker/Podman/network access is unavailable, say so
   plainly and report what was not validated.
 
@@ -74,8 +73,10 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - **Helm integration:** app `Chart.yaml` dependencies are loaded through the
   `HelmCharts` context.
 - **CRDs:** generated CDK8s TypeScript bindings from app-owned CRD manifests.
-- **Build system:** Earthly v0.8+ with Docker or Podman.
-- **Kairos image work:** Go CLI under `kairos/image-build`.
+- **Build system:** Earthly v0.8+ with Docker or Podman, backed by the Go
+  toolbox under `tools/`.
+- **Kairos image work:** `k2-tools image ...`, with `k2-node-init` kept as a
+  separate early-boot helper.
 - **Secrets and TLS:** backend-neutral secret helpers live in
   `@k2/external-secrets`; certificate defaults and replication live in the
   cert-manager app; AWS runtime access should prefer WebIdentity.
@@ -93,11 +94,13 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - `cdk-lib/` - shared app-agnostic CDK8s primitives, contexts, scheduling,
   workload helpers, and volume helpers.
 - `cdk-lib/volumes/` - volume base and one file per concrete volume type.
-- `build/scripts/` - Earthly target implementation scripts.
+- `build/cdk/` - tiny TypeScript CDK synth entrypoints called by Go tooling.
+- `tools/` - Go toolbox module for build workflows, operator tooling, Kairos
+  image commands, and shared TUI/workflow primitives.
 - `clusters/v3.yaml` - the single v3 cluster config file.
 - `deploy/` - ignored generated manifests from `earthly +k8s-manifests`.
-- `kairos/` - Kairos image targets, versions, Earthly targets, and image build
-  tooling.
+- `kairos/` - Kairos image targets, versions, Dockerfile, overlays, node-init,
+  Earthly wrappers, and provisioning docs.
 - `notes/` and `.checkpoint/` - ignored design checkpoints and local planning
   notes.
 
@@ -111,16 +114,19 @@ earthly +diff-manifests      # compare fresh deploy/ against remote deploy-v3
 earthly +build-image         # publish the reusable K2 build image
 ```
 
-For Kairos image-build development:
+For K2 Go tooling development:
 
 ```sh
-cd kairos/image-build
+cd tools
 go test ./...
-go run ./cmd/image-build --help
+go vet ./...
+go build -o k2-tools ./cmd/k2-tools
+./k2-tools --help
+./k2-tools image plan ubuntu-24.04-standard-amd64-qemu-k3s
 ```
 
-Use Go commands directly only for the Go-only Kairos image-build module. Use
-Earthly for K2 CDK8s, manifests, lint, and CRD workflows.
+Use Go commands directly inside `tools/` for tool-level iteration. Use Earthly
+for official K2 CDK8s, manifests, lint, CRD, and image validation.
 
 ---
 
@@ -322,8 +328,8 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 
 - Kairos v3 image work is authoritative on `main-v3`.
 - Prefer the reproducible Earthly image artifact path for image outputs.
-- Direct Go commands are acceptable inside `kairos/image-build` while iterating
-  on that Go CLI.
+- Direct Go commands are acceptable inside `tools/` while iterating on the
+  toolbox and shared tooling packages.
 
 ---
 

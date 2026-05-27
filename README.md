@@ -21,18 +21,19 @@ K2 is the typed IaC backbone for my homelab: Kubernetes manifests are generated 
 
 - [`AGENTS.md`](AGENTS.md) – canonical guide for agents and contributors.
 - [`Earthfile`](Earthfile) – reproducible build/lint targets (manifests, CRDs, Docker images).
-- [`build/scripts/`](build/scripts) – automation for manifest synthesis, CRD imports, and diffing.
+- [`tools/`](tools) – Go toolbox backing build, synth, diff, Kairos, and image workflows.
+- [`build/cdk/`](build/cdk) – tiny TypeScript CDK synth entrypoints called by the Go toolbox.
 - [`deploy/`](deploy) – synthesized manifests and CRDs checked into the `deploy` branch for ArgoCD.
 - [`ansible/`](ansible) – containerized playbooks, roles, and entrypoint for host automation.
 
 ## Kubernetes / CDK8s Workflow
 
-1. `npm install` to sync dependencies.
-2. `earthly +k8s-manifests` to regenerate `deploy/`.
-3. `earthly +diff-manifests` to review drift against the `deploy` branch.
-4. Commit application code to `main`; GitHub actions workflow takes care of the rest.
+1. `npm install` to sync editor-time dependencies.
+2. `earthly +k8s-manifests` to regenerate ignored `deploy/`.
+3. `earthly +diff-manifests` to review drift against `deploy-v3`.
+4. Commit source changes to `main-v3`; promote generated output through the deploy branch workflow.
 
-Manifest synthesis is target-aware and starts from a clean generated `deploy/` tree. `earthly +k8s-manifests` writes cluster-specific output under `deploy/legacy/` and `deploy/v3/`. Use `earthly +k8s-manifests --K2_CLUSTER=legacy` or `--K2_CLUSTER=v3` to focus on one target.
+Manifest synthesis starts from a clean generated `deploy/` tree. Earthly remains the public build interface; the implementation is the Go toolbox under `tools/` plus the minimal CDK-only TypeScript entrypoints in `build/cdk/`.
 
 ## Repository Layout
 
@@ -40,7 +41,7 @@ Manifest synthesis is target-aware and starts from a clean generated `deploy/` t
 | --- | --- |
 | `apps/<name>/` | App factory (`createAppResources`/`createArgoCdResources`), Helm dependencies, CRDs, and components. |
 | `cdk-lib/` | Shared contexts (namespace, apex domain, Helm), scheduling helpers, and storage constructs. |
-| `build/` | Earthly support scripts plus CRD/manifest tooling. |
-| `deploy/` | Generated manifests under target-specific `legacy/` and `v3/` trees. |
-| `ansible/` | Container image definition, roles, and playbooks for Proxmox/bootstrap/TLS tasks. |
-| `kairos/` | Cloud-config templates and helper scripts for spinning up Kairos nodes. |
+| `build/` | Build image definition and CDK-only synth entrypoints. |
+| `tools/` | Go toolbox module for build workflows, Kairos operations, image tooling, and shared TUI/workflow code. |
+| `deploy/` | Ignored generated manifests; committed through the `deploy-v3` branch workflow. |
+| `kairos/` | Kairos image targets, Dockerfile, overlays, node-init, and provisioning docs. |

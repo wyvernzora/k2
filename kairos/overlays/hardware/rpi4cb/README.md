@@ -27,7 +27,7 @@ separate `/var` layout.
 | `oci/system/oem/05-rpi4cb-nvme-persistent.yaml` | Baked into the OCI rootfs as `/system/oem/05-rpi4cb-nvme-persistent.yaml`. On active boot, it invokes `k2-node-init storage` to prepare `/dev/nvme0n1p1` as `COS_PERSISTENT`, relabel any eMMC `COS_PERSISTENT` to `COS_PERSIST_OLD`, and verify `/usr/local` is NVMe-backed. |
 | `raw/COS_GRUB/extraconfig.txt` | Copied into the generated `COS_GRUB` partition. It enables the CM4 PCIe lane with `[cm4] dtparam=pciex1`, which is required for the NVMe device to appear. |
 | `raw/COS_OEM/01_reset.yaml.patch` | Applies a JSON Patch to AuroraBoot's generated `COS_OEM/01_reset.yaml`, adding `size: 500` to the eMMC `COS_PERSISTENT` placeholder partition. The real persistent filesystem is moved to NVMe on first active boot. |
-| `overlay.yaml` | Declares OCI and raw artifact inspection expectations for this overlay. These checks are consumed by the image-build CLI to verify generated images and artifacts. |
+| `overlay.yaml` | Declares OCI and raw artifact inspection expectations for this overlay. These checks are consumed by `k2-tools image` to verify generated images and artifacts. |
 
 ## Boot Sequence
 
@@ -48,7 +48,7 @@ dedicated Kairos state disk.
 
 ## Inspection Expectations
 
-`overlay.yaml` asks the image-build CLI to verify:
+`overlay.yaml` asks `k2-tools image` to verify:
 
 - OCI image contains `/system/oem/05-rpi4cb-nvme-persistent.yaml`;
 - transitional `/system/oem/20-rpi4cb-nvme-data.yaml` is absent;
@@ -60,8 +60,8 @@ dedicated Kairos state disk.
 Run the checks with:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s)
-(cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
+./tools/k2-tools image inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s
+./tools/k2-tools image inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
 ## Post-Boot Checks

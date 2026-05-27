@@ -7,7 +7,7 @@ share under `/usr/share/k2/node-provision/k3s/`. The file is not active in the
 base image. Node provisioning copies it into `/etc/rancher/k3s/config.yaml.d/`
 only when the target node is a K3s server.
 
-The overlay does not enable the K3s service. `k2-tools provision` writes the
+The overlay does not enable the K3s service. `./tools/k2-tools provision` writes the
 role activation cloud-config after role-specific config and bootstrap manifests
 are in place.
 

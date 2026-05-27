@@ -25,7 +25,7 @@ Build the binary directly:
 ```
 
 Image builds compile and install this helper into the OCI rootfs. See
-[`kairos/image-build`](../image-build/README.md) for the image build flow.
+[`kairos`](../README.md) for the image build flow.
 
 ## Commands
 
@@ -90,8 +90,8 @@ keeps the original persistent partition and grows it in place.
 
 Hardware overlays decide whether this behavior is required or optional:
 
-- [QEMU overlay](../image-build/overlays/hardware/qemu/README.md)
-- [Raspberry Pi ComputeBlade overlay](../image-build/overlays/hardware/rpi4cb/README.md)
+- [QEMU overlay](../overlays/hardware/qemu/README.md)
+- [Raspberry Pi ComputeBlade overlay](../overlays/hardware/rpi4cb/README.md)
 
 ## Runtime Checks
 

@@ -2,8 +2,7 @@
 
 This directory defines the Kairos images used to bootstrap K2 nodes.
 It is the image configuration layer: targets, version pins, and Earthly targets
-live here. Image-build implementation details, including hardware and
-Kubernetes overlays, live under `image-build/`.
+live here alongside the Dockerfile, image overlays, and CI helper scripts.
 
 ## Layout
 
@@ -11,10 +10,12 @@ Kubernetes overlays, live under `image-build/`.
 | --- | --- |
 | `targets.yaml` | Enabled and planned image targets. Each target selects hardware, Kairos model, artifact types, overlays, and raw artifact sizing. |
 | `versions.env` | Pinned Kairos, kairos-init, AuroraBoot, Ubuntu, k3s, image revision, and registry values. |
-| `image-build/` | Self-contained Go CLI, Dockerfile, and overlays for planning, building, patching, inspecting, and flashing images. |
+| `Dockerfile` | Image-build Dockerfile that turns Ubuntu into a Kairos+k3s OCI image. |
+| `overlays/` | Optional reviewable OCI/raw overlays plus overlay inspection metadata. |
+| `scripts/` | CI helpers for target selection and artifact publication. |
 | `node-init/` | Go helper baked into images for early-boot node initialization, currently persistent storage preparation. |
-| `tools/` | Client-side Go CLI for provisioning clean Kairos nodes and managing local QEMU VMs. |
-| `Earthfile` | Reproducible Earthly targets for Go validation, OCI builds, raw artifact generation, patching, and inspection. |
+| `tools/` | Presets and docs for provisioning clean Kairos nodes and managing local QEMU VMs through root `k2-tools`. |
+| `Earthfile` | Compatibility wrappers around root Earthly targets for image validation and artifact generation. |
 
 ## Current Targets
 
@@ -38,13 +39,16 @@ v1.36.0+k3s1.
 
 Hardware-specific behavior lives in the hardware overlay docs:
 
-- [QEMU overlay](image-build/overlays/hardware/qemu/README.md)
-- [Raspberry Pi ComputeBlade overlay](image-build/overlays/hardware/rpi4cb/README.md)
+- [QEMU overlay](overlays/hardware/qemu/README.md)
+- [Raspberry Pi ComputeBlade overlay](overlays/hardware/rpi4cb/README.md)
 
 The targets are intentionally cluster-light: they include the OS, k3s, hardware
 defaults, and invariant K2 K3s server config, but do not enable the K3s service
 or bake node identity, cluster tokens, VIP ownership, hostnames, private keys,
 active cluster-specific K3s config, or other secrets.
+
+Future baked content should be added by declaring overlays in `targets.yaml`,
+not by making one-off Dockerfile edits.
 
 ## Build Flow
 
@@ -61,7 +65,7 @@ earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-
 earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-qemu-k3s
 ```
 
-`k2-tools vm create` prefers those local artifacts when present. If there is no
+`./tools/k2-tools vm create` prefers those local artifacts when present. If there is no
 local `kairos/artifacts/<target>/*.raw.xz`, it reads the public S3
 `latest/<target>/manifest.json`, downloads the matching raw artifact, verifies
 its SHA256, and caches it under `.testvm/cache/artifacts/` for later VMs.
@@ -74,14 +78,19 @@ compressed image and metadata under `kairos/artifacts/<target>/`.
 Useful direct CLI commands:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build plan ubuntu-24.04-standard-arm64-rpi4cb-k3s)
-(cd kairos/image-build && go run ./cmd/image-build inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s)
-(cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s)
+cd tools
+go build -o k2-tools ./cmd/k2-tools
+cd ..
+./tools/k2-tools image --help
+./tools/k2-tools image plan ubuntu-24.04-standard-arm64-rpi4cb-k3s
+./tools/k2-tools image build oci ubuntu-24.04-standard-arm64-rpi4cb-k3s
+./tools/k2-tools image build artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s
+./tools/k2-tools image inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s
+./tools/k2-tools image inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s
 ```
 
 The Kairos Go tools are documented in their module READMEs:
 
-- [k2-image-build](image-build/README.md) plans, builds, patches, and inspects images.
 - [k2-node-init](node-init/README.md) runs inside images for early-boot node initialization.
 - [k2-tools](tools/README.md) provisions clean nodes and manages local QEMU VMs.
 
@@ -91,24 +100,33 @@ After a raw-image node boots into the installed Kairos system, use the
 provisioner to write role-specific config and activate k3s:
 
 ```sh
-(cd kairos/tools && go run ./cmd/k2-tools provision bootstrap --cluster-target v3 --cluster-name v3-test --host 127.0.0.1 --ssh-port 2222 --node-name v3-test-01 --operator-key-file ~/.ssh/id_ed25519.pub --extra-manifests '/path/to/bootstrap/*.yaml')
+./tools/k2-tools provision bootstrap --cluster-target v3 --cluster-name v3-test --host 127.0.0.1 --ssh-port 2222 --node-name v3-test-01 --operator-key-file ~/.ssh/id_ed25519.pub --extra-manifests '/path/to/bootstrap/*.yaml'
 ```
 
 Use `provision render bootstrap` first when you want to inspect the bundle
-locally. For local QEMU VM testing, use `k2-tools vm create --start` and
-`k2-tools provision ... --test-vm <id>`.
+locally. For local QEMU VM testing, use `./tools/k2-tools vm create --start` and
+`./tools/k2-tools provision ... --test-vm <id>`.
 
 ## Image-Build Overlay Contract
 
-Selected overlays from `image-build/overlays/` are applied in target order:
+Selected overlays from `overlays/` are applied in target order:
 
 - `oci/` is copied into the OCI root filesystem.
 - `raw/<PARTITION_LABEL>/` is applied to generated raw image partitions after
   AuroraBoot creates the disk image.
 - `.yaml.patch` and `.json.patch` files under `raw/` are strict JSON Patch
   operations against existing structured files.
-- `overlay.yaml` declares inspection expectations consumed by the image-build
-  CLI to verify generated images and artifacts.
+- `overlay.yaml` declares inspection expectations consumed by `k2-tools image`
+  to verify generated images and artifacts.
+
+Hardware-specific behavior belongs in the hardware overlay README:
+
+- [QEMU](overlays/hardware/qemu/README.md)
+- [Raspberry Pi ComputeBlade](overlays/hardware/rpi4cb/README.md)
+
+Kubernetes-specific image content belongs in the Kubernetes overlay README:
+
+- [K3s](overlays/kubernetes/k3s/README.md)
 
 ## Safety Notes
 

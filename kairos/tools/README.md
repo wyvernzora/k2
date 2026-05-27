@@ -11,17 +11,22 @@ server config under `/usr/share/k2/node-provision/k3s/`.
 
 ## Build And Test
 
+Build the local development binary before running toolbox commands:
+
 ```sh
-cd kairos/tools
+cd tools
 go test ./...
 go vet ./...
-go run ./cmd/k2-tools --help
+go build -o k2-tools ./cmd/k2-tools
+./k2-tools --help
+cd ..
 ```
 
 Install the local CLI into your Go bin directory:
 
 ```sh
-(cd kairos/tools && go install ./cmd/k2-tools)
+cd tools
+go install ./cmd/k2-tools
 ```
 
 ## Render Bootstrap Files
@@ -29,8 +34,7 @@ Install the local CLI into your Go bin directory:
 Use render mode to inspect the exact files before touching a node:
 
 ```sh
-cd kairos/tools
-go run ./cmd/k2-tools provision render bootstrap \
+./tools/k2-tools provision render bootstrap \
   --cluster-target v3 \
   --cluster-name v3-test \
   --node-name v3-test-01 \
@@ -41,7 +45,7 @@ go run ./cmd/k2-tools provision render bootstrap \
 ```
 
 `--cluster-target` selects the source cluster config and generated deploy tree,
-for example `clusters/v3.yaml` and `deploy/v3`. `--cluster-name` is the local
+for example `clusters/v3.yaml` and `deploy/`. `--cluster-name` is the local
 cluster instance name and is reserved for per-test credential state such as
 `~/.kube/k2/<cluster-name>/`.
 
@@ -99,7 +103,7 @@ logs or scripts.
 
 ## Local QEMU VMs
 
-`k2-tools vm` manages local QEMU VMs for development and validation. The
+`./tools/k2-tools vm` manages local QEMU VMs for development and validation. The
 default `qemu-user` preset uses
 the host-architecture QEMU artifact, a second persistent disk, user-mode
 networking, SSH forwarding, Kubernetes API forwarding, a QEMU monitor port, and
@@ -113,13 +117,12 @@ macOS treats that as a restricted entitlement and kills the binary before it
 can start.
 
 ```sh
-cd kairos/tools
-go run ./cmd/k2-tools vm create --id v3a --start
-go run ./cmd/k2-tools vm create qemu-vmnet --id v3b --start
-go run ./cmd/k2-tools vm start --sudo v3b
-go run ./cmd/k2-tools vm status v3a
-go run ./cmd/k2-tools vm console v3a
-go run ./cmd/k2-tools vm ssh v3a
+./tools/k2-tools vm create --id v3a --start
+./tools/k2-tools vm create qemu-vmnet --id v3b --start
+./tools/k2-tools vm start --sudo v3b
+./tools/k2-tools vm status v3a
+./tools/k2-tools vm console v3a
+./tools/k2-tools vm ssh v3a
 ```
 
 VM runtime state lives under `.testvm/vm-<id>/` and remains ignored by
@@ -130,14 +133,14 @@ downloads the matching artifact, verifies its SHA256, and caches it under
 
 Useful VM commands:
 
-- `k2-tools vm presets`
-- `k2-tools vm list`
-- `k2-tools vm info <id>`
-- `k2-tools vm start <id>`
-- `k2-tools vm stop <id>`
-- `k2-tools vm stop --all`
-- `k2-tools vm delete --force <id>`
-- `k2-tools vm delete --all --force`
+- `./tools/k2-tools vm presets`
+- `./tools/k2-tools vm list`
+- `./tools/k2-tools vm info <id>`
+- `./tools/k2-tools vm start <id>`
+- `./tools/k2-tools vm stop <id>`
+- `./tools/k2-tools vm stop --all`
+- `./tools/k2-tools vm delete --force <id>`
+- `./tools/k2-tools vm delete --all --force`
 
 `vm list` prints the best guest IP reported by the QEMU guest agent, using the
 same address selection as `vm ssh`. It prints `-` while a VM is stopped or while
@@ -149,8 +152,7 @@ Bootstrap provisioning connects to the node with the built-in Go SSH transport
 and uploads files with SFTP.
 
 ```sh
-cd kairos/tools
-go run ./cmd/k2-tools provision bootstrap \
+./tools/k2-tools provision bootstrap \
   --cluster-target v3 \
   --cluster-name v3-test \
   --host 127.0.0.1 \
@@ -193,7 +195,7 @@ bootstrap server TLS SANs, and patches the kube-vip DaemonSet after bootstrap
 so the saved kubeconfig and join URL point at an address in the VM subnet:
 
 ```sh
-k2-tools provision bootstrap \
+./tools/k2-tools provision bootstrap \
   --cluster-target v3 \
   --test-vm v3a \
   --operator-key-file ~/.ssh/id_ed25519.pub
@@ -257,8 +259,7 @@ Servers use `server-token`, activate the baked server invariant config, and get
 the automatic control-plane taint:
 
 ```sh
-cd kairos/tools
-go run ./cmd/k2-tools provision server \
+./tools/k2-tools provision server \
   --cluster-target v3 \
   --cluster-name v3-test \
   --host 10.42.0.23 \
@@ -271,16 +272,15 @@ For VM swarm tests, `--test-vm` also defaults the cluster name to
 SSH endpoint:
 
 ```sh
-k2-tools provision server --cluster-target v3 --test-vm v3b
-k2-tools provision worker --cluster-target v3 --test-vm v3c
+./tools/k2-tools provision server --cluster-target v3 --test-vm v3b
+./tools/k2-tools provision worker --cluster-target v3 --test-vm v3c
 ```
 
 Workers use `agent-token`, enable `k3s-agent`, and do not activate server-only
 invariants:
 
 ```sh
-cd kairos/tools
-go run ./cmd/k2-tools provision worker \
+./tools/k2-tools provision worker \
   --cluster-target v3 \
   --cluster-name v3-test \
   --host 10.42.0.31 \
@@ -303,14 +303,14 @@ worker join config, no server-only invariant or cluster config, and active
 
 ## Flash CM4 / ComputeBlade eMMC
 
-`k2-tools flash rpi4cb` writes a built `*-arm64-rpi4cb-k3s` artifact to the
+`./tools/k2-tools flash rpi4cb` writes a built `*-arm64-rpi4cb-k3s` artifact to the
 CM4 eMMC exposed through `rpiboot`. Build the artifact first
 (`earthly --allow-privileged ./kairos+image-build-artifact
 --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s`), then with the
 CM4 disconnected:
 
 ```sh
-k2-tools flash rpi4cb --zero-nvme
+./tools/k2-tools flash rpi4cb --zero-nvme
 ```
 
 The flasher snapshots existing external disks, runs `rpiboot` (asking
@@ -332,4 +332,4 @@ implementation can plug in alongside `platform_darwin.go`.
 - raw-image reboot path only; live ISO `manual-install` is deferred
 - local SSH config host aliases and encrypted key passphrases are not parsed by
   the built-in SSH transport
-- `k2-tools flash rpi4cb` is macOS-only today; Linux support pending
+- `./tools/k2-tools flash rpi4cb` is macOS-only today; Linux support pending

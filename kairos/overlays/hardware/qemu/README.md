@@ -21,20 +21,20 @@ harnesses can attach a hypervisor console when needed.
 
 ## Usage With Test VMs
 
-`k2-tools vm` is the supported local harness for this overlay. It creates a
+`./tools/k2-tools vm` is the supported local harness for this overlay. It creates a
 boot disk from the QEMU raw artifact, adds the required second persistent disk,
 wires QEMU guest-agent access, and records VM state under `.testvm/vm-<id>/`.
 
 Create a single-node test VM with user-mode networking:
 
 ```sh
-k2-tools vm create --id v3a --start
+./tools/k2-tools vm create --id v3a --start
 ```
 
 Create a multi-node test VM on macOS `vmnet-shared` networking:
 
 ```sh
-k2-tools vm create qemu-vmnet --id v3a --start
+./tools/k2-tools vm create qemu-vmnet --id v3a --start
 ```
 
 The active boot should move `COS_PERSISTENT` to the second disk. Verify it with:
@@ -48,7 +48,7 @@ systemctl is-active qemu-guest-agent
 
 ## Inspection Expectations
 
-`overlay.yaml` asks the image-build CLI to verify that:
+`overlay.yaml` asks `k2-tools image` to verify that:
 
 - the QEMU persistent OEM file is present;
 - the QEMU guest agent OEM file is present;
@@ -59,6 +59,6 @@ systemctl is-active qemu-guest-agent
 Run the checks with:
 
 ```sh
-(cd kairos/image-build && go run ./cmd/image-build inspect oci ubuntu-24.04-standard-amd64-qemu-k3s)
-(cd kairos/image-build && go run ./cmd/image-build inspect artifact ubuntu-24.04-standard-amd64-qemu-k3s)
+./tools/k2-tools image inspect oci ubuntu-24.04-standard-amd64-qemu-k3s
+./tools/k2-tools image inspect artifact ubuntu-24.04-standard-amd64-qemu-k3s
 ```
