@@ -194,6 +194,48 @@ func TestUncordonInvokesKubectlWithKubeconfig(t *testing.T) {
 	}
 }
 
+func TestLabelNodeInvokesKubectlWithOverwrite(t *testing.T) {
+	fr := &fakeRunner{}
+	c := New("/etc/k2/kubeconfig")
+	c.SetRunnerForTest(fr)
+	if err := c.LabelNode(context.Background(), "k2-worker-01", "node.longhorn.io/create-default-disk=true"); err != nil {
+		t.Fatalf("LabelNode: %v", err)
+	}
+	want := []string{
+		"kubectl",
+		"--kubeconfig=/etc/k2/kubeconfig",
+		"label",
+		"node",
+		"k2-worker-01",
+		"node.longhorn.io/create-default-disk=true",
+		"--overwrite",
+	}
+	if !equalSlices(fr.last, want) {
+		t.Errorf("got args=%v, want %v", fr.last, want)
+	}
+}
+
+func TestAnnotateNodeInvokesKubectlWithOverwrite(t *testing.T) {
+	fr := &fakeRunner{}
+	c := New("/etc/k2/kubeconfig")
+	c.SetRunnerForTest(fr)
+	if err := c.AnnotateNode(context.Background(), "k2-worker-01", `node.longhorn.io/default-node-tags=["k2-storage"]`); err != nil {
+		t.Fatalf("AnnotateNode: %v", err)
+	}
+	want := []string{
+		"kubectl",
+		"--kubeconfig=/etc/k2/kubeconfig",
+		"annotate",
+		"node",
+		"k2-worker-01",
+		`node.longhorn.io/default-node-tags=["k2-storage"]`,
+		"--overwrite",
+	}
+	if !equalSlices(fr.last, want) {
+		t.Errorf("got args=%v, want %v", fr.last, want)
+	}
+}
+
 func TestDrainBuildsArgsFromOpts(t *testing.T) {
 	fr := &fakeRunner{}
 	var stdout bytes.Buffer

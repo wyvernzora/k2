@@ -203,6 +203,35 @@ func TestApplyTestKubeVIPRewritesAPI(t *testing.T) {
 	}
 }
 
+func TestNodeLabelsForRoleAddsLonghornStorageToWorkers(t *testing.T) {
+	got, err := nodeLabelsForRole(nodeRoleWorker, []string{"example.com/custom=true"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"example.com/custom=true",
+		"node.longhorn.io/create-default-disk=true",
+	} {
+		if !contains(got, want) {
+			t.Fatalf("worker labels missing %q: %v", want, got)
+		}
+	}
+}
+
+func TestNodeLabelsForRoleRejectsLonghornLabelsOnServers(t *testing.T) {
+	_, err := nodeLabelsForRole(nodeRoleServer, []string{"node.longhorn.io/create-default-disk=true"})
+	if err == nil || !strings.Contains(err.Error(), "worker-only") {
+		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestRejectLonghornNodeLabelsCatchesPrefixWithoutValue(t *testing.T) {
+	err := rejectLonghornNodeLabels("bootstrap", []string{"node.longhorn.io/create-default-disk"})
+	if err == nil || !strings.Contains(err.Error(), "worker-only") {
+		t.Fatalf("error = %v", err)
+	}
+}
+
 func TestApplyProvisionTestVMDefaultsClusterNodeAndSSH(t *testing.T) {
 	root := t.TempDir()
 	writeTestVMMetadata(t, root, testvm.Metadata{
@@ -258,6 +287,15 @@ func TestApplyProvisionTestVMKeepsExplicitNodeName(t *testing.T) {
 	if nodeName != "custom-node" {
 		t.Fatalf("nodeName = %s, want custom-node", nodeName)
 	}
+}
+
+func contains(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
 }
 
 func testClusterConfig() clusterconfig.Config {

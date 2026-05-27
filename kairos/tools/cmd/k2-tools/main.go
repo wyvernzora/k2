@@ -15,6 +15,7 @@ import (
 	"github.com/wyvernzora/k2/kairos/tools/internal/clusterconfig"
 	"github.com/wyvernzora/k2/kairos/tools/internal/keys"
 	"github.com/wyvernzora/k2/kairos/tools/internal/kubeconfig"
+	"github.com/wyvernzora/k2/kairos/tools/internal/kubectl"
 	"github.com/wyvernzora/k2/kairos/tools/internal/manifests"
 	"github.com/wyvernzora/k2/kairos/tools/internal/remote"
 	"github.com/wyvernzora/k2/kairos/tools/internal/render"
@@ -137,6 +138,11 @@ type testVMProvisionTarget struct {
 const (
 	nodeRoleServer nodeRole = "server"
 	nodeRoleWorker nodeRole = "worker"
+
+	longhornStorageNodeLabel          = "node.longhorn.io/create-default-disk=true"
+	longhornStorageNodeTag            = "k2-storage"
+	longhornStorageNodeTagsAnnotation = `node.longhorn.io/default-node-tags=["k2-storage"]`
+	longhornNodeLabelPrefix           = "node.longhorn.io/"
 
 	remoteRootArgoAppManifestPath = "/var/lib/rancher/k3s/server/k2-root-argocd-app.k8s.yaml"
 )
@@ -431,6 +437,31 @@ func clusterNameOrFallback(name, target string) string {
 	return name
 }
 
+func nodeLabelsForRole(role nodeRole, labels []string) ([]string, error) {
+	if role != nodeRoleWorker {
+		if err := rejectLonghornNodeLabels(string(role), labels); err != nil {
+			return nil, err
+		}
+		return labels, nil
+	}
+	out := append([]string{}, labels...)
+	out = append(out, longhornStorageNodeLabel)
+	return out, nil
+}
+
+func rejectLonghornNodeLabels(role string, labels []string) error {
+	for _, label := range labels {
+		key := strings.TrimSpace(label)
+		if before, _, found := strings.Cut(key, "="); found {
+			key = strings.TrimSpace(before)
+		}
+		if strings.HasPrefix(key, longhornNodeLabelPrefix) {
+			return fmt.Errorf("%s provisioning does not allow user-supplied Longhorn node label %q; Longhorn replica storage is worker-only", role, key)
+		}
+	}
+	return nil
+}
+
 // bootstrapPlanFields renders the operator-facing summary of every CLI
 // arg / env var the bootstrap subcommand is about to act on. Used by
 // the workflow Plan section right before the FLASH-equivalent yes/no
@@ -702,6 +733,14 @@ func provisionJoinNode(rcx *runContext, role nodeRole, flags commonJoinFlags, re
 		return verifyRemoteProvisioning(&client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 5*time.Minute)
 	}).Unless(!postInstall)
 
+	wf.Shell("Mark worker as Longhorn storage node", func(ctx context.Context, sh ui.Step) error {
+		if err := markLonghornStorageWorker(ctx, clusterNameOrFallback(flags.ClusterName, flags.ClusterTarget), flags.NodeName, sh); err != nil {
+			return err
+		}
+		sh.Successf("marked %s for Longhorn replica storage (%s)", flags.NodeName, longhornStorageNodeTag)
+		return nil
+	}).Unless(!postInstall || role != nodeRoleWorker)
+
 	wf.Shell("Harden default access", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()
 		return hardenRemoteDefaultAccess(&client)
@@ -730,6 +769,9 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	logf("loading cluster config clusters/%s.yaml", flags.ClusterTarget)
 	cfg, err := clusterconfig.Load(repoRoot, flags.ClusterTarget)
 	if err != nil {
+		return bundle{}, err
+	}
+	if err := rejectLonghornNodeLabels("bootstrap", flags.Label); err != nil {
 		return bundle{}, err
 	}
 	if flags.testKubeVIP != "" {
@@ -877,11 +919,15 @@ func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, meta
 	}
 
 	logf("rendering k3s %s join config", role)
+	nodeLabels, err := nodeLabelsForRole(role, flags.Label)
+	if err != nil {
+		return joinBundle{}, err
+	}
 	joinConfig, err := render.JoinConfig(render.JoinInput{
 		NodeName:      flags.NodeName,
 		ServerURL:     serverURL,
 		Token:         token,
-		Labels:        flags.Label,
+		Labels:        nodeLabels,
 		Taints:        flags.Taint,
 		ImageMetadata: metadata,
 		ControlPlane:  role == nodeRoleServer,
@@ -977,6 +1023,26 @@ func readRemoteMetadata(client *remote.Client) (render.ImageMetadata, error) {
 		return render.ImageMetadata{}, fmt.Errorf("remote image metadata is incomplete; target, arch, and hardware are required")
 	}
 	return metadata, nil
+}
+
+func markLonghornStorageWorker(ctx context.Context, clusterName string, nodeName string, out ui.Step) error {
+	kubeconfigPath, err := kubeconfigPathFor(clusterName)
+	if err != nil {
+		return err
+	}
+	kc := kubectl.New(kubeconfigPath)
+	kc.Stderr = out
+	kc.Logger = logf
+	if err := kc.Available(); err != nil {
+		return fmt.Errorf("%w; install kubectl + ensure it's on PATH", err)
+	}
+	if err := kc.LabelNode(ctx, nodeName, longhornStorageNodeLabel); err != nil {
+		return err
+	}
+	if err := kc.AnnotateNode(ctx, nodeName, longhornStorageNodeTagsAnnotation); err != nil {
+		return err
+	}
+	return nil
 }
 
 func detectBootstrapAPIHost(client *remote.Client) (string, error) {

@@ -1,9 +1,10 @@
-import { copyFile, mkdir, readdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { Chart } from "cdk8s";
 import fg from "fast-glob";
+import * as YAML from "yaml";
 
 import {
   ApexDomain,
@@ -40,7 +41,9 @@ for (const [appPath, mod] of modules) {
   const app = makeApp(appPath, join(deployRoot, appName));
   mod.createAppResources(app);
   app.synth();
-  await copyCrdManifest(appPath, join(deployRoot, appName));
+  const appOutdir = join(deployRoot, appName);
+  const hasCrdManifest = await copyCrdManifest(appPath, appOutdir);
+  await stripSynthesizedCrds(appPath, appOutdir, hasCrdManifest);
 
   makeDefaultArgoApplication(argoChart, appInfo);
 
@@ -105,10 +108,11 @@ function makeApp(appPath: string, outdir: string): K2App {
     .use(NfsContext, cluster.nfs.server, cluster.nfs.zone);
 }
 
-async function copyCrdManifest(appPath: string, outdir: string): Promise<void> {
+async function copyCrdManifest(appPath: string, outdir: string): Promise<boolean> {
   const src = join(appPath, "crds", "crds.k8s.yaml");
   try {
     await copyFile(src, join(outdir, "crds.k8s.yaml"));
+    return true;
   } catch (cause) {
     if ((cause as NodeJS.ErrnoException).code !== "ENOENT") {
       throw cause;
@@ -121,5 +125,46 @@ async function copyCrdManifest(appPath: string, outdir: string): Promise<void> {
     } catch {
       // No crds/ dir either — app has no CRDs, fine.
     }
+    return false;
   }
+}
+
+async function stripSynthesizedCrds(appPath: string, outdir: string, hasCrdManifest: boolean): Promise<void> {
+  const appName = basename(appPath);
+  const manifestPath = join(outdir, "app.k8s.yaml");
+  let manifest: string;
+  try {
+    manifest = await readFile(manifestPath, "utf8");
+  } catch (cause) {
+    if ((cause as NodeJS.ErrnoException).code === "ENOENT") {
+      return;
+    }
+    throw cause;
+  }
+
+  const documents = YAML.parseAllDocuments(manifest);
+  const keptDocuments: YAML.Document[] = [];
+  const crdNames: string[] = [];
+  for (const document of documents) {
+    if (document.get("kind") === "CustomResourceDefinition") {
+      const name = document.getIn(["metadata", "name"]);
+      crdNames.push(typeof name === "string" ? name : "(unnamed)");
+      continue;
+    }
+    keptDocuments.push(document);
+  }
+
+  if (crdNames.length === 0) {
+    return;
+  }
+  if (!hasCrdManifest) {
+    throw new Error(
+      `[${appName}] synthesized ${crdNames.length} CRD(s) into app.k8s.yaml, ` +
+        `but apps/${appName}/crds/crds.k8s.yaml is missing. Commit upstream CRDs there instead.`,
+    );
+  }
+
+  const rendered = keptDocuments.map(document => document.toString()).join("---\n");
+  await writeFile(manifestPath, rendered.endsWith("\n") ? rendered : `${rendered}\n`);
+  console.warn(`[${appName}] stripped ${crdNames.length} CRD(s) from app.k8s.yaml; using crds.k8s.yaml instead`);
 }

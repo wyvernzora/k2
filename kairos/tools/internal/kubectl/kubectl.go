@@ -97,6 +97,26 @@ func (c *Client) Uncordon(ctx context.Context, node string) error {
 	return nil
 }
 
+// LabelNode applies or updates one Kubernetes node label. keyValue must be in
+// kubectl's key=value form.
+func (c *Client) LabelNode(ctx context.Context, node string, keyValue string) error {
+	_, err := c.invoke(ctx, []string{"label", "node", node, keyValue, "--overwrite"})
+	if err != nil {
+		return fmt.Errorf("kubectl label node %s %s: %w", node, keyValue, err)
+	}
+	return nil
+}
+
+// AnnotateNode applies or updates one Kubernetes node annotation. keyValue must
+// be in kubectl's key=value form.
+func (c *Client) AnnotateNode(ctx context.Context, node string, keyValue string) error {
+	_, err := c.invoke(ctx, []string{"annotate", "node", node, keyValue, "--overwrite"})
+	if err != nil {
+		return fmt.Errorf("kubectl annotate node %s %s: %w", node, keyValue, err)
+	}
+	return nil
+}
+
 // DrainOpts captures the kubectl-drain flags the upgrade subcommand
 // actually exercises. Zero-value defaults match the doc-recommended
 // safe-but-realistic shape: ignore daemonsets (Kairos/Cilium/kube-vip
