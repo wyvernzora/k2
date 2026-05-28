@@ -26,12 +26,10 @@ function loadHealthCustomizations(): Record<string, string> {
  * ArgoCD Helm-chart-based component.
  *
  * - Built-in auth (dex, server.disable.auth) is disabled here; expectation is
- *   that the eventual auth app (Authelia + Traefik ForwardAuth) will add the
- *   needed ingress middleware once it lands.
+ *   that Pomerium will own ingress authentication once app routes land.
  * - Notifications are disabled (no Slack/email targets yet).
- * - Ingress is intentionally not configured yet; Traefik / TLS land later and
- *   will set the hostname + middleware. ArgoCD is reachable via port-forward
- *   or LoadBalancer until then.
+ * - Ingress is intentionally not configured yet. ArgoCD is reachable via
+ *   port-forward or LoadBalancer until its Pomerium route lands.
  * - Per-resource health customizations live as standalone Lua files under
  *   `./health/<group>_<kind>.lua` and are pulled into argocd-cm at synth time.
  *   Per-app CR customizations (e.g. CNPG DatabaseClaim/RoleClaim) come back

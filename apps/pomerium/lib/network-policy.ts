@@ -2,29 +2,26 @@ import type { Construct } from "constructs";
 
 import { PrivateConnection, type PolicyEndpoint, type PortSpec } from "@k2/cilium";
 
-const TRAEFIK_NAMESPACE = "traefik";
+import { POMERIUM_LABELS, POMERIUM_NAMESPACE } from "./constants.js";
 
 export const endpoints = {
   proxy(): PolicyEndpoint {
     return {
-      name: "traefik",
-      namespace: TRAEFIK_NAMESPACE,
-      labels: {
-        "app.kubernetes.io/instance": "traefik-traefik",
-        "app.kubernetes.io/name": "traefik",
-      },
+      name: "pomerium",
+      namespace: POMERIUM_NAMESPACE,
+      labels: POMERIUM_LABELS,
     };
   },
 };
 
-export interface AllowTraefikToBackendProps {
+export interface AllowPomeriumToBackendProps {
   readonly backend: PolicyEndpoint;
   readonly ports: PortSpec[];
   readonly name?: string;
 }
 
-export class AllowTraefikToBackend extends PrivateConnection {
-  public constructor(scope: Construct, id: string, props: AllowTraefikToBackendProps) {
+export class AllowPomeriumToBackend extends PrivateConnection {
+  public constructor(scope: Construct, id: string, props: AllowPomeriumToBackendProps) {
     super(scope, id, {
       name: props.name,
       from: endpoints.proxy(),

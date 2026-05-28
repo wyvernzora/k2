@@ -14,8 +14,8 @@ export class Longhorn extends K2Chart {
 
 function longhornValues() {
   return {
-    // TODO: expose the Longhorn dashboard through Traefik/Auth once the v3
-    // auth ingress surface is ready.
+    // TODO: expose the Longhorn dashboard through Pomerium once the v3 auth
+    // ingress surface is ready.
     ingress: {
       enabled: false,
     },

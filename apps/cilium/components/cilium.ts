@@ -54,8 +54,7 @@ export class Cilium extends K2Chart {
       // flow data; UI consumes Relay. Co-located in the cilium namespace
       // (chart default) — they're adjuncts of cilium itself, not a
       // standalone product. Access via `kubectl port-forward -n cilium
-      // svc/hubble-ui 12000:80` until traefik lands and we put it behind
-      // AuthenticatedIngress.
+      // svc/hubble-ui 12000:80` until we put it behind AuthenticatedIngress.
       hubble: {
         relay: { enabled: true },
         ui: { enabled: true },
