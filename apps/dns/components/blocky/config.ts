@@ -6,6 +6,8 @@ import { ConfigMap } from "@k2/cdk-lib";
 import { ClientGroup } from "./client-group.js";
 import { CustomDns } from "./custom-dns.js";
 
+const K2_V3_DNS = "10.10.10.10";
+
 export interface BlockyConfigProps {
   readonly apexDomain: string;
   readonly clientGroups: ClientGroup[];
@@ -35,6 +37,7 @@ export class BlockyConfig extends ConfigMap {
         conditional: {
           fallbackUpstream: true,
           mapping: {
+            "k2.wyvernzora.io": K2_V3_DNS,
             "wyvernzora.io": "k8s-gateway.dns.svc.cluster.local",
           },
         },
