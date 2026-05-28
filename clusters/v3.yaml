@@ -5,7 +5,7 @@ id: v3
 
 # Apex DNS domain. Used by app constructs to derive per-app hostnames
 # (e.g. argocd.<apexDomain>).
-apexDomain: wyvernzora.io
+apexDomain: k2.wyvernzora.io
 
 # AWS account defaults plus the public service-account OIDC issuer used for
 # AWS WebIdentity federation.
