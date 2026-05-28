@@ -13,6 +13,20 @@ build-image-base:
     SAVE IMAGE ghcr.io/wyvernzora/k2-build:${TAG}
 
 #
+# +job-runner-image: Creates the runtime utility image for K2 Jobs/init containers
+#
+job-runner-image:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +job-runner-image-base
+
+job-runner-image-base:
+    ARG TAG="latest"
+    ARG ALPINE_VERSION="3.22"
+    ARG KUBECTL_VERSION="v1.36.1"
+    ARG DYFF_VERSION="1.12.0"
+    FROM DOCKERFILE --build-arg ALPINE_VERSION=$ALPINE_VERSION --build-arg KUBECTL_VERSION=$KUBECTL_VERSION --build-arg DYFF_VERSION=$DYFF_VERSION images/job-runner
+    SAVE IMAGE ghcr.io/wyvernzora/k2-job-runner:${TAG}
+
+#
 # +crd-manifest: Extracts CRDs from an app's Helm chart dependencies into
 # apps/<name>/crds/crds.k8s.yaml. Run per-app when introducing a new chart
 # or bumping its version. Output is committed; +crd-constructs reads it.

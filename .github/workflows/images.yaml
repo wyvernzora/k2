@@ -1,0 +1,155 @@
+name: Runtime Images
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main-v3
+    paths:
+      - "Earthfile"
+      - "images/**"
+      - ".github/workflows/images.yaml"
+  pull_request:
+    branches:
+      - main-v3
+    paths:
+      - "Earthfile"
+      - "images/**"
+      - ".github/workflows/images.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  images:
+    name: Resolve images
+    runs-on: ubuntu-24.04
+    outputs:
+      images: ${{ steps.images.outputs.images }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed image inputs
+        id: changes
+        shell: bash
+        run: |
+          force_all=false
+          : >/tmp/k2-runtime-image-changed-files.txt
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            force_all=true
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" > /tmp/k2-runtime-image-changed-files.txt
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            before="${{ github.event.before }}"
+            if [[ "$before" =~ ^0+$ ]]; then
+              force_all=true
+            elif ! git cat-file -e "${before}^{commit}" 2>/dev/null; then
+              echo "Previous commit ${before} not present; treating as full image rebuild." >&2
+              force_all=true
+            else
+              git diff --name-only "$before" "${{ github.sha }}" > /tmp/k2-runtime-image-changed-files.txt
+            fi
+          fi
+
+          if grep -Eq "^(\.github/workflows/images\.yaml|images/scripts/)" /tmp/k2-runtime-image-changed-files.txt; then
+            force_all=true
+          fi
+
+          echo "force_all=${force_all}" >> "$GITHUB_OUTPUT"
+          echo "Changed image inputs:"
+          sed 's/^/  /' /tmp/k2-runtime-image-changed-files.txt || true
+
+      - name: Resolve image matrix
+        id: images
+        shell: bash
+        run: |
+          images=$(bash images/scripts/resolve-ci-images.sh \
+            /tmp/k2-runtime-image-changed-files.txt \
+            "${{ steps.changes.outputs.force_all }}")
+          echo "Image matrix:"
+          echo "${images}" | jq .
+          echo "images=${images}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: images
+    if: needs.images.outputs.images != '[]'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.images.outputs.images) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to ghcr.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Earthly
+        uses: earthly/actions-setup@v1
+        with:
+          version: v0.8.14
+
+      - name: Resolve tags
+        id: tags
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA:0:12}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            tag="pr-${{ github.event.pull_request.number }}-${short_sha}"
+          else
+            tag="sha-${short_sha}"
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "latest=${{ matrix.latestOnMain }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build image
+        shell: bash
+        run: earthly "${{ matrix.earthlyTarget }}" --TAG="${{ steps.tags.outputs.tag }}"
+
+      - name: Push immutable tag
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: docker push "${{ matrix.image }}:${{ steps.tags.outputs.tag }}"
+
+      - name: Push latest tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main-v3' && steps.tags.outputs.latest == 'true'
+        shell: bash
+        run: |
+          docker tag "${{ matrix.image }}:${{ steps.tags.outputs.tag }}" "${{ matrix.image }}:latest"
+          docker push "${{ matrix.image }}:latest"
+
+      - name: Prune old package versions
+        if: github.event_name != 'pull_request'
+        uses: actions/delete-package-versions@v5
+        with:
+          owner: ${{ github.repository_owner }}
+          package-name: ${{ matrix.packageName }}
+          package-type: container
+          min-versions-to-keep: ${{ matrix.keepVersions }}
+          delete-only-untagged-versions: false
+          token: ${{ secrets.GITHUB_TOKEN }}
