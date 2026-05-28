@@ -1,7 +1,7 @@
 import type { ApiObjectMetadata } from "cdk8s";
 import type { Construct } from "constructs";
 
-import { ApexDomain, ClusterContext } from "@k2/cdk-lib";
+import { ClusterContext } from "@k2/cdk-lib";
 
 import {
   ClusterIssuer,
@@ -12,12 +12,12 @@ import {
 } from "../../crds/cert-manager.io.js";
 
 import {
+  LETS_ENCRYPT_DNS_ZONE,
   LETS_ENCRYPT_EMAIL,
   LETS_ENCRYPT_PROD_ACME_SERVER,
   LETS_ENCRYPT_PROD_ISSUER_NAME,
   ROUTE53_DNS01_ROLE_NAME,
   ROUTE53_DNS01_SERVICE_ACCOUNT_NAME,
-  ROUTE53_HOSTED_ZONE_ID,
 } from "./constants.js";
 
 export interface LetsEncryptClusterIssuerProps {
@@ -37,7 +37,6 @@ export interface LetsEncryptClusterIssuerProps {
  */
 export class LetsEncryptClusterIssuer extends ClusterIssuer {
   public constructor(scope: Construct, id: string, props: LetsEncryptClusterIssuerProps = {}) {
-    const { apexDomain } = ApexDomain.of(scope);
     const cluster = ClusterContext.of(scope).config;
     const region = props.region ?? cluster.aws?.region;
     const roleName = props.route53RoleName ?? ROUTE53_DNS01_ROLE_NAME;
@@ -60,8 +59,8 @@ export class LetsEncryptClusterIssuer extends ClusterIssuer {
           server: props.server ?? LETS_ENCRYPT_PROD_ACME_SERVER,
           privateKeySecretName: props.privateKeySecretName ?? `${name}-privkey`,
           solver: route53Dns01Solver({
-            dnsZones: props.dnsZones ?? [apexDomain],
-            hostedZoneId: props.hostedZoneId ?? ROUTE53_HOSTED_ZONE_ID,
+            dnsZones: props.dnsZones ?? [LETS_ENCRYPT_DNS_ZONE],
+            hostedZoneId: props.hostedZoneId,
             region,
             roleArn,
             serviceAccountName: props.route53ServiceAccountName ?? ROUTE53_DNS01_SERVICE_ACCOUNT_NAME,
@@ -92,7 +91,7 @@ function letsEncryptAcmeSpec(props: LetsEncryptAcmeSpecProps): AcmeSpec {
 
 interface Route53Dns01SolverProps {
   readonly dnsZones: string[];
-  readonly hostedZoneId: string;
+  readonly hostedZoneId?: string;
   readonly region: string;
   readonly roleArn: string;
   readonly serviceAccountName: string;

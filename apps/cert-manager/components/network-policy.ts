@@ -1,7 +1,7 @@
 import type { Construct } from "constructs";
 
 import { ClusterContext, K2Chart, Namespace } from "@k2/cdk-lib";
-import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, egress, endpoint, fqdn, ingress, tcp } from "@k2/cilium";
+import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, egress, endpoint, fqdn, ingress, tcp, udp } from "@k2/cilium";
 
 export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -34,6 +34,7 @@ export class NetworkPolicy extends K2Chart {
       ),
       egress: [
         ...egress.toDns(),
+        ...egress.toWorld(udp(53), tcp(53)),
         ...egress.toFqdns([
           fqdn.name("acme-v02.api.letsencrypt.org"),
           fqdn.name("route53.amazonaws.com"),

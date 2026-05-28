@@ -15,6 +15,8 @@ export class KubeVip extends K2Chart {
       },
       env: {
         cp_enable: "true",
+        KUBERNETES_SERVICE_HOST: "127.0.0.1",
+        KUBERNETES_SERVICE_PORT: "6443",
         svc_enable: "false",
         vip_leaderelection: "true",
       },
