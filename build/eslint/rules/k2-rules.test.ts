@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 
@@ -11,6 +13,7 @@ import noCdk8sPlusDeepImports from "./no-cdk8s-plus-deep-imports.js";
 import noDeepInlineProps from "./no-deep-inline-props.js";
 import noLargeInlineConstructInstantiation from "./no-large-inline-construct-instantiation.js";
 import noRawApiObject from "./no-raw-apiobject.js";
+import noSingleUseConstantsModule from "./no-single-use-constants-module.js";
 import preferCdk8sPlusL2 from "./prefer-cdk8s-plus-l2.js";
 import preferCrdAliases from "./prefer-crd-aliases.js";
 
@@ -51,6 +54,15 @@ const tester = new RuleTester({
 });
 const repoRoot = process.cwd();
 const repoFile = (...parts: string[]) => path.join(repoRoot, ...parts);
+const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "k2-eslint-rules-"));
+const fixtureFile = (...parts: string[]) => path.join(fixtureRoot, ...parts);
+
+function writeFixture(parts: string[], content: string): string {
+  const filename = fixtureFile(...parts);
+  fs.mkdirSync(path.dirname(filename), { recursive: true });
+  fs.writeFileSync(filename, content);
+  return filename;
+}
 
 tester.run("app-index-public-api", appIndexPublicApi, {
   valid: [
@@ -233,6 +245,85 @@ tester.run("no-cdk8s-plus-deep-imports", noCdk8sPlusDeepImports, {
         const value = 1;
       `,
       errors: [{ messageId: "missingDisableReason" }],
+    },
+  ],
+});
+
+const singleUseConstantsCode = `import { PORT } from "./constants.js";
+export const port = PORT;
+`;
+const sharedConstantsPrimaryCode = `import { PORT } from "./constants.js";
+export const primary = PORT;
+`;
+const sharedConstantsSecondaryCode = `import { PORT } from "./constants.js";
+export const secondary = PORT;
+`;
+const disjointConstantsPrimaryCode = `import { PORT } from "./constants.js";
+export const port = PORT;
+`;
+const disjointConstantsSecondaryCode = `import { HOST } from "./constants.js";
+export const host = HOST;
+`;
+const allowedConstantsCode = `import { PORT } from "./constants.js";
+export const port = PORT;
+`;
+
+writeFixture(["apps", "single-use", "components", "demo", "constants.ts"], `export const PORT = 80;\n`);
+const singleUseConstantsFile = writeFixture(
+  ["apps", "single-use", "components", "demo", "consumer.ts"],
+  singleUseConstantsCode,
+);
+writeFixture(["apps", "shared", "components", "demo", "constants.ts"], `export const PORT = 80;\n`);
+const sharedConstantsPrimaryFile = writeFixture(
+  ["apps", "shared", "components", "demo", "primary.ts"],
+  sharedConstantsPrimaryCode,
+);
+writeFixture(["apps", "shared", "components", "demo", "secondary.ts"], sharedConstantsSecondaryCode);
+writeFixture(
+  ["apps", "disjoint", "components", "demo", "constants.ts"],
+  `export const PORT = 80;\nexport const HOST = "example.test";\n`,
+);
+const disjointConstantsPrimaryFile = writeFixture(
+  ["apps", "disjoint", "components", "demo", "primary.ts"],
+  disjointConstantsPrimaryCode,
+);
+writeFixture(["apps", "disjoint", "components", "demo", "secondary.ts"], disjointConstantsSecondaryCode);
+writeFixture(["apps", "allowed", "components", "demo", "constants.ts"], `export const PORT = 80;\n`);
+const allowedConstantsFile = writeFixture(
+  ["apps", "allowed", "components", "demo", "consumer.ts"],
+  allowedConstantsCode,
+);
+
+tester.run("no-single-use-constants-module", noSingleUseConstantsModule, {
+  valid: [
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `const port = 80;`,
+    },
+    {
+      filename: sharedConstantsPrimaryFile,
+      code: sharedConstantsPrimaryCode,
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { POMERIUM_NAMESPACE } from "@k2/pomerium";`,
+    },
+    {
+      filename: allowedConstantsFile,
+      code: allowedConstantsCode,
+      options: [{ allowedModules: ["apps/allowed/components/demo/constants.ts"] }],
+    },
+  ],
+  invalid: [
+    {
+      filename: singleUseConstantsFile,
+      code: singleUseConstantsCode,
+      errors: [{ messageId: "singleUseConstants" }],
+    },
+    {
+      filename: disjointConstantsPrimaryFile,
+      code: disjointConstantsPrimaryCode,
+      errors: [{ messageId: "singleUseConstants" }],
     },
   ],
 });
