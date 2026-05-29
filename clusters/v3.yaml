@@ -80,6 +80,11 @@ dns:
       address: 10.10.7.254
     - name: rumi
       address: 10.10.8.1
+    # TODO: Replace this static Pomerium authenticate record with a DNS-visible
+    # resource owned by the Pomerium app; the LoadBalancer IP is not guaranteed
+    # to remain deterministic unless we pin it explicitly.
+    - name: login
+      address: 10.10.13.1
 
 # Cilium L2-announcement LoadBalancer IP pools, both within the 10.10/16
 # infra subnet:
