@@ -1,4 +1,4 @@
-import { KubeIngress } from "cdk8s-plus-32/lib/imports/k8s.js";
+import { k8s } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
 import { POMERIUM_INGRESS_CLASS_NAME } from "./constants.js";
@@ -13,7 +13,8 @@ export interface AuthenticatedIngressProps {
   readonly tlsSecretName?: string;
 }
 
-export class AuthenticatedIngress extends KubeIngress {
+// eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- cdk8s-plus Ingress L2 cannot target a backend service by name without owning a Service construct.
+export class AuthenticatedIngress extends k8s.KubeIngress {
   public constructor(scope: Construct, id: string, props: AuthenticatedIngressProps) {
     super(scope, id, {
       metadata: {

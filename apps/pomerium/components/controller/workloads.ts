@@ -1,121 +1,138 @@
-import { IntOrString, KubeDeployment, KubeJob, Quantity, type Container } from "cdk8s-plus-32/lib/imports/k8s.js";
+import { Duration, Size } from "cdk8s";
+import {
+  Capability,
+  Cpu,
+  Deployment,
+  EnvFieldPaths,
+  EnvValue,
+  ImagePullPolicy,
+  Job,
+  LabelSelector,
+  Node,
+  NodeLabelQuery,
+  Probe,
+  Protocol,
+  RestartPolicy,
+  Volume,
+  type ContainerProps,
+  type IServiceAccount,
+  type Workload,
+} from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
 import { Scheduling } from "@k2/cdk-lib";
 
-import { POMERIUM_CONTROLLER_NAME, POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../lib/constants.js";
+import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../lib/constants.js";
 
 import { metadata } from "./metadata.js";
-import { GEN_SECRETS_SERVICE_ACCOUNT } from "./rbac.js";
 
 const POMERIUM_IMAGE = "pomerium/ingress-controller:v0.32.8";
-type SchedulingProfile = ReturnType<typeof Scheduling.workersPreferred>;
+const TMP_VOLUME_NAME = "tmp";
+const LINUX_NODE = Node.labeled(NodeLabelQuery.is("kubernetes.io/os", "linux"));
 
-export function createWorkloads(scope: Construct, scheduling: SchedulingProfile): void {
-  new KubeDeployment(scope, "deployment", deployment(scheduling));
-  new KubeJob(scope, "gen-secrets-job", genSecretsJob(scheduling));
+export function createWorkloads(
+  scope: Construct,
+  controllerServiceAccount: IServiceAccount,
+  genSecretsServiceAccount: IServiceAccount,
+): void {
+  createControllerDeployment(scope, controllerServiceAccount);
+  createGenSecretsJob(scope, genSecretsServiceAccount);
 }
 
-function deployment(scheduling: SchedulingProfile) {
+function createControllerDeployment(scope: Construct, serviceAccount: IServiceAccount): void {
+  const tmpVolume = Volume.fromEmptyDir(scope, "tmp-volume", TMP_VOLUME_NAME);
   const deployMetadata = metadata("pomerium");
-  return {
+  const deployment = new Deployment(scope, "deployment", {
     metadata: {
       ...deployMetadata,
       labels: { ...deployMetadata.labels, ...POMERIUM_LABELS },
     },
-    spec: deploymentSpec(scheduling),
-  };
-}
-
-function deploymentSpec(scheduling: SchedulingProfile) {
-  return {
     replicas: 1,
-    selector: selector(),
-    template: podTemplate(scheduling, POMERIUM_CONTROLLER_NAME, [controllerContainer()]),
-  };
+    select: false,
+    podMetadata: { labels: POMERIUM_LABELS },
+    automountServiceAccountToken: true,
+    serviceAccount,
+    securityContext: { ensureNonRoot: true },
+    terminationGracePeriod: Duration.seconds(10),
+    containers: [controllerContainer(tmpVolume)],
+    volumes: [tmpVolume],
+  });
+
+  deployment.select(LabelSelector.of({ labels: POMERIUM_LABELS }));
+  applyScheduling(deployment);
 }
 
-function genSecretsJob(scheduling: SchedulingProfile) {
-  return {
+function createGenSecretsJob(scope: Construct, serviceAccount: IServiceAccount): void {
+  const job = new Job(scope, "gen-secrets-job", {
     metadata: metadata("pomerium-gen-secrets"),
-    spec: { template: jobPodTemplate(scheduling) },
-  };
-}
-
-function jobPodTemplate(scheduling: SchedulingProfile) {
-  return {
-    metadata: { name: "pomerium-gen-secrets" },
-    spec: jobPodSpec(scheduling),
-  };
-}
-
-function selector() {
-  return { matchLabels: { "app.kubernetes.io/name": "pomerium" } };
-}
-
-function podTemplate(scheduling: SchedulingProfile, serviceAccountName: string, containers: Container[]) {
-  return {
-    metadata: { labels: POMERIUM_LABELS },
-    spec: podSpec(scheduling, serviceAccountName, containers),
-  };
-}
-
-function podSpec(scheduling: SchedulingProfile, serviceAccountName: string, containers: Container[]) {
-  return {
-    affinity: scheduling.affinity,
-    tolerations: scheduling.tolerations,
-    containers,
-    nodeSelector: { "kubernetes.io/os": "linux" },
-    securityContext: { runAsNonRoot: true },
-    serviceAccountName,
-    terminationGracePeriodSeconds: 10,
-    volumes: [{ emptyDir: {}, name: "tmp" }],
-  };
-}
-
-function jobPodSpec(scheduling: SchedulingProfile) {
-  return {
-    affinity: scheduling.affinity,
-    tolerations: scheduling.tolerations,
-    containers: [genSecretsContainer()],
-    nodeSelector: { "kubernetes.io/os": "linux" },
-    restartPolicy: "OnFailure",
+    select: false,
+    podMetadata: { name: "pomerium-gen-secrets" },
+    automountServiceAccountToken: true,
+    serviceAccount,
+    restartPolicy: RestartPolicy.ON_FAILURE,
     securityContext: {
       fsGroup: 1000,
-      runAsNonRoot: true,
-      runAsUser: 1000,
+      ensureNonRoot: true,
+      user: 1000,
     },
-    serviceAccountName: GEN_SECRETS_SERVICE_ACCOUNT,
-  };
+    containers: [genSecretsContainer()],
+  });
+
+  applyScheduling(job);
 }
 
-function controllerContainer(): Container {
+function controllerContainer(tmpVolume: Volume): ContainerProps {
   return {
     name: "pomerium",
     image: POMERIUM_IMAGE,
-    imagePullPolicy: "IfNotPresent",
+    imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
     args: controllerArgs(),
-    env: controllerEnv(),
+    envVariables: controllerEnv(),
     ports: controllerPorts(),
-    livenessProbe: httpProbe("/healthz", 28080, 10),
-    readinessProbe: httpProbe("/readyz", 28080, 5),
-    startupProbe: startupProbe(),
+    liveness: httpProbe("/healthz", 28080, 10),
+    readiness: httpProbe("/readyz", 28080, 5),
+    startup: startupProbe(),
     resources: {
-      limits: { cpu: quantity("1000m"), memory: quantity("1Gi") },
-      requests: { cpu: quantity("100m"), memory: quantity("200Mi") },
+      cpu: {
+        request: Cpu.millis(100),
+        limit: Cpu.millis(1000),
+      },
+      memory: {
+        request: Size.mebibytes(200),
+        limit: Size.gibibytes(1),
+      },
     },
-    securityContext: controllerSecurityContext(),
-    volumeMounts: [{ mountPath: "/tmp", name: "tmp" }],
+    securityContext: {
+      allowPrivilegeEscalation: false,
+      capabilities: { drop: [Capability.ALL] },
+      group: 65532,
+      user: 65532,
+      ensureNonRoot: true,
+      readOnlyRootFilesystem: true,
+    },
+    volumeMounts: [{ volume: tmpVolume, path: "/tmp" }],
   };
 }
 
-function genSecretsContainer(): Container {
+function genSecretsContainer(): ContainerProps {
   return {
     name: "gen-secrets",
     image: POMERIUM_IMAGE,
-    imagePullPolicy: "IfNotPresent",
+    imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
     args: ["gen-secrets", "--secrets=$(POD_NAMESPACE)/bootstrap"],
-    env: [fieldEnv("POD_NAMESPACE", "metadata.namespace")],
+    envVariables: {
+      POD_NAMESPACE: EnvValue.fromFieldRef(EnvFieldPaths.POD_NAMESPACE),
+    },
+    resources: {
+      cpu: {
+        request: Cpu.millis(25),
+        limit: Cpu.millis(250),
+      },
+      memory: {
+        request: Size.mebibytes(64),
+        limit: Size.mebibytes(256),
+      },
+    },
     securityContext: { allowPrivilegeEscalation: false },
   };
 }
@@ -130,68 +147,42 @@ function controllerArgs() {
   ];
 }
 
-function controllerEnv() {
-  return [
-    { name: "TMPDIR", value: "/tmp" },
-    { name: "XDG_CACHE_HOME", value: "/tmp" },
-    fieldEnv("POMERIUM_NAMESPACE", "metadata.namespace", "v1"),
-    fieldEnv("POD_IP", "status.podIP"),
-  ];
+function controllerEnv(): Record<string, EnvValue> {
+  return {
+    TMPDIR: EnvValue.fromValue("/tmp"),
+    XDG_CACHE_HOME: EnvValue.fromValue("/tmp"),
+    POMERIUM_NAMESPACE: EnvValue.fromFieldRef(EnvFieldPaths.POD_NAMESPACE, { apiVersion: "v1" }),
+    POD_IP: EnvValue.fromFieldRef(EnvFieldPaths.POD_IP),
+  };
 }
 
 function controllerPorts() {
   return [
-    { containerPort: 8443, name: "https", protocol: "TCP" },
-    { containerPort: 443, name: "quic", protocol: "UDP" },
-    { containerPort: 8080, name: "http", protocol: "TCP" },
-    { containerPort: 9090, name: "metrics", protocol: "TCP" },
+    { number: 8443, name: "https", protocol: Protocol.TCP },
+    { number: 443, name: "quic", protocol: Protocol.UDP },
+    { number: 8080, name: "http", protocol: Protocol.TCP },
+    { number: 9090, name: "metrics", protocol: Protocol.TCP },
   ];
 }
 
-function controllerSecurityContext() {
-  return {
-    allowPrivilegeEscalation: false,
-    capabilities: { drop: ["ALL"] },
-    readOnlyRootFilesystem: true,
-    runAsGroup: 65532,
-    runAsNonRoot: true,
-    runAsUser: 65532,
-  };
-}
-
-function startupProbe() {
-  return {
+function startupProbe(): Probe {
+  return Probe.fromHttpGet("/startupz", {
+    port: 28080,
     failureThreshold: 40,
-    httpGet: { path: "/startupz", port: portNumber(28080) },
-    periodSeconds: 15,
-  };
+    periodSeconds: Duration.seconds(15),
+  });
 }
 
-function fieldEnv(name: string, fieldPath: string, apiVersion?: string) {
-  return {
-    name,
-    valueFrom: {
-      fieldRef: {
-        apiVersion,
-        fieldPath,
-      },
-    },
-  };
-}
-
-function httpProbe(path: string, port: number, failureThreshold: number) {
-  return {
+function httpProbe(path: string, port: number, failureThreshold: number): Probe {
+  return Probe.fromHttpGet(path, {
+    port,
     failureThreshold,
-    httpGet: { path, port: portNumber(port) },
-    initialDelaySeconds: 15,
-    periodSeconds: 60,
-  };
+    initialDelaySeconds: Duration.seconds(15),
+    periodSeconds: Duration.seconds(60),
+  });
 }
 
-function portNumber(port: number) {
-  return IntOrString.fromNumber(port);
-}
-
-function quantity(value: string) {
-  return Quantity.fromString(value);
+function applyScheduling(workload: Workload): void {
+  Scheduling.applyWorkersPreferred(workload);
+  workload.scheduling.attract(LINUX_NODE);
 }

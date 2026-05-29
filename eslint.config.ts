@@ -47,9 +47,16 @@ export default tseslint.config(
       "k2/app-index-public-api": "error",
       "k2/component-layout": "error",
       "k2/no-cdk-lib-app-imports": "error",
+      "k2/no-cdk8s-plus-deep-imports": "error",
       "k2/no-deep-inline-props": "error",
       "k2/no-large-inline-construct-instantiation": "error",
       "k2/no-raw-apiobject": "error",
+      "k2/prefer-cdk8s-plus-l2": [
+        "warn",
+        {
+          allowedTypes: ["Affinity", "Toleration"],
+        },
+      ],
       "k2/prefer-crd-aliases": "warn",
     },
   },

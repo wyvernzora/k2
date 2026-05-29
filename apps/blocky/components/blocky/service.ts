@@ -1,4 +1,5 @@
-import { k8s } from "cdk8s-plus-32";
+import { ApiObject, JsonPatch } from "cdk8s";
+import { Pods, Protocol, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
 export interface BlockyServiceProps {
@@ -6,7 +7,7 @@ export interface BlockyServiceProps {
   readonly selector: Record<string, string>;
 }
 
-export class BlockyService extends k8s.KubeService {
+export class BlockyService extends Service {
   public constructor(scope: Construct, id: string, props: BlockyServiceProps) {
     super(scope, id, {
       metadata: {
@@ -15,15 +16,13 @@ export class BlockyService extends k8s.KubeService {
           "lbipam.cilium.io/ips": props.loadBalancerIp,
         },
       },
-      spec: {
-        type: "LoadBalancer",
-        externalTrafficPolicy: "Local",
-        selector: props.selector,
-        ports: [
-          { name: "dns-udp", protocol: "UDP", port: 53 },
-          { name: "dns-tcp", protocol: "TCP", port: 53 },
-        ],
-      },
+      type: ServiceType.LOAD_BALANCER,
+      selector: Pods.select(scope, "blocky-service-pods", { labels: props.selector }),
+      ports: [
+        { name: "dns-udp", protocol: Protocol.UDP, port: 53 },
+        { name: "dns-tcp", protocol: Protocol.TCP, port: 53 },
+      ],
     });
+    ApiObject.of(this).addJsonPatch(JsonPatch.add("/spec/externalTrafficPolicy", "Local"));
   }
 }

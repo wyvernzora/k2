@@ -1,4 +1,15 @@
-import { k8s } from "cdk8s-plus-32";
+import { Size } from "cdk8s";
+import {
+  ConfigMap,
+  Cpu,
+  DaemonSet,
+  EnvValue,
+  ImagePullPolicy,
+  LabelSelector,
+  Protocol,
+  Volume,
+  type ContainerProps,
+} from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
 import { Scheduling } from "@k2/cdk-lib";
@@ -17,84 +28,64 @@ export interface BlockyDaemonSetProps {
   readonly configChecksum: string;
 }
 
-export class BlockyDaemonSet extends k8s.KubeDaemonSet {
+export class BlockyDaemonSet extends DaemonSet {
   public readonly selectorLabels = { ...POD_LABELS };
 
   public constructor(scope: Construct, id: string, props: BlockyDaemonSetProps) {
-    super(scope, id, blockyDaemonSetProps(props));
+    const config = ConfigMap.fromConfigMapName(scope, `${id}-config`, props.configName);
+    const configVolume = Volume.fromConfigMap(scope, `${id}-config-volume`, config, { name: CONFIG_VOLUME_NAME });
+
+    super(scope, id, {
+      metadata: { name: "blocky" },
+      select: false,
+      podMetadata: {
+        labels: { ...POD_LABELS },
+        annotations: {
+          "checksum/blocky-config": props.configChecksum,
+        },
+      },
+      automountServiceAccountToken: false,
+      enableServiceLinks: false,
+      securityContext: { ensureNonRoot: false },
+      containers: [blockyContainer(configVolume)],
+      volumes: [configVolume],
+    });
+    this.select(LabelSelector.of({ labels: POD_LABELS }));
+    Scheduling.applyWorkersPreferred(this);
   }
 }
 
-function blockyDaemonSetProps(props: BlockyDaemonSetProps): k8s.KubeDaemonSetProps {
-  return {
-    metadata: {
-      name: "blocky",
-    },
-    spec: {
-      selector: blockySelector(),
-      template: blockyPodTemplate(props),
-    },
-  };
-}
-
-function blockySelector(): k8s.LabelSelector {
-  return {
-    matchLabels: { ...POD_LABELS },
-  };
-}
-
-function blockyPodTemplate(props: BlockyDaemonSetProps): k8s.PodTemplateSpec {
-  return {
-    metadata: {
-      labels: { ...POD_LABELS },
-      annotations: {
-        "checksum/blocky-config": props.configChecksum,
-      },
-    },
-    spec: blockyPodSpec(props.configName),
-  };
-}
-
-function blockyPodSpec(configName: string): k8s.PodSpec {
-  const scheduling = Scheduling.workersPreferred();
-  return {
-    automountServiceAccountToken: false,
-    enableServiceLinks: false,
-    affinity: scheduling.affinity,
-    tolerations: scheduling.tolerations,
-    containers: [blockyContainer()],
-    volumes: [
-      {
-        name: CONFIG_VOLUME_NAME,
-        configMap: {
-          name: configName,
-        },
-      },
-    ],
-  };
-}
-
-function blockyContainer(): k8s.Container {
+function blockyContainer(configVolume: Volume): ContainerProps {
   return {
     name: "blocky",
     image: BLOCKY_IMAGE,
+    imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
     ports: [
-      { name: "dns-udp", containerPort: 53, protocol: "UDP" },
-      { name: "dns-tcp", containerPort: 53, protocol: "TCP" },
-      { name: "http", containerPort: 4000, protocol: "TCP" },
+      { name: "dns-udp", number: 53, protocol: Protocol.UDP },
+      { name: "dns-tcp", number: 53, protocol: Protocol.TCP },
+      { name: "http", number: 4000, protocol: Protocol.TCP },
     ],
-    env: [{ name: "TZ", value: "America/Los_Angeles" }],
-    volumeMounts: [{ name: CONFIG_VOLUME_NAME, mountPath: CONFIG_MOUNT_PATH, subPath: CONFIG_KEY }],
+    envVariables: { TZ: EnvValue.fromValue("America/Los_Angeles") },
+    volumeMounts: [
+      {
+        volume: configVolume,
+        path: CONFIG_MOUNT_PATH,
+        subPath: CONFIG_KEY,
+      },
+    ],
     resources: {
-      requests: resourceList("100m", "256Mi"),
-      limits: resourceList("250m", "1024Mi"),
+      cpu: {
+        request: Cpu.millis(100),
+        limit: Cpu.millis(250),
+      },
+      memory: {
+        request: Size.mebibytes(256),
+        limit: Size.mebibytes(1024),
+      },
     },
-  };
-}
-
-function resourceList(cpu: string, memory: string): Record<string, k8s.Quantity> {
-  return {
-    cpu: k8s.Quantity.fromString(cpu),
-    memory: k8s.Quantity.fromString(memory),
+    securityContext: {
+      ensureNonRoot: false,
+      readOnlyRootFilesystem: false,
+    },
   };
 }

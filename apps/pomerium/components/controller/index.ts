@@ -1,7 +1,7 @@
-import { KubeIngressClass, KubeNamespace, KubeServiceAccount } from "cdk8s-plus-32/lib/imports/k8s.js";
+import { Namespace as KubernetesNamespace, ServiceAccount, k8s } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Chart, Scheduling } from "@k2/cdk-lib";
+import { K2Chart } from "@k2/cdk-lib";
 
 import { POMERIUM_CONTROLLER_NAME, POMERIUM_INGRESS_CLASS_NAME, POMERIUM_NAMESPACE } from "../../lib/constants.js";
 
@@ -14,27 +14,26 @@ export class PomeriumController extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const scheduling = Scheduling.workersPreferred();
-
-    new KubeNamespace(this, "namespace", {
+    new KubernetesNamespace(this, "namespace", {
       metadata: clusterMetadata(POMERIUM_NAMESPACE),
     });
-    new KubeServiceAccount(this, "controller-service-account", {
+    const controllerServiceAccount = new ServiceAccount(this, "controller-service-account", {
       metadata: metadata(POMERIUM_CONTROLLER_NAME),
     });
-    new KubeServiceAccount(this, "gen-secrets-service-account", {
+    const genSecretsServiceAccount = new ServiceAccount(this, "gen-secrets-service-account", {
       metadata: metadata(GEN_SECRETS_SERVICE_ACCOUNT),
     });
 
-    createRbac(this);
+    createRbac(this, controllerServiceAccount, genSecretsServiceAccount);
     createServices(this);
-    createWorkloads(this, scheduling);
+    createWorkloads(this, controllerServiceAccount, genSecretsServiceAccount);
     createIngressClass(this);
   }
 }
 
 function createIngressClass(scope: Construct) {
-  new KubeIngressClass(scope, "ingress-class", {
+  // eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- cdk8s-plus does not expose an IngressClass L2 construct.
+  new k8s.KubeIngressClass(scope, "ingress-class", {
     metadata: {
       ...clusterMetadata(POMERIUM_INGRESS_CLASS_NAME),
       name: POMERIUM_INGRESS_CLASS_NAME,

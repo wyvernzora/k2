@@ -7,9 +7,11 @@ import tseslint from "typescript-eslint";
 import appIndexPublicApi from "./app-index-public-api.js";
 import componentLayout from "./component-layout.js";
 import noCdkLibAppImports from "./no-cdk-lib-app-imports.js";
+import noCdk8sPlusDeepImports from "./no-cdk8s-plus-deep-imports.js";
 import noDeepInlineProps from "./no-deep-inline-props.js";
 import noLargeInlineConstructInstantiation from "./no-large-inline-construct-instantiation.js";
 import noRawApiObject from "./no-raw-apiobject.js";
+import preferCdk8sPlusL2 from "./prefer-cdk8s-plus-l2.js";
 import preferCrdAliases from "./prefer-crd-aliases.js";
 
 const ruleTesterHooks = RuleTester as unknown as {
@@ -200,6 +202,104 @@ tester.run("no-cdk-lib-app-imports", noCdkLibAppImports, {
       filename: repoFile("cdk-lib/context/namespace.ts"),
       code: `import { Thing } from "../apps/demo/lib/thing.js";`,
       errors: [{ messageId: "appImport" }],
+    },
+  ],
+});
+
+tester.run("no-cdk8s-plus-deep-imports", noCdk8sPlusDeepImports, {
+  valid: [
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { k8s, Service } from "cdk8s-plus-32";`,
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        // eslint-disable-next-line rule-to-test/no-cdk8s-plus-deep-imports -- Required while validating upstream import behavior.
+        import { KubeService } from "cdk8s-plus-32/lib/imports/k8s.js";
+      `,
+    },
+  ],
+  invalid: [
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { KubeService } from "cdk8s-plus-32/lib/imports/k8s.js";`,
+      errors: [{ messageId: "deepImport" }],
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        // eslint-disable-next-line rule-to-test/no-cdk8s-plus-deep-imports
+        const value = 1;
+      `,
+      errors: [{ messageId: "missingDisableReason" }],
+    },
+  ],
+});
+
+tester.run("prefer-cdk8s-plus-l2", preferCdk8sPlusL2, {
+  valid: [
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { Deployment, Service } from "cdk8s-plus-32";`,
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        import { k8s } from "cdk8s-plus-32";
+        // eslint-disable-next-line rule-to-test/prefer-cdk8s-plus-l2 -- Job TTL is not exposed by the L2 construct.
+        const job = new k8s.KubeJob(this, "job", {});
+      `,
+    },
+    {
+      filename: repoFile("cdk-lib/scheduling.ts"),
+      code: `
+        import type { k8s } from "cdk8s-plus-32";
+        type Profile = { affinity?: k8s.Affinity; tolerations?: k8s.Toleration[] };
+      `,
+      options: [{ allowedTypes: ["Affinity", "Toleration"] }],
+    },
+  ],
+  invalid: [
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        import { k8s } from "cdk8s-plus-32";
+        new k8s.KubeService(this, "service", {});
+      `,
+      errors: [{ messageId: "namespaceUse" }],
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        import { k8s } from "cdk8s-plus-32";
+        type Container = k8s.Container;
+      `,
+      errors: [{ messageId: "namespaceUse" }],
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        // eslint-disable-next-line rule-to-test/prefer-cdk8s-plus-l2
+        const value = 1;
+      `,
+      errors: [{ messageId: "missingDisableReason" }],
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        import { KubeService } from "cdk8s-plus-32/lib/imports/k8s.js";
+        new KubeService(this, "service", {});
+      `,
+      errors: [{ messageId: "kubeConstruct" }],
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        import { KubeDeployment } from "cdk8s-plus-32/lib/imports/k8s.js";
+        class DemoDeployment extends KubeDeployment {}
+      `,
+      errors: [{ messageId: "kubeConstruct" }],
     },
   ],
 });

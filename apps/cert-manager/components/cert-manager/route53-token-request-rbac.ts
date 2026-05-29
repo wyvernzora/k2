@@ -1,4 +1,4 @@
-import { KubeRole, KubeRoleBinding } from "cdk8s-plus-32/lib/imports/k8s.js";
+import { k8s } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { Namespace } from "@k2/cdk-lib";
@@ -14,7 +14,8 @@ export class Route53TokenRequestRbac extends Construct {
     super(scope, id);
 
     const namespace = Namespace.of(this).namespace;
-    new KubeRole(this, "role", {
+    // eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- cdk8s-plus Role L2 does not expose resourceNames for serviceaccounts/token.
+    new k8s.KubeRole(this, "role", {
       metadata: { name: ROUTE53_DNS01_TOKEN_REQUEST_ROLE_NAME },
       rules: [
         {
@@ -25,7 +26,8 @@ export class Route53TokenRequestRbac extends Construct {
         },
       ],
     });
-    new KubeRoleBinding(this, "role-binding", {
+    // eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- Keep the raw RoleBinding paired with the resourceNames-constrained Role above.
+    new k8s.KubeRoleBinding(this, "role-binding", {
       metadata: { name: ROUTE53_DNS01_TOKEN_REQUEST_ROLE_NAME },
       roleRef: {
         apiGroup: "rbac.authorization.k8s.io",
