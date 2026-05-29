@@ -1,6 +1,6 @@
 import type { Construct } from "constructs";
 
-import { PrivateConnection, type PolicyEndpoint, type PortSpec } from "@k2/cilium";
+import { PrivateConnection, type PolicyEndpoint, type PortSpec } from "../../cilium/lib/netpol/index.js";
 
 import { POMERIUM_LABELS, POMERIUM_NAMESPACE } from "./constants.js";
 

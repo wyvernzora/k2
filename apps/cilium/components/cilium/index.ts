@@ -2,7 +2,9 @@ import type { Construct } from "constructs";
 
 import { ClusterContext, HelmCharts, K2Chart, Scheduling } from "@k2/cdk-lib";
 
-import { CiliumL2AnnouncementPolicy, CiliumLoadBalancerIpPool } from "../crds/cilium.io.js";
+import { CiliumL2AnnouncementPolicy, CiliumLoadBalancerIpPool } from "../../crds/cilium.io.js";
+
+import { HubbleIngress } from "./hubble-ingress.js";
 
 const CILIUM_OPERATOR_LABEL_SELECTOR = {
   matchLabels: {
@@ -53,8 +55,7 @@ export class Cilium extends K2Chart {
       // Hubble = Cilium's observability layer. Relay aggregates per-node
       // flow data; UI consumes Relay. Co-located in the cilium namespace
       // (chart default) — they're adjuncts of cilium itself, not a
-      // standalone product. Access via `kubectl port-forward -n cilium
-      // svc/hubble-ui 12000:80` until we put it behind AuthenticatedIngress.
+      // standalone product.
       hubble: {
         relay: { enabled: true },
         ui: { enabled: true },
@@ -76,5 +77,7 @@ export class Cilium extends K2Chart {
         loadBalancerIPs: true,
       },
     });
+
+    new HubbleIngress(this, "hubble-ingress");
   }
 }

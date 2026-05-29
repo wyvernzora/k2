@@ -5,6 +5,8 @@ import type { Construct } from "constructs";
 
 import { HelmCharts, K2Chart } from "@k2/cdk-lib";
 
+import { ArgoCDIngress } from "./ingress.js";
+
 /**
  * Load resource-health Lua customizations from the sibling `health/`
  * directory. Each `<group>_<kind>.lua` file becomes argocd-cm key
@@ -26,10 +28,8 @@ function loadHealthCustomizations(): Record<string, string> {
  * ArgoCD Helm-chart-based component.
  *
  * - Built-in auth (dex, server.disable.auth) is disabled here; expectation is
- *   that Pomerium will own ingress authentication once app routes land.
+ *   that Pomerium owns ingress authentication.
  * - Notifications are disabled (no Slack/email targets yet).
- * - Ingress is intentionally not configured yet. ArgoCD is reachable via
- *   port-forward or LoadBalancer until its Pomerium route lands.
  * - Per-resource health customizations live as standalone Lua files under
  *   `./health/<group>_<kind>.lua` and are pulled into argocd-cm at synth time.
  *   Per-app CR customizations (e.g. CNPG DatabaseClaim/RoleClaim) come back
@@ -59,7 +59,7 @@ export class ArgoCD extends K2Chart {
         params: {
           // Let an ingress controller terminate TLS once one is present.
           "server.insecure": true,
-          // Disable built-in auth; ForwardAuth via Authelia will replace it.
+          // Disable built-in auth; Pomerium owns route authentication.
           "server.disable.auth": true,
         },
         cm: {
@@ -69,5 +69,7 @@ export class ArgoCD extends K2Chart {
         },
       },
     });
+
+    new ArgoCDIngress(this, "ingress");
   }
 }
