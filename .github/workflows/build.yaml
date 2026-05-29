@@ -1,8 +1,7 @@
 name: 🏗️ Build
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 on:
   push:
@@ -18,101 +17,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 1) Detect changes such that we can work out which build steps need to run
-  detect-changes:
-    name: 🔍 Detect changes
-    runs-on: ubuntu-latest
-    outputs:
-      run-k2-build: ${{ steps.filter.outputs.run-k2-build }}
-    steps:
-      - name: 📥 Checkout source code
-        uses: actions/checkout@v6
-      - name: 🔍 Detect changes
-        uses: dorny/paths-filter@v4
-        id: filter
-        with:
-          base: ${{ github.ref }}
-          filters: |
-            run-k2-build:
-              - 'Earthfile'
-              - '.github/workflows/**'
-              - 'build/Earthfile'
-              - 'build/provision/**'
-      - name: 🐛 Debug filter output
-        run: |
-          echo "STEP-LEVEL run-k2-build = ${{ steps.filter.outputs.run-k2-build }}"
-
-  # 2) Build and push the k2-build image, if anything changed
-  k2-build:
-    name: 🐳 Build k2-build image
-    needs: detect-changes
-    # run when any of the following:
-    #  • this is a schedule build (to refresh build image deps)
-    #  • detect-changes said “true” (to rebuild image in response to pushed changes)
-    if: github.event_name == 'schedule' || needs.detect-changes.outputs.run-k2-build == 'true'
-    runs-on: ubuntu-latest
-    env:
-      BUILDER_IMAGE_REPO: ghcr.io/wyvernzora/k2-build
-    steps:
-      - name: 📥 Checkout source code
-        uses: actions/checkout@v6
-
-      - name: ⚙️ Set up QEMU
-        id: qemu
-        uses: docker/setup-qemu-action@v4
-        with:
-          image: tonistiigi/binfmt:latest
-          platforms: all
-
-      - name: 🛠️ Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: 🔐 Login to ghcr.io
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🌍 Setup earthly
-        uses: earthly/actions-setup@v1
-        with:
-          version: v0.8.14
-
-      - name: 🏗️ Build the k2-build image
-        run: earthly +build-image
-
-      - name: 🏷️ Tag & push :sha
-        shell: bash
-        run: |
-          SHA=${GITHUB_SHA:0:7}
-          echo "Pushing ${BUILDER_IMAGE_REPO}:$SHA"
-          docker tag "${BUILDER_IMAGE_REPO}:latest" "${BUILDER_IMAGE_REPO}:$SHA"
-          docker push "${BUILDER_IMAGE_REPO}:$SHA"
-
-      - name: 🏷️ Tag & push :latest
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main-v3'
-        shell: bash
-        run: |
-          echo "Pushing ${BUILDER_IMAGE_REPO}:latest"
-          docker push "${BUILDER_IMAGE_REPO}:latest"
-
-  # 3) Build Kubernetes deployment manifests
+  # 1) Build Kubernetes deployment manifests
   manifests:
     name: 📜 Build k8s deployment manifests
-    needs: k2-build
-    if: always() && !failure() && !cancelled()
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout source code
         uses: actions/checkout@v6
-
-      - name: 🔐 Login to ghcr.io
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🌍 Setup earthly
         uses: earthly/actions-setup@v1
@@ -120,22 +31,11 @@ jobs:
           version: v0.8.14
 
       - name: ⚙️ Run manifest build & diff
-        env:
-          RUN_K2_BUILD: ${{ needs.k2-build.result == 'success' }}
         run: |
-          TAG_OPT=""
-          SHORT_SHA=${GITHUB_SHA:0:7}
-
-          # On PR builds where the k2-build image changed, use the short-SHA
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$RUN_K2_BUILD" = "true" ]; then
-            echo "⚙️  Using custom build-image TAG=${SHORT_SHA} for PR test"
-            TAG_OPT="--TAG=$SHORT_SHA"
-          fi
-
-          earthly +crd-constructs $TAG_OPT
-          earthly +lint $TAG_OPT
-          earthly +k8s-manifests $TAG_OPT
-          earthly +diff-manifests $TAG_OPT
+          earthly +crd-constructs
+          earthly +lint
+          earthly +k8s-manifests
+          earthly +diff-manifests
 
       - name: 📦 Upload deploy-diff.md
         uses: actions/upload-artifact@v7
@@ -152,7 +52,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # 4) Push manifests to deploy-v3 branch if push to main-v3
+  # 2) Push manifests to deploy-v3 branch if push to main-v3
   deploy:
     name: 🚀 Deploy k8s manifests
     needs: manifests
