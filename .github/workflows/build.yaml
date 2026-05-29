@@ -165,11 +165,19 @@ jobs:
           name: k8s-manifests
           path: artifacts
 
+      - name: 🔐 Create deploy app token
+        id: deploy-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.K2_DEPLOY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.K2_DEPLOY_APP_PRIVATE_KEY }}
+          permission-contents: write
+
       - name: 🚢 Push to deploy-v3 branch
         uses: s0/git-publish-subdir-action@v2.6.0
         env:
           REPO: self
           BRANCH: deploy-v3
           FOLDER: artifacts
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.deploy-token.outputs.token }}
           SKIP_EMPTY_COMMITS: true
