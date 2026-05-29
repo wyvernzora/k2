@@ -3,14 +3,17 @@ import type { Construct } from "constructs";
 
 import { POMERIUM_INGRESS_CLASS_NAME } from "./constants.js";
 
-export interface AuthenticatedIngressProps {
+interface PomeriumIngressRouteProps {
   readonly host: string;
   readonly serviceName: string;
   readonly servicePort: number | string;
   readonly name?: string;
   readonly path?: string;
-  readonly policy?: string;
   readonly tlsSecretName?: string;
+}
+
+export interface AuthenticatedIngressProps extends PomeriumIngressRouteProps {
+  readonly policy?: string;
 }
 
 // eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- cdk8s-plus Ingress L2 cannot target a backend service by name without owning a Service construct.
@@ -19,22 +22,46 @@ export class AuthenticatedIngress extends k8s.KubeIngress {
     super(scope, id, {
       metadata: {
         name: props.name ?? id,
-        annotations: ingressAnnotations(props),
+        annotations: authenticatedIngressAnnotations(props),
       },
       spec: ingressSpec(props),
     });
   }
 }
 
-function ingressSpec(props: AuthenticatedIngressProps) {
+export type PublicIngressProps = PomeriumIngressRouteProps;
+
+// eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- cdk8s-plus Ingress L2 cannot target a backend service by name without owning a Service construct.
+export class PublicIngress extends k8s.KubeIngress {
+  public constructor(scope: Construct, id: string, props: PublicIngressProps) {
+    super(scope, id, {
+      metadata: {
+        name: props.name ?? id,
+        annotations: {
+          "ingress.pomerium.io/allow_public_unauthenticated_access": "true",
+        },
+      },
+      spec: ingressSpec(props),
+    });
+  }
+}
+
+function ingressSpec(props: PomeriumIngressRouteProps) {
   return {
     ingressClassName: POMERIUM_INGRESS_CLASS_NAME,
-    tls: [{ hosts: [props.host], secretName: props.tlsSecretName }],
+    tls: [ingressTls(props)],
     rules: [ingressRule(props)],
   };
 }
 
-function ingressRule(props: AuthenticatedIngressProps) {
+function ingressTls(props: PomeriumIngressRouteProps) {
+  if (props.tlsSecretName === undefined) {
+    return { hosts: [props.host] };
+  }
+  return { hosts: [props.host], secretName: props.tlsSecretName };
+}
+
+function ingressRule(props: PomeriumIngressRouteProps) {
   return {
     host: props.host,
     http: {
@@ -43,7 +70,7 @@ function ingressRule(props: AuthenticatedIngressProps) {
   };
 }
 
-function ingressPath(props: AuthenticatedIngressProps) {
+function ingressPath(props: PomeriumIngressRouteProps) {
   return {
     path: props.path ?? "/",
     pathType: "Prefix",
@@ -53,14 +80,14 @@ function ingressPath(props: AuthenticatedIngressProps) {
   };
 }
 
-function backendService(props: AuthenticatedIngressProps) {
+function backendService(props: PomeriumIngressRouteProps) {
   return {
     name: props.serviceName,
     port: servicePort(props.servicePort),
   };
 }
 
-function ingressAnnotations(props: AuthenticatedIngressProps): Record<string, string> | undefined {
+function authenticatedIngressAnnotations(props: AuthenticatedIngressProps): Record<string, string> | undefined {
   if (props.policy === undefined) {
     return undefined;
   }
