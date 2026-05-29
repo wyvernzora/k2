@@ -1,10 +1,11 @@
 import type { Construct } from "constructs";
 
-import { ClusterContext, K2Chart, type LoadBalancerPoolConfig } from "@k2/cdk-lib";
+import { ClusterContext, K2Chart } from "@k2/cdk-lib";
 
 import { BlockyConfig } from "./config.js";
 import { BlockyDaemonSet } from "./daemon-set.js";
 import { defaultClientGroups } from "./defaults.js";
+import { blockyLoadBalancerIp } from "./load-balancer.js";
 import { BlockyService } from "./service.js";
 
 export interface BlockyProps {
@@ -19,6 +20,7 @@ export class Blocky extends K2Chart {
     const cluster = ClusterContext.of(this).config;
     const config = new BlockyConfig(this, "config", {
       clientGroups: defaultClientGroups({
+        internalCidrs: [cluster.kubernetes.subnets.pods, cluster.kubernetes.subnets.services],
         vlans: cluster.network.vlans,
         publicDnsServers: props.publicDnsServers,
         blocklistUrls: props.blocklistUrls,
@@ -33,17 +35,4 @@ export class Blocky extends K2Chart {
       selector: daemonSet.selectorLabels,
     });
   }
-}
-
-function blockyLoadBalancerIp(pools: LoadBalancerPoolConfig[]): string {
-  const pool = pools.find(candidate => candidate.name === "blocky");
-  if (pool === undefined) {
-    throw new Error("Blocky requires a loadBalancerPools entry named blocky");
-  }
-
-  const [address, mask] = pool.cidr.split("/");
-  if (mask !== "32") {
-    throw new Error("Blocky loadBalancerPools.blocky must be a single-IP /32 CIDR");
-  }
-  return address;
 }

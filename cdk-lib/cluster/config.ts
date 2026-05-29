@@ -49,6 +49,7 @@ export interface VlanConfig {
 }
 
 export interface DnsConfig {
+  readonly k8sGatewayServiceIp: string;
   readonly staticRecords: DnsStaticRecordConfig[];
 }
 

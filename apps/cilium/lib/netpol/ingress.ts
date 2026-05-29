@@ -1,6 +1,9 @@
 import type { IngressRule, PortSpec } from "./types.js";
 
 export const ingress = {
+  fromCluster(...ports: PortSpec[]): IngressRule[] {
+    return [{ from: { entity: "cluster" }, ports: portList(ports) }];
+  },
   fromWorld(...ports: PortSpec[]): IngressRule[] {
     return [{ from: { entity: "world" }, ports: portList(ports) }];
   },

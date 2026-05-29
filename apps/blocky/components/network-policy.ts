@@ -14,6 +14,7 @@ import {
 } from "@k2/cilium";
 
 const DNS_PORTS = [udp(53), tcp(53)];
+const K8S_GATEWAY_DNS_PORTS = [udp(1053), tcp(1053)];
 const HTTPS_PORTS = [tcp(443)];
 
 export interface NetworkPolicyProps {
@@ -45,7 +46,7 @@ export class NetworkPolicy extends K2Chart {
         "app.kubernetes.io/instance": "k8s-gateway",
         "app.kubernetes.io/name": "k8s-gateway",
       }),
-      ingress: ingress.fromNodes(tcp(8080)),
+      ingress: [...ingress.fromNodes(tcp(8080)), ...ingress.fromCluster(...K8S_GATEWAY_DNS_PORTS)],
       egress: egress.toCidrs(publicDnsCidrs, ...DNS_PORTS),
     });
   }

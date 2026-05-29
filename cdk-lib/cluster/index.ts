@@ -50,6 +50,7 @@ function validateClusterConfig(value: unknown, path: string): asserts value is C
   });
 
   const dns = requireObject(root.dns, `${path}.dns`);
+  requireIpv4Address(dns, "k8sGatewayServiceIp", `${path}.dns`);
   const staticRecords = requireArray(dns.staticRecords, `${path}.dns.staticRecords`);
   staticRecords.forEach((entry, index) => {
     const record = requireObject(entry, `${path}.dns.staticRecords[${index}]`);

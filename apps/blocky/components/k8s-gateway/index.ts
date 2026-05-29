@@ -25,7 +25,12 @@ export class K8sGateway extends K2Chart {
       this,
       "k8s-gateway",
       "k8s-gateway",
-      k8sGatewayValues({ apexDomain, customDns, publicDnsServers: props.publicDnsServers }),
+      k8sGatewayValues({
+        apexDomain,
+        customDns,
+        publicDnsServers: props.publicDnsServers,
+        serviceClusterIp: cluster.dns.k8sGatewayServiceIp,
+      }),
     );
   }
 }

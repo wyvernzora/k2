@@ -67,6 +67,10 @@ network:
 # Static internal DNS inventory. The Blocky app decides which clients can see
 # these records.
 dns:
+  # Stable ClusterIP for k8s-gateway. CoreDNS forwards the v3 apex zone here
+  # so in-cluster clients can resolve public K2 ingress hostnames without
+  # relying on node-level upstream resolvers or LoadBalancer hairpin paths.
+  k8sGatewayServiceIp: 10.43.250.122
   staticRecords:
     - name: unifi
       address: 10.10.1.1

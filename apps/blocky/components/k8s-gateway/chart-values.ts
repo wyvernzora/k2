@@ -10,6 +10,7 @@ export interface K8sGatewayValuesProps {
   readonly apexDomain: string;
   readonly customDns: CustomDns;
   readonly publicDnsServers: string[];
+  readonly serviceClusterIp: string;
 }
 
 export function k8sGatewayValues(props: K8sGatewayValuesProps): HelmProps["values"] {
@@ -27,6 +28,7 @@ export function k8sGatewayValues(props: K8sGatewayValuesProps): HelmProps["value
     },
     service: {
       type: "ClusterIP",
+      clusterIP: props.serviceClusterIp,
       useTcp: true,
     },
     extraZonePlugins: extraZonePlugins(props),
