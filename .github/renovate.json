@@ -154,6 +154,7 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": [
         "eclipse-mosquitto",
+        "b4bz/homer",
         "koenkk/zigbee2mqtt",
         "linuxserver/homeassistant",
         "linuxserver/kavita",
