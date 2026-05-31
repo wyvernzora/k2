@@ -24,7 +24,7 @@ export class Kura extends K2Chart {
     new KuraDeployment(this, "deployment", {
       tvdbSecretName: TVDB_SECRET_NAME,
       volumes: {
-        anime: K2Volume.nfs({ path: "/mnt/data/media/anime" }),
+        anime: K2Volume.mountNfs({ path: "/mnt/data/media/anime" }),
       },
     });
     new KuraService(this, "service");

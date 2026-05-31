@@ -18,8 +18,8 @@ export class Qbittorrent extends K2Chart {
     new QbittorrentDeployment(this, "deployment", {
       volumes: {
         appdata: K2Volume.replicated({ size: Size.gibibytes(4) }),
-        default: K2Volume.nfs({ path: "/mnt/data/downloads" }),
-        anime: K2Volume.nfs({ path: "/mnt/data/media/anime" }),
+        default: K2Volume.mountNfs({ path: "/mnt/data/downloads" }),
+        anime: K2Volume.mountNfs({ path: "/mnt/data/media/anime" }),
       },
     });
     new FloodService(this, "flood-service");

@@ -1,9 +1,10 @@
-import { LabeledNode, NodeLabelQuery, Volume, type Workload } from "cdk8s-plus-32";
+import { Volume, type Workload } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
 import { NfsContext } from "../context/nfs.js";
 
 import { K2Volume, type K2NfsProps, type MaterializedVolume } from "./base.js";
+import { configureNfsWorkloadAffinity } from "./nfs-affinity.js";
 
 export class K2NfsVolume extends K2Volume {
   public constructor(private readonly props: K2NfsProps) {
@@ -28,11 +29,7 @@ export class K2NfsVolume extends K2Volume {
     return {
       volume,
       configureWorkload(workload: Workload): void {
-        if (zone !== undefined) {
-          workload.scheduling.attract(new LabeledNode([NodeLabelQuery.is("topology.kubernetes.io/zone", zone)]), {
-            weight: 100,
-          });
-        }
+        configureNfsWorkloadAffinity(workload, zone);
       },
     };
   }

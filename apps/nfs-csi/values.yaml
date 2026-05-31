@@ -1,0 +1,7 @@
+# Used by k2-tools build crd-manifest when rendering this wrapper chart for
+# CRD extraction. The deployed nfs-csi release is rendered from the dependency
+# directly in components/nfs-csi.ts with snapshot CRDs disabled.
+csi-driver-nfs:
+  externalSnapshotter:
+    customResourceDefinitions:
+      enabled: false
