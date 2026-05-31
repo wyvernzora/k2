@@ -59,6 +59,10 @@ function homerConfig(apex: ApexDomain) {
         ],
       },
       {
+        name: "Media",
+        items: [service("Kura", "Anime library manager", "kura", apex.subdomain("kura"))],
+      },
+      {
         name: "Infrastructure",
         items: [
           service("Proxmox VE VIP", "Virtualization cluster", "proxmox", apex.subdomain("pve")),
