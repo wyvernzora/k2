@@ -35,6 +35,9 @@ export class PomeriumGlobalConfig extends K2Chart {
         },
         certificates: [`${POMERIUM_NAMESPACE}/${POMERIUM_DEFAULT_CERTIFICATE_SECRET_NAME}`],
         codecType: CodecType.HTTP3,
+        cookie: {
+          expire: "168h",
+        },
         identityProvider: {
           provider: IdentityProvider.OIDC,
           scopes: ["openid", "email", "profile"],
