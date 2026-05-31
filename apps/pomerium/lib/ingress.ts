@@ -16,6 +16,10 @@ export interface AuthenticatedIngressProps extends PomeriumIngressRouteProps {
   readonly policy?: string;
 }
 
+export interface AuthenticatedMcpIngressProps extends AuthenticatedIngressProps {
+  readonly mcpPath?: string;
+}
+
 // eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- cdk8s-plus Ingress L2 cannot target a backend service by name without owning a Service construct.
 export class AuthenticatedIngress extends k8s.KubeIngress {
   public constructor(scope: Construct, id: string, props: AuthenticatedIngressProps) {
@@ -23,6 +27,19 @@ export class AuthenticatedIngress extends k8s.KubeIngress {
       metadata: {
         name: props.name ?? id,
         annotations: authenticatedIngressAnnotations(props),
+      },
+      spec: ingressSpec(props),
+    });
+  }
+}
+
+// eslint-disable-next-line k2/prefer-cdk8s-plus-l2 -- cdk8s-plus Ingress L2 cannot target a backend service by name without owning a Service construct.
+export class AuthenticatedMcpIngress extends k8s.KubeIngress {
+  public constructor(scope: Construct, id: string, props: AuthenticatedMcpIngressProps) {
+    super(scope, id, {
+      metadata: {
+        name: props.name ?? id,
+        annotations: authenticatedMcpIngressAnnotations(props),
       },
       spec: ingressSpec(props),
     });
@@ -93,6 +110,14 @@ function authenticatedIngressAnnotations(props: AuthenticatedIngressProps): Reco
   }
   return {
     "ingress.pomerium.io/policy": props.policy,
+  };
+}
+
+function authenticatedMcpIngressAnnotations(props: AuthenticatedMcpIngressProps): Record<string, string> {
+  return {
+    ...authenticatedIngressAnnotations(props),
+    "ingress.pomerium.io/mcp_server": "true",
+    "ingress.pomerium.io/mcp_server_path": props.mcpPath ?? props.path ?? "/",
   };
 }
 

@@ -14,6 +14,13 @@ import {
 
 const CodecType = PomeriumSpecCodecType;
 const IdentityProvider = PomeriumSpecIdentityProviderProvider;
+const MCP_ALLOWED_CLIENT_ID_DOMAINS = [
+  "wyvernzora.io",
+  "*.wyvernzora.io",
+  "chatgpt.com",
+  "chat.openai.com",
+  "claude.ai",
+];
 
 export class PomeriumGlobalConfig extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -34,6 +41,8 @@ export class PomeriumGlobalConfig extends K2Chart {
           secret: `${POMERIUM_NAMESPACE}/${POMERIUM_IDP_SECRET_NAME}`,
           url: `https://${apex.subdomain(POMERIUM_IDP_HOST_PREFIX)}`,
         },
+        mcpAllowedClientIdDomains: MCP_ALLOWED_CLIENT_ID_DOMAINS,
+        runtimeFlags: { mcp: true },
         secrets: `${POMERIUM_NAMESPACE}/${POMERIUM_BOOTSTRAP_SECRET_NAME}`,
       },
     });
