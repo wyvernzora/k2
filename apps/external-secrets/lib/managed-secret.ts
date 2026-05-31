@@ -2,7 +2,16 @@ import type { ApiObjectMetadata } from "cdk8s";
 import { type ISecret, Secret as KubeSecret } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { ExternalSecret, ExternalSecretSpecSecretStoreRefKind } from "../crds/external-secrets.io.js";
+import {
+  ExternalSecret,
+  ExternalSecretSpecDataRemoteRefConversionStrategy,
+  ExternalSecretSpecDataRemoteRefDecodingStrategy,
+  ExternalSecretSpecDataRemoteRefMetadataPolicy,
+  ExternalSecretSpecDataRemoteRefNullBytePolicy,
+  ExternalSecretSpecSecretStoreRefKind,
+  ExternalSecretSpecTargetCreationPolicy,
+  ExternalSecretSpecTargetDeletionPolicy,
+} from "../crds/external-secrets.io.js";
 
 /**
  * Cluster-wide default `ClusterSecretStore` name. Provisioned by
@@ -12,6 +21,12 @@ import { ExternalSecret, ExternalSecretSpecSecretStoreRefKind } from "../crds/ex
  */
 const DEFAULT_STORE_NAME = "onepassword";
 const SecretStoreKind = ExternalSecretSpecSecretStoreRefKind;
+const RemoteRefConversionStrategy = ExternalSecretSpecDataRemoteRefConversionStrategy;
+const RemoteRefDecodingStrategy = ExternalSecretSpecDataRemoteRefDecodingStrategy;
+const RemoteRefMetadataPolicy = ExternalSecretSpecDataRemoteRefMetadataPolicy;
+const RemoteRefNullBytePolicy = ExternalSecretSpecDataRemoteRefNullBytePolicy;
+const TargetCreationPolicy = ExternalSecretSpecTargetCreationPolicy;
+const TargetDeletionPolicy = ExternalSecretSpecTargetDeletionPolicy;
 
 export interface ManagedSecretProps {
   readonly metadata?: ApiObjectMetadata;
@@ -69,10 +84,20 @@ export class ManagedSecret extends ExternalSecret {
           name: DEFAULT_STORE_NAME,
         },
         refreshInterval: props.refreshInterval,
-        target: { name },
+        target: {
+          creationPolicy: TargetCreationPolicy.OWNER,
+          deletionPolicy: TargetDeletionPolicy.RETAIN,
+          name,
+        },
         data: Object.entries(props.fields).map(([secretKey, fieldPath]) => ({
           secretKey,
-          remoteRef: { key: `${props.secret}/${fieldPath}` },
+          remoteRef: {
+            conversionStrategy: RemoteRefConversionStrategy.DEFAULT,
+            decodingStrategy: RemoteRefDecodingStrategy.NONE,
+            key: `${props.secret}/${fieldPath}`,
+            metadataPolicy: RemoteRefMetadataPolicy.NONE,
+            nullBytePolicy: RemoteRefNullBytePolicy.IGNORE,
+          },
         })),
       },
     });
