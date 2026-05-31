@@ -58,7 +58,7 @@ func diffManifests(ctx context.Context, repoRoot string, remoteURL string) error
 	}
 	var out bytes.Buffer
 	for _, entry := range diffEntries {
-		if err := writeDiffEntry(&out, entry, remoteRoot, deployRoot, rules.Section("app")); err != nil {
+		if err := writeDiffEntry(&out, entry, remoteRoot, deployRoot, rules); err != nil {
 			return err
 		}
 	}
@@ -120,7 +120,8 @@ func parseGitNameStatus(data []byte, remoteRoot string, deployRoot string) ([]di
 	return entries, nil
 }
 
-func writeDiffEntry(out *bytes.Buffer, entry diffEntry, remoteRoot string, deployRoot string, appExcludes []string) error {
+func writeDiffEntry(out *bytes.Buffer, entry diffEntry, remoteRoot string, deployRoot string, rules dyffignore.Rules) error {
+	appExcludes := appDiffExcludes(rules, entry)
 	switch {
 	case entry.Status == "A":
 		data, err := os.ReadFile(filepath.Join(deployRoot, entry.Path1))
@@ -155,6 +156,25 @@ func writeDiffEntry(out *bytes.Buffer, entry diffEntry, remoteRoot string, deplo
 		return fmt.Errorf("unsupported git diff status %q for %s", entry.Status, entry.Path1)
 	}
 	return nil
+}
+
+func appDiffExcludes(rules dyffignore.Rules, entry diffEntry) []string {
+	excludes := rules.Section("app")
+	if appName := diffEntryAppName(entry); appName != "" {
+		excludes = append(excludes, rules.Section("app:"+appName)...)
+	}
+	return excludes
+}
+
+func diffEntryAppName(entry diffEntry) string {
+	path := entry.Path1
+	if path == "" {
+		path = entry.Path2
+	}
+	if i := strings.IndexByte(path, '/'); i >= 0 {
+		return strings.ToLower(path[:i])
+	}
+	return ""
 }
 
 func writeMarkdownDiff(out *bytes.Buffer, heading string, diff string) {

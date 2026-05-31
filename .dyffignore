@@ -4,6 +4,15 @@
 /spec/template/metadata/labels/app.kubernetes.io\/version
 /spec/template/metadata/labels/helm.sh\/chart
 
+[app:cilium]
+# The Cilium chart renders fresh self-signed certificate/key material for
+# Hubble every synth. Keep structural Secret drift visible, but ignore the
+# generated payload bytes that otherwise dominate deploy diffs.
+/data/ca.crt
+/data/ca.key
+/data/tls.crt
+/data/tls.key
+
 [crd]
 # CRD drift checks compare upstream chart-emitted CRDs with committed
 # apps/<app>/crds/crds.k8s.yaml copies. Helm/CDK8s metadata varies by render

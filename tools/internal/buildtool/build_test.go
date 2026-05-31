@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/wyvernzora/k2/tools/internal/buildtool/dyffignore"
 )
 
 func TestCRDConstructOutputDirDefaultsToAppCRDs(t *testing.T) {
@@ -102,6 +104,32 @@ func TestWriteDiffEntryRejectsUnsupportedStatus(t *testing.T) {
 	err := writeDiffEntry(&bytes.Buffer{}, diffEntry{Status: "T", Path1: "app.k8s.yaml"}, t.TempDir(), t.TempDir(), nil)
 	if err == nil || !strings.Contains(err.Error(), "unsupported git diff status") {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestAppDiffExcludesMergesGlobalAndAppSpecificRules(t *testing.T) {
+	rules := dyffignore.Rules{
+		"app":        {"/metadata/labels/helm.sh\\/chart"},
+		"app:cilium": {"/data/tls.crt"},
+	}
+
+	got := strings.Join(appDiffExcludes(rules, diffEntry{Path1: "cilium/app.k8s.yaml"}), ",")
+	want := "/metadata/labels/helm.sh\\/chart,/data/tls.crt"
+	if got != want {
+		t.Fatalf("excludes = %s, want %s", got, want)
+	}
+}
+
+func TestAppDiffExcludesIgnoresOtherAppSpecificRules(t *testing.T) {
+	rules := dyffignore.Rules{
+		"app":        {"/metadata/labels/helm.sh\\/chart"},
+		"app:cilium": {"/data/tls.crt"},
+	}
+
+	got := strings.Join(appDiffExcludes(rules, diffEntry{Path1: "pomerium/app.k8s.yaml"}), ",")
+	want := "/metadata/labels/helm.sh\\/chart"
+	if got != want {
+		t.Fatalf("excludes = %s, want %s", got, want)
 	}
 }
 
