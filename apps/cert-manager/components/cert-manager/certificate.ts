@@ -5,7 +5,7 @@ import { ApexDomain } from "@k2/cdk-lib";
 
 import { Certificate } from "../../crds/cert-manager.io.js";
 
-import { DEFAULT_CERTIFICATE_SECRET_NAME, LETS_ENCRYPT_PROD_ISSUER_NAME } from "./constants.js";
+import { DEFAULT_CERTIFICATE_SECRET_NAME, LETS_ENCRYPT_DNS_ZONE, LETS_ENCRYPT_PROD_ISSUER_NAME } from "./constants.js";
 
 export interface DefaultWildcardCertificateProps {
   readonly metadata?: ApiObjectMetadata;
@@ -15,12 +15,12 @@ export interface DefaultWildcardCertificateProps {
 }
 
 /**
- * Default wildcard certificate issued once in the cert-manager namespace.
+ * Default apex and wildcard certificate issued once in the cert-manager namespace.
  */
 export class DefaultWildcardCertificate extends Certificate {
   public constructor(scope: Construct, id: string, props: DefaultWildcardCertificateProps = {}) {
     const { apexDomain } = ApexDomain.of(scope);
-    const domains = props.domains ?? [`*.${apexDomain}`];
+    const domains = props.domains ?? [`*.${apexDomain}`, LETS_ENCRYPT_DNS_ZONE, `*.${LETS_ENCRYPT_DNS_ZONE}`];
     const name = props.metadata?.name ?? DEFAULT_CERTIFICATE_SECRET_NAME;
 
     super(scope, id, {
@@ -29,7 +29,6 @@ export class DefaultWildcardCertificate extends Certificate {
         name,
       },
       spec: {
-        commonName: domains[0],
         dnsNames: domains,
         issuerRef: {
           kind: "ClusterIssuer",
