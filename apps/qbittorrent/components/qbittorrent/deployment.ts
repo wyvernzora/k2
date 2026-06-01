@@ -22,8 +22,9 @@ import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBITTORRENT
 const QBITTORRENT_IMAGE = "lscr.io/linuxserver/qbittorrent:4.6.7";
 const FLOOD_IMAGE = "jesec/flood:4.14.0";
 const QBITTORRENT_MCP_IMAGE = "ghcr.io/wyvernzora/qbittorrent-mcp:dev";
-const PUID = 3000;
+const PUID = 3005;
 const PGID = 2001;
+const UMASK = "0007";
 const APPDATA_MOUNT_PATH = "/config";
 const DEFAULT_SAVE_PATH = "/downloads/anime/downloads";
 const OTHER_SAVE_PATH = "/downloads/default";
@@ -45,7 +46,6 @@ export class QbittorrentDeployment extends K2Deployment {
       enableServiceLinks: false,
       securityContext: {
         ensureNonRoot: false,
-        fsGroup: PGID,
       },
     });
 
@@ -96,6 +96,7 @@ function qbittorrentContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
     envVariables: {
       PUID: EnvValue.fromValue(String(PUID)),
       PGID: EnvValue.fromValue(String(PGID)),
+      UMASK: EnvValue.fromValue(UMASK),
       TZ: EnvValue.fromValue("America/Los_Angeles"),
       WEBUI_PORTS: EnvValue.fromValue(`${QBITTORRENT_HTTP_PORT}/tcp`),
     },
@@ -141,8 +142,8 @@ function floodContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
       FLOOD_OPTION_ALLOWEDPATH: EnvValue.fromValue("/downloads"),
     },
     volumeMounts: [
-      volumes.default("/downloads/default"),
-      volumes.anime("/downloads/anime"),
+      volumes.default("/downloads/default", { readOnly: true }),
+      volumes.anime("/downloads/anime", { readOnly: true }),
       volumes.appdata(APPDATA_MOUNT_PATH, { subPath: "flood" }),
     ],
     liveness: Probe.fromHttpGet("/", { port: FLOOD_HTTP_PORT }),
@@ -227,6 +228,7 @@ function appdataInitScript(): string {
   return dedent`
     #!/bin/sh
     set -eu
+    umask ${UMASK}
 
     mkdir -p /config/qbittorrent/qBittorrent
     mkdir -p /config/flood
@@ -243,6 +245,7 @@ function downloadsInitScript(): string {
   return dedent`
     #!/bin/sh
     set -eu
+    umask ${UMASK}
 
     mkdir -p ${DEFAULT_SAVE_PATH}
     mkdir -p ${OTHER_SAVE_PATH}
