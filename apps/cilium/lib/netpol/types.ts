@@ -25,6 +25,7 @@ export interface PrivateConnectionProps {
 export interface EndpointNetworkPolicyProps {
   readonly endpoint: PolicyEndpoint;
   readonly ingress?: IngressRule[];
+  readonly ingressDeny?: IngressRule[];
   readonly egress?: EgressRule[];
   readonly name?: string;
   readonly description?: string;

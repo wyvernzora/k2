@@ -30,6 +30,7 @@ export interface K2NfsProps {
  * existing NFS export path; use {@link K2Volume.mountNfs} for existing paths.
  */
 export interface K2ProvisionedNfsProps {
+  readonly name?: string;
   readonly size: Size;
   readonly storageClass?: string;
   readonly accessModes?: PersistentVolumeAccessMode[];
@@ -37,6 +38,7 @@ export interface K2ProvisionedNfsProps {
 }
 
 export interface K2ReplicatedProps {
+  readonly name?: string;
   readonly size: Size;
   readonly storageClass?: string;
   readonly accessModes?: PersistentVolumeAccessMode[];

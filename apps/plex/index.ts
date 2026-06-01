@@ -1,13 +1,9 @@
 import type { AppResourceFunc } from "@k2/cdk-lib";
 
-import { Cilium } from "./components/cilium/index.js";
 import { NetworkPolicy } from "./components/network-policy.js";
-
-export * from "./lib/netpol/index.js";
-export * from "./lib/load-balancer-service.js";
-export * from "./lib/vlans.js";
+import { Plex } from "./components/plex/index.js";
 
 export const createAppResources: AppResourceFunc = app => {
-  new Cilium(app, "cilium");
+  new Plex(app, "plex");
   new NetworkPolicy(app, "network-policy");
 };

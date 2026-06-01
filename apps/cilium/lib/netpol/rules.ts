@@ -1,10 +1,11 @@
 import type {
   CiliumClusterwideNetworkPolicySpecsEgress,
   CiliumClusterwideNetworkPolicySpecsIngress,
+  CiliumClusterwideNetworkPolicySpecsIngressDeny,
 } from "../../crds/cilium.io.js";
 
-import { clusterwideEgressEntity, clusterwideIngressEntity } from "./entities.js";
-import { clusterwideEgressPorts, clusterwideIngressPorts } from "./ports.js";
+import { clusterwideEgressEntity, clusterwideIngressDenyEntity, clusterwideIngressEntity } from "./entities.js";
+import { clusterwideEgressPorts, clusterwideIngressDenyPorts, clusterwideIngressPorts } from "./ports.js";
 import { endpointSelector } from "./selectors.js";
 import type { EgressPeer, EgressRule, IngressPeer, IngressRule } from "./types.js";
 
@@ -12,6 +13,13 @@ export function clusterwideIngressRule(rule: IngressRule): CiliumClusterwideNetw
   return {
     ...clusterwideIngressFrom(rule.from),
     toPorts: rule.ports === undefined ? undefined : clusterwideIngressPorts(rule.ports),
+  };
+}
+
+export function clusterwideIngressDenyRule(rule: IngressRule): CiliumClusterwideNetworkPolicySpecsIngressDeny {
+  return {
+    ...clusterwideIngressDenyFrom(rule.from),
+    toPorts: rule.ports === undefined ? undefined : clusterwideIngressDenyPorts(rule.ports),
   };
 }
 
@@ -32,6 +40,18 @@ function clusterwideIngressFrom(
     return { fromCidr: [from.cidr] };
   }
   return { fromEntities: [clusterwideIngressEntity(from.entity)] };
+}
+
+function clusterwideIngressDenyFrom(
+  from: IngressPeer,
+): Pick<CiliumClusterwideNetworkPolicySpecsIngressDeny, "fromCidr" | "fromEndpoints" | "fromEntities"> {
+  if ("endpoint" in from) {
+    return { fromEndpoints: [endpointSelector(from.endpoint)] };
+  }
+  if ("cidr" in from) {
+    return { fromCidr: [from.cidr] };
+  }
+  return { fromEntities: [clusterwideIngressDenyEntity(from.entity)] };
 }
 
 function clusterwideEgressTo(

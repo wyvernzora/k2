@@ -16,6 +16,7 @@ export class K2ProvisionedNfsVolume extends K2Volume {
   public materialize(scope: Construct, id: string): MaterializedVolume {
     const zone = NfsContext.of(scope).zone;
     const claim = new PersistentVolumeClaim(scope, `${id}-claim`, {
+      metadata: this.props.name === undefined ? undefined : { name: this.props.name },
       storage: this.props.size,
       storageClassName: this.props.storageClass ?? DEFAULT_NFS_CSI_STORAGE_CLASS,
       accessModes: this.props.accessModes ?? [PersistentVolumeAccessMode.READ_WRITE_MANY],

@@ -198,7 +198,8 @@
       "customType": "regex",
       "managerFilePatterns": ["/\\.ts$/"],
       "matchStrings": [
-        "(?:image|imageName):\\s*[\"'](?<depName>[^\"':\\s]+(?:/[^\"':\\s]+)*):(?<currentValue>[^\"'\\s]+)[\"']"
+        "(?:image|imageName):\\s*[\"'](?<depName>[^\"':\\s]+(?:/[^\"':\\s]+)*):(?<currentValue>[^\"'\\s]+)[\"']",
+        "const\\s+[A-Z0-9_]*IMAGE\\s*=\\s*[\"'](?<depName>[^\"':\\s]+(?:/[^\"':\\s]+)*):(?<currentValue>[^\"'\\s]+)[\"']"
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"

@@ -10,6 +10,7 @@ export class K2ReplicatedVolume extends K2Volume {
 
   public materialize(scope: Construct, id: string): MaterializedVolume {
     const claim = new PersistentVolumeClaim(scope, `${id}-claim`, {
+      metadata: this.props.name === undefined ? undefined : { name: this.props.name },
       storage: this.props.size,
       storageClassName: this.props.storageClass ?? "longhorn",
       accessModes: this.props.accessModes ?? [PersistentVolumeAccessMode.READ_WRITE_ONCE],
