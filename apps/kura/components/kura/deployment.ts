@@ -20,6 +20,7 @@ import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "./labels.js";
 const KURA_IMAGE = "ghcr.io/wyvernzora/kura:dev";
 const PUID = 3000;
 const PGID = 2001;
+const UMASK = "0007";
 const ANIME_MOUNT_PATH = "/anime";
 const LIBRARY_ROOT = `${ANIME_MOUNT_PATH}/series`;
 const INBOX_ROOT = `${ANIME_MOUNT_PATH}/downloads`;
@@ -41,7 +42,6 @@ export class KuraDeployment extends K2Deployment {
       enableServiceLinks: false,
       securityContext: {
         ensureNonRoot: true,
-        fsGroup: PGID,
       },
     });
 
@@ -58,7 +58,7 @@ function initContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
   return {
     name: "init-library",
     image: "busybox:1.37.0",
-    command: ["sh", "-c", `set -eu; mkdir -p ${LIBRARY_ROOT} ${INBOX_ROOT}`],
+    command: ["sh", "-c", `set -eu; umask ${UMASK}; mkdir -p ${LIBRARY_ROOT} ${INBOX_ROOT}`],
     volumeMounts: [volumes.anime(ANIME_MOUNT_PATH)],
     securityContext: {
       user: PUID,
@@ -85,6 +85,7 @@ function kuraContainer(volumes: K2Mounters<K2Volumes>, tvdbSecret: ISecret): Con
       KURA_DISABLE_TOKEN: EnvValue.fromValue("1"),
       KURA_HOST_ID: EnvValue.fromValue("k2-kura"),
       KURA_PREFERRED_LANGUAGES: EnvValue.fromValue("ja"),
+      KURA_UMASK: EnvValue.fromValue(UMASK),
       KURA_TVDB_KEY: tvdbSecret.envValue("credential"),
       TZ: EnvValue.fromValue("America/Los_Angeles"),
     },
