@@ -69,9 +69,10 @@ tester.run("app-index-public-api", appIndexPublicApi, {
     {
       filename: repoFile("apps/demo/index.ts"),
       code: `
-        import type { AppResourceFunc } from "@k2/cdk-lib";
+        import type { AppResourceFunc, ArgoApplicationConfigFunc } from "@k2/cdk-lib";
         export * as crd from "./lib/crd.js";
         export { Thing, type ThingProps } from "./lib/thing.js";
+        export const configureArgoApplication: ArgoApplicationConfigFunc = app => ({});
         export const createAppResources: AppResourceFunc = app => app;
       `,
     },
@@ -90,6 +91,11 @@ tester.run("app-index-public-api", appIndexPublicApi, {
     {
       filename: repoFile("apps/demo/index.ts"),
       code: `export const createAppResources = app => app;`,
+      errors: [{ messageId: "missingType" }],
+    },
+    {
+      filename: repoFile("apps/demo/index.ts"),
+      code: `export const configureArgoApplication = app => ({});`,
       errors: [{ messageId: "missingType" }],
     },
   ],

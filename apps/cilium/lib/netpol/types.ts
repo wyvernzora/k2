@@ -1,7 +1,14 @@
 export interface PolicyEndpoint {
   readonly namespace: string;
   readonly labels: Record<string, string>;
+  readonly matchExpressions?: PolicyEndpointMatchExpression[];
   readonly name?: string;
+}
+
+export interface PolicyEndpointMatchExpression {
+  readonly key: string;
+  readonly operator: "In" | "NotIn" | "Exists" | "DoesNotExist";
+  readonly values?: string[];
 }
 
 export interface PortSpec {

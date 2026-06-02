@@ -93,7 +93,11 @@ export function identifierName(node: AstNode | undefined): string | undefined {
   return node?.type === "Identifier" && typeof node.name === "string" ? node.name : undefined;
 }
 
-export function hasAppResourceFuncAnnotation(node: AstNode, sourceCode: Rule.RuleContext["sourceCode"]): boolean {
+export function hasTypeAnnotation(
+  node: AstNode,
+  sourceCode: Rule.RuleContext["sourceCode"],
+  typeName: string,
+): boolean {
   const declaration = node.declaration as AstNode | undefined;
   if (declaration?.type !== "VariableDeclaration") {
     return false;
@@ -104,7 +108,7 @@ export function hasAppResourceFuncAnnotation(node: AstNode, sourceCode: Rule.Rul
   }
   const id = declarations[0].id as AstNode | undefined;
   const typeAnnotation = id?.typeAnnotation as AstNode | undefined;
-  return typeAnnotation !== undefined && getNodeText(sourceCode, typeAnnotation).includes("AppResourceFunc");
+  return typeAnnotation !== undefined && getNodeText(sourceCode, typeAnnotation).includes(typeName);
 }
 
 export function lineSpan(node: AstNode): number {

@@ -6,9 +6,25 @@ export interface K2AppInfo {
   readonly deployPath: string;
   readonly sourcePath: string;
   readonly destinationNamespace: string;
+  readonly argoApplication?: ArgoApplicationConfig;
 }
 
 export type AppResourceFunc = (app: K2App) => void;
+export type ArgoApplicationConfigFunc = (app: K2AppInfo) => ArgoApplicationConfig;
+
+export interface ArgoApplicationConfig {
+  readonly ignoreDifferences?: ArgoApplicationIgnoreDifference[];
+}
+
+export interface ArgoApplicationIgnoreDifference {
+  readonly group?: string;
+  readonly jqPathExpressions?: string[];
+  readonly jsonPointers?: string[];
+  readonly kind: string;
+  readonly managedFieldsManagers?: string[];
+  readonly name?: string;
+  readonly namespace?: string;
+}
 
 /**
  * An app module exports `createAppResources` — synth derives everything else
@@ -17,5 +33,6 @@ export type AppResourceFunc = (app: K2App) => void;
  * customize sync policy / project / multi-source, add the hook then.
  */
 export interface K2AppDefinition {
+  readonly configureArgoApplication?: ArgoApplicationConfigFunc;
   readonly createAppResources: AppResourceFunc;
 }

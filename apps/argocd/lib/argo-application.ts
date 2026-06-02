@@ -1,9 +1,12 @@
 import type { Construct } from "constructs";
 
-import { ClusterContext } from "@k2/cdk-lib";
-import type { K2AppInfo } from "@k2/cdk-lib";
+import { ClusterContext, type K2AppInfo } from "@k2/cdk-lib";
 
-import { Application, type ApplicationSpecSyncPolicy } from "../crds/argoproj.io.js";
+import {
+  Application,
+  type ApplicationSpecIgnoreDifferences,
+  type ApplicationSpecSyncPolicy,
+} from "../crds/argoproj.io.js";
 
 export interface ArgoApplicationProps {
   readonly name: string;
@@ -14,6 +17,7 @@ export interface ArgoApplicationProps {
   readonly repoBranch: string;
   readonly sourcePath: string;
   readonly autoSync: boolean;
+  readonly ignoreDifferences?: ApplicationSpecIgnoreDifferences[];
 }
 
 export class ArgoApplication extends Application {
@@ -34,6 +38,7 @@ export class ArgoApplication extends Application {
           server: "https://kubernetes.default.svc",
           namespace: props.destinationNamespace,
         },
+        ignoreDifferences: props.ignoreDifferences,
         syncPolicy: syncPolicy(props.autoSync),
       },
     });
@@ -57,6 +62,7 @@ export function makeDefaultArgoApplication(scope: Construct, app: K2AppInfo): Ar
     repoBranch: cluster.argo.repoBranch,
     sourcePath: app.sourcePath,
     autoSync: cluster.argo.autoSync,
+    ignoreDifferences: app.argoApplication?.ignoreDifferences,
   });
 }
 

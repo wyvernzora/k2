@@ -1,8 +1,11 @@
+import { Secret } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
 import { crd } from "@k2/external-secrets";
 
 const SECRET_NAME = "paperless";
+const PROVISIONING_SECRET_NAME = "paperless-provisioning";
+const MCP_TOKEN_SECRET_NAME = "paperless-mcp-token";
 
 const PasswordApiVersion = crd.Password.GVK.apiVersion;
 const PasswordEncoding = crd.PasswordSpecEncoding;
@@ -24,6 +27,34 @@ export class PaperlessSecret extends Construct {
     new crd.ExternalSecret(this, "secret", {
       metadata: { name: SECRET_NAME },
       spec: paperlessExternalSecretSpec(),
+    });
+  }
+}
+
+export class PaperlessProvisioningSecret extends Construct {
+  public readonly secretName = PROVISIONING_SECRET_NAME;
+
+  public constructor(scope: Construct, id: string) {
+    super(scope, id);
+
+    newPasswordGenerator(this, "mcp-password-generator", "paperless-mcp-password", "mcpPassword", 32);
+
+    new crd.ExternalSecret(this, "secret", {
+      metadata: { name: PROVISIONING_SECRET_NAME },
+      spec: provisioningExternalSecretSpec(),
+    });
+  }
+}
+
+export class PaperlessMcpTokenSecret extends Secret {
+  public readonly secretName = MCP_TOKEN_SECRET_NAME;
+
+  public constructor(scope: Construct, id: string) {
+    super(scope, id, {
+      metadata: {
+        name: MCP_TOKEN_SECRET_NAME,
+      },
+      type: "Opaque",
     });
   }
 }
@@ -57,6 +88,19 @@ function paperlessExternalSecretSpec(): crd.ExternalSecretSpec {
       generatorDataFrom("paperless-admin-password"),
       generatorDataFrom("paperless-redis-password"),
     ],
+  };
+}
+
+function provisioningExternalSecretSpec(): crd.ExternalSecretSpec {
+  return {
+    refreshPolicy: ExternalSecretRefreshPolicy.CREATED_ONCE,
+    target: {
+      creationPolicy: TargetCreationPolicy.OWNER,
+      deletionPolicy: TargetDeletionPolicy.RETAIN,
+      immutable: true,
+      name: PROVISIONING_SECRET_NAME,
+    },
+    dataFrom: [generatorDataFrom("paperless-mcp-password")],
   };
 }
 

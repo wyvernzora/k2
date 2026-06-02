@@ -2,7 +2,7 @@ import type { Rule } from "eslint";
 
 import {
   exportedDeclarationNames,
-  hasAppResourceFuncAnnotation,
+  hasTypeAnnotation,
   isAppIndexFile,
   normalizedFilename,
   sourceValue,
@@ -10,7 +10,10 @@ import {
   type ImportLikeNode,
 } from "../utils.js";
 
-const allowedLocalExportNames = new Set(["createAppResources"]);
+const allowedLocalExportTypes = new Map([
+  ["configureArgoApplication", "ArgoApplicationConfigFunc"],
+  ["createAppResources", "AppResourceFunc"],
+]);
 
 const rule: Rule.RuleModule = {
   meta: {
@@ -20,8 +23,9 @@ const rule: Rule.RuleModule = {
     },
     messages: {
       nonLibReExport: "App index files may only re-export public API from ./lib/.",
-      unexpectedExport: "App index files may only export createAppResources and re-export from ./lib/.",
-      missingType: "createAppResources must be exported as a typed AppResourceFunc constant.",
+      unexpectedExport:
+        "App index files may only export createAppResources, configureArgoApplication, and re-export from ./lib/.",
+      missingType: "App index public API constants must use their required K2 type annotation.",
     },
     schema: [],
   },
@@ -49,11 +53,12 @@ const rule: Rule.RuleModule = {
         }
 
         for (const name of names) {
-          if (!allowedLocalExportNames.has(name)) {
+          const requiredType = allowedLocalExportTypes.get(name);
+          if (requiredType === undefined) {
             context.report({ node, messageId: "unexpectedExport" });
             continue;
           }
-          if (!hasAppResourceFuncAnnotation(astNode, context.sourceCode)) {
+          if (!hasTypeAnnotation(astNode, context.sourceCode, requiredType)) {
             context.report({ node, messageId: "missingType" });
           }
         }

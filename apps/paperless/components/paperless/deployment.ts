@@ -17,9 +17,11 @@ import dedent from "dedent-js";
 
 import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS } from "./labels.js";
+import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS, PAPERLESS_MCP_PORT } from "./labels.js";
+import { PAPERLESS_SETUP_USER } from "./setup.js";
 
 const PAPERLESS_IMAGE = "ghcr.io/paperless-ngx/paperless-ngx:2.20.15";
+const PAPERLESS_MCP_IMAGE = "ghcr.io/baruchiro/paperless-mcp:latest";
 const DATA_MOUNT_PATH = "/usr/src/paperless/data";
 const DOCUMENTS_MOUNT_PATH = "/paperless-documents";
 const MEDIA_MOUNT_PATH = "/usr/src/paperless/media";
@@ -32,6 +34,7 @@ const PAPERLESS_GID = 2002;
 export interface PaperlessDeploymentProps {
   readonly appUrl: string;
   readonly credentialsSecretName: string;
+  readonly mcpTokenSecretName: string;
   readonly secretName: string;
   readonly volumes: K2Volumes;
 }
@@ -55,10 +58,12 @@ export class PaperlessDeployment extends K2Deployment {
     this.select(LabelSelector.of({ labels: PAPERLESS_LABELS }));
     const volumes = this.attachVolumes(props.volumes);
     const credentialsSecret = Secret.fromSecretName(this, "credentials-secret", props.credentialsSecretName);
+    const mcpTokenSecret = Secret.fromSecretName(this, "mcp-token-secret", props.mcpTokenSecretName);
     const paperlessSecret = Secret.fromSecretName(this, "paperless-secret", props.secretName);
 
     this.addInitContainer(initDocumentsContainer(volumes));
     this.addContainer(paperlessContainer(props, volumes, credentialsSecret, paperlessSecret));
+    this.addContainer(paperlessMcpContainer(props.appUrl, mcpTokenSecret));
     Scheduling.applyWorkersPreferred(this);
   }
 }
@@ -96,7 +101,7 @@ function paperlessContainer(
     ports: [{ name: "http", number: PAPERLESS_HTTP_PORT, protocol: Protocol.TCP }],
     envVariables: {
       PAPERLESS_SECRET_KEY: paperlessSecret.envValue("secretKey"),
-      PAPERLESS_ADMIN_USER: EnvValue.fromValue("wyvernzora@gmail.com"),
+      PAPERLESS_ADMIN_USER: EnvValue.fromValue(PAPERLESS_SETUP_USER),
       PAPERLESS_ADMIN_PASSWORD: paperlessSecret.envValue("adminPassword"),
       PAPERLESS_DBHOST: credentialsSecret.envValue("host"),
       PAPERLESS_DBPORT: credentialsSecret.envValue("port"),
@@ -112,7 +117,7 @@ function paperlessContainer(
       PAPERLESS_CONSUMER_POLLING: EnvValue.fromValue("60"),
       PAPERLESS_ENABLE_HTTP_REMOTE_USER: EnvValue.fromValue("true"),
       PAPERLESS_ENABLE_HTTP_REMOTE_USER_API: EnvValue.fromValue("true"),
-      PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME: EnvValue.fromValue("HTTP_X_POMERIUM_CLAIM_EMAIL"),
+      PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME: EnvValue.fromValue("HTTP_X_POMERIUM_CLAIM_PREFERRED_USERNAME"),
       PAPERLESS_DISABLE_REGULAR_LOGIN: EnvValue.fromValue("true"),
       PAPERLESS_ACCOUNT_ALLOW_SIGNUPS: EnvValue.fromValue("false"),
       PAPERLESS_ENABLE_UPDATE_CHECK: EnvValue.fromValue("false"),
@@ -144,6 +149,40 @@ function paperlessContainer(
     securityContext: {
       ensureNonRoot: false,
       readOnlyRootFilesystem: false,
+    },
+  };
+}
+
+function paperlessMcpContainer(appUrl: string, mcpTokenSecret: ISecret): ContainerProps {
+  return {
+    name: "paperless-mcp",
+    image: PAPERLESS_MCP_IMAGE,
+    imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
+    ports: [{ name: "mcp", number: PAPERLESS_MCP_PORT, protocol: Protocol.TCP }],
+    envVariables: {
+      PAPERLESS_URL: EnvValue.fromValue(`http://127.0.0.1:${PAPERLESS_HTTP_PORT}`),
+      PAPERLESS_PUBLIC_URL: EnvValue.fromValue(appUrl),
+      PAPERLESS_API_KEY: mcpTokenSecret.envValue("apiKey"),
+      PAPERLESS_API_VERSION: EnvValue.fromValue("9"),
+    },
+    resources: {
+      cpu: {
+        request: Cpu.millis(25),
+        limit: Cpu.millis(500),
+      },
+      memory: {
+        request: Size.mebibytes(128),
+        limit: Size.mebibytes(512),
+      },
+      ephemeralStorage: {
+        limit: Size.gibibytes(1),
+      },
+    },
+    securityContext: {
+      allowPrivilegeEscalation: false,
+      capabilities: { drop: [Capability.ALL] },
+      ensureNonRoot: false,
+      readOnlyRootFilesystem: true,
     },
   };
 }

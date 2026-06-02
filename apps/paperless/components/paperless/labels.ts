@@ -1,7 +1,9 @@
 export const PAPERLESS_HTTP_PORT = 8000;
+export const PAPERLESS_MCP_PORT = 3000;
 export const REDIS_PORT = 6379;
 
 export const PAPERLESS_SERVICE_NAME = "paperless";
+export const PAPERLESS_MCP_SERVICE_NAME = "paperless-mcp";
 export const REDIS_SERVICE_NAME = "paperless-redis";
 
 export const PAPERLESS_LABELS = {
