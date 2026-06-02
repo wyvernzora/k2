@@ -1,0 +1,172 @@
+import { Duration, Size } from "cdk8s";
+import {
+  Capability,
+  Cpu,
+  DeploymentStrategy,
+  EnvValue,
+  ImagePullPolicy,
+  LabelSelector,
+  Probe,
+  Protocol,
+  Secret,
+  type ContainerProps,
+  type ISecret,
+} from "cdk8s-plus-32";
+import type { Construct } from "constructs";
+import dedent from "dedent-js";
+
+import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+
+import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS } from "./labels.js";
+
+const PAPERLESS_IMAGE = "ghcr.io/paperless-ngx/paperless-ngx:2.20.15";
+const DATA_MOUNT_PATH = "/usr/src/paperless/data";
+const DOCUMENTS_MOUNT_PATH = "/paperless-documents";
+const MEDIA_MOUNT_PATH = "/usr/src/paperless/media";
+const CONSUME_MOUNT_PATH = "/usr/src/paperless/consume";
+const EXPORT_MOUNT_PATH = "/usr/src/paperless/export";
+const EXPORT_SUBDIR = "exports";
+const PAPERLESS_UID = 3003;
+const PAPERLESS_GID = 2002;
+
+export interface PaperlessDeploymentProps {
+  readonly appUrl: string;
+  readonly credentialsSecretName: string;
+  readonly secretName: string;
+  readonly volumes: K2Volumes;
+}
+
+export class PaperlessDeployment extends K2Deployment {
+  public constructor(scope: Construct, id: string, props: PaperlessDeploymentProps) {
+    super(scope, id, {
+      metadata: { name: "paperless" },
+      replicas: 1,
+      select: false,
+      strategy: DeploymentStrategy.recreate(),
+      podMetadata: { labels: PAPERLESS_LABELS },
+      automountServiceAccountToken: false,
+      enableServiceLinks: false,
+      securityContext: {
+        ensureNonRoot: false,
+        fsGroup: PAPERLESS_GID,
+      },
+    });
+
+    this.select(LabelSelector.of({ labels: PAPERLESS_LABELS }));
+    const volumes = this.attachVolumes(props.volumes);
+    const credentialsSecret = Secret.fromSecretName(this, "credentials-secret", props.credentialsSecretName);
+    const paperlessSecret = Secret.fromSecretName(this, "paperless-secret", props.secretName);
+
+    this.addInitContainer(initDocumentsContainer(volumes));
+    this.addContainer(paperlessContainer(props, volumes, credentialsSecret, paperlessSecret));
+    Scheduling.applyWorkersPreferred(this);
+  }
+}
+
+function initDocumentsContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
+  return {
+    name: "init-documents",
+    image: "busybox:1.37.0",
+    command: ["sh", "-c"],
+    args: [initDocumentsScript()],
+    volumeMounts: [volumes.documents(DOCUMENTS_MOUNT_PATH)],
+    securityContext: {
+      capabilities: {
+        drop: [Capability.ALL],
+      },
+      user: PAPERLESS_UID,
+      group: PAPERLESS_GID,
+      ensureNonRoot: true,
+      readOnlyRootFilesystem: true,
+    },
+  };
+}
+
+function paperlessContainer(
+  props: PaperlessDeploymentProps,
+  volumes: K2Mounters<K2Volumes>,
+  credentialsSecret: ISecret,
+  paperlessSecret: ISecret,
+): ContainerProps {
+  const health = paperlessHttpProbe(3);
+  return {
+    name: "paperless",
+    image: PAPERLESS_IMAGE,
+    imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
+    ports: [{ name: "http", number: PAPERLESS_HTTP_PORT, protocol: Protocol.TCP }],
+    envVariables: {
+      PAPERLESS_SECRET_KEY: paperlessSecret.envValue("secretKey"),
+      PAPERLESS_ADMIN_USER: EnvValue.fromValue("wyvernzora@gmail.com"),
+      PAPERLESS_ADMIN_PASSWORD: paperlessSecret.envValue("adminPassword"),
+      PAPERLESS_DBHOST: credentialsSecret.envValue("host"),
+      PAPERLESS_DBPORT: credentialsSecret.envValue("port"),
+      PAPERLESS_DBNAME: credentialsSecret.envValue("dbname"),
+      PAPERLESS_DBUSER: credentialsSecret.envValue("user"),
+      PAPERLESS_DBPASS: credentialsSecret.envValue("password"),
+      PAPERLESS_REDIS_PASSWORD: paperlessSecret.envValue("redisPassword"),
+      PAPERLESS_REDIS: EnvValue.fromValue("redis://:$(PAPERLESS_REDIS_PASSWORD)@paperless-redis:6379"),
+      PAPERLESS_URL: EnvValue.fromValue(props.appUrl),
+      PAPERLESS_CSRF_TRUSTED_ORIGINS: EnvValue.fromValue(props.appUrl),
+      PAPERLESS_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
+      PAPERLESS_OCR_LANGUAGE: EnvValue.fromValue("eng"),
+      PAPERLESS_CONSUMER_POLLING: EnvValue.fromValue("60"),
+      PAPERLESS_ENABLE_HTTP_REMOTE_USER: EnvValue.fromValue("true"),
+      PAPERLESS_ENABLE_HTTP_REMOTE_USER_API: EnvValue.fromValue("true"),
+      PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME: EnvValue.fromValue("HTTP_X_POMERIUM_CLAIM_EMAIL"),
+      PAPERLESS_DISABLE_REGULAR_LOGIN: EnvValue.fromValue("true"),
+      PAPERLESS_ACCOUNT_ALLOW_SIGNUPS: EnvValue.fromValue("false"),
+      PAPERLESS_ENABLE_UPDATE_CHECK: EnvValue.fromValue("false"),
+      USERMAP_UID: EnvValue.fromValue(String(PAPERLESS_UID)),
+      USERMAP_GID: EnvValue.fromValue(String(PAPERLESS_GID)),
+    },
+    volumeMounts: [
+      volumes.data(DATA_MOUNT_PATH),
+      volumes.documents(CONSUME_MOUNT_PATH, { subPath: "inbox" }),
+      volumes.documents(EXPORT_MOUNT_PATH, { subPath: EXPORT_SUBDIR }),
+      volumes.documents(MEDIA_MOUNT_PATH, { subPath: "vault" }),
+    ],
+    liveness: health,
+    readiness: health,
+    startup: paperlessHttpProbe(60),
+    resources: {
+      cpu: {
+        request: Cpu.millis(100),
+        limit: Cpu.millis(2000),
+      },
+      memory: {
+        request: Size.mebibytes(512),
+        limit: Size.gibibytes(4),
+      },
+      ephemeralStorage: {
+        limit: Size.gibibytes(10),
+      },
+    },
+    securityContext: {
+      ensureNonRoot: false,
+      readOnlyRootFilesystem: false,
+    },
+  };
+}
+
+function paperlessHttpProbe(failureThreshold: number): Probe {
+  return Probe.fromHttpGet("/", {
+    port: PAPERLESS_HTTP_PORT,
+    failureThreshold,
+    periodSeconds: Duration.seconds(10),
+    timeoutSeconds: Duration.seconds(5),
+  });
+}
+
+function initDocumentsScript(): string {
+  return dedent`
+    set -eu
+    umask 0007
+
+    mkdir -p ${DOCUMENTS_MOUNT_PATH}/inbox
+    mkdir -p ${DOCUMENTS_MOUNT_PATH}/${EXPORT_SUBDIR}
+    mkdir -p ${DOCUMENTS_MOUNT_PATH}/vault
+    chmod 2770 ${DOCUMENTS_MOUNT_PATH}/inbox
+    chmod 2770 ${DOCUMENTS_MOUNT_PATH}/${EXPORT_SUBDIR}
+    chmod 2770 ${DOCUMENTS_MOUNT_PATH}/vault
+  `;
+}

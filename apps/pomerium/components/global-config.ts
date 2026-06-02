@@ -44,6 +44,10 @@ export class PomeriumGlobalConfig extends K2Chart {
           secret: `${POMERIUM_NAMESPACE}/${POMERIUM_IDP_SECRET_NAME}`,
           url: `https://${apex.subdomain(POMERIUM_IDP_HOST_PREFIX)}`,
         },
+        jwtClaimHeaders: {
+          "X-Pomerium-Claim-Email": "email",
+          "X-Pomerium-Claim-Preferred-Username": "preferred_username",
+        },
         mcpAllowedClientIdDomains: MCP_ALLOWED_CLIENT_ID_DOMAINS,
         runtimeFlags: { mcp: true },
         secrets: `${POMERIUM_NAMESPACE}/${POMERIUM_BOOTSTRAP_SECRET_NAME}`,

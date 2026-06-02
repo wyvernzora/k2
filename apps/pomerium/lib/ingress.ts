@@ -13,6 +13,7 @@ interface PomeriumIngressRouteProps {
 }
 
 export interface AuthenticatedIngressProps extends PomeriumIngressRouteProps {
+  readonly passIdentityHeaders?: boolean;
   readonly policy?: string;
 }
 
@@ -105,12 +106,17 @@ function backendService(props: PomeriumIngressRouteProps) {
 }
 
 function authenticatedIngressAnnotations(props: AuthenticatedIngressProps): Record<string, string> | undefined {
-  if (props.policy === undefined) {
+  const annotations: Record<string, string> = {};
+  if (props.passIdentityHeaders === true) {
+    annotations["ingress.pomerium.io/pass_identity_headers"] = "true";
+  }
+  if (props.policy !== undefined) {
+    annotations["ingress.pomerium.io/policy"] = props.policy;
+  }
+  if (Object.keys(annotations).length === 0) {
     return undefined;
   }
-  return {
-    "ingress.pomerium.io/policy": props.policy,
-  };
+  return annotations;
 }
 
 function authenticatedMcpIngressAnnotations(props: AuthenticatedMcpIngressProps): Record<string, string> {
