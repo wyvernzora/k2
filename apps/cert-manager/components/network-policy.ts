@@ -3,6 +3,15 @@ import type { Construct } from "constructs";
 import { ClusterContext, K2Chart, Namespace } from "@k2/cdk-lib";
 import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, egress, endpoint, fqdn, ingress, tcp, udp } from "@k2/cilium";
 
+import {
+  CERT_SYNC_PROXMOX_LABELS,
+  CERT_SYNC_TRUENAS_LABELS,
+  PROXMOX_PORT,
+  TRUENAS_PORT,
+  proxmoxHosts,
+  truenasHost,
+} from "./cert-sync/index.js";
+
 export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
@@ -41,6 +50,17 @@ export class NetworkPolicy extends K2Chart {
           fqdn.name(`sts.${awsRegion(cluster.aws?.region)}.amazonaws.com`),
         ]),
       ],
+    });
+    new EndpointNetworkPolicy(this, "cert-sync-proxmox-egress", {
+      endpoint: endpoint(namespace, CERT_SYNC_PROXMOX_LABELS, "cert-sync-proxmox"),
+      egress: egress.toCidrs(
+        proxmoxHosts(this).map(host => `${host.address}/32`),
+        tcp(PROXMOX_PORT),
+      ),
+    });
+    new EndpointNetworkPolicy(this, "cert-sync-truenas-egress", {
+      endpoint: endpoint(namespace, CERT_SYNC_TRUENAS_LABELS, "cert-sync-truenas"),
+      egress: egress.toCidrs([`${truenasHost(this).address}/32`], tcp(TRUENAS_PORT)),
     });
   }
 }

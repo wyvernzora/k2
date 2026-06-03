@@ -1,4 +1,4 @@
-import { type Cron } from "cdk8s";
+import { Duration, type Cron } from "cdk8s";
 import { ConcurrencyPolicy, CronJob, type CronJobProps, type IServiceAccount, type JobProps } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
@@ -18,6 +18,7 @@ export type ScriptedCronJobMount = ScriptedWorkloadMount;
 
 export interface ScriptedCronJobProps extends ScriptedWorkloadProps {
   readonly schedule: Cron;
+  readonly activeDeadline?: CronJobProps["activeDeadline"];
   readonly timeZone?: string;
   readonly concurrencyPolicy?: ConcurrencyPolicy;
   readonly successfulJobsRetained?: number;
@@ -47,6 +48,8 @@ class ScriptedKubernetesCronJob extends CronJob {
 function scriptedCronJobProps(props: ScriptedCronJobProps, jobProps: JobProps): CronJobProps {
   return {
     ...jobProps,
+    activeDeadline: props.activeDeadline ?? Duration.minutes(10),
+    ttlAfterFinished: undefined,
     schedule: props.schedule,
     timeZone: props.timeZone,
     concurrencyPolicy: props.concurrencyPolicy ?? ConcurrencyPolicy.FORBID,
