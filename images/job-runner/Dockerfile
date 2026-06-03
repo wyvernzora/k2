@@ -25,6 +25,7 @@ RUN apk add --no-cache \
     py3-kubernetes \
     py3-requests \
     py3-rich \
+    py3-websockets \
     py3-yaml \
     python3 \
     sed \

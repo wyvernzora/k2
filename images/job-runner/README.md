@@ -15,7 +15,7 @@ ghcr.io/wyvernzora/k2-job-runner:<tag>
 CI publishes immutable tags as `sha-<12-char-commit>` on non-PR builds.
 Pushes to `main-v3` also publish `latest`.
 
-This image also has a manual contract tag in `image.json`, currently `v1`.
+This image also has a manual contract tag in `image.json`, currently `v2`.
 `ScriptedJob` pins to that version tag in `cdk-lib/scripted-job.ts`. Increment
 the tag after important runner tool-surface changes, then update `ScriptedJob`
 to use the new tag before deploying jobs that need those tools.
@@ -35,6 +35,8 @@ to use the new tag before deploying jobs that need those tools.
 - `nc`
 - `tar`, `gzip`, `unzip`
 - GNU-style `coreutils`, `findutils`, `grep`, `sed`, `awk`, `diff`
+- Python libraries: `click`, `jsonschema`, `kubernetes`, `requests`, `rich`,
+  `websockets`, `yaml`
 
 ## Build
 

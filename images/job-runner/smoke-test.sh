@@ -43,6 +43,7 @@ import jsonschema
 import kubernetes
 import requests
 import rich
+import websockets
 import yaml
 PY
 yq --version >/dev/null

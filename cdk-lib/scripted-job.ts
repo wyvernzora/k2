@@ -20,7 +20,7 @@ import { Construct } from "constructs";
 import { Namespace } from "./context/namespace.js";
 import { Scheduling } from "./scheduling.js";
 
-const JOB_RUNNER_IMAGE = "ghcr.io/wyvernzora/k2-job-runner:v1";
+const JOB_RUNNER_IMAGE = "ghcr.io/wyvernzora/k2-job-runner:v2";
 const SCRIPTED_JOB_LABEL = "k2.wyvernzora.io/scripted-job";
 const SCRIPT_MOUNT_PATH = "/scripts";
 
