@@ -3,12 +3,11 @@ VERSION 0.8
 image:
     FROM willhallonline/ansible:2.18-alpine-3.18
     WORKDIR /ansible
-    RUN pip install --no-cache-dir botocore boto3
 
     COPY requirements.yml requirements.yml
     RUN ansible-galaxy install -r requirements.yml
 
     COPY . /ansible
 
-    VOLUME [ "/ansible", "/root/.ssh", "/root/.aws" ]
+    VOLUME [ "/ansible", "/root/.ssh" ]
     ENTRYPOINT [ "/ansible/entrypoint.sh" ]

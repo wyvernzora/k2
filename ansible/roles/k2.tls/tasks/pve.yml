@@ -1,21 +1,44 @@
-- include_tasks: upload.yml
-
-- name: setup nginx proxy for Proxmox UI
+- name: setup nginx passthrough for Proxmox UI
   block:
-    - name: install nginx
+    - name: install nginx with stream support
       package:
-        name: nginx
-        state: latest
+        name:
+          - nginx
+          - libnginx-mod-stream
+        state: present
 
     - name: remove default nginx config
       file:
         dest: /etc/nginx/sites-enabled/default
         state: absent
 
-    - name: copy nginx config for proxmox
+    - name: create nginx stream config directory
+      file:
+        path: /etc/nginx/stream.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: load nginx stream configs
+      lineinfile:
+        path: /etc/nginx/nginx.conf
+        line: "include /etc/nginx/stream.d/*.conf;"
+        insertbefore: "^http \\{"
+
+    - name: copy nginx HTTP redirect config for proxmox
       template:
         src: proxmox.conf
         dest: /etc/nginx/conf.d/proxmox.conf
+
+    - name: copy nginx stream passthrough config for proxmox
+      template:
+        src: proxmox-stream.conf
+        dest: /etc/nginx/stream.d/proxmox.conf
+
+    - name: validate nginx config
+      command: nginx -t
+      changed_when: no
 
 - name: restart and enable nginx service
   service:

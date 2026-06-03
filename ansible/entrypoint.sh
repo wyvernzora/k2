@@ -14,19 +14,9 @@ help() {
 
   $(print_available_playbooks)
 
-  Environment variables:
-
-    --- AWS Credentials ---
-    AWS_ACCESS_KEY_ID
-    AWS_PRIVATE_ACCESS_KEY
-    AWS_SESSION_TOKEN
-    AWS_PROFILE
-    AWS_REGION
-
   Volumes:
 
     /root/.ssh/           SSH keys to be used for bootstrapping
-    /root/.aws/           AWS credentials file, if any
     /ansible/inventory/   Inventory files here
   "
 }
