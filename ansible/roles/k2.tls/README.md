@@ -6,7 +6,7 @@
 </div>
 
 <p align="center">
-<b>Pull the latest TLS certificates and update them where needed.</b>
+<b>Configure host-side TLS plumbing where needed.</b>
 </p>
 
 <hr>
@@ -14,23 +14,13 @@
 <br>
 
 ## What it does
- - Pulls the latest TLS certificates from S3 (see [wyvernzora/cert-bot-lambda](https://github.com/wyvernzora/cert-bot-lambda))
- - Uploads them to remove hosts
  - Performs any follow up action based on the host type
     - Proxmox
-        - Restarts nginx
-    - TrueNAS
-        - Imports the certificate into TrueNAS config store
-        - Activates the certificate as the active WebUI cert
-        - Removes all other certificates for the same domain
-    - (TODO) Unifi
-        - Restarts `unifi-core`
+        - Configures nginx to redirect HTTP on port 80 to HTTPS
+        - Configures nginx TCP stream passthrough from port 443 to local pveproxy on port 8006
 
 ## AuthN & AuthZ
-Using this role requires proper AWS credentials to read the credential files from the specified S3 bucket.
+Using this role requires SSH access to the Proxmox hosts.
 
 ## Vars and Defaults
-| Var Name        | Default Value         | Description                                         |
-| --------------- | --------------------- | --------------------------------------------------- |
-| `k2_tls_domain` | `wyvernzora.io`       | Domain name for the TLS certificate to pull from S3 |
-| `k2_tls_bucket` | `io.wyvernzora.certs` | S3 bucket to grab the latest certificates from      |
+This role does not currently expose any variables.
