@@ -4,6 +4,7 @@
   "image": "ghcr.io/wyvernzora/k2-job-runner",
   "packageName": "k2-job-runner",
   "earthlyTarget": "+job-runner-image",
+  "versionTag": "v1",
   "latestOnMain": true,
   "retention": {
     "keepVersions": 5

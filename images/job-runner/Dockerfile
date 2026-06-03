@@ -20,6 +20,13 @@ RUN apk add --no-cache \
     jq \
     netcat-openbsd \
     openssl \
+    py3-click \
+    py3-jsonschema \
+    py3-kubernetes \
+    py3-requests \
+    py3-rich \
+    py3-yaml \
+    python3 \
     sed \
     tar \
     unzip \

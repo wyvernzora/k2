@@ -9,6 +9,7 @@ export * from "./context/helm-charts.js";
 export * from "./context/namespace.js";
 export * from "./context/nfs.js";
 export * from "./scheduling.js";
+export * from "./scripted-job.js";
 export * from "./topology-spread.js";
 export * from "./volumes/index.js";
 export * from "./workload.js";

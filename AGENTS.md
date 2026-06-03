@@ -24,6 +24,8 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - `tools/` owns the Go toolbox for build/lint/synth/diff implementation and
   operator-side commands. Earthly remains the public interface; invoke the
   built toolbox directly only for tool-level debugging.
+- Do not push images from a local agent session. Image publishing is owned by
+  the normal automation/release workflow, just like deploy branch promotion.
 - If Earthly fails because Docker/Podman/network access is unavailable, say so
   plainly and report what was not validated.
 

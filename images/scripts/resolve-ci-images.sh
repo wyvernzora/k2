@@ -58,6 +58,7 @@ jq -s -c '
     image: .image,
     packageName: .packageName,
     earthlyTarget: .earthlyTarget,
+    versionTag: (.versionTag // ""),
     latestOnMain: (.latestOnMain // true),
     keepVersions: (.retention.keepVersions // 5)
   })

@@ -18,6 +18,7 @@ commands=(
   nc
   nslookup
   openssl
+  python3
   sed
   sha256sum
   tar
@@ -36,4 +37,12 @@ dyff version >/dev/null
 jq --version >/dev/null
 kubectl version --client=true >/dev/null
 openssl version >/dev/null
+python3 - <<'PY'
+import click
+import jsonschema
+import kubernetes
+import requests
+import rich
+import yaml
+PY
 yq --version >/dev/null
