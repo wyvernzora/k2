@@ -70,8 +70,11 @@ tester.run("app-index-public-api", appIndexPublicApi, {
       filename: repoFile("apps/demo/index.ts"),
       code: `
         import type { AppResourceFunc, ArgoApplicationConfigFunc } from "@k2/cdk-lib";
+        export * from "./constants.js";
         export * as crd from "./lib/crd.js";
         export { Thing, type ThingProps } from "./lib/thing.js";
+        export const endpoints = {};
+        export const workloads = {};
         export const configureArgoApplication: ArgoApplicationConfigFunc = app => ({});
         export const createAppResources: AppResourceFunc = app => app;
       `,

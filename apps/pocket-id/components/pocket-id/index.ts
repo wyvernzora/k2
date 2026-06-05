@@ -3,7 +3,7 @@ import type { Construct } from "constructs";
 import { ApexDomain, K2Chart } from "@k2/cdk-lib";
 import { PublicIngress } from "@k2/pomerium";
 
-import { POCKET_ID_HOST_PREFIX, POCKET_ID_SERVICE_NAME } from "../../lib/constants.js";
+import { POCKET_ID_HOST_PREFIX, POCKET_ID_SERVICE_NAME } from "../../constants.js";
 
 import { PocketIdDatabase } from "./database.js";
 import { PocketIdDeployment } from "./deployment.js";

@@ -1,4 +1,4 @@
-import { POMERIUM_NAMESPACE } from "../../lib/constants.js";
+import { POMERIUM_NAMESPACE } from "../../constants.js";
 
 const APP_NAME = "pomerium";
 const DEFAULT_COMPONENT = "pomerium";

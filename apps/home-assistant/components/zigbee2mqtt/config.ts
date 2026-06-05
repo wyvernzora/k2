@@ -5,7 +5,7 @@ import type { Construct } from "constructs";
 import dedent from "dedent-js";
 import { stringify } from "yaml";
 
-import { MOSQUITTO_MQTT_PORT, MOSQUITTO_SERVICE_NAME } from "../mosquitto/labels.js";
+import { MOSQUITTO_MQTT_PORT, MOSQUITTO_SERVICE_NAME } from "../../constants.js";
 
 const CONFIG_MAP_NAME = "zigbee2mqtt-init";
 const ZIGBEE_COORDINATOR = "tcp://10.10.229.62:6638";

@@ -4,7 +4,6 @@ export const REDIS_PORT = 6379;
 
 export const PAPERLESS_SERVICE_NAME = "paperless";
 export const PAPERLESS_MCP_SERVICE_NAME = "paperless-mcp";
-export const REDIS_SERVICE_NAME = "paperless-redis";
 
 export const PAPERLESS_LABELS = {
   "app.kubernetes.io/name": "paperless",

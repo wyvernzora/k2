@@ -1,7 +1,7 @@
 import { Pods, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { DMHY_MCP_LABELS, DMHY_MCP_PORT, DMHY_MCP_SERVICE_NAME } from "./labels.js";
+import { DMHY_MCP_LABELS, DMHY_MCP_PORT, DMHY_MCP_SERVICE_NAME } from "../../constants.js";
 
 export class DmhyMcpService extends Service {
   public constructor(scope: Construct, id: string) {

@@ -13,7 +13,7 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, Scheduling } from "@k2/cdk-lib";
 
-import { REDIS_LABELS, REDIS_PORT } from "./labels.js";
+import { REDIS_LABELS, REDIS_PORT } from "../../constants.js";
 
 const REDIS_IMAGE = "redis:7.4-alpine";
 

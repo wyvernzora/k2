@@ -10,7 +10,7 @@ import {
   POMERIUM_IDP_HOST_PREFIX,
   POMERIUM_IDP_SECRET_NAME,
   POMERIUM_NAMESPACE,
-} from "../lib/constants.js";
+} from "../constants.js";
 
 const CodecType = PomeriumSpecCodecType;
 const IdentityProvider = PomeriumSpecIdentityProviderProvider;

@@ -3,14 +3,14 @@ import type { Construct } from "constructs";
 import { ApexDomain, K2Chart } from "@k2/cdk-lib";
 
 import { egress, EndpointNetworkPolicy, tcp } from "../../cilium/lib/netpol/index.js";
-import { POMERIUM_IDP_HOST_PREFIX } from "../lib/constants.js";
-import { endpoints } from "../lib/network-policy.js";
+import { POMERIUM_IDP_HOST_PREFIX } from "../constants.js";
+import { workloads } from "../index.js";
 
 export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
     const idpHost = ApexDomain.of(this).subdomain(POMERIUM_IDP_HOST_PREFIX);
-    const proxy = endpoints.proxy();
+    const proxy = workloads.proxy();
 
     new EndpointNetworkPolicy(this, "controller-kube-api-egress", {
       endpoint: proxy,

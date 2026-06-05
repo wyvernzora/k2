@@ -1,7 +1,7 @@
 import { ApiResource, ClusterRole, ClusterRoleBinding, type IServiceAccount } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { POMERIUM_CONTROLLER_NAME } from "../../lib/constants.js";
+import { POMERIUM_CONTROLLER_NAME } from "../../constants.js";
 
 import { clusterMetadata } from "./metadata.js";
 

@@ -5,7 +5,7 @@ import { Construct } from "constructs";
 
 import { ScriptedJob } from "@k2/cdk-lib";
 
-import { PAPERLESS_LABELS, PAPERLESS_SERVICE_NAME } from "./labels.js";
+import { PAPERLESS_LABELS, PAPERLESS_SERVICE_NAME } from "../../constants.js";
 
 export const PAPERLESS_SETUP_USER = "paperless-setup";
 const SETUP_EMAIL = "paperless-setup@kubernetes.local";

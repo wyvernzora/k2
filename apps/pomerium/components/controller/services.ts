@@ -2,7 +2,7 @@ import { ApiObject, JsonPatch } from "cdk8s";
 import { Pods, Protocol, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../lib/constants.js";
+import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js";
 
 import { metadata } from "./metadata.js";
 

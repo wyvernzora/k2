@@ -17,7 +17,7 @@ import dedent from "dedent-js";
 
 import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBITTORRENT_MCP_PORT } from "./labels.js";
+import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBITTORRENT_MCP_PORT } from "../../constants.js";
 
 const QBITTORRENT_IMAGE = "lscr.io/linuxserver/qbittorrent:4.6.7";
 const FLOOD_IMAGE = "jesec/flood:4.14.0";

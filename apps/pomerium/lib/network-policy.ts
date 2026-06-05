@@ -1,18 +1,7 @@
 import type { Construct } from "constructs";
 
 import { PrivateConnection, type PolicyEndpoint, type PortSpec } from "../../cilium/lib/netpol/index.js";
-
-import { POMERIUM_LABELS, POMERIUM_NAMESPACE } from "./constants.js";
-
-export const endpoints = {
-  proxy(): PolicyEndpoint {
-    return {
-      name: "pomerium",
-      namespace: POMERIUM_NAMESPACE,
-      labels: POMERIUM_LABELS,
-    };
-  },
-};
+import { POMERIUM_LABELS, POMERIUM_NAMESPACE } from "../constants.js";
 
 export interface AllowPomeriumToBackendProps {
   readonly backend: PolicyEndpoint;
@@ -24,9 +13,17 @@ export class AllowPomeriumToBackend extends PrivateConnection {
   public constructor(scope: Construct, id: string, props: AllowPomeriumToBackendProps) {
     super(scope, id, {
       name: props.name,
-      from: endpoints.proxy(),
+      from: proxyEndpoint(),
       to: props.backend,
       ports: props.ports,
     });
   }
+}
+
+function proxyEndpoint(): PolicyEndpoint {
+  return {
+    name: "pomerium",
+    namespace: POMERIUM_NAMESPACE,
+    labels: POMERIUM_LABELS,
+  };
 }

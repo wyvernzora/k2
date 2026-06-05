@@ -4,8 +4,9 @@ import type { Construct } from "constructs";
 import { ApexDomain, K2Chart, K2Volume } from "@k2/cdk-lib";
 import { AuthenticatedIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
 
+import { ZIGBEE2MQTT_SERVICE_NAME } from "../../constants.js";
+
 import { Zigbee2MqttConfig } from "./config.js";
-import { ZIGBEE2MQTT_SERVICE_NAME } from "./labels.js";
 import { Zigbee2MqttDeployment } from "./deployment.js";
 import { Zigbee2MqttService } from "./service.js";
 

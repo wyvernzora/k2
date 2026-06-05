@@ -3,7 +3,7 @@ import type { Construct } from "constructs";
 
 import { K2Chart } from "@k2/cdk-lib";
 
-import { POMERIUM_CONTROLLER_NAME, POMERIUM_INGRESS_CLASS_NAME, POMERIUM_NAMESPACE } from "../../lib/constants.js";
+import { POMERIUM_CONTROLLER_NAME, POMERIUM_INGRESS_CLASS_NAME, POMERIUM_NAMESPACE } from "../../constants.js";
 
 import { GEN_SECRETS_SERVICE_ACCOUNT, createRbac } from "./rbac.js";
 import { clusterMetadata, metadata } from "./metadata.js";

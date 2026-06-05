@@ -14,17 +14,18 @@ const allowedLocalExportTypes = new Map([
   ["configureArgoApplication", "ArgoApplicationConfigFunc"],
   ["createAppResources", "AppResourceFunc"],
 ]);
+const allowedMetadataExports = new Set(["endpoints", "workloads"]);
 
 const rule: Rule.RuleModule = {
   meta: {
     type: "problem",
     docs: {
-      description: "Require app index files to expose only createAppResources and lib re-exports.",
+      description: "Require app index files to expose only the app resource API and public app metadata.",
     },
     messages: {
-      nonLibReExport: "App index files may only re-export public API from ./lib/.",
+      nonLibReExport: "App index files may only re-export public API from ./lib/ and ./constants.js.",
       unexpectedExport:
-        "App index files may only export createAppResources, configureArgoApplication, and re-export from ./lib/.",
+        "App index files may only export createAppResources, configureArgoApplication, endpoints, workloads, and public re-exports.",
       missingType: "App index public API constants must use their required K2 type annotation.",
     },
     schema: [],
@@ -55,6 +56,9 @@ const rule: Rule.RuleModule = {
         for (const name of names) {
           const requiredType = allowedLocalExportTypes.get(name);
           if (requiredType === undefined) {
+            if (allowedMetadataExports.has(name)) {
+              continue;
+            }
             context.report({ node, messageId: "unexpectedExport" });
             continue;
           }
@@ -74,7 +78,7 @@ export default rule;
 
 function validateReExport(context: Rule.RuleContext, node: unknown): void {
   const source = sourceValue(node as ImportLikeNode);
-  if (source === undefined || !source.startsWith("./lib/")) {
+  if (source === undefined || (!source.startsWith("./lib/") && source !== "./constants.js")) {
     context.report({ node: node as never, messageId: "nonLibReExport" });
   }
 }

@@ -1,7 +1,13 @@
 import { Pods, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT, KURA_MCP_SERVICE_NAME, KURA_SERVICE_NAME } from "./labels.js";
+import {
+  KURA_HTTP_PORT,
+  KURA_LABELS,
+  KURA_MCP_PORT,
+  KURA_MCP_SERVICE_NAME,
+  KURA_SERVICE_NAME,
+} from "../../constants.js";
 
 export class KuraService extends Service {
   public constructor(scope: Construct, id: string) {

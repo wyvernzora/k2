@@ -1,7 +1,7 @@
 import { k8s } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { POMERIUM_INGRESS_CLASS_NAME } from "./constants.js";
+import { POMERIUM_INGRESS_CLASS_NAME } from "../constants.js";
 
 interface PomeriumIngressRouteProps {
   readonly host: string;

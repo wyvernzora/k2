@@ -17,7 +17,8 @@ import dedent from "dedent-js";
 
 import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS, PAPERLESS_MCP_PORT } from "./labels.js";
+import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS, PAPERLESS_MCP_PORT } from "../../constants.js";
+
 import { PAPERLESS_SETUP_USER } from "./setup.js";
 
 const PAPERLESS_IMAGE = "ghcr.io/paperless-ngx/paperless-ngx:2.20.15";

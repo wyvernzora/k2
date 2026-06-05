@@ -8,8 +8,9 @@ import {
   QBITTORRENT_LABELS,
   QBITTORRENT_MCP_PORT,
   QBITTORRENT_MCP_SERVICE_NAME,
-  QBITTORRENT_SERVICE_NAME,
-} from "./labels.js";
+} from "../../constants.js";
+
+const QBITTORRENT_SERVICE_NAME = "qbittorrent";
 
 export class FloodService extends Service {
   public constructor(scope: Construct, id: string) {

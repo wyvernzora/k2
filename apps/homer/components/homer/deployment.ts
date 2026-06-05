@@ -14,7 +14,7 @@ import type { Construct } from "constructs";
 
 import { Scheduling } from "@k2/cdk-lib";
 
-import { HOMER_HTTP_PORT, HOMER_LABELS } from "./labels.js";
+import { HOMER_HTTP_PORT, HOMER_LABELS } from "../../constants.js";
 
 const HOMER_IMAGE = "b4bz/homer:v26.4.2";
 const CONFIG_KEY = "config.yml";

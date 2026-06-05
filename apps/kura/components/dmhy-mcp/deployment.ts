@@ -12,7 +12,7 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, Scheduling } from "@k2/cdk-lib";
 
-import { DMHY_MCP_LABELS, DMHY_MCP_PORT } from "./labels.js";
+import { DMHY_MCP_LABELS, DMHY_MCP_PORT } from "../../constants.js";
 
 const DMHY_MCP_IMAGE = "ghcr.io/wyvernzora/dmhy-mcp:dev";
 const NOBODY_UID = 65532;

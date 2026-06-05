@@ -9,8 +9,9 @@ import {
   PAPERLESS_SERVICE_NAME,
   REDIS_LABELS,
   REDIS_PORT,
-  REDIS_SERVICE_NAME,
-} from "./labels.js";
+} from "../../constants.js";
+
+const REDIS_SERVICE_NAME = "paperless-redis";
 
 export class PaperlessService extends Service {
   public constructor(scope: Construct, id: string) {

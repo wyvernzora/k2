@@ -9,9 +9,10 @@ import {
   authenticatedSourceIpPolicy,
 } from "@k2/pomerium";
 
+import { PAPERLESS_MCP_SERVICE_NAME, PAPERLESS_SERVICE_NAME } from "../../constants.js";
+
 import { PaperlessDatabase } from "./database.js";
 import { PaperlessDeployment } from "./deployment.js";
-import { PAPERLESS_MCP_SERVICE_NAME, PAPERLESS_SERVICE_NAME } from "./labels.js";
 import { RedisDeployment } from "./redis.js";
 import { PaperlessMcpTokenSecret, PaperlessProvisioningSecret, PaperlessSecret } from "./secret.js";
 import { PaperlessMcpService, PaperlessService, RedisService } from "./service.js";

@@ -7,3 +7,11 @@ export const KURA_LABELS = {
   "app.kubernetes.io/name": "kura",
   "app.kubernetes.io/component": "library-manager",
 };
+
+export const DMHY_MCP_PORT = 8080;
+export const DMHY_MCP_SERVICE_NAME = "dmhy-mcp";
+
+export const DMHY_MCP_LABELS = {
+  "app.kubernetes.io/name": "dmhy-mcp",
+  "app.kubernetes.io/component": "search-acquisition",
+};

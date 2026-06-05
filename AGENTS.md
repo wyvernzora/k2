@@ -89,8 +89,10 @@ learnings. Global rules apply unless this file explicitly overrides them.
   name and namespace.
 - `apps/<name>/components/` - deployable app components. Each direct item is a
   logical deployable unit, roughly a Kubernetes `Chart`.
-- `apps/<name>/lib/` - app-owned reusable helpers exported through
-  `@k2/<app>` for other apps to import.
+- `apps/<name>/constants.ts` - app-owned names, labels, ports, and other
+  metadata shared by that app's components and root exports.
+- `apps/<name>/lib/` - app-owned reusable constructs and helper APIs exported
+  through `@k2/<app>` for other apps to import.
 - `apps/<name>/crds/` - upstream CRD manifest and generated bindings for that
   app.
 - `cdk-lib/` - shared app-agnostic CDK8s primitives, contexts, scheduling,
@@ -168,8 +170,8 @@ export const createAppResources: AppResourceFunc = app => {
 - A simple component may stay as a single `components/<component>.ts` file to
   avoid pointless nesting.
 - App-local constructs used only by an app's own component stay under that
-  app's `components/`; reserve `apps/<name>/lib/` for constructs intentionally
-  imported by other apps through `@k2/<name>`.
+  app's `components/`; reserve `apps/<name>/lib/` for reusable constructs and
+  helper APIs, not constants or app metadata.
 - Wire only the component facade from the app module. Component internals
   should be imported by neighboring files inside the component subtree.
 
@@ -262,6 +264,10 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
   relationships are `REVISIT` until there is a real case.
 - The app that owns a K2 pod owns policies for that pod's traffic to or from
   outside-cluster peers.
+- App root `index.ts` owns exported network metadata such as `endpoints` and
+  `workloads`. `endpoints` should return port-bearing connection/backend
+  targets, not raw pod selectors. Raw selectors belong under a separate
+  `workloads` export when they are truly reusable.
 - Cross-cutting presets such as DNS, API server, ingress controller, and
   monitoring access should be typed helpers in `@k2/cilium`.
 
@@ -306,8 +312,10 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 2. Put deployment components under `apps/<name>/components/`; use a component
    subdirectory with `index.ts` when the component needs multiple construct
    files.
-3. Put reusable app-owned helpers under `apps/<name>/lib/` and export them
-   from `apps/<name>/index.ts` when other apps should import them.
+3. Put app metadata in `apps/<name>/constants.ts` or directly in
+   `apps/<name>/index.ts`. Put reusable app-owned constructs and helper APIs
+   under `apps/<name>/lib/` and export them from `apps/<name>/index.ts` when
+   other apps should import them.
 4. Export typed named `createAppResources: AppResourceFunc`.
 5. Add app CRDs under `apps/<name>/crds/` when the app owns custom resources.
 6. Run the Earthly validation loop.

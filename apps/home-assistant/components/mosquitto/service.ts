@@ -1,7 +1,7 @@
 import { Pods, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { MOSQUITTO_LABELS, MOSQUITTO_MQTT_PORT, MOSQUITTO_SERVICE_NAME } from "./labels.js";
+import { MOSQUITTO_LABELS, MOSQUITTO_MQTT_PORT, MOSQUITTO_SERVICE_NAME } from "../../constants.js";
 
 export class MosquittoService extends Service {
   public constructor(scope: Construct, id: string) {

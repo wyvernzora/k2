@@ -20,7 +20,7 @@ import dedent from "dedent-js";
 
 import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { PLEX_CADDY_PORT, PLEX_HTTP_PORT, PLEX_LABELS } from "./labels.js";
+import { PLEX_CADDY_PORT, PLEX_HTTP_PORT, PLEX_LABELS } from "../../constants.js";
 
 const PLEX_IMAGE = "plexinc/pms-docker:1.43.1.10611-1e34174b1";
 const CADDY_IMAGE = "caddy:2.10.0-alpine";

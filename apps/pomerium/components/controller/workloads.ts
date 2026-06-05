@@ -22,7 +22,7 @@ import type { Construct } from "constructs";
 
 import { Scheduling } from "@k2/cdk-lib";
 
-import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../lib/constants.js";
+import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js";
 
 import { metadata } from "./metadata.js";
 

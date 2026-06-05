@@ -6,7 +6,7 @@ import { Construct } from "constructs";
 import { ApexDomain, ScriptedJob, type ScriptedJobRbacRule } from "@k2/cdk-lib";
 import { POMERIUM_AUTHENTICATE_HOST_PREFIX, POMERIUM_IDP_SECRET_NAME, POMERIUM_NAMESPACE } from "@k2/pomerium";
 
-import { POCKET_ID_LABELS, POCKET_ID_SERVICE_NAME } from "../../lib/constants.js";
+import { POCKET_ID_LABELS, POCKET_ID_SERVICE_NAME } from "../../constants.js";
 
 import { STATIC_API_KEY_SECRET_NAME } from "./deployment.js";
 

@@ -3,9 +3,10 @@ import type { Construct } from "constructs";
 import { ApexDomain, K2Chart } from "@k2/cdk-lib";
 import { AuthenticatedIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
 
+import { HOMER_SERVICE_NAME } from "../../constants.js";
+
 import { HomerConfig } from "./config.js";
 import { HomerDeployment } from "./deployment.js";
-import { HOMER_SERVICE_NAME } from "./labels.js";
 import { HomerService } from "./service.js";
 
 const HOMER_HOST_PREFIX = "home";

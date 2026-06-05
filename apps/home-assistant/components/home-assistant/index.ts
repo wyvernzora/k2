@@ -4,9 +4,10 @@ import type { Construct } from "constructs";
 import { ApexDomain, K2Chart, K2Volume } from "@k2/cdk-lib";
 import { PublicIngress } from "@k2/pomerium";
 
+import { HOME_ASSISTANT_SERVICE_NAME } from "../../constants.js";
+
 import { HomeAssistantConfig } from "./config.js";
 import { HomeAssistantDeployment } from "./deployment.js";
-import { HOME_ASSISTANT_SERVICE_NAME } from "./labels.js";
 import { HomeAssistantService } from "./service.js";
 
 const HOME_ASSISTANT_HOST_PREFIX = "ha";

@@ -1,7 +1,7 @@
 import { Pods, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { HOME_ASSISTANT_HTTP_PORT, HOME_ASSISTANT_LABELS, HOME_ASSISTANT_SERVICE_NAME } from "./labels.js";
+import { HOME_ASSISTANT_HTTP_PORT, HOME_ASSISTANT_LABELS, HOME_ASSISTANT_SERVICE_NAME } from "../../constants.js";
 
 export class HomeAssistantService extends Service {
   public constructor(scope: Construct, id: string) {

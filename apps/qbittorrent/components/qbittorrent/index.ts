@@ -4,8 +4,9 @@ import type { Construct } from "constructs";
 import { ApexDomain, K2Chart, K2Volume } from "@k2/cdk-lib";
 import { AuthenticatedIngress, AuthenticatedMcpIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
 
+import { FLOOD_SERVICE_NAME, QBITTORRENT_MCP_SERVICE_NAME } from "../../constants.js";
+
 import { QbittorrentDeployment } from "./deployment.js";
-import { FLOOD_SERVICE_NAME, QBITTORRENT_MCP_SERVICE_NAME } from "./labels.js";
 import { FloodService, QbittorrentMcpService, QbittorrentService } from "./service.js";
 
 const DOWNLOAD_HOST_PREFIX = "dl";

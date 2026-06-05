@@ -3,7 +3,8 @@ import type { Construct } from "constructs";
 import { K2Chart, Namespace } from "@k2/cdk-lib";
 import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, cidr, egress, endpoint, ingress, tcp } from "@k2/cilium";
 
-import { PLEX_ALLOW_VLANS, PLEX_CADDY_PORT, PLEX_HTTP_PORT, PLEX_LABELS } from "./plex/labels.js";
+import { PLEX_ALLOW_VLANS, PLEX_CADDY_PORT, PLEX_HTTP_PORT } from "../constants.js";
+import { workloads } from "../index.js";
 
 const TRUENAS_NFS_CIDR = "10.10.8.1/32";
 
@@ -11,7 +12,8 @@ export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const plex = endpoint(Namespace.of(this).namespace, PLEX_LABELS, "plex");
+    const namespace = Namespace.of(this).namespace;
+    const plex = workloads.plex();
     const plexClientCidrs = cidr.vlans(this, PLEX_ALLOW_VLANS);
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
@@ -24,7 +26,7 @@ export class NetworkPolicy extends K2Chart {
       ],
       ingressDeny: [
         {
-          from: { endpoint: endpoint(Namespace.of(this).namespace, {}, "plex-namespace") },
+          from: { endpoint: endpoint(namespace, {}, "plex-namespace") },
           ports: [tcp(PLEX_HTTP_PORT)],
         },
       ],

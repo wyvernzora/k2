@@ -1,7 +1,7 @@
 import { Pods, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { POCKET_ID_HTTP_PORT, POCKET_ID_LABELS, POCKET_ID_SERVICE_NAME } from "../../lib/constants.js";
+import { POCKET_ID_HTTP_PORT, POCKET_ID_LABELS, POCKET_ID_SERVICE_NAME } from "../../constants.js";
 
 export class PocketIdService extends Service {
   public constructor(scope: Construct, id: string) {

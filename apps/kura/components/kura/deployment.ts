@@ -15,7 +15,7 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "./labels.js";
+import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "../../constants.js";
 
 const KURA_IMAGE = "ghcr.io/wyvernzora/kura:dev";
 const PUID = 3000;

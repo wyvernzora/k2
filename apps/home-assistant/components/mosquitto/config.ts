@@ -4,7 +4,7 @@ import { ConfigMap } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { MOSQUITTO_MQTT_PORT } from "./labels.js";
+import { MOSQUITTO_MQTT_PORT } from "../../constants.js";
 
 const CONFIG_MAP_NAME = "mosquitto-config";
 

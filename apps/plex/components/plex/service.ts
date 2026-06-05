@@ -3,7 +3,10 @@ import type { Construct } from "constructs";
 
 import { LoadBalancerService } from "@k2/cilium";
 
-import { PLEX_ALLOW_VLANS, PLEX_CADDY_PORT, PLEX_HTTPS_PORT, PLEX_LABELS, PLEX_SERVICE_NAME } from "./labels.js";
+import { PLEX_ALLOW_VLANS, PLEX_CADDY_PORT, PLEX_LABELS } from "../../constants.js";
+
+const PLEX_HTTPS_PORT = 443;
+const PLEX_SERVICE_NAME = "plex";
 
 const PLEX_LOAD_BALANCER_IP = "10.10.13.2";
 

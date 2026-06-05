@@ -29,6 +29,13 @@ export interface PrivateConnectionProps {
   readonly description?: string;
 }
 
+export type PrivateConnectionTarget = Pick<PrivateConnectionProps, "to" | "ports">;
+
+export interface BackendTarget {
+  readonly backend: PolicyEndpoint;
+  readonly ports: PortSpec[];
+}
+
 export interface EndpointNetworkPolicyProps {
   readonly endpoint: PolicyEndpoint;
   readonly ingress?: IngressRule[];

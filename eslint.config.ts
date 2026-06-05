@@ -56,8 +56,8 @@ export default tseslint.config(
         {
           allowedModules: [
             "apps/cert-manager/components/cert-manager/constants.ts",
-            "apps/pocket-id/lib/constants.ts",
-            "apps/pomerium/lib/constants.ts",
+            "apps/pocket-id/constants.ts",
+            "apps/pomerium/constants.ts",
           ],
         },
       ],

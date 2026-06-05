@@ -15,7 +15,7 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { MOSQUITTO_LABELS, MOSQUITTO_MQTT_PORT } from "./labels.js";
+import { MOSQUITTO_LABELS, MOSQUITTO_MQTT_PORT } from "../../constants.js";
 
 const MOSQUITTO_IMAGE = "eclipse-mosquitto:2.0.22";
 
