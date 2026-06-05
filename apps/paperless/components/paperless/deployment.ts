@@ -114,7 +114,9 @@ function paperlessContainer(
       PAPERLESS_CSRF_TRUSTED_ORIGINS: EnvValue.fromValue(props.appUrl),
       PAPERLESS_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
       PAPERLESS_OCR_LANGUAGE: EnvValue.fromValue("eng"),
-      PAPERLESS_CONSUMER_POLLING: EnvValue.fromValue("60"),
+      PAPERLESS_TASK_WORKERS: EnvValue.fromValue("3"),
+      PAPERLESS_THREADS_PER_WORKER: EnvValue.fromValue("1"),
+      PAPERLESS_CONSUMER_POLLING: EnvValue.fromValue("10"),
       PAPERLESS_ENABLE_HTTP_REMOTE_USER: EnvValue.fromValue("true"),
       PAPERLESS_ENABLE_HTTP_REMOTE_USER_API: EnvValue.fromValue("true"),
       PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME: EnvValue.fromValue("HTTP_X_POMERIUM_CLAIM_PREFERRED_USERNAME"),
@@ -135,12 +137,12 @@ function paperlessContainer(
     startup: paperlessHttpProbe(60),
     resources: {
       cpu: {
-        request: Cpu.millis(100),
-        limit: Cpu.millis(2000),
+        request: Cpu.millis(500),
+        limit: Cpu.millis(4000),
       },
       memory: {
-        request: Size.mebibytes(512),
-        limit: Size.gibibytes(4),
+        request: Size.gibibytes(1),
+        limit: Size.gibibytes(6),
       },
       ephemeralStorage: {
         limit: Size.gibibytes(10),
