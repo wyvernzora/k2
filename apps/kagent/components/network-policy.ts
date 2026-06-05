@@ -1,33 +1,48 @@
 import type { Construct } from "constructs";
 
 import { K2Chart } from "@k2/cdk-lib";
-import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, PrivateConnection, egress, tcp } from "@k2/cilium";
+import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, PrivateConnection, egress, fqdn, tcp } from "@k2/cilium";
 import * as kura from "@k2/kura";
 import * as postgresql from "@k2/postgresql";
+import * as qbittorrent from "@k2/qbittorrent";
 import { AllowPomeriumToBackend } from "@k2/pomerium";
 
 import { endpoints, workloads } from "../index.js";
 
-const OPENAI_API_HOST = "api.openai.com";
+const MODEL_PROVIDER_FQDNS = [
+  fqdn.name("api.openai.com"),
+  fqdn.name("api.anthropic.com"),
+  fqdn.pattern("bedrock.*.amazonaws.com"),
+  fqdn.pattern("bedrock-runtime.*.amazonaws.com"),
+  fqdn.pattern("bedrock-agent.*.amazonaws.com"),
+  fqdn.pattern("bedrock-agent-runtime.*.amazonaws.com"),
+];
 
 export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
 
     const kagent = workloads.namespace();
-    const animeKuraAgent = workloads.animeKuraAgent();
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
     new AllowPomeriumToBackend(this, "pomerium-to-kagent-ui", {
       ...endpoints.http(),
     });
-    new EndpointNetworkPolicy(this, "anime-kura-agent-openai-egress", {
-      endpoint: animeKuraAgent,
-      egress: egress.toFqdns([OPENAI_API_HOST], tcp(443)),
+    new EndpointNetworkPolicy(this, "agent-model-provider-egress", {
+      endpoint: workloads.agents(),
+      egress: egress.toFqdns(MODEL_PROVIDER_FQDNS, tcp(443)),
     });
     new PrivateConnection(this, "kagent-to-kura-mcp", {
       from: kagent,
-      ...kura.endpoints.mcp(),
+      ...kura.mcpServers.kura().connection,
+    });
+    new PrivateConnection(this, "kagent-to-dmhy-mcp", {
+      from: kagent,
+      ...kura.mcpServers.dmhy().connection,
+    });
+    new PrivateConnection(this, "kagent-to-qbittorrent-mcp", {
+      from: kagent,
+      ...qbittorrent.mcpServers.qbittorrent().connection,
     });
     new PrivateConnection(this, "kagent-to-postgresql", {
       from: kagent,

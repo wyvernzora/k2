@@ -15,7 +15,7 @@ export class NetworkPolicy extends K2Chart {
     super(scope, id);
 
     const kura = endpoints.httpAndMcp();
-    const dmhyMcp = endpoints.dmhyMcp();
+    const dmhyMcp = endpoints.dmhyMcpHttp();
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
     new AllowPomeriumToBackend(this, "pomerium-to-kura", {

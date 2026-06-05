@@ -2,24 +2,36 @@ import type { Construct } from "constructs";
 
 import { ApexDomain, HelmCharts, K2Chart } from "@k2/cdk-lib";
 import { ManagedSecret } from "@k2/external-secrets";
+import * as kura from "@k2/kura";
 import { AuthenticatedIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
+import * as qbittorrent from "@k2/qbittorrent";
 
-import { KAGENT_UI_PORT } from "../../constants.js";
+import { GPT_5_4_MINI_MODEL_CONFIG_NAME, GPT_5_5_MODEL_CONFIG_NAME, KAGENT_UI_PORT } from "../../constants.js";
+import {
+  ModelConfigV1Alpha2,
+  ModelConfigV1Alpha2SpecProvider,
+  RemoteMcpServer,
+  RemoteMcpServerSpecProtocol,
+} from "../../crds/kagent.dev.js";
+import type { McpServer } from "../../lib/agent.js";
 
 import { KagentDatabase } from "./database.js";
+
+const Provider = ModelConfigV1Alpha2SpecProvider;
+const McpProtocol = RemoteMcpServerSpecProtocol;
 
 const KAGENT_DB_VOLUME_NAME = "kagent-db";
 const KAGENT_HOST_PREFIX = "kagent";
 const KAGENT_UI_SERVICE_NAME = "kagent-ui";
-const KAGENT_OPENAI_SECRET_NAME = "kagent-openai";
 const KAGENT_DATABASE_CREDENTIALS_SECRET_NAME = "kagent-credentials";
+const KAGENT_OPENAI_SECRET_NAME = "kagent-openai";
 const KAGENT_DATABASE_URL_MOUNT_PATH = "/var/run/kagent-db";
 const KAGENT_DATABASE_URL_FILE = `${KAGENT_DATABASE_URL_MOUNT_PATH}/uri`;
 const OPENAI_API_KEY_SECRET_KEY = "OPENAI_API_KEY";
 const OPENAI_SECRET_SOURCE = "OpenAI API";
 const OPENAI_SECRET_SOURCE_FIELD = "credential";
 
-export class Kagent extends K2Chart {
+export class KAgentSystem extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
 
@@ -28,6 +40,17 @@ export class Kagent extends K2Chart {
       secret: OPENAI_SECRET_SOURCE,
       fields: { [OPENAI_API_KEY_SECRET_KEY]: OPENAI_SECRET_SOURCE_FIELD },
     });
+    new OpenAiModelConfig(this, "gpt-5-5", {
+      name: GPT_5_5_MODEL_CONFIG_NAME,
+      model: "gpt-5.5",
+    });
+    new OpenAiModelConfig(this, "gpt-5-4-mini", {
+      name: GPT_5_4_MINI_MODEL_CONFIG_NAME,
+      model: "gpt-5.4-mini",
+    });
+    for (const server of remoteMcpServers()) {
+      new StreamableHttpRemoteMcpServer(this, server.name, server);
+    }
     new KagentDatabase(this, "database");
     HelmCharts.of(this).asChart(this, "kagent", "kagent", kagentValues());
     new AuthenticatedIngress(this, "ingress", {
@@ -66,6 +89,45 @@ function kagentValues() {
       publicBackendUrl: "/api",
     },
   };
+}
+
+interface OpenAiModelConfigProps {
+  readonly name: string;
+  readonly model: string;
+}
+
+class OpenAiModelConfig extends ModelConfigV1Alpha2 {
+  public constructor(scope: Construct, id: string, props: OpenAiModelConfigProps) {
+    super(scope, id, {
+      metadata: { name: props.name },
+      spec: {
+        apiKeySecret: KAGENT_OPENAI_SECRET_NAME,
+        apiKeySecretKey: OPENAI_API_KEY_SECRET_KEY,
+        model: props.model,
+        provider: Provider.OPEN_AI,
+      },
+    });
+  }
+}
+
+class StreamableHttpRemoteMcpServer extends RemoteMcpServer {
+  public constructor(scope: Construct, id: string, props: McpServer) {
+    super(scope, id, {
+      metadata: { name: props.name },
+      spec: {
+        description: props.description,
+        protocol: McpProtocol.STREAMABLE_UNDERSCORE_HTTP,
+        sseReadTimeout: "5m",
+        terminateOnClose: true,
+        timeout: "60s",
+        url: props.url,
+      },
+    });
+  }
+}
+
+function remoteMcpServers(): McpServer[] {
+  return [kura.mcpServers.kura(), kura.mcpServers.dmhy(), qbittorrent.mcpServers.qbittorrent()];
 }
 
 function databaseValues() {

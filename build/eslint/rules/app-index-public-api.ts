@@ -14,7 +14,7 @@ const allowedLocalExportTypes = new Map([
   ["configureArgoApplication", "ArgoApplicationConfigFunc"],
   ["createAppResources", "AppResourceFunc"],
 ]);
-const allowedMetadataExports = new Set(["endpoints", "workloads"]);
+const allowedMetadataExports = new Set(["endpoints", "mcpServers", "workloads"]);
 
 const rule: Rule.RuleModule = {
   meta: {
