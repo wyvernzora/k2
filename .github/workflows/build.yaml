@@ -32,7 +32,6 @@ jobs:
 
       - name: ⚙️ Run manifest build & diff
         run: |
-          earthly +crd-constructs
           earthly +lint
           earthly +k8s-manifests
           earthly +diff-manifests
