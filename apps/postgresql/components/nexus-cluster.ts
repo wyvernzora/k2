@@ -1,7 +1,7 @@
 import { Size } from "cdk8s";
 import type { Construct } from "constructs";
 
-import { K2Chart, TopologySpread } from "@k2/cdk-lib";
+import { K2Chart, only, Scheduling, TopologySpread, workers } from "@k2/cdk-lib";
 
 import {
   Cluster,
@@ -54,6 +54,7 @@ function nexusClusterSpec(): ClusterSpec {
     enableSuperuserAccess: true,
     storage: volumeStorage(),
     walStorage: volumeStorage(),
+    affinity: Scheduling.profile(only(workers())).affinity as NonNullable<ClusterSpec["affinity"]>,
     bootstrap: bootstrap(),
     topologySpreadConstraints: clusterTopologySpread(name),
     resources: clusterResources(),

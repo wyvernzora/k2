@@ -1,11 +1,11 @@
-import { Scheduling } from "@k2/cdk-lib";
+import { linux, only, Scheduling, type SchedulingProfile, workers } from "@k2/cdk-lib";
 
 const NFS_CSI_STORAGE_CLASS = "nfs-csi";
 const NFS_CSI_DRIVER = "nfs.csi.k8s.io";
 const NFS_SHARE = "/mnt/data/volumes/nfs-csi";
 
 export function nfsCsiValues(server: string) {
-  const controllerScheduling = Scheduling.workersPreferred();
+  const controllerScheduling = Scheduling.profile(only(workers()), only(linux()));
   return {
     driver: {
       name: NFS_CSI_DRIVER,
@@ -43,30 +43,8 @@ export function nfsCsiValues(server: string) {
   };
 }
 
-function controllerAffinity(scheduling: ReturnType<typeof Scheduling.workersPreferred>) {
+function controllerAffinity(scheduling: SchedulingProfile) {
   return {
-    nodeAffinity: {
-      requiredDuringSchedulingIgnoredDuringExecution: linuxNodeSelector(),
-      preferredDuringSchedulingIgnoredDuringExecution:
-        scheduling.affinity?.nodeAffinity?.preferredDuringSchedulingIgnoredDuringExecution,
-    },
-  };
-}
-
-function linuxNodeSelector() {
-  return {
-    nodeSelectorTerms: [
-      {
-        matchExpressions: [linuxNodeMatchExpression()],
-      },
-    ],
-  };
-}
-
-function linuxNodeMatchExpression() {
-  return {
-    key: "kubernetes.io/os",
-    operator: "In",
-    values: ["linux"],
+    nodeAffinity: scheduling.affinity?.nodeAffinity,
   };
 }

@@ -15,7 +15,7 @@ import {
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBITTORRENT_MCP_PORT } from "../../constants.js";
 
@@ -57,7 +57,6 @@ export class QbittorrentDeployment extends K2Deployment {
     this.addContainer(qbittorrentContainer(volumes));
     this.addContainer(floodContainer(volumes));
     this.addContainer(qbittorrentMcpContainer());
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

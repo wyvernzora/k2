@@ -8,8 +8,6 @@ import {
   ImagePullPolicy,
   Job,
   LabelSelector,
-  Node,
-  NodeLabelQuery,
   Probe,
   Protocol,
   RestartPolicy,
@@ -20,7 +18,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { Scheduling } from "@k2/cdk-lib";
+import { linux, only, Scheduling, workers } from "@k2/cdk-lib";
 
 import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js";
 
@@ -28,7 +26,6 @@ import { metadata } from "./metadata.js";
 
 const POMERIUM_IMAGE = "pomerium/ingress-controller:v0.32.8";
 const TMP_VOLUME_NAME = "tmp";
-const LINUX_NODE = Node.labeled(NodeLabelQuery.is("kubernetes.io/os", "linux"));
 
 export function createWorkloads(
   scope: Construct,
@@ -183,6 +180,5 @@ function httpProbe(path: string, port: number, failureThreshold: number): Probe 
 }
 
 function applyScheduling(workload: Workload): void {
-  Scheduling.applyWorkersPreferred(workload);
-  workload.scheduling.attract(LINUX_NODE);
+  Scheduling.of(workload).apply(only(workers()), only(linux()));
 }

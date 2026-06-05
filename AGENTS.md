@@ -273,9 +273,9 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 
 ### Scheduling
 
-- Movable workloads should prefer worker nodes.
-- Movable-but-critical data-plane workloads should prefer workers and tolerate
-  control-plane nodes only as fallback.
+- Workloads should require worker nodes unless explicitly configured otherwise.
+- Only cluster-critical workloads should tolerate control-plane nodes; DNS is
+  the normal exception.
 - Host/control-plane style workloads, such as `kube-vip`, may remain
   control-plane pinned.
 

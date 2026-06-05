@@ -1,13 +1,13 @@
 import type { Construct } from "constructs";
 
-import { ClusterContext, HelmCharts, K2Chart, Scheduling } from "@k2/cdk-lib";
+import { ClusterContext, controlPlane, HelmCharts, K2Chart, only, Scheduling } from "@k2/cdk-lib";
 
 export class KubeVip extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
 
     const cluster = ClusterContext.of(this).config;
-    const scheduling = Scheduling.controlPlane();
+    const scheduling = Scheduling.profile(only(controlPlane()));
 
     HelmCharts.of(this).asChart(this, "kube-vip", "kube-vip", {
       config: {

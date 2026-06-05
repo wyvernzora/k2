@@ -15,7 +15,7 @@ import {
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS, PAPERLESS_MCP_PORT } from "../../constants.js";
 
@@ -65,7 +65,6 @@ export class PaperlessDeployment extends K2Deployment {
     this.addInitContainer(initDocumentsContainer(volumes));
     this.addContainer(paperlessContainer(props, volumes, credentialsSecret, paperlessSecret));
     this.addContainer(paperlessMcpContainer(props.appUrl, mcpTokenSecret));
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

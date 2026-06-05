@@ -2,7 +2,7 @@ import { Duration, type Cron } from "cdk8s";
 import { ConcurrencyPolicy, CronJob, type CronJobProps, type IServiceAccount, type JobProps } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
-import { Scheduling } from "../scheduling.js";
+import { only, Scheduling, workers } from "../scheduling.js";
 
 import {
   prepareScriptedWorkload,
@@ -41,7 +41,7 @@ export class ScriptedCronJob extends Construct {
 class ScriptedKubernetesCronJob extends CronJob {
   public constructor(scope: Construct, id: string, props: CronJobProps) {
     super(scope, id, props);
-    Scheduling.applyWorkersPreferred(this);
+    Scheduling.of(this).apply(only(workers()));
   }
 }
 

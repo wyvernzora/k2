@@ -13,7 +13,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { ZIGBEE2MQTT_HTTP_PORT, ZIGBEE2MQTT_LABELS } from "../../constants.js";
 
@@ -52,7 +52,6 @@ export class Zigbee2MqttDeployment extends K2Deployment {
     const initMount = initConfigMount(this, props.configName);
     this.addInitContainer(initConfigContainer(volumes, initMount));
     this.addContainer(zigbee2MqttContainer(volumes));
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

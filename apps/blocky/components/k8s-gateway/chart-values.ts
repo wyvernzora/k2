@@ -1,6 +1,6 @@
 import type { HelmProps } from "cdk8s";
 
-import { Scheduling } from "@k2/cdk-lib";
+import { prefer, Scheduling, workers } from "@k2/cdk-lib";
 
 import { CustomDns } from "./custom-dns.js";
 
@@ -14,7 +14,7 @@ export interface K8sGatewayValuesProps {
 }
 
 export function k8sGatewayValues(props: K8sGatewayValuesProps): HelmProps["values"] {
-  const scheduling = Scheduling.workersPreferred();
+  const scheduling = Scheduling.profile(prefer(workers()));
   return {
     domain: props.apexDomain,
     ttl: 60,

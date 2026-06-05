@@ -13,7 +13,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { MOSQUITTO_LABELS, MOSQUITTO_MQTT_PORT } from "../../constants.js";
 
@@ -48,7 +48,6 @@ export class MosquittoDeployment extends K2Deployment {
     this.select(LabelSelector.of({ labels: MOSQUITTO_LABELS }));
     const volumes = this.attachVolumes(props.volumes);
     this.addContainer(mosquittoContainer(volumes, configMount(this, props.configName)));
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

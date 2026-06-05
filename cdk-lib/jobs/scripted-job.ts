@@ -1,7 +1,7 @@
 import { Job, type IServiceAccount, type JobProps } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
-import { Scheduling } from "../scheduling.js";
+import { only, Scheduling, workers } from "../scheduling.js";
 
 import {
   prepareScriptedWorkload,
@@ -32,6 +32,6 @@ export class ScriptedJob extends Construct {
 class ScriptedKubernetesJob extends Job {
   public constructor(scope: Construct, id: string, props: JobProps) {
     super(scope, id, props);
-    Scheduling.applyWorkersPreferred(this);
+    Scheduling.of(this).apply(only(workers()));
   }
 }

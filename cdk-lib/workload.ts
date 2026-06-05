@@ -1,11 +1,13 @@
 import { Deployment, type DeploymentProps } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
+import { only, Scheduling, workers } from "./scheduling.js";
 import type { K2Mounters, K2Volumes } from "./volumes/base.js";
 
 export class K2Deployment extends Deployment {
   public constructor(scope: Construct, id: string, props: DeploymentProps = {}) {
     super(scope, id, props);
+    Scheduling.of(this).apply(only(workers()));
   }
 
   public attachVolumes<V extends K2Volumes>(volumes: V): K2Mounters<V> {

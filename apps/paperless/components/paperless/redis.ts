@@ -11,7 +11,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, Scheduling } from "@k2/cdk-lib";
+import { K2Deployment } from "@k2/cdk-lib";
 
 import { REDIS_LABELS, REDIS_PORT } from "../../constants.js";
 
@@ -35,7 +35,6 @@ export class RedisDeployment extends K2Deployment {
     this.select(LabelSelector.of({ labels: REDIS_LABELS }));
     const secret = Secret.fromSecretName(this, "paperless-secret", props.secretName);
     this.addContainer(redisContainer(secret));
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

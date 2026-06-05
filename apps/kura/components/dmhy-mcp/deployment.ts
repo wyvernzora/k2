@@ -10,7 +10,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, Scheduling } from "@k2/cdk-lib";
+import { K2Deployment } from "@k2/cdk-lib";
 
 import { DMHY_MCP_LABELS, DMHY_MCP_PORT } from "../../constants.js";
 
@@ -35,7 +35,6 @@ export class DmhyMcpDeployment extends K2Deployment {
 
     this.select(LabelSelector.of({ labels: DMHY_MCP_LABELS }));
     this.addContainer(dmhyMcpContainer());
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

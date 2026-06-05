@@ -18,7 +18,7 @@ import {
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { PLEX_CADDY_PORT, PLEX_HTTP_PORT, PLEX_LABELS } from "../../constants.js";
 
@@ -67,7 +67,6 @@ export class PlexDeployment extends K2Deployment {
     this.addInitContainer(initDatabaseContainer(volumes));
     this.addContainer(plexContainer(volumes));
     this.addContainer(caddyContainer(caddyMounts));
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

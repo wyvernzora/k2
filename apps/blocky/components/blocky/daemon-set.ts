@@ -12,7 +12,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { Scheduling } from "@k2/cdk-lib";
+import { prefer, Scheduling, workers } from "@k2/cdk-lib";
 
 const BLOCKY_IMAGE = "ghcr.io/0xerr0r/blocky:v0.26.2";
 const CONFIG_KEY = "blocky.yaml";
@@ -51,7 +51,7 @@ export class BlockyDaemonSet extends DaemonSet {
       volumes: [configVolume],
     });
     this.select(LabelSelector.of({ labels: POD_LABELS }));
-    Scheduling.applyWorkersPreferred(this);
+    Scheduling.of(this).apply(prefer(workers()));
   }
 }
 

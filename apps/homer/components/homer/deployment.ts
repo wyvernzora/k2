@@ -12,7 +12,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { Scheduling } from "@k2/cdk-lib";
+import { only, Scheduling, workers } from "@k2/cdk-lib";
 
 import { HOMER_HTTP_PORT, HOMER_LABELS } from "../../constants.js";
 
@@ -50,7 +50,7 @@ export class HomerDeployment extends Deployment {
       volumes: [configVolume],
     });
     this.select(LabelSelector.of({ labels: HOMER_LABELS }));
-    Scheduling.applyWorkersPreferred(this);
+    Scheduling.of(this).apply(only(workers()));
   }
 }
 

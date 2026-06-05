@@ -13,7 +13,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { HOME_ASSISTANT_HTTP_PORT, HOME_ASSISTANT_LABELS } from "../../constants.js";
 
@@ -52,7 +52,6 @@ export class HomeAssistantDeployment extends K2Deployment {
     const initMount = initConfigMount(this, props.configName);
     this.addInitContainer(initConfigContainer(volumes, initMount));
     this.addContainer(homeAssistantContainer(volumes));
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

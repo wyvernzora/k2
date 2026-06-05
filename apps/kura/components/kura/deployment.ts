@@ -13,7 +13,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, Scheduling, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "../../constants.js";
 
@@ -50,7 +50,6 @@ export class KuraDeployment extends K2Deployment {
     const tvdbSecret = Secret.fromSecretName(this, "tvdb-secret", props.tvdbSecretName);
     this.addInitContainer(initContainer(volumes));
     this.addContainer(kuraContainer(volumes, tvdbSecret));
-    Scheduling.applyWorkersPreferred(this);
   }
 }
 

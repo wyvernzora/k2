@@ -1,6 +1,6 @@
 import type { Construct } from "constructs";
 
-import { ClusterContext, HelmCharts, K2Chart, Scheduling } from "@k2/cdk-lib";
+import { ClusterContext, controlPlane, HelmCharts, K2Chart, prefer, Scheduling } from "@k2/cdk-lib";
 
 import { CiliumL2AnnouncementPolicy, CiliumLoadBalancerIpPool } from "../../crds/cilium.io.js";
 
@@ -46,7 +46,7 @@ export class Cilium extends K2Chart {
         replicas: 1,
         affinity: {
           podAntiAffinity: CILIUM_OPERATOR_POD_ANTI_AFFINITY,
-          nodeAffinity: Scheduling.controlPlanePreferred().affinity!.nodeAffinity,
+          nodeAffinity: Scheduling.profile(prefer(controlPlane())).affinity!.nodeAffinity,
         },
       },
       bpf: {

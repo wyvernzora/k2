@@ -15,7 +15,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { Scheduling } from "@k2/cdk-lib";
+import { only, Scheduling, workers } from "@k2/cdk-lib";
 
 import { POCKET_ID_HTTP_PORT, POCKET_ID_LABELS } from "../../constants.js";
 
@@ -52,7 +52,7 @@ export class PocketIdDeployment extends Deployment {
       containers: [container({ ...props, credentialsSecret, dataVolume, pocketIdSecret, staticApiKeySecret })],
     });
     this.select(LabelSelector.of({ labels: POCKET_ID_LABELS }));
-    Scheduling.applyWorkersPreferred(this);
+    Scheduling.of(this).apply(only(workers()));
   }
 }
 
