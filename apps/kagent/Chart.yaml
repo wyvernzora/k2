@@ -1,0 +1,10 @@
+apiVersion: v2
+name: kagent
+version: 1.0.0
+dependencies:
+  - name: kagent-crds
+    repository: oci://ghcr.io/kagent-dev/kagent/helm
+    version: 0.9.4
+  - name: kagent
+    repository: oci://ghcr.io/kagent-dev/kagent/helm
+    version: 0.9.4
