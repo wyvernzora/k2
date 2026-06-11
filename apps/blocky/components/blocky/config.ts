@@ -5,6 +5,7 @@ import type { Construct } from "constructs";
 import * as YAML from "yaml";
 
 import { ClientGroup } from "./client-group.js";
+import { K8S_GATEWAY_UPSTREAM, K8S_GATEWAY_ZONE } from "./defaults.js";
 
 const CONFIG_MAP_NAME = "blocky-config";
 const CONFIG_KEY = "blocky.yaml";
@@ -40,6 +41,7 @@ function blockyConfig(clientGroups: ClientGroup[]) {
       level: "info",
     },
     upstreams: renderUpstreams(clientGroups),
+    conditional: renderConditionalForwarding(),
     blocking: renderBlocking(clientGroups),
     ports: {
       dns: 53,
@@ -48,6 +50,15 @@ function blockyConfig(clientGroups: ClientGroup[]) {
     prometheus: {
       enable: true,
       path: "/metrics",
+    },
+  };
+}
+
+function renderConditionalForwarding() {
+  return {
+    fallbackUpstream: false,
+    mapping: {
+      [K8S_GATEWAY_ZONE]: K8S_GATEWAY_UPSTREAM,
     },
   };
 }

@@ -3,7 +3,10 @@ import type { VlanConfig } from "@k2/cdk-lib";
 import { BlockingGroup } from "./blocking-group.js";
 import { ClientGroup } from "./client-group.js";
 
-const INTERNAL_UPSTREAMS = ["tcp+udp:k8s-gateway.blocky.svc.cluster.local:53"];
+export const K8S_GATEWAY_ZONE = "wyvernzora.io";
+export const K8S_GATEWAY_UPSTREAM = "tcp+udp:k8s-gateway.blocky.svc.cluster.local:53";
+
+const INTERNAL_UPSTREAMS = [K8S_GATEWAY_UPSTREAM];
 
 const INTERNAL_CLIENT_VLANS = new Set(["default", "privileged", "infrastructure"]);
 const PUBLIC_CLIENT_VLANS = new Set(["sandbox"]);
