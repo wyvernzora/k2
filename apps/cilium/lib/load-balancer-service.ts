@@ -1,4 +1,4 @@
-import { ApiObject, JsonPatch } from "cdk8s";
+import { ApiObject, JsonPatch, type ApiObjectMetadata } from "cdk8s";
 import { Service, ServiceType, type IPodSelector, type ServicePort } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
@@ -10,6 +10,7 @@ export interface LoadBalancerServiceProps {
   readonly selector: IPodSelector;
   readonly ports: ServicePort[];
   readonly allowVlans?: string[];
+  readonly annotations?: ApiObjectMetadata["annotations"];
   readonly externalTrafficPolicy?: "Cluster" | "Local";
 }
 
@@ -22,6 +23,7 @@ export class LoadBalancerService extends Service {
       metadata: {
         name: props.name,
         annotations: {
+          ...props.annotations,
           "lbipam.cilium.io/ips": props.loadBalancerIp,
         },
       },

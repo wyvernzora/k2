@@ -16,6 +16,9 @@ export class PlexService extends LoadBalancerService {
       name: PLEX_SERVICE_NAME,
       loadBalancerIp: PLEX_LOAD_BALANCER_IP,
       allowVlans: PLEX_ALLOW_VLANS,
+      annotations: {
+        "external-dns.alpha.kubernetes.io/hostname": "plex.wyvernzora.io",
+      },
       externalTrafficPolicy: "Cluster",
       selector: Pods.select(scope, "plex-service-pods", { labels: PLEX_LABELS }),
       ports: [

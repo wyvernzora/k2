@@ -5,6 +5,7 @@ import { prefer, Scheduling, workers } from "@k2/cdk-lib";
 import { CustomDns } from "./custom-dns.js";
 
 const WATCHED_RESOURCES = ["Ingress", "Service", "HTTPRoute"];
+const PARENT_DOMAIN = "wyvernzora.io";
 
 export interface K8sGatewayValuesProps {
   readonly apexDomain: string;
@@ -16,7 +17,7 @@ export interface K8sGatewayValuesProps {
 export function k8sGatewayValues(props: K8sGatewayValuesProps): HelmProps["values"] {
   const scheduling = Scheduling.profile(prefer(workers()));
   return {
-    domain: props.apexDomain,
+    domain: [props.apexDomain, PARENT_DOMAIN].join(" "),
     ttl: 60,
     replicaCount: 2,
     watchedResources: WATCHED_RESOURCES,
