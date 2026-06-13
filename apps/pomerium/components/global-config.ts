@@ -14,13 +14,14 @@ import {
 
 const CodecType = PomeriumSpecCodecType;
 const IdentityProvider = PomeriumSpecIdentityProviderProvider;
-const MCP_ALLOWED_CLIENT_ID_DOMAINS = [
+export const MCP_ALLOWED_CLIENT_ID_DOMAINS = [
   "wyvernzora.io",
   "*.wyvernzora.io",
   "chatgpt.com",
   "chat.openai.com",
   "claude.ai",
 ];
+export const MCP_CLIENT_METADATA_EGRESS_HOSTS = ["chatgpt.com", "chat.openai.com", "claude.ai"];
 
 export class PomeriumGlobalConfig extends K2Chart {
   public constructor(scope: Construct, id: string) {

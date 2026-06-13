@@ -6,10 +6,13 @@ import { egress, EndpointNetworkPolicy, tcp } from "../../cilium/lib/netpol/inde
 import { POMERIUM_IDP_HOST_PREFIX } from "../constants.js";
 import { workloads } from "../index.js";
 
+import { MCP_CLIENT_METADATA_EGRESS_HOSTS } from "./global-config.js";
+
 export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
     const idpHost = ApexDomain.of(this).subdomain(POMERIUM_IDP_HOST_PREFIX);
+    const authMetadataHosts = [idpHost, ...MCP_CLIENT_METADATA_EGRESS_HOSTS];
     const proxy = workloads.proxy();
 
     new EndpointNetworkPolicy(this, "controller-kube-api-egress", {
@@ -18,7 +21,7 @@ export class NetworkPolicy extends K2Chart {
     });
     new EndpointNetworkPolicy(this, "controller-oidc-egress", {
       endpoint: proxy,
-      egress: [...egress.toDns(idpHost), ...egress.toFqdns([idpHost], tcp(443))],
+      egress: [...egress.toDns(...authMetadataHosts), ...egress.toFqdns(authMetadataHosts, tcp(443))],
     });
   }
 }
