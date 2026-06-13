@@ -7,6 +7,10 @@ export const POMERIUM_IDP_HOST_PREFIX = "id";
 export const POMERIUM_IDP_SECRET_NAME = "pocket-id";
 export const POMERIUM_PROXY_SERVICE_NAME = "pomerium-proxy";
 export const POMERIUM_DEFAULT_CERTIFICATE_SECRET_NAME = "default-certificate";
+export const POMERIUM_DATABASE_CLAIM_NAME = "pomerium";
+export const POMERIUM_DATABASE_NAME = "pomerium";
+export const POMERIUM_DATABASE_ROLE_NAME = "pomerium";
+export const POMERIUM_DATABASE_SECRET_NAME = `${POMERIUM_DATABASE_CLAIM_NAME}-credentials`;
 
 export const POMERIUM_LABELS = {
   "app.kubernetes.io/component": "proxy",

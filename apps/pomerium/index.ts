@@ -3,6 +3,7 @@ import type { AppResourceFunc } from "@k2/cdk-lib";
 import type { PolicyEndpoint } from "../cilium/lib/netpol/index.js";
 
 import { PomeriumController } from "./components/controller/index.js";
+import { PomeriumDatabase } from "./components/database.js";
 import { PomeriumGlobalConfig } from "./components/global-config.js";
 import { NetworkPolicy } from "./components/network-policy.js";
 import { POMERIUM_LABELS, POMERIUM_NAMESPACE } from "./constants.js";
@@ -25,6 +26,7 @@ export const workloads = {
 
 export const createAppResources: AppResourceFunc = app => {
   new PomeriumController(app, "pomerium");
+  new PomeriumDatabase(app, "database");
   new PomeriumGlobalConfig(app, "global-config");
   new NetworkPolicy(app, "network-policy");
 };
