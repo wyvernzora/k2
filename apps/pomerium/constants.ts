@@ -11,6 +11,7 @@ export const POMERIUM_DATABASE_CLAIM_NAME = "pomerium";
 export const POMERIUM_DATABASE_NAME = "pomerium";
 export const POMERIUM_DATABASE_ROLE_NAME = "pomerium";
 export const POMERIUM_DATABASE_SECRET_NAME = `${POMERIUM_DATABASE_CLAIM_NAME}-credentials`;
+export const POMERIUM_DATABASE_STORAGE_SECRET_NAME = `${POMERIUM_DATABASE_CLAIM_NAME}-storage`;
 
 export const POMERIUM_LABELS = {
   "app.kubernetes.io/component": "proxy",

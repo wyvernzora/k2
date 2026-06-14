@@ -3,7 +3,7 @@ import type { AppResourceFunc } from "@k2/cdk-lib";
 import type { PolicyEndpoint } from "../cilium/lib/netpol/index.js";
 
 import { PomeriumController } from "./components/controller/index.js";
-import { PomeriumDatabase } from "./components/database.js";
+import { PomeriumDatabase } from "./components/database/index.js";
 import { PomeriumGlobalConfig } from "./components/global-config.js";
 import { NetworkPolicy } from "./components/network-policy.js";
 import { POMERIUM_LABELS, POMERIUM_NAMESPACE } from "./constants.js";
