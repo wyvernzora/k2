@@ -134,7 +134,6 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": [
         "ghcr.io/wyvernzora/dmhy-mcp",
-        "ghcr.io/wyvernzora/kura",
         "ghcr.io/wyvernzora/personal-finance-mcp",
         "ghcr.io/wyvernzora/qbittorrent-mcp",
         "ghcr.io/wyvernzora/k2-cluster-init"
