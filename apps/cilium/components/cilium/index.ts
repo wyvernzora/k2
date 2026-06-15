@@ -34,6 +34,14 @@ export class Cilium extends K2Chart {
         qps: 20,
         burst: 40,
       },
+      encryption: {
+        enabled: true,
+        nodeEncryption: true,
+        type: "wireguard",
+      },
+      routingMode: "native",
+      autoDirectNodeRoutes: true,
+      ipv4NativeRoutingCIDR: cluster.kubernetes.subnets.pods,
       l2announcements: {
         enabled: true,
       },
