@@ -1,4 +1,4 @@
-import type { IngressRule, PortSpec } from "./types.js";
+import type { CidrTarget, IngressRule, PortSpec } from "./types.js";
 
 export const ingress = {
   fromCluster(...ports: PortSpec[]): IngressRule[] {
@@ -9,6 +9,9 @@ export const ingress = {
   },
   fromCidrs(cidrs: string[], ...ports: PortSpec[]): IngressRule[] {
     return cidrs.map(cidr => ({ from: { cidr }, ports: portList(ports) }));
+  },
+  fromCidrTarget(target: CidrTarget): IngressRule[] {
+    return ingress.fromCidrs(target.cidrs, ...target.ports);
   },
   fromKubeApiServer(...ports: PortSpec[]): IngressRule[] {
     return [{ from: { entity: "kube-apiserver" }, ports: portList(ports) }];

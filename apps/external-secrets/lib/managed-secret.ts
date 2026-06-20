@@ -32,14 +32,12 @@ export interface ManagedSecretProps {
   readonly metadata?: ApiObjectMetadata;
 
   /**
-   * Logical secret name. The external-secrets library maps this to the active
-   * backing provider. Today that means a 1Password item inside the configured
-   * vault; future backends should preserve this app-facing contract.
+   * Opaque stable identifier for the backing secret record.
    *
-   * @example "plex"
-   * @example "cert-manager-route53"
+   * Today this is the 1Password item ID. Use IDs instead of display names so
+   * renames do not affect deployed ExternalSecrets.
    */
-  readonly secret: string;
+  readonly secretId: string;
 
   /**
    * Fields to materialize into the target Kubernetes Secret. Map keys become
@@ -94,7 +92,7 @@ export class ManagedSecret extends ExternalSecret {
           remoteRef: {
             conversionStrategy: RemoteRefConversionStrategy.DEFAULT,
             decodingStrategy: RemoteRefDecodingStrategy.NONE,
-            key: `${props.secret}/${fieldPath}`,
+            key: `${props.secretId}/${fieldPath}`,
             metadataPolicy: RemoteRefMetadataPolicy.NONE,
             nullBytePolicy: RemoteRefNullBytePolicy.IGNORE,
           },

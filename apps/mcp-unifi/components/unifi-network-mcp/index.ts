@@ -11,14 +11,14 @@ import { UnifiNetworkMcpService } from "./service.js";
 
 const UNIFI_MCP_HOST_PREFIX = "unifi-mcp";
 const UNIFI_MCP_SECRET_NAME = "unifi-network-mcp";
-const UNIFI_MCP_SECRET_SOURCE = "Unifi Console";
+const UNIFI_MCP_SECRET_ID = "ouq44qyvowkyhuyw7waubowa3a";
 
 export class UnifiNetworkMcp extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
     new ManagedSecret(this, "credentials", {
       metadata: { name: UNIFI_MCP_SECRET_NAME },
-      secret: UNIFI_MCP_SECRET_SOURCE,
+      secretId: UNIFI_MCP_SECRET_ID,
       fields: {
         "api-key": "credential",
       },

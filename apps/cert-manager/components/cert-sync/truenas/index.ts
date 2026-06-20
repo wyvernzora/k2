@@ -13,6 +13,7 @@ import { CERT_SYNC_TRUENAS_LABELS } from "../labels.js";
 
 const JOB_NAME = "cert-sync-truenas";
 const CREDENTIAL_SECRET_NAME = "cert-sync-truenas";
+const CREDENTIAL_SECRET_ID = "lfsuj4pkgrxtprzlcadbrgixze";
 const SCRIPT_PATH = fileURLToPath(new URL("./scripts/sync.py", import.meta.url));
 
 export class TrueNasCertSync extends Construct {
@@ -21,7 +22,7 @@ export class TrueNasCertSync extends Construct {
 
     const credentials = new ManagedSecret(this, "credentials", {
       metadata: { name: CREDENTIAL_SECRET_NAME },
-      secret: CREDENTIAL_SECRET_NAME,
+      secretId: CREDENTIAL_SECRET_ID,
       fields: {
         "api-key": "api-key",
       },

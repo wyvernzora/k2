@@ -28,8 +28,8 @@ const KAGENT_OPENAI_SECRET_NAME = "kagent-openai";
 const KAGENT_DATABASE_URL_MOUNT_PATH = "/var/run/kagent-db";
 const KAGENT_DATABASE_URL_FILE = `${KAGENT_DATABASE_URL_MOUNT_PATH}/uri`;
 const OPENAI_API_KEY_SECRET_KEY = "OPENAI_API_KEY";
-const OPENAI_SECRET_SOURCE = "OpenAI API";
-const OPENAI_SECRET_SOURCE_FIELD = "credential";
+const OPENAI_SECRET_ID = "auxpf6o2uqun2igak64lteb5tq";
+const OPENAI_SECRET_FIELD = "credential";
 
 export class KAgentSystem extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -37,8 +37,8 @@ export class KAgentSystem extends K2Chart {
 
     new ManagedSecret(this, "openai-secret", {
       metadata: { name: KAGENT_OPENAI_SECRET_NAME },
-      secret: OPENAI_SECRET_SOURCE,
-      fields: { [OPENAI_API_KEY_SECRET_KEY]: OPENAI_SECRET_SOURCE_FIELD },
+      secretId: OPENAI_SECRET_ID,
+      fields: { [OPENAI_API_KEY_SECRET_KEY]: OPENAI_SECRET_FIELD },
     });
     new OpenAiModelConfig(this, "gpt-5-5", {
       name: GPT_5_5_MODEL_CONFIG_NAME,

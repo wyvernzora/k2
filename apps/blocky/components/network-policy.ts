@@ -12,6 +12,7 @@ import {
   tcp,
   udp,
 } from "@k2/cilium";
+import * as tailscale from "@k2/tailscale";
 
 const DNS_PORTS = [udp(53), tcp(53)];
 const K8S_GATEWAY_DNS_PORTS = [udp(1053), tcp(1053)];
@@ -34,7 +35,11 @@ export class NetworkPolicy extends K2Chart {
         "app.kubernetes.io/component": "resolver",
         "app.kubernetes.io/name": "blocky",
       }),
-      ingress: ingress.fromCidrs(cidr.rfc1918(), ...DNS_PORTS),
+      ingress: [
+        ...ingress.fromCidrs(cidr.rfc1918(), ...DNS_PORTS),
+        ...ingress.fromCidrTarget(tailscale.endpoints.tailnetDnsClients()),
+        { from: { endpoint: tailscale.workloads.router() }, ports: DNS_PORTS },
+      ],
       egress: [
         ...egress.toCidrs(publicDnsCidrs, ...DNS_PORTS),
         ...egress.toDns(),

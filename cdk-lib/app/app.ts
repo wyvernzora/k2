@@ -89,4 +89,5 @@ const CLUSTER_SCOPED_KINDS = new Set([
   "storage.k8s.io/v1/CSINode",
   "storage.k8s.io/v1/StorageClass",
   "storage.k8s.io/v1/VolumeAttachment",
+  "tailscale.com/v1alpha1/Connector",
 ]);

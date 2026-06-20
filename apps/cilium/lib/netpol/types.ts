@@ -36,6 +36,11 @@ export interface BackendTarget {
   readonly ports: PortSpec[];
 }
 
+export interface CidrTarget {
+  readonly cidrs: string[];
+  readonly ports: PortSpec[];
+}
+
 export interface EndpointNetworkPolicyProps {
   readonly endpoint: PolicyEndpoint;
   readonly ingress?: IngressRule[];

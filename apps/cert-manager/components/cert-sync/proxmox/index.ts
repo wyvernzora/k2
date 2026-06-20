@@ -13,6 +13,7 @@ import { CERT_SYNC_PROXMOX_LABELS } from "../labels.js";
 
 const JOB_NAME = "cert-sync-proxmox";
 const CREDENTIAL_SECRET_NAME = "cert-sync-proxmox";
+const CREDENTIAL_SECRET_ID = "iyvvxsn6rsrxawh6o3wyapzijm";
 const SCRIPT_PATH = fileURLToPath(new URL("./scripts/sync.py", import.meta.url));
 
 export class ProxmoxCertSync extends Construct {
@@ -21,7 +22,7 @@ export class ProxmoxCertSync extends Construct {
 
     const credentials = new ManagedSecret(this, "credentials", {
       metadata: { name: CREDENTIAL_SECRET_NAME },
-      secret: CREDENTIAL_SECRET_NAME,
+      secretId: CREDENTIAL_SECRET_ID,
       fields: {
         "api-token-id": "api-token-id",
         "api-token-secret": "api-token-secret",

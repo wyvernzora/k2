@@ -16,11 +16,9 @@ aws:
     url: https://oidc.k2.wyvernzora.io/v3
     jwksUri: https://oidc.k2.wyvernzora.io/v3/openid/v1/jwks
 
-# 1Password vault that ESO's ClusterSecretStore reads through. Vault names
-# are case-sensitive in the 1Password SDK — must match the vault as it
-# appears in the 1Password UI (NOT lowercased).
+# 1Password vault ID that ESO's ClusterSecretStore reads through.
 onePassword:
-  vault: K2
+  vault: zfsyjjcwge4w4gw6dh4zaqndhq
 
 # Kubernetes / k3s networking facts.
 #   api      — kube-vip VIP IP. Used as the Kubernetes API endpoint and the

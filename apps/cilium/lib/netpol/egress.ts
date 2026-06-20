@@ -1,4 +1,4 @@
-import type { EgressRule, FqdnMatch, PolicyEndpoint, PortSpec } from "./types.js";
+import type { CidrTarget, EgressRule, FqdnMatch, PolicyEndpoint, PortSpec } from "./types.js";
 import { fqdnMatch } from "./fqdn-match.js";
 import { tcp, udp } from "./port-spec.js";
 
@@ -23,6 +23,9 @@ export const egress = {
   },
   toCidrs(cidrs: string[], ...ports: PortSpec[]): EgressRule[] {
     return cidrs.map(cidr => ({ to: { cidr }, ports: portList(ports) }));
+  },
+  toCidrTarget(target: CidrTarget): EgressRule[] {
+    return egress.toCidrs(target.cidrs, ...target.ports);
   },
   toFqdns(matches: Array<string | FqdnMatch>, ...ports: PortSpec[]): EgressRule[] {
     return [{ to: { fqdn: matches.map(fqdnMatch) }, ports: ports.length > 0 ? ports : [tcp(443)] }];

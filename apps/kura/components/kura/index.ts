@@ -11,6 +11,7 @@ import { KuraMcpService, KuraService } from "./service.js";
 
 const KURA_HOST_PREFIX = "kura";
 const TVDB_SECRET_NAME = "kura-tvdb";
+const TVDB_SECRET_ID = "q4xf32di7npmvc7e62amvgd574";
 
 export class Kura extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -19,7 +20,7 @@ export class Kura extends K2Chart {
 
     new ManagedSecret(this, "tvdb-secret", {
       metadata: { name: TVDB_SECRET_NAME },
-      secret: "TheTVDB v4 API",
+      secretId: TVDB_SECRET_ID,
       fields: { credential: "credential" },
     });
     new KuraDeployment(this, "deployment", {
