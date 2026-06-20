@@ -7,7 +7,7 @@ import {
   DEFAULT_CERTIFICATE_SECRET_NAME,
 } from "../cert-manager/constants.js";
 
-const TARGET_NAMESPACES = ["plex", "pomerium"];
+const TARGET_NAMESPACES = ["forgejo", "plex", "pomerium"];
 const {
   ClusterExternalSecret,
   ClusterExternalSecretSpecExternalSecretSpecDataRemoteRefConversionStrategy: RemoteRefConversionStrategy,

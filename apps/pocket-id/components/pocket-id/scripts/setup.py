@@ -30,6 +30,11 @@ class Settings:
     pomerium_client_id: str
     pomerium_callback_url: str
     pomerium_launch_url: str
+    forgejo_namespace: str
+    forgejo_secret: str
+    forgejo_client_id: str
+    forgejo_callback_url: str
+    forgejo_launch_url: str
 
 
 def main() -> None:
@@ -38,17 +43,53 @@ def main() -> None:
     core_api = client.CoreV1Api()
     apps_api = client.AppsV1Api()
 
-    if pomerium_secret_ready(core_api, settings):
+    if oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret) and oidc_secret_ready(
+        core_api,
+        settings.forgejo_namespace,
+        settings.forgejo_secret,
+    ):
         cleanup_static_api_key(core_api, apps_api, settings)
-        print("Pomerium OIDC client secret already exists")
+        print("Pocket ID OIDC client secrets already exist")
         return
 
     api_key = ensure_static_api_key(core_api, settings)
     restart_pocket_id(apps_api, settings)
-    upsert_pomerium_client(settings, api_key)
-    write_pomerium_secret(core_api, settings, api_key)
+    if not oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret):
+        upsert_oidc_client(
+            settings,
+            api_key,
+            client_id=settings.pomerium_client_id,
+            name="Pomerium",
+            callback_url=settings.pomerium_callback_url,
+            launch_url=settings.pomerium_launch_url,
+        )
+        write_oidc_secret(
+            core_api,
+            settings,
+            api_key,
+            namespace=settings.pomerium_namespace,
+            secret_name=settings.pomerium_secret,
+            client_id=settings.pomerium_client_id,
+        )
+    if not oidc_secret_ready(core_api, settings.forgejo_namespace, settings.forgejo_secret):
+        upsert_oidc_client(
+            settings,
+            api_key,
+            client_id=settings.forgejo_client_id,
+            name="Forgejo",
+            callback_url=settings.forgejo_callback_url,
+            launch_url=settings.forgejo_launch_url,
+        )
+        write_oidc_secret(
+            core_api,
+            settings,
+            api_key,
+            namespace=settings.forgejo_namespace,
+            secret_name=settings.forgejo_secret,
+            client_id=settings.forgejo_client_id,
+        )
     cleanup_static_api_key(core_api, apps_api, settings)
-    print("Pomerium OIDC client bootstrap complete")
+    print("Pocket ID OIDC client bootstrap complete")
 
 
 def load_settings() -> Settings:
@@ -62,6 +103,11 @@ def load_settings() -> Settings:
         pomerium_client_id=required_env("POMERIUM_CLIENT_ID"),
         pomerium_callback_url=required_env("POMERIUM_CALLBACK_URL"),
         pomerium_launch_url=required_env("POMERIUM_LAUNCH_URL"),
+        forgejo_namespace=required_env("FORGEJO_NAMESPACE"),
+        forgejo_secret=required_env("FORGEJO_SECRET"),
+        forgejo_client_id=required_env("FORGEJO_CLIENT_ID"),
+        forgejo_callback_url=required_env("FORGEJO_CALLBACK_URL"),
+        forgejo_launch_url=required_env("FORGEJO_LAUNCH_URL"),
     )
 
 
@@ -72,8 +118,8 @@ def required_env(name: str) -> str:
     return value
 
 
-def pomerium_secret_ready(core_api: client.CoreV1Api, settings: Settings) -> bool:
-    secret = read_secret(core_api, settings.pomerium_namespace, settings.pomerium_secret)
+def oidc_secret_ready(core_api: client.CoreV1Api, namespace: str, name: str) -> bool:
+    secret = read_secret(core_api, namespace, name)
     if secret is None or secret.data is None:
         return False
     return secret_key_exists(secret, "client_id") and secret_key_exists(secret, "client_secret")
@@ -172,16 +218,24 @@ def wait_for_pocket_id(settings: Settings) -> None:
     raise RuntimeError("timed out waiting for Pocket ID health endpoint")
 
 
-def upsert_pomerium_client(settings: Settings, api_key: str) -> None:
+def upsert_oidc_client(
+    settings: Settings,
+    api_key: str,
+    *,
+    client_id: str,
+    name: str,
+    callback_url: str,
+    launch_url: str,
+) -> None:
     response = requests.get(
-        f"{settings.pocket_id_internal_url}/api/oidc/clients/{settings.pomerium_client_id}",
+        f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}",
         headers=api_headers(api_key),
         timeout=REQUEST_TIMEOUT,
     )
-    payload = client_payload(settings)
+    payload = client_payload(client_id=client_id, name=name, callback_url=callback_url, launch_url=launch_url)
     if response.status_code == requests.codes.ok:
         put_response = requests.put(
-            f"{settings.pocket_id_internal_url}/api/oidc/clients/{settings.pomerium_client_id}",
+            f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}",
             headers=api_headers(api_key),
             json=payload,
             timeout=REQUEST_TIMEOUT,
@@ -204,9 +258,17 @@ def upsert_pomerium_client(settings: Settings, api_key: str) -> None:
     response.raise_for_status()
 
 
-def write_pomerium_secret(core_api: client.CoreV1Api, settings: Settings, api_key: str) -> None:
+def write_oidc_secret(
+    core_api: client.CoreV1Api,
+    settings: Settings,
+    api_key: str,
+    *,
+    namespace: str,
+    secret_name: str,
+    client_id: str,
+) -> None:
     response = requests.post(
-        f"{settings.pocket_id_internal_url}/api/oidc/clients/{settings.pomerium_client_id}/secret",
+        f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}/secret",
         headers=api_headers(api_key),
         timeout=REQUEST_TIMEOUT,
     )
@@ -217,26 +279,26 @@ def write_pomerium_secret(core_api: client.CoreV1Api, settings: Settings, api_ke
 
     create_or_patch_secret(
         core_api,
-        namespace=settings.pomerium_namespace,
-        name=settings.pomerium_secret,
+        namespace=namespace,
+        name=secret_name,
         string_data={
-            "client_id": settings.pomerium_client_id,
+            "client_id": client_id,
             "client_secret": client_secret,
         },
     )
 
 
-def client_payload(settings: Settings) -> dict[str, Any]:
+def client_payload(*, client_id: str, name: str, callback_url: str, launch_url: str) -> dict[str, Any]:
     return {
-        "id": settings.pomerium_client_id,
-        "name": "Pomerium",
-        "callbackURLs": [settings.pomerium_callback_url],
+        "id": client_id,
+        "name": name,
+        "callbackURLs": [callback_url],
         "logoutCallbackURLs": [],
         "isPublic": False,
         "pkceEnabled": False,
         "requiresReauthentication": False,
         "credentials": {"federatedIdentities": []},
-        "launchURL": settings.pomerium_launch_url,
+        "launchURL": launch_url,
         "isGroupRestricted": False,
     }
 

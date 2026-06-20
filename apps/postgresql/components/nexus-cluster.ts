@@ -41,7 +41,7 @@ function nexusClusterMetadata(): ClusterProps["metadata"] {
   return {
     name: NEXUS_CLUSTER_NAME,
     annotations: {
-      "cnpg.wyvernzora.io/allowed-claim-namespaces": "paperless,pocket-id,kagent,pomerium,n8n",
+      "cnpg.wyvernzora.io/allowed-claim-namespaces": "paperless,pocket-id,kagent,pomerium,n8n,forgejo",
     },
   };
 }
