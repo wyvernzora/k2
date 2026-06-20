@@ -13,8 +13,10 @@ interface PomeriumIngressRouteProps {
 }
 
 export interface AuthenticatedIngressProps extends PomeriumIngressRouteProps {
+  readonly allowWebsockets?: boolean;
   readonly passIdentityHeaders?: boolean;
   readonly policy?: string;
+  readonly preserveHostHeader?: boolean;
 }
 
 export interface AuthenticatedMcpIngressProps extends AuthenticatedIngressProps {
@@ -107,8 +109,14 @@ function backendService(props: PomeriumIngressRouteProps) {
 
 function authenticatedIngressAnnotations(props: AuthenticatedIngressProps): Record<string, string> | undefined {
   const annotations: Record<string, string> = {};
+  if (props.allowWebsockets === true) {
+    annotations["ingress.pomerium.io/allow_websockets"] = "true";
+  }
   if (props.passIdentityHeaders === true) {
     annotations["ingress.pomerium.io/pass_identity_headers"] = "true";
+  }
+  if (props.preserveHostHeader === true) {
+    annotations["ingress.pomerium.io/preserve_host_header"] = "true";
   }
   if (props.policy !== undefined) {
     annotations["ingress.pomerium.io/policy"] = props.policy;
