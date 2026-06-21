@@ -511,7 +511,7 @@ spec:
               set -eu
 
               forgejo_admin() {
-                forgejo --work-path "/var/lib/gitea" --config "/etc/gitea/app.ini" admin "$@"
+                forgejo --work-path "/var/lib/gitea" --config "/var/lib/gitea/custom/conf/app.ini" admin "$@"
               }
 
               auth_exists() {

@@ -2104,6 +2104,24 @@ spec:
           automountServiceAccountToken: false
           containers:
             - command:
+                - sh
+                - -c
+                - |-
+                  workload='cronjob/cert-sync-proxmox'
+                  script='sync.py'
+                  log() { printf '%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$1"; }
+                  trap 'log "$workload interrupted by SIGTERM while running $script"; exit 143' TERM
+                  trap 'log "$workload interrupted by SIGINT while running $script"; exit 130' INT
+                  log "$workload started $script"
+                  "$@"
+                  status=$?
+                  if [ "$status" -eq 0 ]; then
+                    log "$workload finished $script successfully"
+                  else
+                    log "$workload finished $script with exit code $status"
+                  fi
+                  exit "$status"
+                - scripted-workload
                 - /scripts/sync.py
               env:
                 - name: PROXMOX_HOSTS
@@ -2491,6 +2509,24 @@ spec:
           automountServiceAccountToken: false
           containers:
             - command:
+                - sh
+                - -c
+                - |-
+                  workload='cronjob/cert-sync-truenas'
+                  script='sync.py'
+                  log() { printf '%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$1"; }
+                  trap 'log "$workload interrupted by SIGTERM while running $script"; exit 143' TERM
+                  trap 'log "$workload interrupted by SIGINT while running $script"; exit 130' INT
+                  log "$workload started $script"
+                  "$@"
+                  status=$?
+                  if [ "$status" -eq 0 ]; then
+                    log "$workload finished $script successfully"
+                  else
+                    log "$workload finished $script with exit code $status"
+                  fi
+                  exit "$status"
+                - scripted-workload
                 - /scripts/sync.py
               env:
                 - name: TRUENAS_HOST
