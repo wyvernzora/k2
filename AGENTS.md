@@ -333,6 +333,13 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
   the legacy API VIP.
 - Do not reveal Secret values in command output or summaries.
 
+### Scheduled Jobs
+
+- Scheduled jobs MUST log enough progress to show that they started, what
+  phase or wait loop they are in, and whether they ended successfully or
+  failed. Long waits and retries should emit periodic progress messages so a
+  hung job is diagnosable from pod logs alone.
+
 ### Kairos Image Work
 
 - Kairos v3 image work is authoritative on `main`.

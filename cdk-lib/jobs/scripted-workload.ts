@@ -172,7 +172,7 @@ function scriptContainer(options: ScriptedJobPropsOptions): ContainerProps {
     name: "script",
     image: JOB_RUNNER_IMAGE,
     imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
-    command: options.props.command ?? [`${SCRIPT_MOUNT_PATH}/${options.props.script.filename}`],
+    command: loggedCommand(options),
     envVariables: options.props.env,
     resources: {
       cpu: {
@@ -205,6 +205,41 @@ function scriptContainer(options: ScriptedJobPropsOptions): ContainerProps {
       ...extraVolumeMounts(options.props),
     ],
   };
+}
+
+function loggedCommand(options: ScriptedJobPropsOptions): string[] {
+  return [
+    "sh",
+    "-c",
+    loggedCommandScript(options),
+    "scripted-workload",
+    ...(options.props.command ?? [`${SCRIPT_MOUNT_PATH}/${options.props.script.filename}`]),
+  ];
+}
+
+function loggedCommandScript(options: ScriptedJobPropsOptions): string {
+  const workload = shellLiteral(`${options.type}/${options.props.name}`);
+  const script = shellLiteral(options.props.script.filename);
+  return [
+    `workload=${workload}`,
+    `script=${script}`,
+    `log() { printf '%s %s\\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$1"; }`,
+    `trap 'log "$workload interrupted by SIGTERM while running $script"; exit 143' TERM`,
+    `trap 'log "$workload interrupted by SIGINT while running $script"; exit 130' INT`,
+    `log "$workload started $script"`,
+    `"$@"`,
+    `status=$?`,
+    `if [ "$status" -eq 0 ]; then`,
+    `  log "$workload finished $script successfully"`,
+    `else`,
+    `  log "$workload finished $script with exit code $status"`,
+    `fi`,
+    `exit "$status"`,
+  ].join("\n");
+}
+
+function shellLiteral(value: string): string {
+  return `'${value.replaceAll("'", `'\\''`)}'`;
 }
 
 function extraVolumes(props: ScriptedWorkloadProps): Volume[] {
