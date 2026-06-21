@@ -1,0 +1,273 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: mcp-unifi
+    k2.wyvernzora.io/component: unifi-network-mcp
+  name: unifi-network-mcp
+  namespace: mcp-unifi
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: ouq44qyvowkyhuyw7waubowa3a/credential
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: api-key
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: unifi-network-mcp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: mcp-unifi
+    k2.wyvernzora.io/component: unifi-network-mcp
+  name: unifi-network-mcp
+  namespace: mcp-unifi
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: network
+      app.kubernetes.io/name: unifi-network-mcp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: network
+        app.kubernetes.io/name: unifi-network-mcp
+        cdk8s.io/metadata.addr: unifi-network-mcp-deployment-c89ae9da
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: UNIFI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: unifi-network-mcp
+            - name: UNIFI_API_TYPE
+              value: local
+            - name: UNIFI_LOCAL_HOST
+              value: unifi.k2.wyvernzora.io
+            - name: UNIFI_LOCAL_VERIFY_SSL
+              value: "false"
+            - name: UNIFI_PROFILE
+              value: network
+            - name: MCP_SERVER_TRANSPORT
+              value: http
+            - name: MCP_SERVER_HOST
+              value: 0.0.0.0
+            - name: MCP_SERVER_PORT
+              value: "3000"
+          image: ghcr.io/enuno/unifi-mcp-server:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            periodSeconds: 10
+            tcpSocket:
+              port: 3000
+            timeoutSeconds: 5
+          name: unifi-network-mcp
+          ports:
+            - containerPort: 3000
+              name: mcp
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            periodSeconds: 10
+            tcpSocket:
+              port: 3000
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 1000m
+              ephemeral-storage: 1Gi
+              memory: 1024Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: mcp-unifi
+    k2.wyvernzora.io/component: unifi-network-mcp
+  name: unifi-network-mcp
+  namespace: mcp-unifi
+spec:
+  externalIPs: []
+  ports:
+    - name: mcp
+      port: 80
+      targetPort: 3000
+  selector:
+    app.kubernetes.io/component: network
+    app.kubernetes.io/name: unifi-network-mcp
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/mcp_server: "true"
+    ingress.pomerium.io/mcp_server_path: /mcp
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+  labels:
+    k2.wyvernzora.io/app: mcp-unifi
+    k2.wyvernzora.io/component: unifi-network-mcp
+  name: mcp-ingress
+  namespace: mcp-unifi
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: unifi-mcp.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: unifi-network-mcp
+                port:
+                  name: mcp
+            path: /mcp
+            pathType: Prefix
+  tls:
+    - hosts:
+        - unifi-mcp.k2.wyvernzora.io
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: mcp-unifi
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: mcp-unifi
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: mcp-unifi
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: mcp-unifi
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: mcp-unifi
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-mcp-unifi-pomerium-to-unifi-network-mcp
+specs:
+  - description: pomerium to unifi-network-mcp
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: network
+              app.kubernetes.io/name: unifi-network-mcp
+              k8s:io.kubernetes.pod.namespace: mcp-unifi
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to unifi-network-mcp
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: network
+        app.kubernetes.io/name: unifi-network-mcp
+        k8s:io.kubernetes.pod.namespace: mcp-unifi
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: mcp-unifi
+    k2.wyvernzora.io/component: network-policy
+  name: mcp-unifi-unifi-network-mcp-egress
+specs:
+  - egress:
+      - toCIDR:
+          - 10.10.1.1/32
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: network
+        app.kubernetes.io/name: unifi-network-mcp
+        k8s:io.kubernetes.pod.namespace: mcp-unifi

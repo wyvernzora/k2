@@ -1,0 +1,939 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: mosquitto
+  name: mosquitto-config
+  namespace: home-assistant
+data:
+  mosquitto.conf: |-
+    listener 1883
+    allow_anonymous true
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest stdout
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: mosquitto
+  name: mosquitto
+  namespace: home-assistant
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: mosquitto
+      app.kubernetes.io/name: home-assistant
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/mosquitto-config: d7c7c5a6a7e01717d9abcd1a4ee15dd3437e7a62b39ad6a748a246d61bdc9742
+      labels:
+        app.kubernetes.io/component: mosquitto
+        app.kubernetes.io/name: home-assistant
+        cdk8s.io/metadata.addr: mosquitto-deployment-c84756bb
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - image: eclipse-mosquitto:2.0.22
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - mosquitto_sub
+                - -t
+                - $$SYS/#
+                - -C
+                - "1"
+                - -W
+                - "5"
+            failureThreshold: 3
+          name: mosquitto
+          ports:
+            - containerPort: 1883
+              name: mqtt
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - mosquitto_sub
+                - -t
+                - $$SYS/#
+                - -C
+                - "1"
+                - -W
+                - "5"
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 512Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /mosquitto/data
+              name: pvc-mosquitto-data
+            - mountPath: /mosquitto/log
+              name: vol-logs
+            - mountPath: /mosquitto/config/mosquitto.conf
+              name: configmap-mosquitto-config
+              subPath: mosquitto.conf
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: false
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-mosquitto-data
+          persistentVolumeClaim:
+            claimName: mosquitto-data
+            readOnly: false
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: vol-logs
+        - configMap:
+            name: mosquitto-config
+          name: configmap-mosquitto-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: mosquitto
+  name: mosquitto-data
+  namespace: home-assistant
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: mosquitto
+  name: mosquitto
+  namespace: home-assistant
+spec:
+  externalIPs: []
+  ports:
+    - name: mqtt
+      port: 1883
+      targetPort: 1883
+  selector:
+    app.kubernetes.io/component: mosquitto
+    app.kubernetes.io/name: home-assistant
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: zigbee2mqtt
+  name: zigbee2mqtt-init
+  namespace: home-assistant
+data:
+  configuration.yaml: |
+    frontend:
+      enabled: true
+      url: https://z2m.k2.wyvernzora.io
+    mqtt:
+      base_topic: zigbee2mqtt
+      server: mqtt://mosquitto:1883
+    serial:
+      port: tcp://10.10.229.62:6638
+      adapter: zstack
+  init.sh: |-
+    #!/bin/sh
+    set -eu
+
+    if [ ! -s /app/data/configuration.yaml ]; then
+      cp /init/configuration.yaml /app/data/configuration.yaml
+    fi
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: zigbee2mqtt
+  name: zigbee2mqtt
+  namespace: home-assistant
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: zigbee2mqtt
+      app.kubernetes.io/name: home-assistant
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/zigbee2mqtt-config: 4dcc4d3f74096efe1dca8ab2dc91515cf47de17c293a2347e49d2af954e991a7
+      labels:
+        app.kubernetes.io/component: zigbee2mqtt
+        app.kubernetes.io/name: home-assistant
+        cdk8s.io/metadata.addr: zigbee2mqtt-deployment-c8b6fcf2
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - image: koenkk/zigbee2mqtt:2.10.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: zigbee2mqtt
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 1000m
+              ephemeral-storage: 2Gi
+              memory: 1024Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /app/data
+              name: pvc-zigbee2mqtt-data
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      initContainers:
+        - command:
+            - sh
+            - /init/init.sh
+          image: busybox:1.37.0
+          imagePullPolicy: IfNotPresent
+          name: setup-config
+          resources:
+            limits:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /app/data
+              name: pvc-zigbee2mqtt-data
+            - mountPath: /init
+              name: configmap-zigbee2mqtt-init
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: false
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-zigbee2mqtt-data
+          persistentVolumeClaim:
+            claimName: zigbee2mqtt-data
+            readOnly: false
+        - configMap:
+            name: zigbee2mqtt-init
+          name: configmap-zigbee2mqtt-init
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: zigbee2mqtt
+  name: zigbee2mqtt-data
+  namespace: home-assistant
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: zigbee2mqtt
+  name: zigbee2mqtt
+  namespace: home-assistant
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: zigbee2mqtt
+    app.kubernetes.io/name: home-assistant
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: zigbee2mqtt
+  name: zigbee2mqtt
+  namespace: home-assistant
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: z2m.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: zigbee2mqtt
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - z2m.k2.wyvernzora.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: home-assistant
+  name: home-assistant-init
+  namespace: home-assistant
+data:
+  configuration.yaml: |-
+    default_config:
+
+    frontend:
+      themes: !include_dir_merge_named themes
+
+    http: !include http.yaml
+    automation: !include automations.yaml
+    script: !include scripts.yaml
+    scene: !include scenes.yaml
+  http.yaml: |-
+    use_x_forwarded_for: true
+    trusted_proxies:
+      - 10.42.0.0/16
+  init.sh: |-
+    #!/bin/sh
+    set -eu
+
+    if [ ! -f /config/configuration.yaml ]; then
+      cp /init/configuration.yaml /config/configuration.yaml
+    fi
+
+    if [ ! -f /config/http.yaml ]; then
+      cp /init/http.yaml /config/http.yaml
+    fi
+
+    if [ ! -f /config/automations.yaml ]; then
+      printf '[]\n' > /config/automations.yaml
+    fi
+
+    touch /config/scripts.yaml
+    touch /config/scenes.yaml
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: home-assistant
+  name: home-assistant
+  namespace: home-assistant
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: home-assistant
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/home-assistant-config: 49ffddefe6d7fba9c8f3493ca5141ad4648f7918ba90333cf36348893a216194
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: home-assistant
+        cdk8s.io/metadata.addr: home-assistant-deployment-c8039030
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - image: linuxserver/homeassistant:2026.5.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8123
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: home-assistant
+          ports:
+            - containerPort: 8123
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8123
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 4Gi
+              memory: 4096Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /
+              port: 8123
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-home-assistant-config
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      initContainers:
+        - command:
+            - sh
+            - /init/init.sh
+          image: busybox:1.37.0
+          imagePullPolicy: IfNotPresent
+          name: setup-config
+          resources:
+            limits:
+              cpu: 250m
+              ephemeral-storage: 1Gi
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-home-assistant-config
+            - mountPath: /init
+              name: configmap-home-assistant-init
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: false
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-home-assistant-config
+          persistentVolumeClaim:
+            claimName: home-assistant-config
+            readOnly: false
+        - configMap:
+            name: home-assistant-init
+          name: configmap-home-assistant-init
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: home-assistant
+  name: home-assistant-config
+  namespace: home-assistant
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: home-assistant
+  name: home-assistant
+  namespace: home-assistant
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8123
+  selector:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: home-assistant
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/allow_public_unauthenticated_access: "true"
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: home-assistant
+  name: home-assistant
+  namespace: home-assistant
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: ha.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: home-assistant
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - ha.k2.wyvernzora.io
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: home-assistant
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: home-assistant
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: home-assistant
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: home-assistant-home-assistant-http-ingress-deny
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    ingressDeny:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "8123"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: home-assistant-zigbee2mqtt-http-ingress-deny
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: zigbee2mqtt
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    ingressDeny:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: home-assistant-mosquitto-ingress-deny
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: mosquitto
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    ingressDeny:
+      - fromEndpoints:
+          - matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: NotIn
+                values:
+                  - app
+                  - zigbee2mqtt
+            matchLabels:
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "1883"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-home-assistant-pomerium-to-home-assistant
+specs:
+  - description: pomerium to home-assistant
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: app
+              app.kubernetes.io/name: home-assistant
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "8123"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to home-assistant
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8123"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-home-assistant-pomerium-to-zigbee2mqtt
+specs:
+  - description: pomerium to zigbee2mqtt
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: zigbee2mqtt
+              app.kubernetes.io/name: home-assistant
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to zigbee2mqtt
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: zigbee2mqtt
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: home-assistant-home-assistant-home-assistant-to-mosquitto
+specs:
+  - description: home-assistant to mosquitto
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: mosquitto
+              app.kubernetes.io/name: home-assistant
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "1883"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+  - description: home-assistant to mosquitto
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: mosquitto
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: app
+              app.kubernetes.io/name: home-assistant
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "1883"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: home-assistant-home-assistant-zigbee2mqtt-to-mosquitto
+specs:
+  - description: zigbee2mqtt to mosquitto
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: mosquitto
+              app.kubernetes.io/name: home-assistant
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "1883"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: zigbee2mqtt
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+  - description: zigbee2mqtt to mosquitto
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: mosquitto
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: zigbee2mqtt
+              app.kubernetes.io/name: home-assistant
+              k8s:io.kubernetes.pod.namespace: home-assistant
+        toPorts:
+          - ports:
+              - port: "1883"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: home-assistant-home-assistant-egress
+specs:
+  - egress:
+      - toCIDR:
+          - 10.0.0.0/8
+      - toCIDR:
+          - 172.16.0.0/12
+      - toCIDR:
+          - 192.168.0.0/16
+      - toEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: home-assistant
+    k2.wyvernzora.io/component: network-policy
+  name: home-assistant-zigbee2mqtt-egress
+specs:
+  - egress:
+      - toCIDR:
+          - 10.10.229.62/32
+        toPorts:
+          - ports:
+              - port: "6638"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: zigbee2mqtt
+        app.kubernetes.io/name: home-assistant
+        k8s:io.kubernetes.pod.namespace: home-assistant

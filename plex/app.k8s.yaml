@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    checksum/tls-termination-caddy-conf: 9cee1c7272b7d39ecea3ea270ffed90bb7b9f4b7c5f9ae8249a153c466e9196e
-  name: plex-depl-c894ec87
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: plex
+  name: plex
+  namespace: plex
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
@@ -11,38 +13,37 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      cdk8s.io/metadata.addr: plex-depl-c8d675e7
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/name: plex
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        cdk8s.io/metadata.addr: plex-depl-c8d675e7
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/name: plex
+        cdk8s.io/metadata.addr: plex-deployment-c8241fd2
     spec:
       affinity:
         nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - preference:
+                matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              weight: 100
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                  - key: topology.kubernetes.io/zone
-                    operator: In
-                    values:
-                      - roxy
-              - matchExpressions:
-                  - key: topology.kubernetes.io/zone
-                    operator: In
-                    values:
-                      - roxy
-              - matchExpressions:
-                  - key: topology.kubernetes.io/zone
-                    operator: In
-                    values:
-                      - roxy
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       automountServiceAccountToken: false
       containers:
         - env:
             - name: PLEX_UID
-              value: "3000"
+              value: "3001"
             - name: PLEX_GID
               value: "2001"
             - name: TZ
@@ -51,193 +52,419 @@ spec:
               value: docker
             - name: ADVERTISE_IP
               value: https://plex.wyvernzora.io
+            - name: CHANGE_CONFIG_DIR_OWNERSHIP
+              value: "false"
           image: plexinc/pms-docker:1.43.1.10611-1e34174b1
-          imagePullPolicy: Always
-          name: plex-media-server
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /identity
+              port: 32400
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: plex
           ports:
             - containerPort: 32400
-              name: http-internal
-            - containerPort: 1900
-              name: dlna
-            - containerPort: 5353
-              name: mdns
-            - containerPort: 32410
-              name: gdm-32410
-            - containerPort: 32412
-              name: gdm-32412
-            - containerPort: 32413
-              name: gdm-32413
-            - containerPort: 32414
-              name: gdm-32414
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: false
-            runAsNonRoot: false
-          volumeMounts:
-            - mountPath: /config/Library/Application Support/Plex Media Server
-              name: pvc-plex-depl-vol-config-pvc-c8c492a8
-            - mountPath: /anime/series
-              name: blk-vol-series
-            - mountPath: /anime/features
-              name: blk-vol-features
-            - mountPath: /anime/airing
-              name: blk-vol-airing
-        - command:
-            - /bin/sh
-            - /etc/caddy/watch-certs.sh
-          image: caddy:2-alpine
-          imagePullPolicy: Always
-          name: caddy-tls-termination
-          ports:
-            - containerPort: 80
               name: http
-            - containerPort: 443
-              name: https
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /identity
+              port: 32400
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
           resources:
             limits:
-              cpu: 1500m
-              memory: 2048Mi
+              cpu: 4000m
+              ephemeral-storage: 8Gi
+              memory: 8192Mi
             requests:
-              cpu: 1000m
-              memory: 512Mi
+              cpu: 250m
+              memory: 1024Mi
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
             readOnlyRootFilesystem: false
             runAsNonRoot: false
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /identity
+              port: 32400
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
           volumeMounts:
-            - mountPath: /etc/caddy
-              name: configmap-plex-depl-tls-termination-caddy-conf-c8e37d19
-              readOnly: true
-            - mountPath: /etc/caddy/tls
+            - mountPath: /config
+              name: pvc-plex-config
+            - mountPath: /config/Library/Application Support/Plex Media Server/Plug-in Support/Databases
+              name: pvc-plex-databases
+            - mountPath: /anime/series
+              name: vol-series
+            - mountPath: /anime/features
+              name: vol-features
+            - mountPath: /transcode
+              name: vol-transcode
+        - env:
+            - name: XDG_CONFIG_HOME
+              value: /config
+            - name: XDG_DATA_HOME
+              value: /data
+          image: caddy:2.10.0-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            periodSeconds: 10
+            tcpSocket:
+              port: 8443
+            timeoutSeconds: 5
+          name: caddy
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            periodSeconds: 10
+            tcpSocket:
+              port: 8443
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 512Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - NET_BIND_SERVICE
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /etc/caddy/Caddyfile
+              name: configmap-plex-deployment-caddy-config-c8c3fb47
+              subPath: Caddyfile
+            - mountPath: /tls
               name: secret-default-certificate
               readOnly: true
+            - mountPath: /config
+              name: caddy-config-state
+            - mountPath: /data
+              name: caddy-data
+            - mountPath: /tmp
+              name: caddy-tmp
       dnsPolicy: ClusterFirst
+      enableServiceLinks: false
       hostNetwork: false
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - |-
+              set -eu
+
+              mkdir -p "/config/Library/Application Support/Plex Media Server/Plug-in Support"
+              mkdir -p "/config/Library/Application Support/Plex Media Server/Plug-in Support/Databases"
+              touch "/config/.k2-plex-config-initialized"
+          image: busybox:1.37.0
+          imagePullPolicy: IfNotPresent
+          name: init-plex-config
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 2001
+            runAsNonRoot: true
+            runAsUser: 3001
+          volumeMounts:
+            - mountPath: /config
+              name: pvc-plex-config
+        - command:
+            - sh
+            - -c
+            - |-
+              set -eu
+
+              mkdir -p "/databases"
+              if [ ! -f "/databases/.k2-plex-permissions-3001-2001-initialized" ]; then
+                chown -R 3001:2001 "/databases"
+                touch "/databases/.k2-plex-permissions-3001-2001-initialized"
+                chown 3001:2001 "/databases/.k2-plex-permissions-3001-2001-initialized"
+              fi
+          image: busybox:1.37.0
+          imagePullPolicy: IfNotPresent
+          name: init-plex-databases
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /databases
+              name: pvc-plex-databases
       restartPolicy: Always
       securityContext:
-        fsGroupChangePolicy: Always
-        runAsNonRoot: true
+        runAsNonRoot: false
+        supplementalGroups:
+          - 2001
       setHostnameAsFQDN: false
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: pvc-plex-depl-vol-config-pvc-c8c492a8
+        - name: pvc-plex-config
           persistentVolumeClaim:
-            claimName: plex-depl-vol-config-pvc-c8c492a8
+            claimName: plex-config
             readOnly: false
-        - name: blk-vol-series
+        - name: pvc-plex-databases
+          persistentVolumeClaim:
+            claimName: plex-databases
+            readOnly: false
+        - name: vol-series
           nfs:
             path: /mnt/data/media/anime/series
             readOnly: true
             server: 10.10.8.1
-        - name: blk-vol-features
+        - name: vol-features
           nfs:
             path: /mnt/data/media/anime/features
             readOnly: true
             server: 10.10.8.1
-        - name: blk-vol-airing
-          nfs:
-            path: /mnt/data/media/anime/airing
-            readOnly: true
-            server: 10.10.8.1
+        - emptyDir:
+            sizeLimit: 32768Mi
+          name: vol-transcode
         - configMap:
-            name: plex-depl-tls-termination-caddy-conf-c8e37d19
-          name: configmap-plex-depl-tls-termination-caddy-conf-c8e37d19
+            name: plex-deployment-caddy-config-c8c3fb47
+          name: configmap-plex-deployment-caddy-config-c8c3fb47
         - name: secret-default-certificate
           secret:
             secretName: default-certificate
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: caddy-config-state
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: caddy-data
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: caddy-tmp
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: plex-depl-vol-config-pvc-c8c492a8
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: plex
+  name: plex-config
+  namespace: plex
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 256Gi
+  storageClassName: nfs-csi
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: plex
+  name: plex-databases
+  namespace: plex
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 50Gi
+      storage: 8Gi
   storageClassName: longhorn
   volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: plex-depl-tls-termination-caddy-conf-c8e37d19
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: plex
+  name: plex-deployment-caddy-config-c8c3fb47
+  namespace: plex
 data:
   Caddyfile: |-
     {
       auto_https off
     }
 
-    :80 {
-      redir https://{host}{uri} permanent
-    }
-
-    :443 {
-      tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
-
+    :8443 {
+      tls /tls/tls.crt /tls/tls.key
       reverse_proxy 127.0.0.1:32400
     }
-  watch-certs.sh: |-
-    #!/bin/sh
-    set -eu
-
-    checksum() {
-      sha256sum /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key 2>/dev/null || true
-    }
-
-    caddy run --config /etc/caddy/Caddyfile --adapter caddyfile &
-    pid="$!"
-    trap 'kill -TERM "$pid"; wait "$pid"' TERM INT
-
-    last="$(checksum)"
-    while kill -0 "$pid" 2>/dev/null; do
-      sleep 60
-      next="$(checksum)"
-      if [ "$next" != "$last" ]; then
-        caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile --force
-        last="$next"
-      fi
-    done
-
-    wait "$pid"
 immutable: false
 ---
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    coredns.io/hostname: plex.wyvernzora.io
-  name: plex-depl-service-c8e1d3b8
+    external-dns.alpha.kubernetes.io/hostname: plex.wyvernzora.io
+    lbipam.cilium.io/ips: 10.10.13.2
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: plex
+  name: plex
+  namespace: plex
 spec:
   externalIPs: []
+  externalTrafficPolicy: Cluster
+  loadBalancerSourceRanges:
+    - 10.1.0.0/16
+    - 10.8.0.0/16
+    - 10.10.0.0/16
   ports:
-    - name: http
-      port: 80
     - name: https
       port: 443
-    - name: dlna
-      port: 1900
-    - name: mdns
-      port: 5353
-    - name: gdm-32410
-      port: 32410
-    - name: gdm-32412
-      port: 32412
-    - name: gdm-32413
-      port: 32413
-    - name: gdm-32414
-      port: 32414
+      protocol: TCP
+      targetPort: 8443
   selector:
-    cdk8s.io/metadata.addr: plex-depl-c8d675e7
+    app.kubernetes.io/component: media-server
+    app.kubernetes.io/name: plex
   type: LoadBalancer
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: plex
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: plex
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: plex
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: network-policy
+  name: plex-plex-network
+specs:
+  - egress:
+      - toCIDR:
+          - 10.10.8.1/32
+        toPorts:
+          - ports:
+              - port: "2049"
+                protocol: TCP
+      - toEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/name: plex
+        k8s:io.kubernetes.pod.namespace: plex
+    ingress:
+      - fromCIDR:
+          - 10.1.0.0/16
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 10.8.0.0/16
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 10.10.0.0/16
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+      - fromEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+      - fromEntities:
+          - host
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+              - port: "32400"
+                protocol: TCP
+    ingressDeny:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: plex
+        toPorts:
+          - ports:
+              - port: "32400"
+                protocol: TCP

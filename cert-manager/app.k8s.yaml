@@ -2,138 +2,46 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/instance: reflector
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 10.0.42
-    helm.sh/chart: reflector-10.0.42
-  name: reflector
-  namespace: k2-core
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
+  name: route53-dns01
+  namespace: cert-manager
+automountServiceAccountToken: false
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   labels:
-    app.kubernetes.io/instance: reflector
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 10.0.42
-    helm.sh/chart: reflector-10.0.42
-  name: reflector
-  namespace: k2-core
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
+  name: route53-dns01-token-request
+  namespace: cert-manager
 rules:
   - apiGroups:
       - ""
+    resourceNames:
+      - route53-dns01
     resources:
-      - configmaps
-      - secrets
+      - serviceaccounts/token
     verbs:
-      - "*"
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - watch
-      - list
+      - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   labels:
-    app.kubernetes.io/instance: reflector
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 10.0.42
-    helm.sh/chart: reflector-10.0.42
-  name: reflector
-  namespace: k2-core
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
+  name: route53-dns01-token-request
+  namespace: cert-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: reflector
+  kind: Role
+  name: route53-dns01-token-request
 subjects:
   - kind: ServiceAccount
-    name: reflector
-    namespace: k2-core
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app.kubernetes.io/instance: reflector
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: reflector
-    app.kubernetes.io/version: 10.0.42
-    helm.sh/chart: reflector-10.0.42
-  name: reflector
-  namespace: k2-core
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: reflector
-      app.kubernetes.io/name: reflector
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: reflector
-        app.kubernetes.io/name: reflector
-    spec:
-      containers:
-        - env:
-            - name: ES_Serilog__MinimumLevel__Default
-              value: Information
-            - name: ES_Reflector__Watcher__Timeout
-              value: ""
-            - name: ES_Reflector__Watcher__ExcludedNamespaces
-              value: ""
-            - name: ES_Ignite__KubernetesClient__SkipTlsVerify
-              value: "false"
-          image: docker.io/emberstack/kubernetes-reflector:10.0.42
-          imagePullPolicy: IfNotPresent
-          livenessProbe:
-            failureThreshold: 5
-            httpGet:
-              path: /health/live
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 10
-          name: reflector
-          ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
-          readinessProbe:
-            failureThreshold: 5
-            httpGet:
-              path: /health/ready
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 10
-          resources: {}
-          securityContext:
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 1000
-          startupProbe:
-            failureThreshold: 5
-            httpGet:
-              path: /health/ready
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 10
-          volumeMounts: []
-      priorityClassName: system-cluster-critical
-      securityContext:
-        fsGroup: 2000
-      serviceAccountName: reflector
+    name: cert-manager
+    namespace: cert-manager
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -146,8 +54,10 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-cainjector
-  namespace: k2-core
+  namespace: cert-manager
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -161,8 +71,10 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager
-  namespace: k2-core
+  namespace: cert-manager
 automountServiceAccountToken: true
 ---
 apiVersion: v1
@@ -176,8 +88,10 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook
-  namespace: k2-core
+  namespace: cert-manager
 automountServiceAccountToken: true
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -191,8 +105,9 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-cainjector
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -262,8 +177,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-issuers
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -311,8 +227,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-clusterissuers
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -360,8 +277,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-certificates
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -432,8 +350,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-orders
-  namespace: k2-core
 rules:
   - apiGroups:
       - acme.cert-manager.io
@@ -508,8 +427,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-challenges
-  namespace: k2-core
 rules:
   - apiGroups:
       - acme.cert-manager.io
@@ -616,8 +536,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-ingress-shim
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -690,9 +611,10 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
   name: cert-manager-cluster-view
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -714,12 +636,13 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-view: "true"
   name: cert-manager-view
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -752,10 +675,11 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
   name: cert-manager-edit
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -798,8 +722,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-approve:cert-manager-io
-  namespace: k2-core
 rules:
   - apiGroups:
       - cert-manager.io
@@ -822,8 +747,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-certificatesigningrequests
-  namespace: k2-core
 rules:
   - apiGroups:
       - certificates.k8s.io
@@ -868,8 +794,9 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook:subjectaccessreviews
-  namespace: k2-core
 rules:
   - apiGroups:
       - authorization.k8s.io
@@ -889,8 +816,9 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-cainjector
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -898,7 +826,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager-cainjector
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -911,8 +839,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-issuers
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -920,7 +849,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -933,8 +862,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-clusterissuers
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -942,7 +872,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -955,8 +885,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-certificates
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -964,7 +895,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -977,8 +908,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-orders
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -986,7 +918,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -999,8 +931,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-challenges
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -1008,7 +941,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1021,8 +954,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-ingress-shim
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -1030,7 +964,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1043,8 +977,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-approve:cert-manager-io
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -1052,7 +987,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1065,8 +1000,9 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-controller-certificatesigningrequests
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -1074,7 +1010,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1087,8 +1023,9 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook:subjectaccessreviews
-  namespace: k2-core
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -1096,7 +1033,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager-webhook
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -1109,6 +1046,8 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-cainjector:leaderelection
   namespace: kube-system
 rules:
@@ -1141,6 +1080,8 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager:leaderelection
   namespace: kube-system
 rules:
@@ -1172,8 +1113,10 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-tokenrequest
-  namespace: k2-core
+  namespace: cert-manager
 rules:
   - apiGroups:
       - ""
@@ -1195,8 +1138,10 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook:dynamic-serving
-  namespace: k2-core
+  namespace: cert-manager
 rules:
   - apiGroups:
       - ""
@@ -1227,6 +1172,8 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-cainjector:leaderelection
   namespace: kube-system
 roleRef:
@@ -1236,7 +1183,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager-cainjector
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1249,6 +1196,8 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager:leaderelection
   namespace: kube-system
 roleRef:
@@ -1258,7 +1207,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1271,8 +1220,10 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-tokenrequest
-  namespace: k2-core
+  namespace: cert-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1280,7 +1231,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1293,8 +1244,10 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook:dynamic-serving
-  namespace: k2-core
+  namespace: cert-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1302,7 +1255,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager-webhook
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: v1
 kind: Service
@@ -1315,8 +1268,10 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-cainjector
-  namespace: k2-core
+  namespace: cert-manager
 spec:
   ports:
     - name: http-metrics
@@ -1339,8 +1294,10 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager
-  namespace: k2-core
+  namespace: cert-manager
 spec:
   ports:
     - name: tcp-prometheus-servicemonitor
@@ -1364,8 +1321,10 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook
-  namespace: k2-core
+  namespace: cert-manager
 spec:
   ports:
     - name: https
@@ -1393,8 +1352,10 @@ metadata:
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-cainjector
-  namespace: k2-core
+  namespace: cert-manager
 spec:
   replicas: 1
   selector:
@@ -1459,8 +1420,10 @@ metadata:
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager
-  namespace: k2-core
+  namespace: cert-manager
 spec:
   replicas: 1
   selector:
@@ -1489,7 +1452,6 @@ spec:
             - --cluster-resource-namespace=$(POD_NAMESPACE)
             - --leader-election-namespace=kube-system
             - --acme-http01-solver-image=quay.io/jetstack/cert-manager-acmesolver:v1.20.2
-            - --controllers=*
             - --max-concurrent-challenges=60
           env:
             - name: POD_NAMESPACE
@@ -1542,8 +1504,10 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook
-  namespace: k2-core
+  namespace: cert-manager
 spec:
   replicas: 1
   selector:
@@ -1632,7 +1596,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from-secret: k2-core/cert-manager-webhook-ca
+    cert-manager.io/inject-ca-from-secret: cert-manager/cert-manager-webhook-ca
   labels:
     app: webhook
     app.kubernetes.io/component: webhook
@@ -1641,15 +1605,16 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook
-  namespace: k2-core
 webhooks:
   - admissionReviewVersions:
       - v1
     clientConfig:
       service:
         name: cert-manager-webhook
-        namespace: k2-core
+        namespace: cert-manager
         path: /mutate
     failurePolicy: Fail
     matchPolicy: Equivalent
@@ -1670,7 +1635,7 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from-secret: k2-core/cert-manager-webhook-ca
+    cert-manager.io/inject-ca-from-secret: cert-manager/cert-manager-webhook-ca
   labels:
     app: webhook
     app.kubernetes.io/component: webhook
@@ -1679,15 +1644,16 @@ metadata:
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-webhook
-  namespace: k2-core
 webhooks:
   - admissionReviewVersions:
       - v1
     clientConfig:
       service:
         name: cert-manager-webhook
-        namespace: k2-core
+        namespace: cert-manager
         path: /validate
     failurePolicy: Fail
     matchPolicy: Equivalent
@@ -1727,8 +1693,10 @@ metadata:
     app.kubernetes.io/name: startupapicheck
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-startupapicheck
-  namespace: k2-core
+  namespace: cert-manager
 automountServiceAccountToken: true
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1746,8 +1714,10 @@ metadata:
     app.kubernetes.io/name: startupapicheck
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-startupapicheck:create-cert
-  namespace: k2-core
+  namespace: cert-manager
 rules:
   - apiGroups:
       - cert-manager.io
@@ -1771,8 +1741,10 @@ metadata:
     app.kubernetes.io/name: startupapicheck
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-startupapicheck:create-cert
-  namespace: k2-core
+  namespace: cert-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1780,7 +1752,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cert-manager-startupapicheck
-    namespace: k2-core
+    namespace: cert-manager
 ---
 apiVersion: batch/v1
 kind: Job
@@ -1797,8 +1769,10 @@ metadata:
     app.kubernetes.io/name: startupapicheck
     app.kubernetes.io/version: v1.20.2
     helm.sh/chart: cert-manager-v1.20.2
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: cert-manager-startupapicheck
-  namespace: k2-core
+  namespace: cert-manager
 spec:
   backoffLimit: 4
   template:
@@ -1842,19 +1816,13 @@ spec:
           type: RuntimeDefault
       serviceAccountName: cert-manager-startupapicheck
 ---
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
-metadata:
-  name: cert-manager-aws-credentials-c8ae9038
-  namespace: k2-core
-spec:
-  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/hxitqr6xcco7g2ne3n7m6kkoqa
----
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: letsencrypt-prod
-  namespace: k2-core
 spec:
   acme:
     email: wyvernzora+letsencrypt@gmail.com
@@ -1864,13 +1832,12 @@ spec:
     solvers:
       - dns01:
           route53:
-            accessKeyIDSecretRef:
-              key: access-key-id
-              name: cert-manager-aws-credentials-c8ae9038
+            auth:
+              kubernetes:
+                serviceAccountRef:
+                  name: route53-dns01
             region: us-west-2
-            secretAccessKeySecretRef:
-              key: secret-access-key
-              name: cert-manager-aws-credentials-c8ae9038
+            role: arn:aws:iam::843805466351:role/io.wyvernzora.k2.dns01
         selector:
           dnsZones:
             - wyvernzora.io
@@ -1878,19 +1845,1004 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-manager
   name: default-certificate
-  namespace: k2-core
+  namespace: cert-manager
 spec:
-  commonName: "*.wyvernzora.io"
   dnsNames:
+    - "*.k2.wyvernzora.io"
+    - wyvernzora.io
     - "*.wyvernzora.io"
   issuerRef:
     kind: ClusterIssuer
     name: letsencrypt-prod
   secretName: default-certificate
-  secretTemplate:
-    annotations:
-      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
-      reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: k2-network,plex
-      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
-      reflector.v1.k8s.emberstack.com/reflection-auto-namespace: k2-network,plex
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-sync
+  name: cert-sync-proxmox
+  namespace: cert-manager
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: iyvvxsn6rsrxawh6o3wyapzijm/api-token-id
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: api-token-id
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: iyvvxsn6rsrxawh6o3wyapzijm/api-token-secret
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: api-token-secret
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: cert-sync-proxmox
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-sync
+  name: cert-sync-proxmox-script
+  namespace: cert-manager
+data:
+  sync.py: |
+    #!/usr/bin/env python3
+    import hashlib
+    import json
+    import os
+    import re
+    import socket
+    import ssl
+    import sys
+    from datetime import datetime, timezone
+    from pathlib import Path
+    from typing import Any
+
+    import requests
+    from urllib3.exceptions import InsecureRequestWarning
+
+    CERT_PATH = Path("/cert/tls.crt")
+    KEY_PATH = Path("/cert/tls.key")
+    TOKEN_ID_PATH = Path("/credentials/api-token-id")
+    TOKEN_SECRET_PATH = Path("/credentials/api-token-secret")
+
+    REQUEST_TIMEOUT_SECONDS = 30
+    PEM_CERT_RE = re.compile(
+        rb"-----BEGIN CERTIFICATE-----\s+.*?\s+-----END CERTIFICATE-----",
+        re.DOTALL,
+    )
+
+
+    def main() -> int:
+        requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
+        log("Proxmox certificate sync starting")
+        cert = CERT_PATH.read_text(encoding="utf-8")
+        key = KEY_PATH.read_text(encoding="utf-8")
+        local_fingerprint = certificate_fingerprint(cert.encode("utf-8"))
+        token_id = TOKEN_ID_PATH.read_text(encoding="utf-8").strip()
+        token_secret = TOKEN_SECRET_PATH.read_text(encoding="utf-8").strip()
+        hosts = json.loads(require_env("PROXMOX_HOSTS"))
+        port = int(os.environ.get("PROXMOX_PORT", "8006"))
+        log(
+            "Loaded sync inputs",
+            hosts=", ".join(f"{host_name(host)}={host_address(host)}" for host in hosts),
+            port=port,
+            local_fingerprint=fingerprint_prefix(local_fingerprint),
+        )
+
+        changed = 0
+        skipped = 0
+        failures = []
+        for host in hosts:
+            try:
+                if sync_host(host, port, cert, key, local_fingerprint, token_id, token_secret):
+                    changed += 1
+                else:
+                    skipped += 1
+            except Exception as exc:
+                log("Host sync failed", host=host_name(host), error=str(exc), stream=sys.stderr)
+                failures.append(f"{host_name(host)}: {exc}")
+
+        if failures:
+            log("Proxmox certificate sync failed", changed=changed, skipped=skipped, failed=len(failures), stream=sys.stderr)
+            for failure in failures:
+                log("Failure detail", detail=failure, stream=sys.stderr)
+            return 1
+
+        log("Proxmox certificate sync complete", changed=changed, skipped=skipped, failed=0)
+        return 0
+
+
+    def sync_host(
+        host: dict[str, Any],
+        port: int,
+        cert: str,
+        key: str,
+        local_fingerprint: str,
+        token_id: str,
+        token_secret: str,
+    ) -> bool:
+        name = host_name(host)
+        address = host_address(host)
+        log("Checking host certificate", host=name, address=address, port=port)
+        remote_fingerprint = remote_certificate_fingerprint(address, port)
+        log("Fetched remote certificate", host=name, remote_fingerprint=fingerprint_prefix(remote_fingerprint))
+
+        if remote_fingerprint == local_fingerprint:
+            log("Certificate already current", host=name)
+            return False
+
+        log(
+            "Certificate differs; uploading replacement",
+            host=name,
+            remote_fingerprint=fingerprint_prefix(remote_fingerprint),
+            local_fingerprint=fingerprint_prefix(local_fingerprint),
+        )
+        response = requests.post(
+            f"https://{address}:{port}/api2/json/nodes/{name}/certificates/custom",
+            headers={"Authorization": f"PVEAPIToken={token_id}={token_secret}"},
+            data={
+                "certificates": cert,
+                "key": key,
+                "force": "1",
+                "restart": "1",
+            },
+            timeout=REQUEST_TIMEOUT_SECONDS,
+            verify=False,
+        )
+        if not response.ok:
+            raise RuntimeError(f"upload returned HTTP {response.status_code}: {response.text[:500]}")
+        log("Upload accepted", host=name, status=response.status_code)
+        return True
+
+
+    def remote_certificate_fingerprint(host: str, port: int) -> str:
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
+        with socket.create_connection((host, port), timeout=REQUEST_TIMEOUT_SECONDS) as sock:
+            with context.wrap_socket(sock, server_hostname=host) as tls:
+                cert = tls.getpeercert(binary_form=True)
+
+        if cert is None:
+            raise RuntimeError("remote host did not present a certificate")
+        return hashlib.sha256(cert).hexdigest()
+
+
+    def certificate_fingerprint(pem_bundle: bytes) -> str:
+        match = PEM_CERT_RE.search(pem_bundle)
+        if match is None:
+            raise RuntimeError("local certificate bundle does not contain a PEM certificate")
+
+        der = ssl.PEM_cert_to_DER_cert(match.group(0).decode("ascii"))
+        return hashlib.sha256(der).hexdigest()
+
+
+    def host_name(host: dict[str, Any]) -> str:
+        value = host.get("name")
+        if not isinstance(value, str) or not value:
+            raise RuntimeError(f"host entry is missing name: {host!r}")
+        return value
+
+
+    def host_address(host: dict[str, Any]) -> str:
+        value = host.get("address")
+        if not isinstance(value, str) or not value:
+            raise RuntimeError(f"host entry is missing address: {host!r}")
+        return value
+
+
+    def require_env(name: str) -> str:
+        value = os.environ.get(name)
+        if value is None or value == "":
+            raise RuntimeError(f"{name} is required")
+        return value
+
+
+    def fingerprint_prefix(fingerprint: str) -> str:
+        return fingerprint[:16]
+
+
+    def log(message: str, stream: Any = sys.stdout, **fields: Any) -> None:
+        timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        suffix = "".join(f" {key}={json.dumps(value, sort_keys=True)}" for key, value in fields.items())
+        print(f"{timestamp} {message}{suffix}", file=stream, flush=True)
+
+
+    if __name__ == "__main__":
+        raise SystemExit(main())
+immutable: false
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-sync
+  name: cert-sync-proxmox
+  namespace: cert-manager
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600
+      backoffLimit: 6
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: proxmox
+            app.kubernetes.io/name: cert-sync
+            cdk8s.io/metadata.addr: cert-sync-proxmox-cron-job-c8a48447
+            k2.wyvernzora.io/scripted-workload-type: cronjob
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: DoesNotExist
+          automountServiceAccountToken: false
+          containers:
+            - command:
+                - /scripts/sync.py
+              env:
+                - name: PROXMOX_HOSTS
+                  value: '[{"name":"roxy","address":"10.10.7.1"},{"name":"eris","address":"10.10.7.2"},{"name":"sylphy","address":"10.10.7.3"}]'
+                - name: PROXMOX_PORT
+                  value: "8006"
+              image: ghcr.io/wyvernzora/k2-job-runner:v2
+              imagePullPolicy: IfNotPresent
+              name: script
+              resources:
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                privileged: false
+                readOnlyRootFilesystem: true
+                runAsGroup: 65532
+                runAsNonRoot: true
+                runAsUser: 65532
+              volumeMounts:
+                - mountPath: /scripts
+                  name: script
+                  readOnly: true
+                - mountPath: /tmp
+                  name: tmp
+                - mountPath: /cert
+                  name: certificate
+                  readOnly: true
+                - mountPath: /credentials
+                  name: credentials
+                  readOnly: true
+          dnsPolicy: ClusterFirst
+          enableServiceLinks: false
+          hostNetwork: false
+          restartPolicy: OnFailure
+          securityContext:
+            fsGroupChangePolicy: Always
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          setHostnameAsFQDN: false
+          shareProcessNamespace: false
+          terminationGracePeriodSeconds: 30
+          volumes:
+            - configMap:
+                defaultMode: 365
+                name: cert-sync-proxmox-script
+              name: script
+            - emptyDir:
+                sizeLimit: 16Mi
+              name: tmp
+            - name: certificate
+              secret:
+                secretName: default-certificate
+            - name: credentials
+              secret:
+                secretName: cert-sync-proxmox
+  schedule: 17 */6 * * *
+  startingDeadlineSeconds: 10
+  successfulJobsHistoryLimit: 1
+  suspend: false
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-sync
+  name: cert-sync-truenas
+  namespace: cert-manager
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: lfsuj4pkgrxtprzlcadbrgixze/api-key
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: api-key
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: cert-sync-truenas
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-sync
+  name: cert-sync-truenas-script
+  namespace: cert-manager
+data:
+  sync.py: |
+    #!/usr/bin/env python3
+    import asyncio
+    import hashlib
+    import json
+    import os
+    import re
+    import ssl
+    import sys
+    from datetime import datetime, timezone
+    from pathlib import Path
+    from typing import Any
+
+    import websockets
+
+    CERT_PATH = Path("/cert/tls.crt")
+    KEY_PATH = Path("/cert/tls.key")
+    API_KEY_PATH = Path("/credentials/api-key")
+    REQUEST_TIMEOUT_SECONDS = 30
+    JOB_POLL_SECONDS = 2
+    JOB_TIMEOUT_SECONDS = 180
+    PEM_CERT_RE = re.compile(
+        rb"-----BEGIN CERTIFICATE-----\s+.*?\s+-----END CERTIFICATE-----",
+        re.DOTALL,
+    )
+
+
+    async def main() -> int:
+        log("TrueNAS certificate sync starting")
+        cert = CERT_PATH.read_text(encoding="utf-8")
+        key = KEY_PATH.read_text(encoding="utf-8")
+        api_key = API_KEY_PATH.read_text(encoding="utf-8").strip()
+        host = json.loads(require_env("TRUENAS_HOST"))
+        port = int(os.environ.get("TRUENAS_PORT", "443"))
+        certificate_name = require_env("TRUENAS_CERTIFICATE_NAME")
+        local_fingerprint = certificate_fingerprint(cert.encode("utf-8"))
+
+        url = f"wss://{host_address(host)}:{port}/api/current"
+        log(
+            "Loaded sync inputs",
+            host=host.get("name"),
+            address=host_address(host),
+            port=port,
+            certificate_name=certificate_name,
+            local_fingerprint=fingerprint_prefix(local_fingerprint),
+        )
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
+        log("Connecting to TrueNAS API", url=url)
+        async with websockets.connect(
+            url,
+            ssl=context,
+            open_timeout=REQUEST_TIMEOUT_SECONDS,
+            close_timeout=REQUEST_TIMEOUT_SECONDS,
+        ) as websocket:
+            client = TrueNasClient(websocket)
+            log("Authenticating with TrueNAS API")
+            await client.call("auth.login_with_api_key", [api_key])
+            log("Authenticated with TrueNAS API")
+            await sync_certificate(client, certificate_name, cert, key, local_fingerprint)
+
+        log("TrueNAS certificate sync complete")
+        return 0
+
+
+    async def sync_certificate(
+        client: "TrueNasClient",
+        certificate_name: str,
+        cert: str,
+        key: str,
+        local_fingerprint: str,
+    ) -> None:
+        log("Reading current UI certificate")
+        current = await current_ui_certificate(client)
+        current_fingerprint = certificate_object_fingerprint(current)
+        if current_fingerprint == local_fingerprint:
+            log("UI certificate already current", current_fingerprint=fingerprint_prefix(current_fingerprint))
+            return
+
+        log(
+            "UI certificate differs",
+            current_fingerprint=fingerprint_prefix(current_fingerprint),
+            local_fingerprint=fingerprint_prefix(local_fingerprint),
+        )
+        managed = await certificate_by_name(client, certificate_name)
+        if managed is None:
+            log("Creating imported certificate", certificate_name=certificate_name)
+            job_id = await client.call(
+                "certificate.create",
+                [
+                    {
+                        "name": certificate_name,
+                        "create_type": "CERTIFICATE_CREATE_IMPORTED",
+                        "certificate": cert,
+                        "privatekey": key,
+                    }
+                ],
+            )
+            await client.wait_for_job(job_id)
+        else:
+            log("Updating imported certificate", certificate_name=certificate_name, certificate_id=managed["id"])
+            job_id = await client.call("certificate.update", [managed["id"], {"certificate": cert, "privatekey": key}])
+            await client.wait_for_job(job_id)
+
+        managed = await certificate_by_name(client, certificate_name)
+        if managed is None:
+            raise RuntimeError(f"TrueNAS certificate {certificate_name} was not found after create/update")
+
+        config = await client.call("system.general.config")
+        selected_id = selected_certificate_id(config.get("ui_certificate"))
+        if selected_id != managed["id"]:
+            log("Selecting UI certificate", certificate_name=certificate_name, certificate_id=managed["id"], previous_id=selected_id)
+            await client.call("system.general.update", [{"ui_certificate": managed["id"], "ui_restart_delay": 5}])
+        else:
+            log("Managed certificate already selected; restarting UI", certificate_name=certificate_name)
+            await client.call("system.general.ui_restart")
+
+
+    async def current_ui_certificate(client: "TrueNasClient") -> dict[str, Any] | None:
+        config = await client.call("system.general.config")
+        selected = config.get("ui_certificate")
+        if isinstance(selected, dict):
+            return selected
+
+        selected_id = selected_certificate_id(selected)
+        if selected_id is None:
+            return None
+
+        matches = await client.call("certificate.query", [[["id", "=", selected_id]]])
+        return matches[0] if matches else None
+
+
+    async def certificate_by_name(client: "TrueNasClient", name: str) -> dict[str, Any] | None:
+        matches = await client.call("certificate.query", [[["name", "=", name]]])
+        return matches[0] if matches else None
+
+
+    class TrueNasClient:
+        def __init__(self, websocket: Any):
+            self.websocket = websocket
+            self.next_id = 1
+
+        async def call(self, method: str, params: list[Any] | None = None) -> Any:
+            request_id = self.next_id
+            self.next_id += 1
+            log("Calling TrueNAS API", method=method, request_id=request_id)
+            await self.websocket.send(
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "method": method,
+                        "params": params or [],
+                        "id": request_id,
+                    }
+                )
+            )
+            while True:
+                response = json.loads(await asyncio.wait_for(self.websocket.recv(), timeout=REQUEST_TIMEOUT_SECONDS))
+                if response.get("id") != request_id:
+                    continue
+                if response.get("error") is not None:
+                    log("TrueNAS API call failed", method=method, request_id=request_id, error=response["error"], stream=sys.stderr)
+                    raise RuntimeError(f"{method} failed: {response['error']}")
+                log("TrueNAS API call complete", method=method, request_id=request_id)
+                return response.get("result")
+
+        async def wait_for_job(self, job_id: Any) -> None:
+            if not isinstance(job_id, int):
+                log("Method returned without job id", result=job_id)
+                return
+
+            log("Waiting for TrueNAS job", job_id=job_id, timeout_seconds=JOB_TIMEOUT_SECONDS)
+            deadline = asyncio.get_running_loop().time() + JOB_TIMEOUT_SECONDS
+            last_logged_state = None
+            last_log_time = 0.0
+            while True:
+                matches = await self.call("core.get_jobs", [[["id", "=", job_id]]])
+                job = matches[0] if matches else None
+                state = job.get("state") if isinstance(job, dict) else None
+                now = asyncio.get_running_loop().time()
+                if state != last_logged_state or now - last_log_time >= 10:
+                    log("TrueNAS job state", job_id=job_id, state=state)
+                    last_logged_state = state
+                    last_log_time = now
+                if state == "SUCCESS":
+                    log("TrueNAS job complete", job_id=job_id)
+                    return
+                if state == "FAILED":
+                    raise RuntimeError(f"TrueNAS job {job_id} failed: {job.get('error')}")
+                if asyncio.get_running_loop().time() >= deadline:
+                    raise TimeoutError(f"Timed out waiting for TrueNAS job {job_id}")
+                await asyncio.sleep(JOB_POLL_SECONDS)
+
+
+    def certificate_object_fingerprint(certificate: dict[str, Any] | None) -> str | None:
+        if certificate is None:
+            return None
+
+        pem = certificate.get("certificate")
+        if not isinstance(pem, str) or pem == "":
+            return None
+        return certificate_fingerprint(pem.encode("utf-8"))
+
+
+    def certificate_fingerprint(pem_bundle: bytes) -> str:
+        match = PEM_CERT_RE.search(pem_bundle)
+        if match is None:
+            raise RuntimeError("certificate bundle does not contain a PEM certificate")
+
+        der = ssl.PEM_cert_to_DER_cert(match.group(0).decode("ascii"))
+        return hashlib.sha256(der).hexdigest()
+
+
+    def selected_certificate_id(selected: Any) -> int | None:
+        if isinstance(selected, int):
+            return selected
+        if isinstance(selected, dict) and isinstance(selected.get("id"), int):
+            return selected["id"]
+        return None
+
+
+    def host_address(host: dict[str, Any]) -> str:
+        value = host.get("address")
+        if not isinstance(value, str) or not value:
+            raise RuntimeError(f"host entry is missing address: {host!r}")
+        return value
+
+
+    def require_env(name: str) -> str:
+        value = os.environ.get(name)
+        if value is None or value == "":
+            raise RuntimeError(f"{name} is required")
+        return value
+
+
+    def fingerprint_prefix(fingerprint: str | None) -> str | None:
+        return fingerprint[:16] if fingerprint is not None else None
+
+
+    def log(message: str, stream: Any = sys.stdout, **fields: Any) -> None:
+        timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        suffix = "".join(f" {key}={json.dumps(value, sort_keys=True)}" for key, value in fields.items())
+        print(f"{timestamp} {message}{suffix}", file=stream, flush=True)
+
+
+    if __name__ == "__main__":
+        raise SystemExit(asyncio.run(main()))
+immutable: false
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: cert-sync
+  name: cert-sync-truenas
+  namespace: cert-manager
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 600
+      backoffLimit: 6
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/component: truenas
+            app.kubernetes.io/name: cert-sync
+            cdk8s.io/metadata.addr: cert-sync-truenas-cron-job-c859b1ae
+            k2.wyvernzora.io/scripted-workload-type: cronjob
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: DoesNotExist
+          automountServiceAccountToken: false
+          containers:
+            - command:
+                - /scripts/sync.py
+              env:
+                - name: TRUENAS_HOST
+                  value: '{"name":"rumi","address":"10.10.8.1"}'
+                - name: TRUENAS_PORT
+                  value: "443"
+                - name: TRUENAS_CERTIFICATE_NAME
+                  value: k2-default-certificate
+              image: ghcr.io/wyvernzora/k2-job-runner:v2
+              imagePullPolicy: IfNotPresent
+              name: script
+              resources:
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                privileged: false
+                readOnlyRootFilesystem: true
+                runAsGroup: 65532
+                runAsNonRoot: true
+                runAsUser: 65532
+              volumeMounts:
+                - mountPath: /scripts
+                  name: script
+                  readOnly: true
+                - mountPath: /tmp
+                  name: tmp
+                - mountPath: /cert
+                  name: certificate
+                  readOnly: true
+                - mountPath: /credentials
+                  name: credentials
+                  readOnly: true
+          dnsPolicy: ClusterFirst
+          enableServiceLinks: false
+          hostNetwork: false
+          restartPolicy: OnFailure
+          securityContext:
+            fsGroupChangePolicy: Always
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          setHostnameAsFQDN: false
+          shareProcessNamespace: false
+          terminationGracePeriodSeconds: 30
+          volumes:
+            - configMap:
+                defaultMode: 365
+                name: cert-sync-truenas-script
+              name: script
+            - emptyDir:
+                sizeLimit: 16Mi
+              name: tmp
+            - name: certificate
+              secret:
+                secretName: default-certificate
+            - name: credentials
+              secret:
+                secretName: cert-sync-truenas
+  schedule: 17 */6 * * *
+  startingDeadlineSeconds: 10
+  successfulJobsHistoryLimit: 1
+  suspend: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: default-certificate-replication
+  name: default-certificate-reader
+  namespace: cert-manager
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: default-certificate-replication
+  name: default-certificate-reader
+  namespace: cert-manager
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - selfsubjectrulesreviews
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: default-certificate-replication
+  name: rolebindingc8150a5b46317abecb8cc057eae301d9ba-c84b732d
+  namespace: cert-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: default-certificate-reader
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: default-certificate-reader
+    namespace: cert-manager
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: default-certificate-replication
+  name: cert-manager-default-certificate
+spec:
+  provider:
+    kubernetes:
+      auth:
+        serviceAccount:
+          name: default-certificate-reader
+          namespace: cert-manager
+      remoteNamespace: cert-manager
+      server:
+        caProvider:
+          key: ca.crt
+          name: kube-root-ca.crt
+          namespace: cert-manager
+          type: ConfigMap
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: default-certificate-replication
+  name: default-certificate
+spec:
+  externalSecretName: default-certificate
+  externalSecretSpec:
+    data:
+      - remoteRef:
+          conversionStrategy: Default
+          decodingStrategy: None
+          key: default-certificate
+          metadataPolicy: None
+          nullBytePolicy: Ignore
+          property: tls.crt
+        secretKey: tls.crt
+      - remoteRef:
+          conversionStrategy: Default
+          decodingStrategy: None
+          key: default-certificate
+          metadataPolicy: None
+          nullBytePolicy: Ignore
+          property: tls.key
+        secretKey: tls.key
+    refreshInterval: 1h
+    secretStoreRef:
+      kind: ClusterSecretStore
+      name: cert-manager-default-certificate
+    target:
+      creationPolicy: Owner
+      deletionPolicy: Retain
+      name: default-certificate
+      template:
+        engineVersion: v2
+        mergePolicy: Replace
+        type: kubernetes.io/tls
+  namespaceSelectors:
+    - matchLabels:
+        kubernetes.io/metadata.name: forgejo
+    - matchLabels:
+        kubernetes.io/metadata.name: plex
+    - matchLabels:
+        kubernetes.io/metadata.name: pomerium
+  refreshTime: 1m
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: cert-manager
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: cert-manager
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: cert-manager
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: cert-manager-webhook-admission-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: webhook
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/name: webhook
+        k8s:io.kubernetes.pod.namespace: cert-manager
+    ingress:
+      - fromEntities:
+          - host
+        toPorts:
+          - ports:
+              - port: "10250"
+                protocol: TCP
+      - fromEntities:
+          - remote-node
+        toPorts:
+          - ports:
+              - port: "10250"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: cert-manager-controller-external-egress
+specs:
+  - egress:
+      - toEndpoints:
+          - matchLabels:
+              k8s-app: kube-dns
+              k8s:io.kubernetes.pod.namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+            rules:
+              dns:
+                - matchPattern: "*"
+      - toEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+      - toFQDNs:
+          - matchName: acme-v02.api.letsencrypt.org
+          - matchName: route53.amazonaws.com
+          - matchName: sts.us-west-2.amazonaws.com
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/name: cert-manager
+        k8s:io.kubernetes.pod.namespace: cert-manager
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: cert-manager-cert-sync-proxmox-egress
+specs:
+  - egress:
+      - toCIDR:
+          - 10.10.7.1/32
+        toPorts:
+          - ports:
+              - port: "8006"
+                protocol: TCP
+      - toCIDR:
+          - 10.10.7.2/32
+        toPorts:
+          - ports:
+              - port: "8006"
+                protocol: TCP
+      - toCIDR:
+          - 10.10.7.3/32
+        toPorts:
+          - ports:
+              - port: "8006"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxmox
+        app.kubernetes.io/name: cert-sync
+        k8s:io.kubernetes.pod.namespace: cert-manager
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: cert-manager-cert-sync-truenas-egress
+specs:
+  - egress:
+      - toCIDR:
+          - 10.10.8.1/32
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: truenas
+        app.kubernetes.io/name: cert-sync
+        k8s:io.kubernetes.pod.namespace: cert-manager

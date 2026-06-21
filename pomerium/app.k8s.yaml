@@ -1,0 +1,759 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium
+spec: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-controller
+  namespace: pomerium
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-gen-secrets
+  namespace: pomerium
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-controller
+rules:
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - services/status
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - secrets/status
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - endpoints/status
+    verbs:
+      - get
+  - apiGroups:
+      - networking.k8s.io
+    resourceNames: []
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resourceNames: []
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resourceNames: []
+    resources:
+      - ingresses/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - ingress.pomerium.io
+    resourceNames: []
+    resources:
+      - pomerium
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ingress.pomerium.io
+    resourceNames: []
+    resources:
+      - pomerium/status
+    verbs:
+      - get
+      - update
+      - patch
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-gen-secrets
+rules:
+  - apiGroups:
+      - ""
+    resourceNames: []
+    resources:
+      - secrets
+    verbs:
+      - create
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pomerium-controller
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: pomerium-controller
+    namespace: pomerium
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-gen-secrets
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pomerium-gen-secrets
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: pomerium-gen-secrets
+    namespace: pomerium
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-metrics
+  namespace: pomerium
+spec:
+  externalIPs: []
+  ports:
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/name: pomerium
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-proxy
+  namespace: pomerium
+spec:
+  externalIPs: []
+  ipFamilyPolicy: PreferDualStack
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    - name: quic
+      port: 443
+      protocol: UDP
+      targetPort: 443
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/name: pomerium
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/name: pomerium
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium
+  namespace: pomerium
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: proxy
+      app.kubernetes.io/name: pomerium
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        cdk8s.io/metadata.addr: pomerium-deployment-c80eb8b6
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - all-in-one
+            - --pomerium-config=global
+            - --update-status-from-service=$(POMERIUM_NAMESPACE)/pomerium-proxy
+            - --metrics-bind-address=$(POD_IP):9090
+            - --health-probe-bind-address=$(POD_IP):28080
+          env:
+            - name: TMPDIR
+              value: /tmp
+            - name: XDG_CACHE_HOME
+              value: /tmp
+            - name: POMERIUM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          image: pomerium/ingress-controller:v0.32.8
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /healthz
+              port: 28080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 60
+          name: pomerium
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+            - containerPort: 443
+              name: quic
+              protocol: UDP
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: metrics
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /readyz
+              port: 28080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 60
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          startupProbe:
+            failureThreshold: 40
+            httpGet:
+              path: /startupz
+              port: 28080
+              scheme: HTTP
+            periodSeconds: 15
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      serviceAccountName: pomerium-controller
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - emptyDir: {}
+          name: tmp
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium-gen-secrets
+  namespace: pomerium
+spec:
+  template:
+    metadata:
+      labels:
+        cdk8s.io/metadata.addr: pomerium-gen-secrets-job-c854dadc
+      name: pomerium-gen-secrets
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+      automountServiceAccountToken: true
+      containers:
+        - args:
+            - gen-secrets
+            - --secrets=$(POD_NAMESPACE)/bootstrap
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: pomerium/ingress-controller:v0.32.8
+          imagePullPolicy: IfNotPresent
+          name: gen-secrets
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+        runAsUser: 1000
+      serviceAccountName: pomerium-gen-secrets
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: pomerium
+  name: pomerium
+spec:
+  controller: pomerium.io/ingress-controller
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: DatabaseClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: database
+  name: pomerium
+  namespace: pomerium
+spec:
+  clusterRef:
+    name: nexus
+    namespace: postgresql
+  databaseName: pomerium
+  deletionPolicy: Retain
+  schemas:
+    - public
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: RoleClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: database
+  name: pomerium
+  namespace: pomerium
+spec:
+  access: Owner
+  databaseClaimRef:
+    name: pomerium
+  roleName: pomerium
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: database
+  name: pomerium-database-secret-replication
+  namespace: pomerium
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: database
+  name: pomerium-database-secret-replication
+  namespace: pomerium
+rules:
+  - apiGroups:
+      - ""
+    resourceNames:
+      - pomerium-credentials
+    resources:
+      - secrets
+    verbs:
+      - get
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - selfsubjectrulesreviews
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: database
+  name: pomerium-database-secret-replication
+  namespace: pomerium
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pomerium-database-secret-replication
+subjects:
+  - kind: ServiceAccount
+    name: pomerium-database-secret-replication
+    namespace: pomerium
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: database
+  name: pomerium-database-credentials
+spec:
+  provider:
+    kubernetes:
+      auth:
+        serviceAccount:
+          name: pomerium-database-secret-replication
+          namespace: pomerium
+      remoteNamespace: pomerium
+      server:
+        caProvider:
+          key: ca.crt
+          name: kube-root-ca.crt
+          namespace: pomerium
+          type: ConfigMap
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: database
+  name: pomerium-storage
+  namespace: pomerium
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: pomerium-credentials
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+        property: uri
+      secretKey: uri
+  refreshInterval: 1m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: pomerium-database-credentials
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: pomerium-storage
+    template:
+      data:
+        connection: "{{ .uri }}"
+      engineVersion: v2
+      mergePolicy: Replace
+      type: Opaque
+---
+apiVersion: ingress.pomerium.io/v1
+kind: Pomerium
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: global-config
+  name: global
+spec:
+  authenticate:
+    url: https://login.k2.wyvernzora.io
+  certificates:
+    - pomerium/default-certificate
+  codecType: http3
+  cookie:
+    expire: 168h
+  identityProvider:
+    provider: oidc
+    scopes:
+      - openid
+      - email
+      - profile
+    secret: pomerium/pocket-id
+    url: https://id.k2.wyvernzora.io
+  jwtClaimHeaders:
+    X-Pomerium-Claim-Email: email
+    X-Pomerium-Claim-Preferred-Username: preferred_username
+  mcpAllowedClientIdDomains:
+    - wyvernzora.io
+    - "*.wyvernzora.io"
+    - chatgpt.com
+    - chat.openai.com
+    - claude.ai
+  runtimeFlags:
+    mcp: true
+  secrets: pomerium/bootstrap
+  storage:
+    postgres:
+      secret: pomerium/pomerium-storage
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-controller-kube-api-egress
+specs:
+  - egress:
+      - toEntities:
+          - kube-apiserver
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+              - port: "6443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-controller-oidc-egress
+specs:
+  - egress:
+      - toEndpoints:
+          - matchLabels:
+              k8s-app: kube-dns
+              k8s:io.kubernetes.pod.namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+            rules:
+              dns:
+                - matchName: id.k2.wyvernzora.io
+                - matchName: chatgpt.com
+                - matchName: chat.openai.com
+                - matchName: claude.ai
+      - toFQDNs:
+          - matchName: id.k2.wyvernzora.io
+          - matchName: chatgpt.com
+          - matchName: chat.openai.com
+          - matchName: claude.ai
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-controller-postgresql-dns-egress
+specs:
+  - egress:
+      - toEndpoints:
+          - matchLabels:
+              k8s-app: kube-dns
+              k8s:io.kubernetes.pod.namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+            rules:
+              dns:
+                - matchName: nexus-rw.postgresql.svc
+                - matchName: nexus-rw.postgresql.svc.cluster.local
+                - matchName: nexus-rw.postgresql.svc.pomerium.svc.cluster.local
+                - matchName: nexus-rw.postgresql.svc.svc.cluster.local
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-postgresql-controller-to-postgresql
+specs:
+  - description: pomerium to nexus-postgresql
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              cnpg.io/cluster: nexus
+              k8s:io.kubernetes.pod.namespace: postgresql
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to nexus-postgresql
+    endpointSelector:
+      matchLabels:
+        cnpg.io/cluster: nexus
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP

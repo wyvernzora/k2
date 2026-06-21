@@ -1,20 +1,60 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
+  name: operator-oauth
+  namespace: tailscale
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: 4of6ip5wf5s4s5lj2z4bwxww7a/client_id
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: client_id
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: 4of6ip5wf5s4s5lj2z4bwxww7a/client_secret
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: client_secret
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: operator-oauth
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: operator
   namespace: tailscale
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: proxies
   namespace: tailscale
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: tailscale-operator
-  namespace: tailscale
 rules:
   - apiGroups:
       - ""
@@ -149,8 +189,10 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: tailscale-operator
-  namespace: tailscale
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -163,6 +205,9 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: operator
   namespace: tailscale
 rules:
@@ -248,6 +293,9 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: proxies
   namespace: tailscale
 rules:
@@ -276,6 +324,9 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: operator
   namespace: tailscale
 roleRef:
@@ -290,6 +341,9 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: proxies
   namespace: tailscale
 roleRef:
@@ -304,6 +358,9 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: operator
   namespace: tailscale
 spec:
@@ -340,7 +397,7 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /oauth/client_secret
             - name: PROXY_IMAGE
-              value: tailscale/tailscale:v1.96.5
+              value: tailscale/tailscale:v1.98.4
             - name: PROXY_TAGS
               value: tag:k8s
             - name: APISERVER_PROXY
@@ -355,7 +412,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.uid
-          image: tailscale/k8s-operator:v1.96.5
+          image: tailscale/k8s-operator:v1.98.4
           imagePullPolicy: Always
           name: operator
           volumeMounts:
@@ -373,27 +430,40 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: tailscale-operator
   name: tailscale
-  namespace: tailscale
 spec:
   controller: tailscale.com/ts-ingress
 ---
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
 metadata:
-  name: operator-oauth
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: connector
+  name: k2-router-iptables
   namespace: tailscale
 spec:
-  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/4of6ip5wf5s4s5lj2z4bwxww7a
+  statefulSet:
+    pod:
+      tailscaleContainer:
+        env:
+          - name: TS_DEBUG_FIREWALL_MODE
+            value: iptables
 ---
 apiVersion: tailscale.com/v1alpha1
 kind: Connector
 metadata:
-  name: ts-connector-c8c476c0
-  namespace: tailscale
+  labels:
+    k2.wyvernzora.io/app: tailscale
+    k2.wyvernzora.io/component: connector
+  name: k2-router
 spec:
-  exitNode: true
-  hostname: k2-net
+  hostname: k2-router
+  proxyClass: k2-router-iptables
   subnetRouter:
     advertiseRoutes:
-      - 10.0.0.0/8
+      - 10.10.10.10/32
+      - 10.10.13.0/24

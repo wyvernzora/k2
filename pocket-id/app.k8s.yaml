@@ -1,0 +1,984 @@
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id-encryption-key
+  namespace: pocket-id
+spec:
+  allowRepeat: true
+  digits: 8
+  encoding: raw
+  length: 32
+  noUpper: false
+  secretKeys:
+    - encryptionKey
+  symbols: 0
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id
+  namespace: pocket-id
+spec:
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: pocket-id-encryption-key
+  refreshPolicy: CreatedOnce
+  target:
+    immutable: true
+    name: pocket-id
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: DatabaseClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id
+  namespace: pocket-id
+spec:
+  clusterRef:
+    name: nexus
+    namespace: postgresql
+  databaseName: pocket_id
+  deletionPolicy: Retain
+  schemas:
+    - public
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: RoleClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id
+  namespace: pocket-id
+spec:
+  access: Owner
+  databaseClaimRef:
+    name: pocket-id
+  roleName: pocket_id
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id
+  namespace: pocket-id
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: app
+      app.kubernetes.io/name: pocket-id
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: pocket-id
+        cdk8s.io/metadata.addr: pocket-id-deployment-c85db61f
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: APP_URL
+              value: https://id.k2.wyvernzora.io
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: "1411"
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TRUST_PROXY
+              value: "true"
+            - name: FILE_BACKEND
+              value: database
+            - name: ANALYTICS_DISABLED
+              value: "true"
+            - name: VERSION_CHECK_DISABLED
+              value: "true"
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: encryptionKey
+                  name: pocket-id
+            - name: STATIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: apiKey
+                  name: pocket-id-bootstrap-api-key
+                  optional: true
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: host
+                  name: pocket-id-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: port
+                  name: pocket-id-credentials
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: dbname
+                  name: pocket-id-credentials
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: user
+                  name: pocket-id-credentials
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: pocket-id-credentials
+            - name: DB_CONNECTION_STRING
+              value: postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
+          image: ghcr.io/pocket-id/pocket-id:v2.7.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - /app/pocket-id
+                - healthcheck
+            failureThreshold: 6
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: pocket-id
+          ports:
+            - containerPort: 1411
+              name: http
+          readinessProbe:
+            exec:
+              command:
+                - /app/pocket-id
+                - healthcheck
+            failureThreshold: 3
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - CHOWN
+                - SETGID
+                - SETUID
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          startupProbe:
+            exec:
+              command:
+                - /app/pocket-id
+                - healthcheck
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /app/data
+              name: data
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        runAsNonRoot: false
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir:
+            sizeLimit: 256Mi
+          name: data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id
+  namespace: pocket-id
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+      targetPort: 1411
+  selector:
+    app.kubernetes.io/component: app
+    app.kubernetes.io/name: pocket-id
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: setup-script
+  namespace: pocket-id
+data:
+  setup.py: |
+    #!/usr/bin/env python3
+    from __future__ import annotations
+
+    import base64
+    import os
+    import secrets
+    import sys
+    import time
+    from dataclasses import dataclass
+    from datetime import datetime, timezone
+    from typing import Any
+
+    import requests
+    from kubernetes import client, config
+    from kubernetes.client import V1ObjectMeta, V1Secret
+    from kubernetes.client.exceptions import ApiException
+
+
+    REQUEST_TIMEOUT = 15
+
+
+    @dataclass(frozen=True)
+    class Settings:
+        pod_namespace: str
+        pocket_id_internal_url: str
+        pocket_id_deployment: str
+        pocket_id_bootstrap_secret: str
+        pomerium_namespace: str
+        pomerium_secret: str
+        pomerium_client_id: str
+        pomerium_callback_url: str
+        pomerium_launch_url: str
+        forgejo_namespace: str
+        forgejo_secret: str
+        forgejo_client_id: str
+        forgejo_callback_url: str
+        forgejo_launch_url: str
+
+
+    def main() -> None:
+        settings = load_settings()
+        config.load_incluster_config()
+        core_api = client.CoreV1Api()
+        apps_api = client.AppsV1Api()
+
+        if oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret) and oidc_secret_ready(
+            core_api,
+            settings.forgejo_namespace,
+            settings.forgejo_secret,
+        ):
+            cleanup_static_api_key(core_api, apps_api, settings)
+            print("Pocket ID OIDC client secrets already exist")
+            return
+
+        api_key = ensure_static_api_key(core_api, settings)
+        restart_pocket_id(apps_api, settings)
+        if not oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret):
+            upsert_oidc_client(
+                settings,
+                api_key,
+                client_id=settings.pomerium_client_id,
+                name="Pomerium",
+                callback_url=settings.pomerium_callback_url,
+                launch_url=settings.pomerium_launch_url,
+            )
+            write_oidc_secret(
+                core_api,
+                settings,
+                api_key,
+                namespace=settings.pomerium_namespace,
+                secret_name=settings.pomerium_secret,
+                client_id=settings.pomerium_client_id,
+            )
+        if not oidc_secret_ready(core_api, settings.forgejo_namespace, settings.forgejo_secret):
+            upsert_oidc_client(
+                settings,
+                api_key,
+                client_id=settings.forgejo_client_id,
+                name="Forgejo",
+                callback_url=settings.forgejo_callback_url,
+                launch_url=settings.forgejo_launch_url,
+            )
+            write_oidc_secret(
+                core_api,
+                settings,
+                api_key,
+                namespace=settings.forgejo_namespace,
+                secret_name=settings.forgejo_secret,
+                client_id=settings.forgejo_client_id,
+            )
+        cleanup_static_api_key(core_api, apps_api, settings)
+        print("Pocket ID OIDC client bootstrap complete")
+
+
+    def load_settings() -> Settings:
+        return Settings(
+            pod_namespace=required_env("POD_NAMESPACE"),
+            pocket_id_internal_url=required_env("POCKET_ID_INTERNAL_URL").rstrip("/"),
+            pocket_id_deployment=required_env("POCKET_ID_DEPLOYMENT"),
+            pocket_id_bootstrap_secret=required_env("POCKET_ID_BOOTSTRAP_SECRET"),
+            pomerium_namespace=required_env("POMERIUM_NAMESPACE"),
+            pomerium_secret=required_env("POMERIUM_SECRET"),
+            pomerium_client_id=required_env("POMERIUM_CLIENT_ID"),
+            pomerium_callback_url=required_env("POMERIUM_CALLBACK_URL"),
+            pomerium_launch_url=required_env("POMERIUM_LAUNCH_URL"),
+            forgejo_namespace=required_env("FORGEJO_NAMESPACE"),
+            forgejo_secret=required_env("FORGEJO_SECRET"),
+            forgejo_client_id=required_env("FORGEJO_CLIENT_ID"),
+            forgejo_callback_url=required_env("FORGEJO_CALLBACK_URL"),
+            forgejo_launch_url=required_env("FORGEJO_LAUNCH_URL"),
+        )
+
+
+    def required_env(name: str) -> str:
+        value = os.environ.get(name)
+        if value is None or value == "":
+            raise RuntimeError(f"missing required environment variable: {name}")
+        return value
+
+
+    def oidc_secret_ready(core_api: client.CoreV1Api, namespace: str, name: str) -> bool:
+        secret = read_secret(core_api, namespace, name)
+        if secret is None or secret.data is None:
+            return False
+        return secret_key_exists(secret, "client_id") and secret_key_exists(secret, "client_secret")
+
+
+    def secret_key_exists(secret: V1Secret, key: str) -> bool:
+        value = (secret.data or {}).get(key)
+        return isinstance(value, str) and value != ""
+
+
+    def cleanup_static_api_key(
+        core_api: client.CoreV1Api,
+        apps_api: client.AppsV1Api,
+        settings: Settings,
+    ) -> None:
+        if read_secret(core_api, settings.pod_namespace, settings.pocket_id_bootstrap_secret) is None:
+            return
+
+        core_api.delete_namespaced_secret(
+            name=settings.pocket_id_bootstrap_secret,
+            namespace=settings.pod_namespace,
+        )
+        restart_pocket_id(apps_api, settings)
+
+
+    def ensure_static_api_key(core_api: client.CoreV1Api, settings: Settings) -> str:
+        secret = read_secret(core_api, settings.pod_namespace, settings.pocket_id_bootstrap_secret)
+        if secret is not None and secret.data is not None:
+            encoded_api_key = secret.data.get("apiKey")
+            if encoded_api_key:
+                return base64.b64decode(encoded_api_key).decode("utf-8")
+
+        api_key = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
+        create_or_patch_secret(
+            core_api,
+            namespace=settings.pod_namespace,
+            name=settings.pocket_id_bootstrap_secret,
+            string_data={"apiKey": api_key},
+        )
+        return api_key
+
+
+    def restart_pocket_id(apps_api: client.AppsV1Api, settings: Settings) -> None:
+        deployment = apps_api.read_namespaced_deployment(
+            name=settings.pocket_id_deployment,
+            namespace=settings.pod_namespace,
+        )
+        annotations = deployment.spec.template.metadata.annotations
+        if annotations is None:
+            annotations = {}
+        annotations["kubectl.kubernetes.io/restartedAt"] = datetime.now(timezone.utc).isoformat()
+
+        patched = apps_api.patch_namespaced_deployment(
+            name=settings.pocket_id_deployment,
+            namespace=settings.pod_namespace,
+            body={"spec": {"template": {"metadata": {"annotations": annotations}}}},
+        )
+        wait_for_rollout(apps_api, settings, patched.metadata.generation)
+        wait_for_pocket_id(settings)
+
+
+    def wait_for_rollout(
+        apps_api: client.AppsV1Api,
+        settings: Settings,
+        generation: int | None,
+    ) -> None:
+        deadline = time.monotonic() + 180
+        while time.monotonic() < deadline:
+            deployment = apps_api.read_namespaced_deployment(
+                name=settings.pocket_id_deployment,
+                namespace=settings.pod_namespace,
+            )
+            desired = deployment.spec.replicas or 0
+            status = deployment.status
+            if (
+                (generation is None or (status.observed_generation or 0) >= generation)
+                and (status.updated_replicas or 0) == desired
+                and (status.replicas or 0) == desired
+                and (status.available_replicas or 0) == desired
+                and (status.unavailable_replicas or 0) == 0
+            ):
+                return
+            time.sleep(2)
+        raise RuntimeError("timed out waiting for Pocket ID rollout")
+
+
+    def wait_for_pocket_id(settings: Settings) -> None:
+        for _ in range(60):
+            try:
+                response = requests.get(f"{settings.pocket_id_internal_url}/healthz", timeout=REQUEST_TIMEOUT)
+                if response.ok:
+                    return
+            except requests.RequestException:
+                pass
+            time.sleep(2)
+        raise RuntimeError("timed out waiting for Pocket ID health endpoint")
+
+
+    def upsert_oidc_client(
+        settings: Settings,
+        api_key: str,
+        *,
+        client_id: str,
+        name: str,
+        callback_url: str,
+        launch_url: str,
+    ) -> None:
+        response = requests.get(
+            f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}",
+            headers=api_headers(api_key),
+            timeout=REQUEST_TIMEOUT,
+        )
+        payload = client_payload(client_id=client_id, name=name, callback_url=callback_url, launch_url=launch_url)
+        if response.status_code == requests.codes.ok:
+            put_response = requests.put(
+                f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}",
+                headers=api_headers(api_key),
+                json=payload,
+                timeout=REQUEST_TIMEOUT,
+            )
+            put_response.raise_for_status()
+            return
+
+        if response.status_code == requests.codes.not_found:
+            post_response = requests.post(
+                f"{settings.pocket_id_internal_url}/api/oidc/clients",
+                headers=api_headers(api_key),
+                json=payload,
+                timeout=REQUEST_TIMEOUT,
+            )
+            post_response.raise_for_status()
+            return
+
+        print(f"unexpected Pocket ID client lookup status: {response.status_code}", file=sys.stderr)
+        print(response.text, file=sys.stderr)
+        response.raise_for_status()
+
+
+    def write_oidc_secret(
+        core_api: client.CoreV1Api,
+        settings: Settings,
+        api_key: str,
+        *,
+        namespace: str,
+        secret_name: str,
+        client_id: str,
+    ) -> None:
+        response = requests.post(
+            f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}/secret",
+            headers=api_headers(api_key),
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        client_secret = response.json().get("secret")
+        if not isinstance(client_secret, str) or client_secret == "":
+            raise RuntimeError("Pocket ID did not return a client secret")
+
+        create_or_patch_secret(
+            core_api,
+            namespace=namespace,
+            name=secret_name,
+            string_data={
+                "client_id": client_id,
+                "client_secret": client_secret,
+            },
+        )
+
+
+    def client_payload(*, client_id: str, name: str, callback_url: str, launch_url: str) -> dict[str, Any]:
+        return {
+            "id": client_id,
+            "name": name,
+            "callbackURLs": [callback_url],
+            "logoutCallbackURLs": [],
+            "isPublic": False,
+            "pkceEnabled": False,
+            "requiresReauthentication": False,
+            "credentials": {"federatedIdentities": []},
+            "launchURL": launch_url,
+            "isGroupRestricted": False,
+        }
+
+
+    def api_headers(api_key: str) -> dict[str, str]:
+        return {
+            "Content-Type": "application/json",
+            "X-API-Key": api_key,
+        }
+
+
+    def create_or_patch_secret(
+        core_api: client.CoreV1Api,
+        *,
+        namespace: str,
+        name: str,
+        string_data: dict[str, str],
+    ) -> None:
+        secret = V1Secret(
+            metadata=V1ObjectMeta(name=name),
+            string_data=string_data,
+            type="Opaque",
+        )
+        try:
+            core_api.create_namespaced_secret(namespace=namespace, body=secret)
+        except ApiException as exc:
+            if exc.status != 409:
+                raise
+            core_api.patch_namespaced_secret(name=name, namespace=namespace, body=secret)
+
+
+    def read_secret(core_api: client.CoreV1Api, namespace: str, name: str) -> V1Secret | None:
+        try:
+            return core_api.read_namespaced_secret(name=name, namespace=namespace)
+        except ApiException as exc:
+            if exc.status == 404:
+                return None
+            raise
+
+
+    if __name__ == "__main__":
+        main()
+immutable: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: setup
+  namespace: pocket-id
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: setup
+  namespace: pocket-id
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - delete
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - patch
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: setup
+  namespace: pocket-id
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: setup
+subjects:
+  - kind: ServiceAccount
+    name: setup
+    namespace: pocket-id
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: setup
+  namespace: pocket-id
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: setup
+        app.kubernetes.io/name: pocket-id
+        cdk8s.io/metadata.addr: pocket-id-setup-job-c8b3a638
+        k2.wyvernzora.io/scripted-workload-type: job
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: true
+      containers:
+        - command:
+            - /scripts/setup.py
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POCKET_ID_INTERNAL_URL
+              value: http://pocket-id
+            - name: POCKET_ID_DEPLOYMENT
+              value: pocket-id
+            - name: POCKET_ID_BOOTSTRAP_SECRET
+              value: pocket-id-bootstrap-api-key
+            - name: POMERIUM_NAMESPACE
+              value: pomerium
+            - name: POMERIUM_SECRET
+              value: pocket-id
+            - name: POMERIUM_CLIENT_ID
+              value: pomerium
+            - name: POMERIUM_CALLBACK_URL
+              value: https://login.k2.wyvernzora.io/oauth2/callback
+            - name: POMERIUM_LAUNCH_URL
+              value: https://login.k2.wyvernzora.io
+            - name: FORGEJO_NAMESPACE
+              value: forgejo
+            - name: FORGEJO_SECRET
+              value: forgejo-oidc
+            - name: FORGEJO_CLIENT_ID
+              value: forgejo
+            - name: FORGEJO_CALLBACK_URL
+              value: https://git.wyvernzora.io/user/oauth2/PocketID/callback
+            - name: FORGEJO_LAUNCH_URL
+              value: https://git.wyvernzora.io
+          image: ghcr.io/wyvernzora/k2-job-runner:v2
+          imagePullPolicy: IfNotPresent
+          name: script
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /scripts
+              name: script
+              readOnly: true
+            - mountPath: /tmp
+              name: tmp
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+      serviceAccountName: setup
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            defaultMode: 365
+            name: setup-script
+          name: script
+        - emptyDir:
+            sizeLimit: 16Mi
+          name: tmp
+  ttlSecondsAfterFinished: 86400
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id-setup
+  namespace: pomerium
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - get
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id-setup
+  namespace: pomerium
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pocket-id-setup
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: setup
+    namespace: pocket-id
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id-forgejo-setup
+  namespace: forgejo
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - get
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: pocket-id-forgejo-setup
+  namespace: forgejo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pocket-id-forgejo-setup
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: setup
+    namespace: pocket-id
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/allow_public_unauthenticated_access: "true"
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: pocket-id
+  name: ingress
+  namespace: pocket-id
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: id.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: pocket-id
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - id.k2.wyvernzora.io
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: pocket-id
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: pocket-id
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: pocket-id
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-pocket-id-pomerium-to-pocket-id
+specs:
+  - description: pomerium to pocket-id
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: app
+              app.kubernetes.io/name: pocket-id
+              k8s:io.kubernetes.pod.namespace: pocket-id
+        toPorts:
+          - ports:
+              - port: "1411"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to pocket-id
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: pocket-id
+        k8s:io.kubernetes.pod.namespace: pocket-id
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "1411"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pocket-id
+    k2.wyvernzora.io/component: network-policy
+  name: pocket-id-postgresql-pocket-id-to-postgresql
+specs:
+  - description: pocket-id to nexus-postgresql
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              cnpg.io/cluster: nexus
+              k8s:io.kubernetes.pod.namespace: postgresql
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: pocket-id
+        k8s:io.kubernetes.pod.namespace: pocket-id
+  - description: pocket-id to nexus-postgresql
+    endpointSelector:
+      matchLabels:
+        cnpg.io/cluster: nexus
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: app
+              app.kubernetes.io/name: pocket-id
+              k8s:io.kubernetes.pod.namespace: pocket-id
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP

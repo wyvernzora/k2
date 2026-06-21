@@ -1,0 +1,826 @@
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo-secret-key
+  namespace: forgejo
+spec:
+  allowRepeat: true
+  digits: 8
+  encoding: raw
+  length: 64
+  noUpper: false
+  secretKeys:
+    - secretKey
+  symbols: 0
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo-internal-token
+  namespace: forgejo
+spec:
+  allowRepeat: true
+  digits: 8
+  encoding: raw
+  length: 64
+  noUpper: false
+  secretKeys:
+    - internalToken
+  symbols: 0
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo
+  namespace: forgejo
+spec:
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: forgejo-secret-key
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: forgejo-internal-token
+  refreshPolicy: CreatedOnce
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    immutable: true
+    name: forgejo
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: DatabaseClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo
+  namespace: forgejo
+spec:
+  clusterRef:
+    name: nexus
+    namespace: postgresql
+  databaseName: forgejo
+  deletionPolicy: Retain
+  schemas:
+    - public
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: RoleClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo
+  namespace: forgejo
+spec:
+  access: Owner
+  databaseClaimRef:
+    name: forgejo
+  roleName: forgejo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo
+  namespace: forgejo
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: forge
+      app.kubernetes.io/name: forgejo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: forge
+        app.kubernetes.io/name: forgejo
+        cdk8s.io/metadata.addr: forgejo-deployment-c8a2d1c6
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: host
+                  name: forgejo-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: port
+                  name: forgejo-credentials
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: dbname
+                  name: forgejo-credentials
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: user
+                  name: forgejo-credentials
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: forgejo-credentials
+            - name: USER_UID
+              value: "1000"
+            - name: USER_GID
+              value: "1000"
+            - name: FORGEJO_WORK_DIR
+              value: /var/lib/gitea
+            - name: FORGEJO__database__DB_TYPE
+              value: postgres
+            - name: FORGEJO__database__HOST
+              value: $(DB_HOST):$(DB_PORT)
+            - name: FORGEJO__database__NAME
+              value: $(DB_NAME)
+            - name: FORGEJO__database__USER
+              value: $(DB_USER)
+            - name: FORGEJO__database__PASSWD
+              value: $(DB_PASSWORD)
+            - name: FORGEJO__database__SSL_MODE
+              value: disable
+            - name: FORGEJO__security__INSTALL_LOCK
+              value: "true"
+            - name: FORGEJO__security__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secretKey
+                  name: forgejo
+            - name: FORGEJO__security__INTERNAL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: internalToken
+                  name: forgejo
+            - name: FORGEJO__server__APP_DATA_PATH
+              value: /var/lib/gitea/data
+            - name: FORGEJO__server__DOMAIN
+              value: git.wyvernzora.io
+            - name: FORGEJO__server__ROOT_URL
+              value: https://git.wyvernzora.io/
+            - name: FORGEJO__server__HTTP_ADDR
+              value: 0.0.0.0
+            - name: FORGEJO__server__HTTP_PORT
+              value: "3000"
+            - name: FORGEJO__server__DISABLE_SSH
+              value: "false"
+            - name: FORGEJO__server__START_SSH_SERVER
+              value: "true"
+            - name: FORGEJO__server__SSH_DOMAIN
+              value: git.wyvernzora.io
+            - name: FORGEJO__server__SSH_PORT
+              value: "2222"
+            - name: FORGEJO__server__SSH_LISTEN_PORT
+              value: "2222"
+            - name: FORGEJO__service__DISABLE_REGISTRATION
+              value: "true"
+            - name: FORGEJO__service__REQUIRE_SIGNIN_VIEW
+              value: "true"
+            - name: FORGEJO__openid__ENABLE_OPENID_SIGNIN
+              value: "false"
+            - name: FORGEJO__openid__ENABLE_OPENID_SIGNUP
+              value: "false"
+            - name: FORGEJO__oauth2_client__ENABLE_AUTO_REGISTRATION
+              value: "true"
+            - name: FORGEJO__oauth2_client__USERNAME
+              value: nickname
+            - name: FORGEJO__oauth2_client__ACCOUNT_LINKING
+              value: login
+            - name: FORGEJO__repository__DEFAULT_PRIVATE
+              value: private
+            - name: FORGEJO__repository__DEFAULT_PUSH_CREATE_PRIVATE
+              value: "true"
+          image: codeberg.org/forgejo/forgejo:15-rootless
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /api/healthz
+              port: 3000
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: forgejo
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+            - containerPort: 2222
+              name: ssh
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/healthz
+              port: 3000
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 8Gi
+              memory: 4096Mi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            failureThreshold: 60
+            httpGet:
+              path: /api/healthz
+              port: 3000
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /var/lib/gitea
+              name: pvc-forgejo-appdata
+              subPath: data
+            - mountPath: /etc/gitea
+              name: pvc-forgejo-appdata
+              subPath: config
+        - env:
+            - name: XDG_CONFIG_HOME
+              value: /config
+            - name: XDG_DATA_HOME
+              value: /data
+          image: caddy:2.10.0-alpine
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            periodSeconds: 10
+            tcpSocket:
+              port: 8443
+            timeoutSeconds: 5
+          name: caddy
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            periodSeconds: 10
+            tcpSocket:
+              port: 8443
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 512Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - NET_BIND_SERVICE
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /etc/caddy/Caddyfile
+              name: configmap-forgejo-deployment-caddy-config-c88efaad
+              subPath: Caddyfile
+            - mountPath: /tls
+              name: secret-default-certificate
+              readOnly: true
+            - mountPath: /config
+              name: caddy-config-state
+            - mountPath: /data
+              name: caddy-data
+            - mountPath: /tmp
+              name: caddy-tmp
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - |-
+              set -eu
+
+              mkdir -p "/forgejo/data" "/forgejo/config"
+              chown -R 1000:1000 "/forgejo/data" "/forgejo/config"
+          image: busybox:1.37.0
+          imagePullPolicy: IfNotPresent
+          name: init-forgejo-appdata
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /forgejo
+              name: pvc-forgejo-appdata
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-forgejo-appdata
+          persistentVolumeClaim:
+            claimName: forgejo-appdata
+            readOnly: false
+        - configMap:
+            name: forgejo-deployment-caddy-config-c88efaad
+          name: configmap-forgejo-deployment-caddy-config-c88efaad
+        - name: secret-default-certificate
+          secret:
+            secretName: default-certificate
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: caddy-config-state
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: caddy-data
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: caddy-tmp
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo-appdata
+  namespace: forgejo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo-deployment-caddy-config-c88efaad
+  namespace: forgejo
+data:
+  Caddyfile: |-
+    {
+      auto_https off
+    }
+
+    :8443 {
+      tls /tls/tls.crt /tls/tls.key
+      reverse_proxy 127.0.0.1:3000
+    }
+immutable: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: git.wyvernzora.io
+    lbipam.cilium.io/ips: 10.10.13.3
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo
+  namespace: forgejo
+spec:
+  externalIPs: []
+  externalTrafficPolicy: Cluster
+  loadBalancerSourceRanges:
+    - 10.1.0.0/16
+    - 10.8.0.0/16
+    - 10.10.0.0/16
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    - name: ssh
+      port: 2222
+      protocol: TCP
+      targetPort: 2222
+  selector:
+    app.kubernetes.io/component: forge
+    app.kubernetes.io/name: forgejo
+  type: LoadBalancer
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: setup
+  namespace: forgejo
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: setup
+        app.kubernetes.io/name: forgejo
+        cdk8s.io/metadata.addr: forgejo-setup-c86548c5
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: forgejo
+                  app.kubernetes.io/component: forge
+              topologyKey: kubernetes.io/hostname
+      automountServiceAccountToken: false
+      containers:
+        - command:
+            - sh
+            - -c
+            - |-
+              set -eu
+
+              forgejo_admin() {
+                forgejo --work-path "/var/lib/gitea" --config "/etc/gitea/app.ini" admin "$@"
+              }
+
+              auth_exists() {
+                forgejo_admin auth list 2>/tmp/forgejo-auth-list.err | grep -q "PocketID"
+              }
+
+              ready=false
+              for _ in $(seq 1 60); do
+                if forgejo_admin auth list >/tmp/forgejo-auth-list.out 2>/tmp/forgejo-auth-list.err; then
+                  ready=true
+                  break
+                fi
+                sleep 5
+              done
+
+              if [ "$ready" != "true" ]; then
+                cat /tmp/forgejo-auth-list.err
+                exit 1
+              fi
+
+              if auth_exists; then
+                echo "PocketID OAuth source already exists"
+                exit 0
+              fi
+
+              forgejo_admin auth add-oauth       --name PocketID       --provider openidConnect       --key "$OIDC_CLIENT_ID"       --secret "$OIDC_CLIENT_SECRET"       --auto-discover-url "$OIDC_DISCOVERY_URL"       --scopes openid       --scopes profile       --scopes email
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: host
+                  name: forgejo-credentials
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: port
+                  name: forgejo-credentials
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: dbname
+                  name: forgejo-credentials
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: user
+                  name: forgejo-credentials
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: forgejo-credentials
+            - name: USER_UID
+              value: "1000"
+            - name: USER_GID
+              value: "1000"
+            - name: FORGEJO_WORK_DIR
+              value: /var/lib/gitea
+            - name: FORGEJO__database__DB_TYPE
+              value: postgres
+            - name: FORGEJO__database__HOST
+              value: $(DB_HOST):$(DB_PORT)
+            - name: FORGEJO__database__NAME
+              value: $(DB_NAME)
+            - name: FORGEJO__database__USER
+              value: $(DB_USER)
+            - name: FORGEJO__database__PASSWD
+              value: $(DB_PASSWORD)
+            - name: FORGEJO__database__SSL_MODE
+              value: disable
+            - name: FORGEJO__security__INSTALL_LOCK
+              value: "true"
+            - name: FORGEJO__security__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secretKey
+                  name: forgejo
+            - name: FORGEJO__security__INTERNAL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: internalToken
+                  name: forgejo
+            - name: FORGEJO__server__APP_DATA_PATH
+              value: /var/lib/gitea/data
+            - name: FORGEJO__server__DOMAIN
+              value: git.wyvernzora.io
+            - name: FORGEJO__server__ROOT_URL
+              value: https://git.wyvernzora.io/
+            - name: FORGEJO__server__HTTP_ADDR
+              value: 0.0.0.0
+            - name: FORGEJO__server__HTTP_PORT
+              value: "3000"
+            - name: FORGEJO__server__DISABLE_SSH
+              value: "false"
+            - name: FORGEJO__server__START_SSH_SERVER
+              value: "true"
+            - name: FORGEJO__server__SSH_DOMAIN
+              value: git.wyvernzora.io
+            - name: FORGEJO__server__SSH_PORT
+              value: "2222"
+            - name: FORGEJO__server__SSH_LISTEN_PORT
+              value: "2222"
+            - name: FORGEJO__service__DISABLE_REGISTRATION
+              value: "true"
+            - name: FORGEJO__service__REQUIRE_SIGNIN_VIEW
+              value: "true"
+            - name: FORGEJO__openid__ENABLE_OPENID_SIGNIN
+              value: "false"
+            - name: FORGEJO__openid__ENABLE_OPENID_SIGNUP
+              value: "false"
+            - name: FORGEJO__oauth2_client__ENABLE_AUTO_REGISTRATION
+              value: "true"
+            - name: FORGEJO__oauth2_client__USERNAME
+              value: nickname
+            - name: FORGEJO__oauth2_client__ACCOUNT_LINKING
+              value: login
+            - name: FORGEJO__repository__DEFAULT_PRIVATE
+              value: private
+            - name: FORGEJO__repository__DEFAULT_PUSH_CREATE_PRIVATE
+              value: "true"
+            - name: OIDC_CLIENT_ID
+              value: forgejo
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: client_secret
+                  name: forgejo-oidc
+            - name: OIDC_DISCOVERY_URL
+              value: https://id.k2.wyvernzora.io/.well-known/openid-configuration
+          image: codeberg.org/forgejo/forgejo:15-rootless
+          imagePullPolicy: IfNotPresent
+          name: setup
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 25m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /var/lib/gitea
+              name: pvc-forgejo-appdata
+              subPath: data
+            - mountPath: /etc/gitea
+              name: pvc-forgejo-appdata
+              subPath: config
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: OnFailure
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: pvc-forgejo-appdata
+          persistentVolumeClaim:
+            claimName: forgejo-appdata
+            readOnly: false
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: forgejo
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: forgejo
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: forgejo
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
+  name: forgejo-forgejo-network
+specs:
+  - egress:
+      - toEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: forge
+        app.kubernetes.io/name: forgejo
+        k8s:io.kubernetes.pod.namespace: forgejo
+    ingress:
+      - fromCIDR:
+          - 10.1.0.0/16
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+              - port: "2222"
+                protocol: TCP
+      - fromCIDR:
+          - 10.8.0.0/16
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+              - port: "2222"
+                protocol: TCP
+      - fromCIDR:
+          - 10.10.0.0/16
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+              - port: "2222"
+                protocol: TCP
+      - fromEntities:
+          - host
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+              - port: "2222"
+                protocol: TCP
+    ingressDeny:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: forgejo
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
+  name: forgejo-postgresql-forgejo-to-postgresql
+specs:
+  - description: forgejo to nexus-postgresql
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              cnpg.io/cluster: nexus
+              k8s:io.kubernetes.pod.namespace: postgresql
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: forge
+        app.kubernetes.io/name: forgejo
+        k8s:io.kubernetes.pod.namespace: forgejo
+  - description: forgejo to nexus-postgresql
+    endpointSelector:
+      matchLabels:
+        cnpg.io/cluster: nexus
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: forge
+              app.kubernetes.io/name: forgejo
+              k8s:io.kubernetes.pod.namespace: forgejo
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP

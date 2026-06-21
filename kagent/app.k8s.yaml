@@ -1,0 +1,1816 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-openai
+  namespace: kagent
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: auxpf6o2uqun2igak64lteb5tq/credential
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: OPENAI_API_KEY
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: kagent-openai
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: gpt-5-5
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-5.5
+  provider: OpenAI
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: gpt-5-4-mini
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-5.4-mini
+  provider: OpenAI
+---
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kura-mcp
+  namespace: kagent
+spec:
+  description: Kura anime library MCP server.
+  protocol: STREAMABLE_HTTP
+  sseReadTimeout: 5m
+  terminateOnClose: true
+  timeout: 60s
+  url: http://kura-mcp.kura.svc.cluster.local/mcp
+---
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: dmhy-mcp
+  namespace: kagent
+spec:
+  description: DMHY anime release search MCP server.
+  protocol: STREAMABLE_HTTP
+  sseReadTimeout: 5m
+  terminateOnClose: true
+  timeout: 60s
+  url: http://dmhy-mcp.kura.svc.cluster.local/mcp
+---
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: qbittorrent-mcp
+  namespace: kagent
+spec:
+  description: qBittorrent download management MCP server.
+  protocol: STREAMABLE_HTTP
+  sseReadTimeout: 5m
+  terminateOnClose: true
+  timeout: 60s
+  url: http://qbittorrent-mcp.qbittorrent.svc.cluster.local/mcp
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: DatabaseClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent
+  namespace: kagent
+spec:
+  clusterRef:
+    name: nexus
+    namespace: postgresql
+  databaseName: kagent
+  deletionPolicy: Retain
+  schemas:
+    - public
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: RoleClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent
+  namespace: kagent
+spec:
+  access: Owner
+  databaseClaimRef:
+    name: kagent
+  roleName: kagent
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-controller-manager
+  namespace: kagent
+automountServiceAccountToken: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-controller
+  namespace: kagent
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-ui
+  namespace: kagent
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+    kagent.dev/prompt-library: "true"
+  name: kagent-builtin-prompts
+  namespace: kagent
+data:
+  a2a-communication: |
+    ## Agent-to-Agent Communication
+
+    You can communicate with other agents to accomplish complex tasks that span multiple
+    domains of expertise. When working with other agents:
+
+    1. **Clear delegation**: When delegating a task to another agent, provide clear and
+       complete context. Include all relevant information the other agent needs to
+       accomplish the task.
+    2. **Result validation**: When receiving results from another agent, validate them
+       before incorporating them into your response or using them for further actions.
+    3. **Error handling**: If an agent you are communicating with fails or returns an
+       unexpected result, handle the error gracefully. Consider retrying, using an
+       alternative approach, or informing the user.
+    4. **Avoid circular delegation**: Do not create circular delegation chains where
+       agents repeatedly delegate tasks back to each other without making progress.
+  kubernetes-context: |
+    ## Kubernetes Operational Context
+
+    You are operating within a Kubernetes cluster. Follow this methodology:
+
+    ### Investigation Protocol
+    1. **Start non-intrusively**: Begin with read-only operations (get, describe, logs,
+       events) before any modifications. Gather information before acting.
+    2. **Progressive escalation**: Start with broad resource checks, then narrow down to
+       specific resources, pods, containers, or logs as you identify the problem area.
+    3. **Verify before acting**: Consider the potential impact of any change. Check
+       dependencies, related resources, and downstream effects before modifying anything.
+
+    ### Problem-Solving Framework
+    1. **Initial assessment**: Check cluster health, node status, and recent events. Identify
+       the scope of the issue (single pod, deployment, namespace, or cluster-wide).
+    2. **Classify the problem**: Determine if it's an application issue (crashes, errors),
+       infrastructure problem (node failures, resource exhaustion), networking issue
+       (connectivity, DNS, policies), or configuration error (invalid specs, missing secrets).
+    3. **Analyze resources**: Examine pod status, container logs, resource metrics, events,
+       and network connectivity relevant to the issue.
+    4. **Implement solutions**: Propose targeted fixes. Present multiple options when
+       appropriate, explain trade-offs, and include verification steps.
+
+    ### Key Principles
+    - Always be explicit about which namespace you are operating in.
+    - Remember that your actions impact real workloads — prioritize stability.
+    - Use labels and selectors to target resources precisely.
+    - Check resource quotas and limits before creating or scaling resources.
+  safety-guardrails: |
+    ## Safety Guidelines
+
+    You must follow these safety principles in all interactions:
+
+    1. **No destructive operations without confirmation**: Never delete resources, modify
+       production systems, or take irreversible actions without explicit user confirmation.
+       Always explain what will happen and ask for approval first.
+    2. **Least privilege**: Apply changes to the minimum scope necessary. Prefer targeted
+       operations over broad ones. Avoid cluster-wide changes when namespace-scoped changes
+       will suffice.
+    3. **Rollback planning**: Before making changes, ensure you have a plan to revert them.
+       Capture the current state, explain the rollback procedure, and verify the rollback
+       path exists before proceeding.
+    4. **Protect sensitive data**: Never expose secrets, credentials, API keys, tokens, or
+       certificates in your responses. Redact sensitive information before presenting output
+       to the user.
+    5. **Stay within scope**: Only perform actions within your defined capabilities and the
+       user's stated intent. Do not take autonomous actions beyond what was requested.
+    6. **Report uncertainties**: If you are unsure about an action or its consequences,
+       communicate your uncertainty to the user and ask for guidance before proceeding.
+  skills-usage: |
+    ## Skills
+
+    You have access to skills — pre-built capabilities loaded from external sources and
+    available as files in your skills directory (/skills). Each skill contains instructions,
+    prompts, or data that extend your abilities beyond your base training.
+
+    When a user asks you to perform a task, check if any of the available skills match
+    the request. If a skill is relevant, read and follow its instructions carefully.
+    Skills may contain domain-specific knowledge, step-by-step procedures, or templates
+    that you should use to produce higher-quality responses.
+
+    Always prefer using a skill over generating a response from scratch when a relevant
+    skill is available.
+  tool-usage-best-practices: |
+    ## Tool Usage Best Practices
+
+    Follow these principles when using tools:
+
+    1. **Read before write**: Always use informational tools (get, describe, list, status)
+       before modification tools. Understand the current state before making changes.
+    2. **Explain before acting**: Before calling any modification tool, explain to the user
+       what you intend to do and why. Wait for confirmation on destructive operations.
+    3. **Dry-run when possible**: Use dry-run flags or preview modes when available to
+       validate changes before applying them.
+    4. **Use the right tool**: Select the most specific tool for the task. Check tool
+       descriptions carefully and ensure you understand the expected parameters.
+    5. **Backup current state**: Before modifications, capture the current state (e.g.,
+       export YAML, save configuration) so changes can be reverted if needed.
+    6. **Verify after changes**: After any modification, use informational tools to confirm
+       the change took effect and didn't cause unintended side effects.
+    7. **Handle errors gracefully**: If a tool call fails, analyze the error, adjust your
+       approach, and retry. Do not repeat the exact same failing call.
+    8. **Minimize calls**: Plan your approach to minimize tool calls. Batch operations when
+       possible and avoid redundant calls.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-controller
+  namespace: kagent
+data:
+  A2A_BASE_URL: http://kagent-controller.kagent.svc.cluster.local:8083
+  DATABASE_VECTOR_ENABLED: "false"
+  DEFAULT_MODEL_CONFIG_NAME: default-model-config
+  IMAGE_PULL_POLICY: IfNotPresent
+  IMAGE_REGISTRY: cr.kagent.dev
+  IMAGE_REPOSITORY: kagent-dev/kagent/app
+  IMAGE_TAG: 0.9.4
+  KAGENT_CONTROLLER_NAME: kagent-controller
+  LEADER_ELECT: "false"
+  OTEL_LOGGING_ENABLED: "false"
+  OTEL_TRACING_ENABLED: "false"
+  SKILLS_INIT_IMAGE_PULL_POLICY: IfNotPresent
+  SKILLS_INIT_IMAGE_REGISTRY: cr.kagent.dev
+  SKILLS_INIT_IMAGE_REPOSITORY: kagent-dev/kagent/skills-init
+  SKILLS_INIT_IMAGE_TAG: 0.9.4
+  STREAMING_INITIAL_BUF_SIZE: 4Ki
+  STREAMING_MAX_BUF_SIZE: 1Mi
+  STREAMING_TIMEOUT: 600s
+  WATCH_NAMESPACES: ""
+  ZAP_LOG_LEVEL: info
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-ui-config
+  namespace: kagent
+data:
+  nginx.conf: |
+    pid /tmp/nginx.pid;
+
+    error_log /dev/stderr;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        client_body_temp_path /tmp/nginx/client_temp;
+        proxy_temp_path /tmp/nginx/proxy_temp;
+        fastcgi_temp_path /tmp/nginx/fastcgi_temp;
+        uwsgi_temp_path /tmp/nginx/uwsgi_temp;
+        scgi_temp_path /tmp/nginx/scgi_temp;
+
+        access_log /dev/stdout;
+
+        log_format main        '[$time_local] $remote_addr - $remote_user - $request $status $body_bytes_sent $http_referer $http_user_agent $http_x_forwarded_for';
+        log_format upstreamlog '[$time_local] $remote_addr - $remote_user - $server_name $host to: $upstream_addr: $request $status upstream_response_time $upstream_response_time msec $msec request_time $request_time';
+
+        upstream kagent_ui {
+            server 127.0.0.1:8001;
+        }
+
+        upstream kagent_backend {
+            server kagent-controller.kagent.svc.cluster.local:8083;
+        }
+
+        map $http_upgrade $connection_upgrade {
+            default upgrade;
+            ''      close;
+        }
+
+        server {
+            listen 8080;
+            server_name localhost;
+
+            location /a2a/ {
+                proxy_pass http://kagent_ui/a2a/;
+                proxy_http_version 1.1;
+                proxy_set_header Connection '';
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Origin $scheme://$host;
+                proxy_read_timeout 600s;
+                proxy_send_timeout 600s;
+                proxy_buffering off;
+            }
+
+            location / {
+                proxy_pass http://kagent_ui;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Origin $scheme://$host;
+                proxy_cache_bypass $http_upgrade;
+            }
+
+            location /health {
+                return 200 'OK';
+            }
+
+            location /api/ {
+                proxy_pass http://kagent_backend/api/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection $connection_upgrade;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Host $server_name;
+                proxy_cache_bypass $http_upgrade;
+                proxy_read_timeout 3600s;
+                proxy_send_timeout 3600s;
+                proxy_buffering off;
+            }
+        }
+    }
+  supervisord.conf: |
+    [supervisord]
+    nodaemon=true
+    logfile=/dev/stdout
+    logfile_maxbytes=0
+    loglevel=debug
+
+    [program:nginx]
+    command=/usr/sbin/nginx -g "daemon off;"
+    autostart=true
+    autorestart=true
+    startretries=5
+    numprocs=1
+    startsecs=0
+    priority=20
+    stdout_logfile=/dev/stdout
+    stdout_logfile_maxbytes=0
+    stderr_logfile=/dev/stderr
+    stderr_logfile_maxbytes=0
+    stdout_events_enabled=true
+    stderr_events_enabled=true
+
+    [program:nextjs]
+    command=node /app/ui/server.js
+    directory=/app/ui
+    environment=PORT=8001,HOSTNAME="0.0.0.0",NODE_ENV=production,PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    autostart=true
+    autorestart=true
+    startretries=5
+    numprocs=1
+    startsecs=0
+    priority=10
+    stdout_logfile=/dev/stdout
+    stdout_logfile_maxbytes=0
+    stderr_logfile=/dev/stderr
+    stderr_logfile_maxbytes=0
+    stdout_events_enabled=true
+    stderr_events_enabled=true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-manager-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - services
+      - serviceaccounts
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - mcpservers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - mcpservers/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - mcpservers/status
+    verbs:
+      - get
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-metrics-auth-role
+rules:
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-metrics-reader
+rules:
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-getter-role
+rules:
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - agents
+      - sandboxagents
+      - agentharnesses
+      - modelconfigs
+      - modelproviderconfigs
+      - toolservers
+      - memories
+      - remotemcpservers
+      - mcpservers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - agents/finalizers
+      - sandboxagents/finalizers
+      - agentharnesses/finalizers
+      - modelconfigs/finalizers
+      - modelproviderconfigs/finalizers
+      - toolservers/finalizers
+      - memories/finalizers
+      - remotemcpservers/finalizers
+      - mcpservers/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - agents/status
+      - sandboxagents/status
+      - agentharnesses/status
+      - modelconfigs/status
+      - modelproviderconfigs/status
+      - toolservers/status
+      - memories/status
+      - remotemcpservers/status
+      - mcpservers/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - agents.x-k8s.io
+    resources:
+      - sandboxes
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-writer-role
+rules:
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - agents
+      - sandboxagents
+      - agentharnesses
+      - modelconfigs
+      - modelproviderconfigs
+      - toolservers
+      - memories
+      - remotemcpservers
+      - mcpservers
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - kagent.dev
+    resources:
+      - agents/finalizers
+      - sandboxagents/finalizers
+      - agentharnesses/finalizers
+      - modelconfigs/finalizers
+      - modelproviderconfigs/finalizers
+      - toolservers/finalizers
+      - memories/finalizers
+      - remotemcpservers/finalizers
+      - mcpservers/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - "*"
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - "*"
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - batch
+    resources:
+      - "*"
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - "*"
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - agents.x-k8s.io
+    resources:
+      - sandboxes
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kagent-kmcp-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: kagent-kmcp-controller-manager
+    namespace: kagent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-metrics-auth-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kagent-kmcp-metrics-auth-role
+subjects:
+  - kind: ServiceAccount
+    name: kagent-kmcp-controller-manager
+    namespace: kagent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-getter-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kagent-getter-role
+subjects:
+  - kind: ServiceAccount
+    name: kagent-controller
+    namespace: kagent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-writer-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kagent-writer-role
+subjects:
+  - kind: ServiceAccount
+    name: kagent-controller
+    namespace: kagent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-leader-election-role
+  namespace: kagent
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-leader-election-rolebinding
+  namespace: kagent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kagent-kmcp-leader-election-role
+subjects:
+  - kind: ServiceAccount
+    name: kagent-kmcp-controller-manager
+    namespace: kagent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-controller-manager-metrics-service
+  namespace: kagent
+spec:
+  ports:
+    - name: https
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/name: kmcp
+    control-plane: controller-manager
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-controller
+  namespace: kagent
+spec:
+  ports:
+    - name: controller
+      port: 8083
+      protocol: TCP
+      targetPort: 8083
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/name: kagent
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: ui
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-ui
+  namespace: kagent
+spec:
+  ports:
+    - name: ui
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: ui
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/name: kagent
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kmcp
+    app.kubernetes.io/version: 0.3.0
+    control-plane: controller-manager
+    helm.sh/chart: kmcp-0.3.0
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-kmcp-controller-manager
+  namespace: kagent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: kagent
+      app.kubernetes.io/name: kmcp
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app.kubernetes.io/instance: kagent
+        app.kubernetes.io/name: kmcp
+        control-plane: controller-manager
+    spec:
+      containers:
+        - args:
+            - --leader-elect
+            - --health-probe-bind-address=:8081
+            - --metrics-bind-address=:8443
+          command:
+            - /manager
+          image: ghcr.io/kagent-dev/kmcp/controller:0.3.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: manager
+          ports:
+            - containerPort: 8443
+              name: metrics
+              protocol: TCP
+            - containerPort: 8081
+              name: health
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts: []
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kagent-kmcp-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes: []
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-controller
+  namespace: kagent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: kagent
+      app.kubernetes.io/name: kagent
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: 9afab5213f5c4065d1e818ca352e9ef93339d619b4bf30a9170a452fce498b56
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: kagent
+        app.kubernetes.io/name: kagent
+    spec:
+      containers:
+        - env:
+            - name: KAGENT_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: AUTH_MODE
+              value: unsecure
+            - name: POSTGRES_DATABASE_URL_FILE
+              value: /var/run/kagent-db/uri
+          envFrom:
+            - configMapRef:
+                name: kagent-controller
+          image: cr.kagent.dev/kagent-dev/kagent/controller:0.9.4
+          imagePullPolicy: IfNotPresent
+          name: controller
+          ports:
+            - containerPort: 8083
+              name: http
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+          resources:
+            limits:
+              cpu: 2
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          volumeMounts:
+            - mountPath: /var/run/kagent-db
+              name: kagent-db
+              readOnly: true
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: kagent-controller
+      volumes:
+        - name: kagent-db
+          secret:
+            items:
+              - key: uri
+                path: uri
+            secretName: kagent-credentials
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: kagent-ui
+  namespace: kagent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: ui
+      app.kubernetes.io/instance: kagent
+      app.kubernetes.io/name: kagent
+  template:
+    metadata:
+      annotations:
+        checksum/ui-config: f8e4a981751cdeaf88e9ba9c6d9f56baa9d74856c6785f64b375584d66587912
+      labels:
+        app.kubernetes.io/component: ui
+        app.kubernetes.io/instance: kagent
+        app.kubernetes.io/name: kagent
+    spec:
+      containers:
+        - env:
+            - name: NEXT_PUBLIC_BACKEND_URL
+              value: /api
+            - name: BACKEND_INTERNAL_URL
+              value: http://kagent-controller:8083/api
+            - name: SSO_REDIRECT_PATH
+              value: /oauth2/start
+          image: cr.kagent.dev/kagent-dev/kagent/ui:0.9.4
+          imagePullPolicy: IfNotPresent
+          name: ui
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 1
+            periodSeconds: 1
+          volumeMounts:
+            - mountPath: /app/ui/.next/cache
+              name: nextjs-cache
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /etc/nginx/nginx.conf
+              name: ui-config
+              readOnly: true
+              subPath: nginx.conf
+            - mountPath: /etc/supervisor/conf.d/supervisord.conf
+              name: ui-config
+              readOnly: true
+              subPath: supervisord.conf
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: kagent-ui
+      volumes:
+        - emptyDir:
+            sizeLimit: 100Mi
+          name: nextjs-cache
+        - emptyDir:
+            sizeLimit: 50Mi
+          name: tmp
+        - configMap:
+            name: kagent-ui-config
+          name: ui-config
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  labels:
+    app.kubernetes.io/instance: kagent
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: kagent
+    app.kubernetes.io/part-of: kagent
+    app.kubernetes.io/version: 0.9.4
+    helm.sh/chart: kagent-0.9.4
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: default-model-config
+  namespace: kagent
+spec:
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  model: gpt-5.5
+  provider: OpenAI
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: system
+  name: ingress
+  namespace: kagent
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: kagent.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: kagent-ui
+                port:
+                  number: 8080
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - kagent.k2.wyvernzora.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: anime-manager
+  name: anime-kura-agent-system-prompt
+  namespace: kagent
+data:
+  system-prompt: |
+    You manage an anime library through Kura, DMHY, and qBittorrent tools.
+
+    Kura is the source of truth for tracked series, inbox files, staged changes,
+    and reconcile state. DMHY is only a release index. qBittorrent only queues,
+    tracks, and removes downloads. Downloaded files become adoptable only after
+    they land in the Kura inbox.
+
+    Core rules:
+    - Always resolve titles to a MetadataRef before acting. Never invent refs.
+    - If resolve returns 0 matches, surface that. If it returns 2 or more, ask the user to disambiguate.
+    - Use the release-search delegate for DMHY release searching. Keep raw release search churn out of your main context.
+    - Before any mutation, have a clear one-sentence reason for the action.
+    - For async Kura tools, poll kura_job_status until succeeded, failed, or cancelled.
+    - Before reconcile_apply, inspect the reconcile plan and summarize what will move, replace, or be trashed.
+    - Copy inbox: and series: selectors exactly from tool output.
+    - Preserve companion subtitle files when staging episode files.
+    - Infer source labels conservatively from release/title tokens. Ask if the result would otherwise be Unknown.
+
+    Find and queue workflow:
+    - For "find releases" requests, resolve/show the series first, then delegate release search.
+    - Present compact candidates with group, source/quality, episode coverage, date, and info_hash.
+    - If the user chooses a release to download, call get_magnets for the chosen info_hash values.
+    - Queue downloads with qbit_add_download using destination "kura-inbox" and tags ["tvdb:<id>"].
+    - Never change the destination away from "kura-inbox".
+    - After queueing, report qBit hashes and whether any torrent already existed.
+
+    Download watch workflow:
+    - There is no scheduler in this MVP. Do not promise automatic wakeups.
+    - If a torrent is incomplete, report progress/state and ask the user to check again later.
+    - Treat progress == 1 as complete even if state is stalled.
+    - Once complete, inspect the Kura inbox and adopt with kura_stage, kura_reconcile_plan, and approved kura_reconcile_apply.
+
+    Cleanup workflow:
+    - Only remove qBit downloads that are complete and whose expected episodes are present in Kura.
+    - Do not remove incomplete downloads or downloads whose library adoption is uncertain.
+    - qbit_remove_downloads is destructive and must be approved.
+
+    In-place source relabeling:
+    - Use series: paths, set replace: true, and omit companions.
+immutable: false
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: anime-manager
+  name: anime-kura-agent
+  namespace: kagent
+spec:
+  declarative:
+    a2aConfig:
+      skills:
+        - description: Resolve anime titles, inspect Kura state, search releases through a delegate, queue downloads, adopt inbox files, reconcile, and clean up completed torrents.
+          examples:
+            - Find a BluRay release for an incomplete series
+            - Queue that release for download
+            - Check whether downloads are ready to adopt
+            - Adopt completed inbox files into the library
+          id: anime-library-management
+          inputModes:
+            - text
+          name: Anime library management
+          outputModes:
+            - text
+          tags:
+            - anime
+            - kura
+            - dmhy
+            - qbittorrent
+            - library
+    modelConfig: gpt-5-5
+    stream: true
+    systemMessageFrom:
+      key: system-prompt
+      name: anime-kura-agent-system-prompt
+      type: ConfigMap
+    tools:
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: kura-mcp
+          requireApproval:
+            - kura_reconcile_apply
+          toolNames:
+            - kura_resolve
+            - kura_aliases
+            - kura_list
+            - kura_show
+            - kura_inbox_list
+            - kura_job_status
+            - kura_reconcile_plan
+            - kura_add
+            - kura_import
+            - kura_scan
+            - kura_stage
+            - kura_reset
+            - kura_reconcile_apply
+        type: McpServer
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: dmhy-mcp
+          toolNames:
+            - get_magnets
+        type: McpServer
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: qbittorrent-mcp
+          requireApproval:
+            - qbit_add_download
+            - qbit_remove_downloads
+          toolNames:
+            - qbit_add_download
+            - qbit_search_downloads
+            - qbit_remove_downloads
+        type: McpServer
+      - agent:
+          apiGroup: kagent.dev
+          kind: Agent
+          name: anime-release-search-agent
+        type: Agent
+  description: Manage the Kura anime library, release search, and qBittorrent download flow.
+  type: Declarative
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: anime-release-search
+  name: anime-release-search-agent-system-prompt
+  namespace: kagent
+data:
+  system-prompt: |
+    You are a focused DMHY anime release search delegate.
+
+    Your job is to find release candidates for a Kura library series. Keep your
+    output compact. Do not queue downloads, fetch magnets, stage files, reconcile,
+    or mutate Kura/qBittorrent state.
+
+    Workflow:
+    - If the caller gives only a title, call kura_resolve and ask the caller to disambiguate if needed.
+    - Call kura_show for the series to understand missing episodes, staged state, existing source, codec, and resolution.
+    - Call kura_aliases and pick 2-3 concise DMHY search keywords.
+    - DMHY is a Chinese anime torrent site. Prefer short ASCII/romaji aliases, distinctive kana/kanji fragments, or short zh aliases.
+    - Spaces become AND in search. Prefer short distinctive tokens over full English titles.
+    - Search DMHY with search_releases, category anime, limit 30.
+    - Try at most 3 total search attempts. If results are wrong or empty, refine once or twice, then stop.
+
+    Return only useful candidates:
+    - title
+    - group
+    - source/quality/resolution when inferable
+    - episode coverage or batch/single-episode scope
+    - date
+    - info_hash
+    - short reason why it fits or does not fit the requested gap/upgrade
+
+    Stop when you have at least one clearly relevant result. If none are relevant,
+    explain the attempted keywords and ask for a better search term.
+immutable: false
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: anime-release-search
+  name: anime-release-search-agent
+  namespace: kagent
+spec:
+  declarative:
+    a2aConfig:
+      skills:
+        - description: Derive compact DMHY search keywords from Kura aliases and return release candidates that fit library gaps or upgrades.
+          examples:
+            - Find releases for tvdb:357488 that cover missing episodes
+            - Look for a BluRay batch upgrade for this series
+          id: anime-release-search
+          inputModes:
+            - text
+          name: Anime release search
+          outputModes:
+            - text
+          tags:
+            - anime
+            - dmhy
+            - release-search
+    modelConfig: gpt-5-4-mini
+    stream: true
+    systemMessageFrom:
+      key: system-prompt
+      name: anime-release-search-agent-system-prompt
+      type: ConfigMap
+    tools:
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: kura-mcp
+          toolNames:
+            - kura_resolve
+            - kura_aliases
+            - kura_show
+        type: McpServer
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: dmhy-mcp
+          toolNames:
+            - search_releases
+        type: McpServer
+  description: Search DMHY for anime releases using compact Kura context.
+  type: Declarative
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: kagent
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kagent
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kagent
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-kagent-pomerium-to-kagent-ui
+specs:
+  - description: pomerium to kagent-ui
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: ui
+              app.kubernetes.io/instance: kagent
+              app.kubernetes.io/name: kagent
+              k8s:io.kubernetes.pod.namespace: kagent
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to kagent-ui
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: ui
+        app.kubernetes.io/instance: kagent
+        app.kubernetes.io/name: kagent
+        k8s:io.kubernetes.pod.namespace: kagent
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: network-policy
+  name: kagent-agent-model-provider-egress
+specs:
+  - egress:
+      - toFQDNs:
+          - matchName: api.openai.com
+          - matchName: api.anthropic.com
+          - matchPattern: bedrock.*.amazonaws.com
+          - matchPattern: bedrock-runtime.*.amazonaws.com
+          - matchPattern: bedrock-agent.*.amazonaws.com
+          - matchPattern: bedrock-agent-runtime.*.amazonaws.com
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/managed-by: kagent
+        k8s:io.kubernetes.pod.namespace: kagent
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: network-policy
+  name: kagent-kura-kagent-to-kura-mcp
+specs:
+  - description: kagent to kura
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: library-manager
+              app.kubernetes.io/name: kura
+              k8s:io.kubernetes.pod.namespace: kura
+        toPorts:
+          - ports:
+              - port: "8081"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: kagent
+  - description: kagent to kura
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: library-manager
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kagent
+        toPorts:
+          - ports:
+              - port: "8081"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: network-policy
+  name: kagent-kura-kagent-to-dmhy-mcp
+specs:
+  - description: kagent to dmhy-mcp
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: search-acquisition
+              app.kubernetes.io/name: dmhy-mcp
+              k8s:io.kubernetes.pod.namespace: kura
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: kagent
+  - description: kagent to dmhy-mcp
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: search-acquisition
+        app.kubernetes.io/name: dmhy-mcp
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kagent
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: network-policy
+  name: kagent-qbittorrent-kagent-to-qbittorrent-mcp
+specs:
+  - description: kagent to qbittorrent
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: download-client
+              app.kubernetes.io/name: qbittorrent
+              k8s:io.kubernetes.pod.namespace: qbittorrent
+        toPorts:
+          - ports:
+              - port: "8082"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: kagent
+  - description: kagent to qbittorrent
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: download-client
+        app.kubernetes.io/name: qbittorrent
+        k8s:io.kubernetes.pod.namespace: qbittorrent
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kagent
+        toPorts:
+          - ports:
+              - port: "8082"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kagent
+    k2.wyvernzora.io/component: network-policy
+  name: kagent-postgresql-kagent-to-postgresql
+specs:
+  - description: kagent to nexus-postgresql
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              cnpg.io/cluster: nexus
+              k8s:io.kubernetes.pod.namespace: postgresql
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: kagent
+  - description: kagent to nexus-postgresql
+    endpointSelector:
+      matchLabels:
+        cnpg.io/cluster: nexus
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kagent
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP

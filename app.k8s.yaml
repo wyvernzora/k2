@@ -1,56 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: 1password
-  namespace: k2-core
-spec:
-  destination:
-    namespace: k2-core
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: 1password
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
   name: argocd
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
-    namespace: k2-core
+    namespace: argocd
     server: https://kubernetes.default.svc
   project: default
   source:
     path: argocd
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -59,27 +24,21 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: auth
-  namespace: k2-core
+  name: blocky
+  namespace: argocd
 spec:
   destination:
-    namespace: auth
+    namespace: blocky
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: auth
-    repoURL: https://github.com/wyvernzora/k2
+    path: blocky
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -89,26 +48,20 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: cert-manager
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
-    namespace: k2-core
+    namespace: cert-manager
     server: https://kubernetes.default.svc
   project: default
   source:
     path: cert-manager
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -117,27 +70,21 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dns
-  namespace: k2-core
+  name: cilium
+  namespace: argocd
 spec:
   destination:
-    namespace: dns
+    namespace: cilium
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: dns
-    repoURL: https://github.com/wyvernzora/k2
+    path: cilium
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -146,27 +93,21 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: gen-ai
-  namespace: k2-core
+  name: external-secrets
+  namespace: argocd
 spec:
   destination:
-    namespace: gen-ai
+    namespace: external-secrets
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: gen-ai
-    repoURL: https://github.com/wyvernzora/k2
+    path: external-secrets
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -175,27 +116,90 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: home-automation
-  namespace: k2-core
+  name: forgejo
+  namespace: argocd
 spec:
   destination:
-    namespace: home-automation
+    namespace: forgejo
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: home-automation
-    repoURL: https://github.com/wyvernzora/k2
+    path: forgejo
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant
+  namespace: argocd
+spec:
+  destination:
+    namespace: home-assistant
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: home-assistant
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homer
+  namespace: argocd
+spec:
+  destination:
+    namespace: homer
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: homer
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kagent
+  namespace: argocd
+spec:
+  destination:
+    namespace: kagent
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: kagent
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -205,26 +209,43 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: kube-vip
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
-    namespace: k2-network
+    namespace: kube-vip
     server: https://kubernetes.default.svc
   project: default
   source:
     path: kube-vip
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kura
+  namespace: argocd
+spec:
+  destination:
+    namespace: kura
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: kura
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -234,61 +255,20 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: longhorn
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
-    namespace: k2-storage
+    namespace: longhorn
     server: https://kubernetes.default.svc
-  ignoreDifferences:
-    - group: apiextensions.k8s.io
-      jsonPointers:
-        - /spec/conversion
-      kind: CustomResourceDefinition
   project: default
   source:
     path: longhorn
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
-      - RespectIgnoreDifferences=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: media
-  namespace: k2-core
-spec:
-  destination:
-    namespace: media
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: media
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -297,27 +277,21 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: metallb
-  namespace: k2-core
+  name: mcp-unifi
+  namespace: argocd
 spec:
   destination:
-    namespace: k2-network
+    namespace: mcp-unifi
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: metallb
-    repoURL: https://github.com/wyvernzora/k2
+    path: mcp-unifi
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -327,7 +301,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: n8n
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
     namespace: n8n
@@ -335,18 +309,35 @@ spec:
   project: default
   source:
     path: n8n
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nfs-csi
+  namespace: argocd
+spec:
+  destination:
+    namespace: nfs-csi
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: nfs-csi
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -356,26 +347,26 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: paperless
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
     namespace: paperless
     server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - jsonPointers:
+        - /data
+      kind: Secret
+      name: paperless-mcp-token
+      namespace: paperless
   project: default
   source:
     path: paperless
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -385,7 +376,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: plex
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
     namespace: plex
@@ -393,18 +384,58 @@ spec:
   project: default
   source:
     path: plex
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pocket-id
+  namespace: argocd
+spec:
+  destination:
+    namespace: pocket-id
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: pocket-id
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pomerium
+  namespace: argocd
+spec:
+  destination:
+    namespace: pomerium
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: pomerium
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -414,7 +445,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: postgresql
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
     namespace: postgresql
@@ -422,18 +453,35 @@ spec:
   project: default
   source:
     path: postgresql
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent
+  namespace: argocd
+spec:
+  destination:
+    namespace: qbittorrent
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: qbittorrent
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -443,7 +491,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: tailscale
-  namespace: k2-core
+  namespace: argocd
 spec:
   destination:
     namespace: tailscale
@@ -451,47 +499,12 @@ spec:
   project: default
   source:
     path: tailscale
-    repoURL: https://github.com/wyvernzora/k2
+    repoURL: https://github.com/wyvernzora/k2.git
     targetRevision: deploy
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: traefik
-  namespace: k2-core
-spec:
-  destination:
-    namespace: k2-network
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: traefik
-    repoURL: https://github.com/wyvernzora/k2
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 600s
-      limit: 10
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true

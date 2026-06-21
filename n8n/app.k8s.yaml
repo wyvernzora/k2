@@ -1,7 +1,122 @@
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n-encryption-key
+  namespace: n8n
+spec:
+  allowRepeat: true
+  digits: 8
+  encoding: raw
+  length: 32
+  noUpper: false
+  secretKeys:
+    - encryptionKey
+  symbols: 0
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n
+  namespace: n8n
+spec:
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: n8n-encryption-key
+  refreshPolicy: CreatedOnce
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    immutable: true
+    name: n8n
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n-user-management-jwt-secret
+  namespace: n8n
+spec:
+  allowRepeat: true
+  digits: 16
+  encoding: raw
+  length: 64
+  noUpper: false
+  secretKeys:
+    - jwtSecret
+  symbols: 0
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n-user-management
+  namespace: n8n
+spec:
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: n8n-user-management-jwt-secret
+  refreshPolicy: CreatedOnce
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    immutable: true
+    name: n8n-user-management
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: DatabaseClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n
+  namespace: n8n
+spec:
+  clusterRef:
+    name: nexus
+    namespace: postgresql
+  databaseName: n8n
+  deletionPolicy: Retain
+  schemas:
+    - public
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: RoleClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n
+  namespace: n8n
+spec:
+  access: Owner
+  databaseClaimRef:
+    name: n8n
+  roleName: n8n
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: n8n-depl-c8f2cd03
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n
+  namespace: n8n
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
@@ -9,41 +124,115 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      cdk8s.io/metadata.addr: n8n-depl-c8fb3fe6
+      app.kubernetes.io/component: automation
+      app.kubernetes.io/name: n8n
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        cdk8s.io/metadata.addr: n8n-depl-c8fb3fe6
+        app.kubernetes.io/component: automation
+        app.kubernetes.io/name: n8n
+        cdk8s.io/metadata.addr: n8n-deployment-c8127bd9
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       automountServiceAccountToken: false
       containers:
         - env:
             - name: N8N_PORT
               value: "5678"
-            - name: N8N_USER_MANAGEMENT_ENABLED
+            - name: N8N_HOST
+              value: n8n.k2.wyvernzora.io
+            - name: N8N_PROTOCOL
+              value: https
+            - name: N8N_EDITOR_BASE_URL
+              value: https://n8n.k2.wyvernzora.io/
+            - name: N8N_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: encryptionKey
+                  name: n8n
+            - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+              value: "true"
+            - name: N8N_RUNNERS_ENABLED
+              value: "true"
+            - name: N8N_ENDPOINT_HEALTH
+              value: /n8n-healthz
+            - name: N8N_USER_MANAGEMENT_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: jwtSecret
+                  name: n8n-user-management
+            - name: N8N_PROXY_HOPS
+              value: "1"
+            - name: EXTERNAL_HOOK_FILES
+              value: /opt/proxy-auth/hook.cjs
+            - name: N8N_PROXY_AUTH_JWKS_URL
+              value: https://n8n.k2.wyvernzora.io/.well-known/pomerium/jwks.json
+            - name: N8N_PROXY_AUTH_ISSUER
+              value: n8n.k2.wyvernzora.io
+            - name: N8N_PROXY_AUTH_AUDIENCE
+              value: n8n.k2.wyvernzora.io
+            - name: N8N_PROXY_AUTH_ALGORITHMS
+              value: ES256
+            - name: DB_TYPE
+              value: postgresdb
+            - name: DB_POSTGRESDB_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: host
+                  name: n8n-credentials
+            - name: DB_POSTGRESDB_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: port
+                  name: n8n-credentials
+            - name: DB_POSTGRESDB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  key: dbname
+                  name: n8n-credentials
+            - name: DB_POSTGRESDB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: user
+                  name: n8n-credentials
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: n8n-credentials
+            - name: DB_POSTGRESDB_SCHEMA
+              value: public
+            - name: DB_POSTGRESDB_SSL_ENABLED
               value: "false"
             - name: GENERIC_TIMEZONE
               value: America/Los_Angeles
             - name: TZ
               value: America/Los_Angeles
           image: n8nio/n8n:2.20.6
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
             httpGet:
-              path: /
+              path: /n8n-healthz
               port: 5678
               scheme: HTTP
           name: n8n
           ports:
             - containerPort: 5678
               name: http
+              protocol: TCP
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              path: /
+              path: /n8n-healthz/readiness
               port: 5678
               scheme: HTTP
           resources:
@@ -56,123 +245,295 @@ spec:
               memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
             privileged: false
             readOnlyRootFilesystem: false
-            runAsNonRoot: false
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /n8n-healthz
+              port: 5678
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
           volumeMounts:
             - mountPath: /home/node/.n8n
-              name: pvc-n8n-depl-vol-appdata-pvc-c86b6999
-        - env:
-            - name: LUNCHMONEY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: credential
-                  name: n8n-depl-lm-token-c86ce486
-            - name: KUBERA_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: key
-                  name: n8n-depl-kb-token-c87948cc
-            - name: KUBERA_API_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: secret
-                  name: n8n-depl-kb-token-c87948cc
-            - name: KUBERA_PORTFOLIO_ID
-              valueFrom:
-                secretKeyRef:
-                  key: portfolioId
-                  name: n8n-depl-kb-token-c87948cc
-          image: ghcr.io/wyvernzora/personal-finance-mcp:edge
-          imagePullPolicy: Always
-          name: personal-finance-mcp
-          ports:
-            - containerPort: 3000
-              name: mcp
+              name: pvc-n8n-appdata
+            - mountPath: /opt/proxy-auth
+              name: proxy-auth-hook
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      initContainers:
+        - image: ghcr.io/wyvernzora/n8n-proxy-auth-hook:v0.1.0
+          imagePullPolicy: IfNotPresent
+          name: install-proxy-auth-hook
           resources:
             limits:
-              cpu: 1500m
-              memory: 2048Mi
+              cpu: 100m
+              memory: 64Mi
             requests:
-              cpu: 1000m
-              memory: 512Mi
+              cpu: 10m
+              memory: 16Mi
           securityContext:
             allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
             privileged: false
             readOnlyRootFilesystem: true
-            runAsNonRoot: true
-      dnsPolicy: ClusterFirst
-      hostNetwork: false
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /out
+              name: proxy-auth-hook
       restartPolicy: Always
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: Always
         runAsNonRoot: true
-        runAsUser: 1000
       setHostnameAsFQDN: false
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: pvc-n8n-depl-vol-appdata-pvc-c86b6999
+        - name: pvc-n8n-appdata
           persistentVolumeClaim:
-            claimName: n8n-depl-vol-appdata-pvc-c86b6999
+            claimName: n8n-appdata
             readOnly: false
+        - emptyDir:
+            sizeLimit: 1Mi
+          name: proxy-auth-hook
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: n8n-depl-vol-appdata-pvc-c86b6999
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: n8n-appdata
+  namespace: n8n
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 16Gi
+      storage: 4Gi
   storageClassName: longhorn
   volumeMode: Filesystem
----
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
-metadata:
-  name: n8n-depl-lm-token-c86ce486
-spec:
-  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/3hzvddfjcii34wz2ej6g4zbwf4
----
-apiVersion: onepassword.com/v1
-kind: OnePasswordItem
-metadata:
-  name: n8n-depl-kb-token-c87948cc
-spec:
-  itemPath: vaults/zfsyjjcwge4w4gw6dh4zaqndhq/items/r7qpb5ljzxj76pwlojnmfswlre
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
   name: n8n
+  namespace: n8n
 spec:
   externalIPs: []
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 5678
   selector:
-    cdk8s.io/metadata.addr: n8n-depl-c8fb3fe6
+    app.kubernetes.io/component: automation
+    app.kubernetes.io/name: n8n
   type: ClusterIP
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: auth-authelia@kubernetescrd
-  name: n8n-ingress-c8d604fd
+    ingress.pomerium.io/allow_websockets: "true"
+    ingress.pomerium.io/pass_identity_headers: "true"
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+    ingress.pomerium.io/preserve_host_header: "true"
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: ingress
+  namespace: n8n
 spec:
+  ingressClassName: pomerium
   rules:
-    - host: n8n.wyvernzora.io
+    - host: n8n.k2.wyvernzora.io
       http:
         paths:
           - backend:
               service:
                 name: n8n
                 port:
-                  number: 80
+                  name: http
             path: /
             pathType: Prefix
+  tls:
+    - hosts:
+        - n8n.k2.wyvernzora.io
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: n8n
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: n8n
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: n8n
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-n8n-pomerium-to-n8n
+specs:
+  - description: pomerium to n8n
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: automation
+              app.kubernetes.io/name: n8n
+              k8s:io.kubernetes.pod.namespace: n8n
+        toPorts:
+          - ports:
+              - port: "5678"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to n8n
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: automation
+        app.kubernetes.io/name: n8n
+        k8s:io.kubernetes.pod.namespace: n8n
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "5678"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: network-policy
+  name: n8n-postgresql-n8n-to-postgresql
+specs:
+  - description: n8n to nexus-postgresql
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              cnpg.io/cluster: nexus
+              k8s:io.kubernetes.pod.namespace: postgresql
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: automation
+        app.kubernetes.io/name: n8n
+        k8s:io.kubernetes.pod.namespace: n8n
+  - description: n8n to nexus-postgresql
+    endpointSelector:
+      matchLabels:
+        cnpg.io/cluster: nexus
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: automation
+              app.kubernetes.io/name: n8n
+              k8s:io.kubernetes.pod.namespace: n8n
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: network-policy
+  name: n8n-n8n-egress
+specs:
+  - egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "443"
+                protocol: TCP
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - toEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "443"
+                protocol: TCP
+      - toCIDR:
+          - 10.10.13.0/24
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: automation
+        app.kubernetes.io/name: n8n
+        k8s:io.kubernetes.pod.namespace: n8n

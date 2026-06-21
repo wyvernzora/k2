@@ -1,0 +1,573 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: kura
+  name: kura-tvdb
+  namespace: kura
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: q4xf32di7npmvc7e62amvgd574/credential
+        metadataPolicy: None
+        nullBytePolicy: Ignore
+      secretKey: credential
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: kura-tvdb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: kura
+  name: kura
+  namespace: kura
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: library-manager
+      app.kubernetes.io/name: kura
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: library-manager
+        app.kubernetes.io/name: kura
+        cdk8s.io/metadata.addr: kura-deployment-c819f6eb
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - preference:
+                matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              weight: 100
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - serve
+            - --rest=:8080
+            - --mcp-http=:8081
+          env:
+            - name: KURA_LIBRARY_ROOT
+              value: /anime/series
+            - name: KURA_INBOX_ROOT
+              value: /anime/downloads
+            - name: KURA_DISABLE_TOKEN
+              value: "1"
+            - name: KURA_HOST_ID
+              value: k2-kura
+            - name: KURA_PREFERRED_LANGUAGES
+              value: ja
+            - name: KURA_UMASK
+              value: "0007"
+            - name: KURA_TVDB_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: credential
+                  name: kura-tvdb
+            - name: TZ
+              value: America/Los_Angeles
+          image: ghcr.io/wyvernzora/kura:v0.1.0
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+              scheme: HTTP
+          name: kura
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 8081
+              name: mcp
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 2Gi
+              memory: 2048Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 2001
+            runAsNonRoot: true
+            runAsUser: 3000
+          volumeMounts:
+            - mountPath: /anime
+              name: vol-anime
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - set -eu; umask 0007; mkdir -p /anime/series /anime/downloads
+          image: busybox:1.37.0
+          imagePullPolicy: Always
+          name: init-library
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 2001
+            runAsNonRoot: true
+            runAsUser: 3000
+          volumeMounts:
+            - mountPath: /anime
+              name: vol-anime
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: vol-anime
+          nfs:
+            path: /mnt/data/media/anime
+            server: 10.10.8.1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: kura
+  name: kura
+  namespace: kura
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: library-manager
+    app.kubernetes.io/name: kura
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: kura
+  name: kura-mcp
+  namespace: kura
+spec:
+  externalIPs: []
+  ports:
+    - name: mcp
+      port: 80
+      targetPort: 8081
+  selector:
+    app.kubernetes.io/component: library-manager
+    app.kubernetes.io/name: kura
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: kura
+  name: ingress
+  namespace: kura
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: kura.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: kura
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - kura.k2.wyvernzora.io
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/mcp_server: "true"
+    ingress.pomerium.io/mcp_server_path: /mcp
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: kura
+  name: mcp-ingress
+  namespace: kura
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: kura.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: kura-mcp
+                port:
+                  name: mcp
+            path: /mcp
+            pathType: Prefix
+  tls:
+    - hosts:
+        - kura.k2.wyvernzora.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: dmhy-mcp
+  name: dmhy-mcp
+  namespace: kura
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: search-acquisition
+      app.kubernetes.io/name: dmhy-mcp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: search-acquisition
+        app.kubernetes.io/name: dmhy-mcp
+        cdk8s.io/metadata.addr: dmhy-mcp-deployment-c8663d93
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - image: ghcr.io/wyvernzora/dmhy-mcp:dev
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+          name: dmhy-mcp
+          ports:
+            - containerPort: 8080
+              name: mcp
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: dmhy-mcp
+  name: dmhy-mcp
+  namespace: kura
+spec:
+  externalIPs: []
+  ports:
+    - name: mcp
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: search-acquisition
+    app.kubernetes.io/name: dmhy-mcp
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/mcp_server: "true"
+    ingress.pomerium.io/mcp_server_path: /mcp
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: dmhy-mcp
+  name: dmhy-mcp-ingress
+  namespace: kura
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: dmhy.k2.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: dmhy-mcp
+                port:
+                  name: mcp
+            path: /mcp
+            pathType: Prefix
+  tls:
+    - hosts:
+        - dmhy.k2.wyvernzora.io
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: kura
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kura
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kura
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-kura-pomerium-to-kura
+specs:
+  - description: pomerium to kura
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: library-manager
+              app.kubernetes.io/name: kura
+              k8s:io.kubernetes.pod.namespace: kura
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8081"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to kura
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: library-manager
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8081"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-kura-pomerium-to-dmhy-mcp
+specs:
+  - description: pomerium to dmhy-mcp
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: search-acquisition
+              app.kubernetes.io/name: dmhy-mcp
+              k8s:io.kubernetes.pod.namespace: kura
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to dmhy-mcp
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: search-acquisition
+        app.kubernetes.io/name: dmhy-mcp
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: kura-kura-egress
+specs:
+  - egress:
+      - toCIDR:
+          - 10.10.8.1/32
+        toPorts:
+          - ports:
+              - port: "2049"
+                protocol: TCP
+      - toFQDNs:
+          - matchName: api4.thetvdb.com
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: library-manager
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: kura-dmhy-mcp-egress
+specs:
+  - egress:
+      - toFQDNs:
+          - matchName: share.dmhy.org
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: search-acquisition
+        app.kubernetes.io/name: dmhy-mcp
+        k8s:io.kubernetes.pod.namespace: kura

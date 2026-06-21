@@ -2,23 +2,27 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg
   namespace: postgresql
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
   name: cnpg-controller-manager-config
   namespace: postgresql
 data:
@@ -28,12 +32,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     cnpg.io/reload: ""
     helm.sh/chart: cloudnative-pg-0.28.2
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
   name: cnpg-default-monitoring
   namespace: postgresql
 data:
@@ -526,13 +532,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg
-  namespace: postgresql
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg
 rules:
   - apiGroups:
       - ""
@@ -563,13 +570,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg-view
-  namespace: postgresql
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg-view
 rules:
   - apiGroups:
       - postgresql.cnpg.io
@@ -594,13 +602,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg-edit
-  namespace: postgresql
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg-edit
 rules:
   - apiGroups:
       - postgresql.cnpg.io
@@ -627,32 +636,35 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg
-  namespace: postgresql
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cloudnative-pg
+  name: cnpg-cloudnative-pg
 subjects:
   - kind: ServiceAccount
-    name: cloudnative-pg
+    name: cnpg-cloudnative-pg
     namespace: postgresql
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg
   namespace: postgresql
 rules:
   - apiGroups:
@@ -862,31 +874,35 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg
   namespace: postgresql
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: cloudnative-pg
+  name: cnpg-cloudnative-pg
 subjects:
   - kind: ServiceAccount
-    name: cloudnative-pg
+    name: cnpg-cloudnative-pg
     namespace: postgresql
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
   name: cnpg-webhook-service
   namespace: postgresql
 spec:
@@ -895,7 +911,7 @@ spec:
       port: 443
       targetPort: webhook-server
   selector:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/name: cloudnative-pg
   type: ClusterIP
 ---
@@ -903,27 +919,29 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
-  name: cloudnative-pg
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
+  name: cnpg-cloudnative-pg
   namespace: postgresql
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/instance: cloudnative-pg
+      app.kubernetes.io/instance: cnpg
       app.kubernetes.io/name: cloudnative-pg
   template:
     metadata:
       annotations:
-        checksum/config: 0ba5c0cb9ac6d2206cd652bdffe2f8499ef21fb6bff976693d663abe24f23591
-        checksum/monitoring-config: e150ce15497004b3f23f19d41707917560b2fcef7ab08380c676ffd61bc53428
-        checksum/rbac: fcfd325624338776eccfbdb99ea395bc0e61df5994efe9793c1106f73b5d5a83
+        checksum/config: c5dd4f3e7e833141ed46163f69e98b2e50729042793c2b991287fb374f486af7
+        checksum/monitoring-config: 77c50f6304074ef0c09ef409b1a79540793782f62700ced83e97343b6f382f4b
+        checksum/rbac: e9373e5ec2c64cf3c6a9712f39de5142889ac6d8e26596be453d084d7b3e989a
       labels:
-        app.kubernetes.io/instance: cloudnative-pg
+        app.kubernetes.io/instance: cnpg
         app.kubernetes.io/name: cloudnative-pg
     spec:
       containers:
@@ -1001,7 +1019,7 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: cloudnative-pg
+      serviceAccountName: cnpg-cloudnative-pg
       terminationGracePeriodSeconds: 10
       topologySpreadConstraints:
         - labelSelector:
@@ -1009,7 +1027,7 @@ spec:
               app.kubernetes.io/name: cloudnative-pg
           maxSkew: 1
           topologyKey: topology.kubernetes.io/zone
-          whenUnsatisfiable: DoNotSchedule
+          whenUnsatisfiable: ScheduleAnyway
         - labelSelector:
             matchLabels:
               app.kubernetes.io/name: cloudnative-pg
@@ -1029,13 +1047,14 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
   name: cnpg-mutating-webhook-configuration
-  namespace: postgresql
 webhooks:
   - admissionReviewVersions:
       - v1
@@ -1126,13 +1145,14 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   labels:
-    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
     app.kubernetes.io/version: 1.29.1
     helm.sh/chart: cloudnative-pg-0.28.2
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: cnpg
   name: cnpg-validating-webhook-configuration
-  namespace: postgresql
 webhooks:
   - admissionReviewVersions:
       - v1
@@ -1249,6 +1269,8 @@ metadata:
     app.kubernetes.io/name: dbclaim-operator
     app.kubernetes.io/version: v0.3.0
     helm.sh/chart: dbclaim-operator-0.3.0
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator
   namespace: postgresql
 ---
@@ -1261,8 +1283,9 @@ metadata:
     app.kubernetes.io/name: dbclaim-operator
     app.kubernetes.io/version: v0.3.0
     helm.sh/chart: dbclaim-operator-0.3.0
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-manager
-  namespace: postgresql
 rules:
   - apiGroups:
       - cnpg.wyvernzora.io
@@ -1336,8 +1359,9 @@ metadata:
     app.kubernetes.io/name: dbclaim-operator
     app.kubernetes.io/version: v0.3.0
     helm.sh/chart: dbclaim-operator-0.3.0
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-manager
-  namespace: postgresql
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -1356,6 +1380,8 @@ metadata:
     app.kubernetes.io/name: dbclaim-operator
     app.kubernetes.io/version: v0.3.0
     helm.sh/chart: dbclaim-operator-0.3.0
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-leader-election
   namespace: postgresql
 rules:
@@ -1388,6 +1414,8 @@ metadata:
     app.kubernetes.io/name: dbclaim-operator
     app.kubernetes.io/version: v0.3.0
     helm.sh/chart: dbclaim-operator-0.3.0
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-leader-election
   namespace: postgresql
 roleRef:
@@ -1408,6 +1436,8 @@ metadata:
     app.kubernetes.io/name: dbclaim-operator
     app.kubernetes.io/version: v0.3.0
     helm.sh/chart: dbclaim-operator-0.3.0
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator
   namespace: postgresql
 spec:
@@ -1474,10 +1504,20 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   annotations:
-    cnpg.wyvernzora.io/allowed-claim-namespaces: paperless
+    cnpg.wyvernzora.io/allowed-claim-namespaces: paperless,pocket-id,kagent,pomerium,n8n,forgejo
+  labels:
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: nexus-cluster
   name: nexus
   namespace: postgresql
 spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
   bootstrap:
     initdb:
       dataChecksums: true
@@ -1495,7 +1535,7 @@ spec:
       cpu: 500m
       memory: 1Gi
   storage:
-    size: 16Gi
+    size: 4Gi
     storageClass: longhorn
   topologySpreadConstraints:
     - labelSelector:
@@ -1503,7 +1543,7 @@ spec:
           cnpg.io/cluster: nexus
       maxSkew: 1
       topologyKey: topology.kubernetes.io/zone
-      whenUnsatisfiable: DoNotSchedule
+      whenUnsatisfiable: ScheduleAnyway
     - labelSelector:
         matchLabels:
           cnpg.io/cluster: nexus
@@ -1513,3 +1553,66 @@ spec:
   walStorage:
     size: 4Gi
     storageClass: longhorn
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: network-policies
+  name: namespace-boundary
+  namespace: postgresql
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: postgresql
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: postgresql
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: postgresql
+    k2.wyvernzora.io/component: network-policies
+  name: postgresql-cnpg-webhook-admission-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/instance: cnpg
+        app.kubernetes.io/name: cloudnative-pg
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEntities:
+          - host
+        toPorts:
+          - ports:
+              - port: "9443"
+                protocol: TCP
+      - fromEntities:
+          - remote-node
+        toPorts:
+          - ports:
+              - port: "9443"
+                protocol: TCP
