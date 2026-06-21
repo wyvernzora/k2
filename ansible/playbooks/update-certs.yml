@@ -1,0 +1,6 @@
+# Pulls latest TLS certificates and updates all hosts
+---
+  - hosts: all:!unifi
+    remote_user: root
+    roles:
+      - role: k2.tls

@@ -1,0 +1,7 @@
+  - include_tasks: upload.yml
+
+  - name: Import certificate to TrueNAS and activate
+    truenas_cert:
+        domain: "{{ k2_tls_domain }}"
+        state: valid
+        cleanup: true

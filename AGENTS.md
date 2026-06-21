@@ -114,7 +114,6 @@ earthly +crd-constructs      # generate app CRD TypeScript bindings
 earthly +lint                # regenerate CRD bindings in-container, typecheck, lint
 earthly +k8s-manifests       # synthesize deploy/ from a clean generated tree
 earthly +diff-manifests      # compare fresh deploy/ against remote deploy
-earthly +build-image         # publish the reusable K2 build image
 ```
 
 For K2 Go tooling development:

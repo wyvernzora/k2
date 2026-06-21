@@ -1,0 +1,41 @@
+---
+- name: create wheel group
+  group:
+      name: wheel
+      state: present
+
+- name: create non-admin user group
+  group:
+      gid: "{{ k2_user_gid }}"
+      name: "{{ k2_user_username }}"
+
+- name: create non-admin user
+  user:
+      uid: "{{ k2_user_uid }}"
+      name: "{{ k2_user_username }}"
+      password: "{{ k2_user_password }}"
+      group: "{{ k2_user_username }}"
+      groups:
+        - wheel
+      update_password: always
+
+- name: set up authorized SSH keys
+  authorized_key:
+      user: "{{ k2_user_username }}"
+      key: "{{ item }}"
+      state: present
+  with_items: "{{ k2_user_sshkeys }}"
+
+- name: install sudo
+  package:
+      name: sudo
+      state: present
+
+- name: allow wheel group to sudo with no password
+  community.general.sudoers:
+      name: wheel
+      commands: ALL
+      group: wheel
+
+- import_tasks: pve.yml
+  when: "'proxmox' in group_names"

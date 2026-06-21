@@ -1,0 +1,5 @@
+
+# Users to set up fish shell for
+k2_fish_users:
+    - root
+    - "{{ k2_user_username }}"

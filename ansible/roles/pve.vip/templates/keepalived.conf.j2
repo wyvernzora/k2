@@ -1,0 +1,23 @@
+vrrp_script chk_proxmox {
+  script "curl -m 5 http://localhost:8006/ &> /dev/null"
+  interval 2
+  weight 50
+}
+
+vrrp_instance VI_1 {
+  state BACKUP
+  interface {{ k2_pve_mgmt_interface }}
+  virtual_router_id 51
+  priority 100
+  advert_int 1
+  authentication {
+    auth_type PASS
+    auth_pass {{ k2_pve_vrrp_pass }}
+  }
+  virtual_ipaddress {
+    {{ k2_pve_vip_address }}
+  }
+  track_script {
+    chk_proxmox
+  }
+}

@@ -1,0 +1,15 @@
+- name: upload certificates to remote host
+  block:
+    - name: upload certificate to remote host
+      copy:
+        dest: "/etc/ssl/certs/{{ k2_tls_domain }}.pem"
+        src: "{{ __tls_tempdir.path }}/fullchain.pem"
+        owner: root
+        mode: 0600
+
+    - name: upload private key to remote host
+      copy:
+        dest: "/etc/ssl/private/{{ k2_tls_domain }}.pem"
+        src: "{{ __tls_tempdir.path }}/privkey.pem"
+        owner: root
+        mode: 0600

@@ -1,0 +1,47 @@
+---
+- name: configure fish shell
+  block:
+      - name: "[{{ item }}] ensure config directory exists"
+        ansible.builtin.file:
+            path: ~{{ item }}/.config/fish/functions
+            owner: "{{ item }}"
+            state: directory
+
+      - name: "[{{ item }}] install fisher"
+        ansible.builtin.get_url:
+            url: https://git.io/fisher
+            dest: ~{{ item }}/.config/fish/functions/fisher.fish
+
+      - name: "[{{ item }}] copy fisher plugins file"
+        copy:
+            src: files/fish_plugins
+            dest: ~{{ item }}/.config/fish/fish_plugins
+        diff: true
+        register: __fisher_config
+
+      - name: "[{{ item }}] update fisher plugins"
+        ansible.builtin.shell:
+            cmd: "fisher update"
+            executable: /bin/fish
+        when: __fisher_config.changed
+        register: __fisher_update
+
+      - name: "[{{ item }}] copy fish config file"
+        ansible.builtin.copy:
+            src: files/config.fish
+            dest: ~{{ item }}/.config/fish/config.fish
+            owner: "{{ item }}"
+            mode: 0755
+
+      - name: "[{{ item }}] make fish default shell"
+        user:
+            name: "{{ item }}"
+            shell: /usr/bin/fish
+
+      - name: "[{{ item }}] make sure ownership is correct"
+        file:
+          path: "~{{ item }}/.config"
+          owner: "{{ item }}"
+          group: "{{ item }}"
+          recurse: yes
+          state: directory

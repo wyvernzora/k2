@@ -2,17 +2,6 @@ VERSION 0.8
 ARG TAG="latest"
 
 #
-# +build-image: Creates the base image for all cdk8s builds
-#
-build-image:
-    BUILD --platform=linux/amd64 --platform=linux/arm64 +build-image-base
-
-build-image-base:
-    ARG TAG="latest"
-    FROM ./build+image
-    SAVE IMAGE ghcr.io/wyvernzora/k2-build:${TAG}
-
-#
 # +job-runner-image: Creates the runtime utility image for K2 Jobs/init containers
 #
 job-runner-image:
