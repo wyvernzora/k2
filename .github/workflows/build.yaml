@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches:
-      - main-v3
+      - main
       - renovate/*
   schedule:
     - cron: "0 3 * * 0" # every Sunday 03:00 UTC
@@ -51,11 +51,11 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # 2) Push manifests to deploy-v3 branch if push to main-v3
+  # 2) Push manifests to deploy branch if push to main
   deploy:
     name: 🚀 Deploy k8s manifests
     needs: manifests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main-v3' && !failure() && !cancelled()
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !failure() && !cancelled()
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download k8s manifests
@@ -72,11 +72,11 @@ jobs:
           private-key: ${{ secrets.K2_DEPLOY_APP_PRIVATE_KEY }}
           permission-contents: write
 
-      - name: 🚢 Push to deploy-v3 branch
+      - name: 🚢 Push to deploy branch
         uses: s0/git-publish-subdir-action@v2.6.0
         env:
           REPO: self
-          BRANCH: deploy-v3
+          BRANCH: deploy
           FOLDER: artifacts
           GITHUB_TOKEN: ${{ steps.deploy-token.outputs.token }}
           SKIP_EMPTY_COMMITS: true

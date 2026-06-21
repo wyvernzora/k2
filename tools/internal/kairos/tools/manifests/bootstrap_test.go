@@ -72,7 +72,7 @@ func TestRootArgoAppRendersAppOfApps(t *testing.T) {
 		"name: k2",
 		"namespace: argocd",
 		"repoURL: https://github.com/wyvernzora/k2.git",
-		"targetRevision: deploy-v3",
+		"targetRevision: deploy",
 		"path: .",
 		"include: app.k8s.yaml",
 		"ServerSideApply=true",
@@ -131,7 +131,7 @@ func testClusterConfig() clusterconfig.Config {
 			Namespace:  "argocd",
 			Project:    "default",
 			RepoURL:    "https://github.com/wyvernzora/k2.git",
-			RepoBranch: "deploy-v3",
+			RepoBranch: "deploy",
 		},
 	}
 }

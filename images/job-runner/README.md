@@ -13,7 +13,7 @@ ghcr.io/wyvernzora/k2-job-runner:<tag>
 ```
 
 CI publishes immutable tags as `sha-<12-char-commit>` on non-PR builds.
-Pushes to `main-v3` also publish `latest`.
+Pushes to `main` also publish `latest`.
 
 This image also has a manual contract tag in `image.json`, currently `v2`.
 Scripted workloads pin to that version tag under `cdk-lib/jobs/`. Increment

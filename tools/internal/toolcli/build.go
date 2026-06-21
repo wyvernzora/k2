@@ -10,7 +10,7 @@ type buildCmd struct {
 	CRDConstructs buildCRDConstructsCmd `cmd:"" name:"crd-constructs" help:"Generate TypeScript CRD bindings for all app-owned CRD manifests."`
 	CRDManifest   buildCRDManifestCmd   `cmd:"" name:"crd-manifest" help:"Extract CRDs from one app's Helm chart dependencies."`
 	Manifests     buildManifestsCmd     `cmd:"" help:"Synthesize deploy/ manifests."`
-	DiffManifests buildDiffManifestsCmd `cmd:"" name:"diff-manifests" help:"Diff deploy/ against the remote deploy-v3 branch."`
+	DiffManifests buildDiffManifestsCmd `cmd:"" name:"diff-manifests" help:"Diff deploy/ against the remote deploy branch."`
 	Lint          buildLintCmd          `cmd:"" help:"Run CRD generation, typecheck, eslint-rule tests, and eslint."`
 }
 
@@ -26,7 +26,7 @@ type buildCRDManifestCmd struct {
 type buildManifestsCmd struct{}
 
 type buildDiffManifestsCmd struct {
-	RemoteURL string `arg:"" optional:"" default:"https://github.com/wyvernzora/k2.git" help:"Git remote URL containing deploy-v3."`
+	RemoteURL string `arg:"" optional:"" default:"https://github.com/wyvernzora/k2.git" help:"Git remote URL containing deploy."`
 }
 
 type buildLintCmd struct{}

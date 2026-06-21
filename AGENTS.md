@@ -64,9 +64,8 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - **Domain:** personal homelab infrastructure-as-code.
 - **Purpose:** manage Kubernetes applications, cluster bootstrap, and Kairos
   bare-metal images with typed, reviewable source.
-- **Current source branch:** `main-v3`, a greenfield v3 branch. Legacy v2
-  source remains on `main` until cutover.
-- **Current deploy branch target:** `deploy-v3`.
+- **Current source branch:** `main`.
+- **Current deploy branch target:** `deploy`.
 
 ### Stack
 
@@ -114,7 +113,7 @@ learnings. Global rules apply unless this file explicitly overrides them.
 earthly +crd-constructs      # generate app CRD TypeScript bindings
 earthly +lint                # regenerate CRD bindings in-container, typecheck, lint
 earthly +k8s-manifests       # synthesize deploy/ from a clean generated tree
-earthly +diff-manifests      # compare fresh deploy/ against remote deploy-v3
+earthly +diff-manifests      # compare fresh deploy/ against remote deploy
 earthly +build-image         # publish the reusable K2 build image
 ```
 
@@ -302,7 +301,7 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 2. Run `earthly +lint`.
 3. Run `earthly +k8s-manifests`.
 4. Run `earthly +diff-manifests` after a fresh synth when the remote
-   `deploy-v3` branch exists.
+   `deploy` branch exists.
 5. Inspect generated manifests when behavior matters; do not rely only on
    source-level reasoning.
 
@@ -336,7 +335,7 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 
 ### Kairos Image Work
 
-- Kairos v3 image work is authoritative on `main-v3`.
+- Kairos v3 image work is authoritative on `main`.
 - Prefer the reproducible Earthly image artifact path for image outputs.
 - Direct Go commands are acceptable inside `tools/` while iterating on the
   toolbox and shared tooling packages.

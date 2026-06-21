@@ -34,7 +34,6 @@
         "jesec/flood",
         "koenkk/zigbee2mqtt",
         "linuxserver/homeassistant",
-        "linuxserver/kavita",
         "mikefarah/yq",
         "n8nio/n8n",
         "node",
@@ -108,7 +107,7 @@
     },
     {
       "matchDatasources": ["helm"],
-      "matchPackageNames": ["kube-vip", "metallb", "k8s-gateway", "reflector"],
+      "matchPackageNames": ["kube-vip", "k8s-gateway"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "low-risk helm charts",
       "addLabels": ["helm", "cluster-infra"],
@@ -117,15 +116,12 @@
     {
       "matchDatasources": ["helm"],
       "matchPackageNames": [
-        "1password-connect",
         "argo-cd",
-        "authelia",
         "cert-manager",
         "cilium",
         "cloudnative-pg",
         "longhorn",
-        "tailscale-operator",
-        "traefik"
+        "tailscale-operator"
       ],
       "addLabels": ["helm", "manual-review", "manifest-impact"],
       "automerge": false
@@ -134,9 +130,7 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": [
         "ghcr.io/wyvernzora/dmhy-mcp",
-        "ghcr.io/wyvernzora/personal-finance-mcp",
-        "ghcr.io/wyvernzora/qbittorrent-mcp",
-        "ghcr.io/wyvernzora/k2-cluster-init"
+        "ghcr.io/wyvernzora/qbittorrent-mcp"
       ],
       "enabled": false
     },
@@ -156,12 +150,10 @@
         "b4bz/homer",
         "koenkk/zigbee2mqtt",
         "linuxserver/homeassistant",
-        "linuxserver/kavita",
         "lscr.io/linuxserver/qbittorrent",
         "n8nio/n8n",
         "plexinc/pms-docker"
       ],
-      "groupName": "application container images",
       "addLabels": ["container", "manual-review", "manifest-impact"],
       "automerge": false
     },

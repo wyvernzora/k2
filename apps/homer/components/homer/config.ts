@@ -9,7 +9,7 @@ import { ApexDomain } from "@k2/cdk-lib";
 const CONFIG_MAP_NAME = "homer-config";
 const CONFIG_KEY = "config.yml";
 const SELFHST_ICON_BASE_URL = "https://cdn.jsdelivr.net/gh/selfhst/icons/svg";
-const K2_LOGO_URL = "https://raw.githubusercontent.com/wyvernzora/k2/main-v3/.github/assets/k2.png";
+const K2_LOGO_URL = "https://raw.githubusercontent.com/wyvernzora/k2/main/.github/assets/k2.png";
 
 export class HomerConfig extends ConfigMap {
   public readonly checksum: string;

@@ -107,7 +107,7 @@ argo:
   namespace: argocd
   project: default
   repoUrl: https://github.com/wyvernzora/k2.git
-  repoBranch: deploy-v3
+  repoBranch: deploy
   autoSync: true
 
 # NFS server for K2NfsVolume. zone is the optional node-attraction label;

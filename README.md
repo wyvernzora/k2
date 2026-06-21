@@ -30,8 +30,8 @@ K2 is the typed IaC backbone for my homelab: Kubernetes manifests are generated 
 
 1. `npm install` to sync editor-time dependencies.
 2. `earthly +k8s-manifests` to regenerate ignored `deploy/`.
-3. `earthly +diff-manifests` to review drift against `deploy-v3`.
-4. Commit source changes to `main-v3`; promote generated output through the deploy branch workflow.
+3. `earthly +diff-manifests` to review drift against `deploy`.
+4. Commit source changes to `main`; promote generated output through the deploy branch workflow.
 
 Manifest synthesis starts from a clean generated `deploy/` tree. Earthly remains the public build interface; the implementation is the Go toolbox under `tools/` plus the minimal CDK-only TypeScript entrypoints in `build/cdk/`.
 
@@ -43,5 +43,5 @@ Manifest synthesis starts from a clean generated `deploy/` tree. Earthly remains
 | `cdk-lib/` | Shared contexts (namespace, apex domain, Helm), scheduling helpers, and storage constructs. |
 | `build/` | Build image definition and CDK-only synth entrypoints. |
 | `tools/` | Go toolbox module for build workflows, Kairos operations, image tooling, and shared TUI/workflow code. |
-| `deploy/` | Ignored generated manifests; committed through the `deploy-v3` branch workflow. |
+| `deploy/` | Ignored generated manifests; committed through the `deploy` branch workflow. |
 | `kairos/` | Kairos image targets, Dockerfile, overlays, node-init, and provisioning docs. |

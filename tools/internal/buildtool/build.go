@@ -8,7 +8,7 @@ import (
 
 const (
 	dyffIgnorePath = ".dyffignore"
-	deployBranch   = "deploy-v3"
+	deployBranch   = "deploy"
 )
 
 type appInfo struct {

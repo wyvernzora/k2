@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main-v3
+      - main
     paths:
       - "Earthfile"
       - "images/**"
       - ".github/workflows/images.yaml"
   pull_request:
     branches:
-      - main-v3
+      - main
     paths:
       - "Earthfile"
       - "images/**"
@@ -138,14 +138,14 @@ jobs:
         run: docker push "${{ matrix.image }}:${{ steps.tags.outputs.tag }}"
 
       - name: Push latest tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main-v3' && steps.tags.outputs.latest == 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.tags.outputs.latest == 'true'
         shell: bash
         run: |
           docker tag "${{ matrix.image }}:${{ steps.tags.outputs.tag }}" "${{ matrix.image }}:latest"
           docker push "${{ matrix.image }}:latest"
 
       - name: Push version tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main-v3' && steps.tags.outputs.version_tag != ''
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.tags.outputs.version_tag != ''
         shell: bash
         run: |
           docker tag "${{ matrix.image }}:${{ steps.tags.outputs.tag }}" "${{ matrix.image }}:${{ steps.tags.outputs.version_tag }}"
