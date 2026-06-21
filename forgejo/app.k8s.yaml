@@ -471,6 +471,65 @@ spec:
     app.kubernetes.io/name: forgejo
   type: LoadBalancer
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: setup-script
+  namespace: forgejo
+data:
+  setup.sh: |
+    set -eu
+
+    log() {
+      printf '%s forgejo setup: %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$1"
+    }
+
+    forgejo_admin() {
+      timeout "${FORGEJO_ADMIN_TIMEOUT:-30}" \
+        forgejo --work-path "$FORGEJO_WORK_PATH" --config "$FORGEJO_CONFIG_FILE" admin "$@"
+    }
+
+    log "waiting for Forgejo admin CLI"
+    ready=false
+    for attempt in $(seq 1 "${FORGEJO_READY_ATTEMPTS:-60}"); do
+      if forgejo_admin auth list >/tmp/forgejo-auth-list.out 2>/tmp/forgejo-auth-list.err; then
+        ready=true
+        log "Forgejo admin CLI is ready on attempt ${attempt}"
+        break
+      fi
+
+      log "Forgejo admin CLI not ready on attempt ${attempt}; retrying"
+      sed -n '1,20p' /tmp/forgejo-auth-list.err
+      sleep "${FORGEJO_READY_SLEEP_SECONDS:-5}"
+    done
+
+    if [ "$ready" != "true" ]; then
+      log "Forgejo admin CLI did not become ready"
+      cat /tmp/forgejo-auth-list.err
+      exit 1
+    fi
+
+    if grep -q "PocketID" /tmp/forgejo-auth-list.out; then
+      log "PocketID OAuth source already exists"
+      exit 0
+    fi
+
+    log "adding PocketID OAuth source"
+    forgejo_admin auth add-oauth \
+      --name PocketID \
+      --provider openidConnect \
+      --key "$OIDC_CLIENT_ID" \
+      --secret "$OIDC_CLIENT_SECRET" \
+      --auto-discover-url "$OIDC_DISCOVERY_URL" \
+      --scopes openid \
+      --scopes profile \
+      --scopes email
+    log "PocketID OAuth source added"
+immutable: false
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -486,7 +545,8 @@ spec:
       labels:
         app.kubernetes.io/component: setup
         app.kubernetes.io/name: forgejo
-        cdk8s.io/metadata.addr: forgejo-setup-c86548c5
+        cdk8s.io/metadata.addr: forgejo-setup-job-c8a60b41
+        k2.wyvernzora.io/scripted-workload-type: job
     spec:
       affinity:
         nodeAffinity:
@@ -508,36 +568,22 @@ spec:
             - sh
             - -c
             - |-
-              set -eu
-
-              forgejo_admin() {
-                forgejo --work-path "/var/lib/gitea" --config "/var/lib/gitea/custom/conf/app.ini" admin "$@"
-              }
-
-              auth_exists() {
-                forgejo_admin auth list 2>/tmp/forgejo-auth-list.err | grep -q "PocketID"
-              }
-
-              ready=false
-              for _ in $(seq 1 60); do
-                if forgejo_admin auth list >/tmp/forgejo-auth-list.out 2>/tmp/forgejo-auth-list.err; then
-                  ready=true
-                  break
-                fi
-                sleep 5
-              done
-
-              if [ "$ready" != "true" ]; then
-                cat /tmp/forgejo-auth-list.err
-                exit 1
+              workload='job/setup'
+              script='setup.sh'
+              log() { printf '%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$1"; }
+              trap 'log "$workload interrupted by SIGTERM while running $script"; exit 143' TERM
+              trap 'log "$workload interrupted by SIGINT while running $script"; exit 130' INT
+              log "$workload started $script"
+              "$@"
+              status=$?
+              if [ "$status" -eq 0 ]; then
+                log "$workload finished $script successfully"
+              else
+                log "$workload finished $script with exit code $status"
               fi
-
-              if auth_exists; then
-                echo "PocketID OAuth source already exists"
-                exit 0
-              fi
-
-              forgejo_admin auth add-oauth       --name PocketID       --provider openidConnect       --key "$OIDC_CLIENT_ID"       --secret "$OIDC_CLIENT_SECRET"       --auto-discover-url "$OIDC_DISCOVERY_URL"       --scopes openid       --scopes profile       --scopes email
+              exit "$status"
+            - scripted-workload
+            - /scripts/setup.sh
           env:
             - name: DB_HOST
               valueFrom:
@@ -632,6 +678,10 @@ spec:
               value: private
             - name: FORGEJO__repository__DEFAULT_PUSH_CREATE_PRIVATE
               value: "true"
+            - name: FORGEJO_WORK_PATH
+              value: /var/lib/gitea
+            - name: FORGEJO_CONFIG_FILE
+              value: /var/lib/gitea/custom/conf/app.ini
             - name: OIDC_CLIENT_ID
               value: forgejo
             - name: OIDC_CLIENT_SECRET
@@ -662,6 +712,11 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
           volumeMounts:
+            - mountPath: /scripts
+              name: script
+              readOnly: true
+            - mountPath: /tmp
+              name: tmp
             - mountPath: /var/lib/gitea
               name: pvc-forgejo-appdata
               subPath: data
@@ -674,17 +729,25 @@ spec:
       restartPolicy: OnFailure
       securityContext:
         fsGroupChangePolicy: Always
-        runAsGroup: 1000
+        runAsGroup: 65532
         runAsNonRoot: true
-        runAsUser: 1000
+        runAsUser: 65532
       setHostnameAsFQDN: false
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
+        - configMap:
+            defaultMode: 365
+            name: setup-script
+          name: script
+        - emptyDir:
+            sizeLimit: 16Mi
+          name: tmp
         - name: pvc-forgejo-appdata
           persistentVolumeClaim:
             claimName: forgejo-appdata
             readOnly: false
+  ttlSecondsAfterFinished: 86400
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -792,6 +855,29 @@ metadata:
   labels:
     k2.wyvernzora.io/app: forgejo
     k2.wyvernzora.io/component: network-policy
+  name: forgejo-forgejo-setup-network
+specs:
+  - egress:
+      - toEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: setup
+        app.kubernetes.io/name: forgejo
+        k8s:io.kubernetes.pod.namespace: forgejo
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
   name: forgejo-postgresql-forgejo-to-postgresql
 specs:
   - description: forgejo to nexus-postgresql
@@ -818,6 +904,45 @@ specs:
       - fromEndpoints:
           - matchLabels:
               app.kubernetes.io/component: forge
+              app.kubernetes.io/name: forgejo
+              k8s:io.kubernetes.pod.namespace: forgejo
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
+  name: forgejo-postgresql-forgejo-setup-to-postgresql
+specs:
+  - description: forgejo-setup to nexus-postgresql
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              cnpg.io/cluster: nexus
+              k8s:io.kubernetes.pod.namespace: postgresql
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: setup
+        app.kubernetes.io/name: forgejo
+        k8s:io.kubernetes.pod.namespace: forgejo
+  - description: forgejo-setup to nexus-postgresql
+    endpointSelector:
+      matchLabels:
+        cnpg.io/cluster: nexus
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: setup
               app.kubernetes.io/name: forgejo
               k8s:io.kubernetes.pod.namespace: forgejo
         toPorts:
