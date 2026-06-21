@@ -1,3 +1,4 @@
+/* eslint-disable k2/no-raw-k8s-jobs -- K2 ScriptedJob owns the allowed raw cdk8s-plus Job construction layer. */
 import { Job, type IServiceAccount, type JobProps } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
@@ -18,6 +19,7 @@ export type ScriptedJobMount = ScriptedWorkloadMount;
 export type ScriptedJobProps = ScriptedWorkloadProps;
 
 export class ScriptedJob extends Construct {
+  public readonly job: Job;
   public readonly serviceAccount?: IServiceAccount;
 
   public constructor(scope: Construct, id: string, props: ScriptedJobProps) {
@@ -25,7 +27,7 @@ export class ScriptedJob extends Construct {
 
     const prepared = prepareScriptedWorkload(this, props, { type: "job" });
     this.serviceAccount = prepared.serviceAccount;
-    new ScriptedKubernetesJob(this, "job", prepared.jobProps);
+    this.job = new ScriptedKubernetesJob(this, "job", prepared.jobProps);
   }
 }
 

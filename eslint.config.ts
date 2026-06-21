@@ -51,11 +51,13 @@ export default tseslint.config(
       "k2/no-deep-inline-props": "error",
       "k2/no-large-inline-construct-instantiation": "error",
       "k2/no-raw-apiobject": "error",
+      "k2/no-raw-k8s-jobs": "error",
       "k2/no-single-use-constants-module": [
         "error",
         {
           allowedModules: [
             "apps/cert-manager/components/cert-manager/constants.ts",
+            "apps/forgejo/constants.ts",
             "apps/pocket-id/constants.ts",
             "apps/pomerium/constants.ts",
           ],

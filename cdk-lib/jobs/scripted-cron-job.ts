@@ -1,3 +1,4 @@
+/* eslint-disable k2/no-raw-k8s-jobs -- K2 ScriptedCronJob owns the allowed raw cdk8s-plus CronJob construction layer. */
 import { Duration, type Cron } from "cdk8s";
 import { ConcurrencyPolicy, CronJob, type CronJobProps, type IServiceAccount, type JobProps } from "cdk8s-plus-32";
 import { Construct } from "constructs";

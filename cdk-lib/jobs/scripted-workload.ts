@@ -50,11 +50,16 @@ export interface ScriptedWorkloadMount {
 export interface ScriptedWorkloadProps {
   readonly name: string;
   readonly script: ScriptedWorkloadScript;
+  readonly image?: string;
+  readonly imagePullPolicy?: ImagePullPolicy;
+  readonly containerName?: string;
   readonly command?: string[];
   readonly env?: Record<string, EnvValue>;
   readonly labels?: Record<string, string>;
   readonly rbacRules?: ScriptedWorkloadRbacRule[];
   readonly mounts?: ScriptedWorkloadMount[];
+  readonly resources?: ContainerProps["resources"];
+  readonly securityContext?: ContainerProps["securityContext"];
 }
 
 export interface PreparedScriptedWorkload {
@@ -169,12 +174,12 @@ function scriptedJobProps(options: ScriptedJobPropsOptions): JobProps {
 
 function scriptContainer(options: ScriptedJobPropsOptions): ContainerProps {
   return {
-    name: "script",
-    image: JOB_RUNNER_IMAGE,
-    imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
+    name: options.props.containerName ?? "script",
+    image: options.props.image ?? JOB_RUNNER_IMAGE,
+    imagePullPolicy: options.props.imagePullPolicy ?? ImagePullPolicy.IF_NOT_PRESENT,
     command: loggedCommand(options),
     envVariables: options.props.env,
-    resources: {
+    resources: options.props.resources ?? {
       cpu: {
         request: Cpu.millis(25),
         limit: Cpu.millis(250),
@@ -184,7 +189,7 @@ function scriptContainer(options: ScriptedJobPropsOptions): ContainerProps {
         limit: Size.mebibytes(256),
       },
     },
-    securityContext: {
+    securityContext: options.props.securityContext ?? {
       allowPrivilegeEscalation: false,
       capabilities: { drop: [Capability.ALL] },
       group: 65532,
@@ -243,7 +248,11 @@ function shellLiteral(value: string): string {
 }
 
 function extraVolumes(props: ScriptedWorkloadProps): Volume[] {
-  return props.mounts?.map(mount => mount.volume) ?? [];
+  const volumes = new Map<string, Volume>();
+  for (const mount of props.mounts ?? []) {
+    volumes.set(mount.volume.name, mount.volume);
+  }
+  return [...volumes.values()];
 }
 
 function extraVolumeMounts(props: ScriptedWorkloadProps): VolumeMount[] {

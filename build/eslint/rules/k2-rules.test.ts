@@ -13,6 +13,7 @@ import noCdk8sPlusDeepImports from "./no-cdk8s-plus-deep-imports.js";
 import noDeepInlineProps from "./no-deep-inline-props.js";
 import noLargeInlineConstructInstantiation from "./no-large-inline-construct-instantiation.js";
 import noRawApiObject from "./no-raw-apiobject.js";
+import noRawK8sJobs from "./no-raw-k8s-jobs.js";
 import noSingleUseConstantsModule from "./no-single-use-constants-module.js";
 import preferCdk8sPlusL2 from "./prefer-cdk8s-plus-l2.js";
 import preferCrdAliases from "./prefer-crd-aliases.js";
@@ -251,6 +252,46 @@ tester.run("no-cdk8s-plus-deep-imports", noCdk8sPlusDeepImports, {
       filename: repoFile("apps/demo/components/demo.ts"),
       code: `
         // eslint-disable-next-line rule-to-test/no-cdk8s-plus-deep-imports
+        const value = 1;
+      `,
+      errors: [{ messageId: "missingDisableReason" }],
+    },
+  ],
+});
+
+tester.run("no-raw-k8s-jobs", noRawK8sJobs, {
+  valid: [
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { Deployment, type JobProps } from "cdk8s-plus-32";`,
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { ScriptedCronJob, ScriptedJob } from "@k2/cdk-lib";`,
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        // eslint-disable-next-line rule-to-test/no-raw-k8s-jobs -- This one-off bootstrap job needs upstream controller args.
+        import { Job } from "cdk8s-plus-32";
+      `,
+    },
+  ],
+  invalid: [
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { Job } from "cdk8s-plus-32";`,
+      errors: [{ messageId: "rawJob" }],
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `import { CronJob as UpstreamCronJob } from "cdk8s-plus-32";`,
+      errors: [{ messageId: "rawJob" }],
+    },
+    {
+      filename: repoFile("apps/demo/components/demo.ts"),
+      code: `
+        // eslint-disable-next-line rule-to-test/no-raw-k8s-jobs
         const value = 1;
       `,
       errors: [{ messageId: "missingDisableReason" }],

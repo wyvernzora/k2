@@ -22,6 +22,11 @@ export class NetworkPolicy extends K2Chart {
 
     const namespace = Namespace.of(this).namespace;
     const forgejo = workloads.forgejo();
+    const setup = endpoint(
+      namespace,
+      { "app.kubernetes.io/name": "forgejo", "app.kubernetes.io/component": "setup" },
+      "forgejo-setup",
+    );
     const forgejoClientCidrs = cidr.vlans(this, FORGEJO_ALLOW_VLANS);
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
@@ -39,8 +44,16 @@ export class NetworkPolicy extends K2Chart {
       ],
       egress: [...egress.toWorld(tcp(80), tcp(443))],
     });
+    new EndpointNetworkPolicy(this, "forgejo-setup-network", {
+      endpoint: setup,
+      egress: [...egress.toWorld(tcp(80), tcp(443))],
+    });
     new PrivateConnection(this, "forgejo-to-postgresql", {
       from: forgejo,
+      ...postgresql.endpoints.nexus(),
+    });
+    new PrivateConnection(this, "forgejo-setup-to-postgresql", {
+      from: setup,
       ...postgresql.endpoints.nexus(),
     });
   }

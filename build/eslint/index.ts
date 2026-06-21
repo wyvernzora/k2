@@ -5,6 +5,7 @@ import noCdk8sPlusDeepImports from "./rules/no-cdk8s-plus-deep-imports.js";
 import noDeepInlineProps from "./rules/no-deep-inline-props.js";
 import noLargeInlineConstructInstantiation from "./rules/no-large-inline-construct-instantiation.js";
 import noRawApiObject from "./rules/no-raw-apiobject.js";
+import noRawK8sJobs from "./rules/no-raw-k8s-jobs.js";
 import noSingleUseConstantsModule from "./rules/no-single-use-constants-module.js";
 import preferCdk8sPlusL2 from "./rules/prefer-cdk8s-plus-l2.js";
 import preferCrdAliases from "./rules/prefer-crd-aliases.js";
@@ -18,6 +19,7 @@ export default {
     "no-deep-inline-props": noDeepInlineProps,
     "no-large-inline-construct-instantiation": noLargeInlineConstructInstantiation,
     "no-raw-apiobject": noRawApiObject,
+    "no-raw-k8s-jobs": noRawK8sJobs,
     "no-single-use-constants-module": noSingleUseConstantsModule,
     "prefer-cdk8s-plus-l2": preferCdk8sPlusL2,
     "prefer-crd-aliases": preferCrdAliases,
