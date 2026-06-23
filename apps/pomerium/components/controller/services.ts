@@ -2,7 +2,13 @@ import { ApiObject, JsonPatch } from "cdk8s";
 import { Pods, Protocol, Service, ServiceType } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js";
+import {
+  POMERIUM_LABELS,
+  POMERIUM_PROXY_CLUSTER_IP,
+  POMERIUM_PROXY_HTTP_PORT,
+  POMERIUM_PROXY_HTTPS_PORT,
+  POMERIUM_PROXY_SERVICE_NAME,
+} from "../../constants.js";
 
 import { metadata } from "./metadata.js";
 
@@ -32,11 +38,12 @@ function proxyService(scope: Construct) {
       labels: { ...proxyMetadata.labels, ...POMERIUM_LABELS },
     },
     type: ServiceType.LOAD_BALANCER,
+    clusterIP: POMERIUM_PROXY_CLUSTER_IP,
     selector: Pods.select(scope, "pomerium-proxy-service-pods", { labels: POMERIUM_LABELS }),
     ports: [
-      servicePort("https", 443, 8443),
+      servicePort("https", 443, POMERIUM_PROXY_HTTPS_PORT),
       servicePort("quic", 443, 443, Protocol.UDP),
-      servicePort("http", 80, 8080),
+      servicePort("http", 80, POMERIUM_PROXY_HTTP_PORT),
     ],
   };
 }

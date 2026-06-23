@@ -6,11 +6,13 @@ import { LoadBalancerService } from "@k2/cilium";
 import {
   FORGEJO_ALLOW_VLANS,
   FORGEJO_HOST,
+  FORGEJO_HTTP_REDIRECT_PORT,
   FORGEJO_HTTPS_PORT,
   FORGEJO_LABELS,
   FORGEJO_SSH_PORT,
 } from "../../constants.js";
 
+const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
 const SERVICE_NAME = "forgejo";
 const LOAD_BALANCER_IP = "10.10.13.3";
@@ -27,6 +29,12 @@ export class ForgejoService extends LoadBalancerService {
       externalTrafficPolicy: "Cluster",
       selector: Pods.select(scope, "forgejo-service-pods", { labels: FORGEJO_LABELS }),
       ports: [
+        {
+          name: "http",
+          protocol: Protocol.TCP,
+          port: HTTP_PORT,
+          targetPort: FORGEJO_HTTP_REDIRECT_PORT,
+        },
         {
           name: "https",
           protocol: Protocol.TCP,

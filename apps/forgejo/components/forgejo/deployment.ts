@@ -19,9 +19,16 @@ import {
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { ApexDomain, K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { POMERIUM_IDP_HOST_PREFIX, POMERIUM_PROXY_CLUSTER_IP } from "@k2/pomerium";
 
-import { FORGEJO_HTTP_PORT, FORGEJO_HTTPS_PORT, FORGEJO_LABELS, FORGEJO_SSH_PORT } from "../../constants.js";
+import {
+  FORGEJO_HTTP_PORT,
+  FORGEJO_HTTP_REDIRECT_PORT,
+  FORGEJO_HTTPS_PORT,
+  FORGEJO_LABELS,
+  FORGEJO_SSH_PORT,
+} from "../../constants.js";
 
 import { forgejoEnv } from "./env.js";
 
@@ -62,6 +69,14 @@ export class ForgejoDeployment extends K2Deployment {
 
     this.select(LabelSelector.of({ labels: FORGEJO_LABELS }));
     ApiObject.of(this).addJsonPatch(JsonPatch.remove("/spec/template/spec/securityContext/fsGroupChangePolicy"));
+    ApiObject.of(this).addJsonPatch(
+      JsonPatch.add("/spec/template/spec/hostAliases", [
+        {
+          ip: POMERIUM_PROXY_CLUSTER_IP,
+          hostnames: [ApexDomain.of(this).subdomain(POMERIUM_IDP_HOST_PREFIX)],
+        },
+      ]),
+    );
     const volumes = this.attachVolumes(props.volumes);
     const credentialsSecret = Secret.fromSecretName(this, "credentials-secret", props.credentialsSecretName);
     const forgejoSecret = Secret.fromSecretName(this, "forgejo-secret", props.secretName);
@@ -144,7 +159,10 @@ function caddyContainer(volumeMounts: VolumeMount[]): ContainerProps {
     name: "caddy",
     image: CADDY_IMAGE,
     imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
-    ports: [{ name: "https", number: FORGEJO_HTTPS_PORT, protocol: Protocol.TCP }],
+    ports: [
+      { name: "http", number: FORGEJO_HTTP_REDIRECT_PORT, protocol: Protocol.TCP },
+      { name: "https", number: FORGEJO_HTTPS_PORT, protocol: Protocol.TCP },
+    ],
     volumeMounts,
     envVariables: {
       XDG_CONFIG_HOME: EnvValue.fromValue("/config"),
@@ -268,6 +286,10 @@ function caddyfile(): string {
   return dedent`
     {
       auto_https off
+    }
+
+    :${FORGEJO_HTTP_REDIRECT_PORT} {
+      redir https://{host}{uri} permanent
     }
 
     :${FORGEJO_HTTPS_PORT} {

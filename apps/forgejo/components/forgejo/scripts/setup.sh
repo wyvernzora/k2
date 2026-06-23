@@ -29,8 +29,20 @@ if [ "$ready" != "true" ]; then
   exit 1
 fi
 
-if grep -q "PocketID" /tmp/forgejo-auth-list.out; then
-  log "PocketID OAuth source already exists"
+auth_id="$(awk '$2 == "PocketID" { print $1; exit }' /tmp/forgejo-auth-list.out)"
+if [ -n "$auth_id" ]; then
+  log "updating PocketID OAuth source ${auth_id}"
+  forgejo_admin auth update-oauth \
+    --id "$auth_id" \
+    --name PocketID \
+    --provider openidConnect \
+    --key "$OIDC_CLIENT_ID" \
+    --secret "$OIDC_CLIENT_SECRET" \
+    --auto-discover-url "$OIDC_DISCOVERY_URL" \
+    --scopes openid \
+    --scopes profile \
+    --scopes email
+  log "PocketID OAuth source updated"
   exit 0
 fi
 
