@@ -14,7 +14,7 @@ import {
 } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
-import { ScriptedJob } from "@k2/cdk-lib";
+import { ApexDomain, ScriptedJob } from "@k2/cdk-lib";
 
 import { FORGEJO_LABELS, FORGEJO_OIDC_CLIENT_ID, FORGEJO_OIDC_SECRET_NAME } from "../../constants.js";
 
@@ -37,6 +37,7 @@ export class ForgejoSetup extends Construct {
     const credentialsSecret = Secret.fromSecretName(this, "credentials", props.credentialsSecretName);
     const forgejoSecret = Secret.fromSecretName(this, "secret", props.secretName);
     const oidcSecret = Secret.fromSecretName(this, "oidc-secret", FORGEJO_OIDC_SECRET_NAME);
+    const oidcDiscoveryUrl = `https://${ApexDomain.of(this).subdomain("id")}/.well-known/openid-configuration`;
 
     const setupJob = new ScriptedJob(this, "job", {
       name: SETUP_JOB_NAME,
@@ -44,7 +45,7 @@ export class ForgejoSetup extends Construct {
       image: FORGEJO_IMAGE,
       imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
       containerName: "setup",
-      env: setupEnv(credentialsSecret, forgejoSecret, oidcSecret),
+      env: setupEnv(credentialsSecret, forgejoSecret, oidcSecret, oidcDiscoveryUrl),
       labels: setupLabels(),
       mounts: appdataVolumeMounts(this, props),
       resources: {
@@ -74,14 +75,19 @@ export class ForgejoSetup extends Construct {
   }
 }
 
-function setupEnv(credentialsSecret: ISecret, forgejoSecret: ISecret, oidcSecret: ISecret): Record<string, EnvValue> {
+function setupEnv(
+  credentialsSecret: ISecret,
+  forgejoSecret: ISecret,
+  oidcSecret: ISecret,
+  oidcDiscoveryUrl: string,
+): Record<string, EnvValue> {
   return {
     ...forgejoEnv({ credentialsSecret, forgejoSecret }),
     FORGEJO_WORK_PATH: EnvValue.fromValue(APPDATA_MOUNT_PATH),
     FORGEJO_CONFIG_FILE: EnvValue.fromValue(CONFIG_FILE_PATH),
     OIDC_CLIENT_ID: EnvValue.fromValue(FORGEJO_OIDC_CLIENT_ID),
     OIDC_CLIENT_SECRET: oidcSecret.envValue("client_secret"),
-    OIDC_DISCOVERY_URL: EnvValue.fromValue("https://id.k2.wyvernzora.io/.well-known/openid-configuration"),
+    OIDC_DISCOVERY_URL: EnvValue.fromValue(oidcDiscoveryUrl),
   };
 }
 

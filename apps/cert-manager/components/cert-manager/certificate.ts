@@ -20,7 +20,7 @@ export interface DefaultWildcardCertificateProps {
 export class DefaultWildcardCertificate extends Certificate {
   public constructor(scope: Construct, id: string, props: DefaultWildcardCertificateProps = {}) {
     const { apexDomain } = ApexDomain.of(scope);
-    const domains = props.domains ?? [`*.${apexDomain}`, LETS_ENCRYPT_DNS_ZONE, `*.${LETS_ENCRYPT_DNS_ZONE}`];
+    const domains = props.domains ?? defaultCertificateDomains(apexDomain);
     const name = props.metadata?.name ?? DEFAULT_CERTIFICATE_SECRET_NAME;
 
     super(scope, id, {
@@ -38,4 +38,8 @@ export class DefaultWildcardCertificate extends Certificate {
       },
     });
   }
+}
+
+function defaultCertificateDomains(apexDomain: string): string[] {
+  return [...new Set([`*.${apexDomain}`, LETS_ENCRYPT_DNS_ZONE, `*.${LETS_ENCRYPT_DNS_ZONE}`])];
 }

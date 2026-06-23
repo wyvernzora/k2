@@ -5,7 +5,7 @@ import { ApexDomain, ClusterContext, K2Chart } from "@k2/cdk-lib";
 
 const COREDNS_NAMESPACE = "kube-system";
 const CONFIG_MAP_NAME = "coredns-custom";
-const K2_ZONE_FORWARD_KEY = "k2.server";
+const APEX_ZONE_FORWARD_KEY = "apex.server";
 
 export class CoreDnsForward extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -17,7 +17,7 @@ export class CoreDnsForward extends K2Chart {
     new ConfigMap(this, "config", {
       metadata: { name: CONFIG_MAP_NAME },
       data: {
-        [K2_ZONE_FORWARD_KEY]: renderCorefileServer(apexDomain, cluster.dns.k8sGatewayServiceIp),
+        [APEX_ZONE_FORWARD_KEY]: renderCorefileServer(apexDomain, cluster.dns.k8sGatewayServiceIp),
       },
     });
   }

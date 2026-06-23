@@ -43,26 +43,19 @@ def main() -> None:
     core_api = client.CoreV1Api()
     apps_api = client.AppsV1Api()
 
-    if oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret) and oidc_secret_ready(
-        core_api,
-        settings.forgejo_namespace,
-        settings.forgejo_secret,
-    ):
-        cleanup_static_api_key(core_api, apps_api, settings)
-        print("Pocket ID OIDC client secrets already exist")
-        return
-
+    pomerium_secret_ready = oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret)
+    forgejo_secret_ready = oidc_secret_ready(core_api, settings.forgejo_namespace, settings.forgejo_secret)
     api_key = ensure_static_api_key(core_api, settings)
     restart_pocket_id(apps_api, settings)
-    if not oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret):
-        upsert_oidc_client(
-            settings,
-            api_key,
-            client_id=settings.pomerium_client_id,
-            name="Pomerium",
-            callback_url=settings.pomerium_callback_url,
-            launch_url=settings.pomerium_launch_url,
-        )
+    upsert_oidc_client(
+        settings,
+        api_key,
+        client_id=settings.pomerium_client_id,
+        name="Pomerium",
+        callback_url=settings.pomerium_callback_url,
+        launch_url=settings.pomerium_launch_url,
+    )
+    if not pomerium_secret_ready:
         write_oidc_secret(
             core_api,
             settings,
@@ -71,15 +64,15 @@ def main() -> None:
             secret_name=settings.pomerium_secret,
             client_id=settings.pomerium_client_id,
         )
-    if not oidc_secret_ready(core_api, settings.forgejo_namespace, settings.forgejo_secret):
-        upsert_oidc_client(
-            settings,
-            api_key,
-            client_id=settings.forgejo_client_id,
-            name="Forgejo",
-            callback_url=settings.forgejo_callback_url,
-            launch_url=settings.forgejo_launch_url,
-        )
+    upsert_oidc_client(
+        settings,
+        api_key,
+        client_id=settings.forgejo_client_id,
+        name="Forgejo",
+        callback_url=settings.forgejo_callback_url,
+        launch_url=settings.forgejo_launch_url,
+    )
+    if not forgejo_secret_ready:
         write_oidc_secret(
             core_api,
             settings,

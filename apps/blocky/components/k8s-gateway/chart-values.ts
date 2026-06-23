@@ -17,7 +17,7 @@ export interface K8sGatewayValuesProps {
 export function k8sGatewayValues(props: K8sGatewayValuesProps): HelmProps["values"] {
   const scheduling = Scheduling.profile(prefer(workers()));
   return {
-    domain: [props.apexDomain, PARENT_DOMAIN].join(" "),
+    domain: watchedDomains(props.apexDomain).join(" "),
     ttl: 60,
     replicaCount: 2,
     watchedResources: WATCHED_RESOURCES,
@@ -34,6 +34,10 @@ export function k8sGatewayValues(props: K8sGatewayValuesProps): HelmProps["value
     },
     extraZonePlugins: extraZonePlugins(props),
   };
+}
+
+function watchedDomains(apexDomain: string): string[] {
+  return [...new Set([apexDomain, PARENT_DOMAIN])];
 }
 
 function extraZonePlugins(props: K8sGatewayValuesProps): K8sGatewayPlugin[] {
