@@ -148,11 +148,11 @@ spec:
             - name: N8N_PORT
               value: "5678"
             - name: N8N_HOST
-              value: n8n.k2.wyvernzora.io
+              value: n8n.wyvernzora.io
             - name: N8N_PROTOCOL
               value: https
             - name: N8N_EDITOR_BASE_URL
-              value: https://n8n.k2.wyvernzora.io/
+              value: https://n8n.wyvernzora.io/
             - name: N8N_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
@@ -174,11 +174,11 @@ spec:
             - name: EXTERNAL_HOOK_FILES
               value: /opt/proxy-auth/hook.cjs
             - name: N8N_PROXY_AUTH_JWKS_URL
-              value: https://n8n.k2.wyvernzora.io/.well-known/pomerium/jwks.json
+              value: https://n8n.wyvernzora.io/.well-known/pomerium/jwks.json
             - name: N8N_PROXY_AUTH_ISSUER
-              value: n8n.k2.wyvernzora.io
+              value: n8n.wyvernzora.io
             - name: N8N_PROXY_AUTH_AUDIENCE
-              value: n8n.k2.wyvernzora.io
+              value: n8n.wyvernzora.io
             - name: N8N_PROXY_AUTH_ALGORITHMS
               value: ES256
             - name: DB_TYPE
@@ -364,7 +364,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: n8n.k2.wyvernzora.io
+    - host: n8n.wyvernzora.io
       http:
         paths:
           - backend:
@@ -376,7 +376,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - n8n.k2.wyvernzora.io
+        - n8n.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

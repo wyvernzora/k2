@@ -22,41 +22,41 @@ data:
           - name: Argo CD
             subtitle: GitOps control plane
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/argo-cd.svg
-            url: https://argo.k2.wyvernzora.io
+            url: https://argo.wyvernzora.io
           - name: Hubble
             subtitle: Cilium observability
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/cilium.svg
-            url: https://hubble.k2.wyvernzora.io
+            url: https://hubble.wyvernzora.io
           - name: Longhorn
             subtitle: Storage dashboard
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/rancher-longhorn-dark.svg
-            url: https://longhorn.k2.wyvernzora.io
+            url: https://longhorn.wyvernzora.io
       - name: Identity
         items:
           - name: Pocket ID
             subtitle: OIDC identity provider
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/pocket-id.svg
-            url: https://id.k2.wyvernzora.io
+            url: https://id.wyvernzora.io
           - name: Pomerium Login
             subtitle: Authentication portal
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/pomerium.svg
-            url: https://login.k2.wyvernzora.io
+            url: https://login.wyvernzora.io
       - name: Media
         items:
           - name: Kura
             subtitle: Anime library manager
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/kura.svg
-            url: https://kura.k2.wyvernzora.io
+            url: https://kura.wyvernzora.io
       - name: Infrastructure
         items:
           - name: Proxmox VE VIP
             subtitle: Virtualization cluster
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/proxmox.svg
-            url: https://pve.k2.wyvernzora.io
+            url: https://pve.wyvernzora.io
           - name: TrueNAS Scale
             subtitle: Storage appliance
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/truenas-scale.svg
-            url: https://rumi.k2.wyvernzora.io
+            url: https://rumi.wyvernzora.io
           - name: UniFi Console
             subtitle: Network controller
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/ubiquiti-unifi.svg
@@ -88,7 +88,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/homer-config: 4fb063d121ebf2d978b68c5f8ea37185ab02d5bdb1ed21c1e8879ee00704db57
+        checksum/homer-config: 5a5b3dc1b55493e6b666f71b8f1524a3d294eb4b93ef39b46eae61ec11c62055
       labels:
         app.kubernetes.io/component: dashboard
         app.kubernetes.io/name: homer
@@ -181,7 +181,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: home.k2.wyvernzora.io
+    - host: home.wyvernzora.io
       http:
         paths:
           - backend:
@@ -193,7 +193,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - home.k2.wyvernzora.io
+        - home.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

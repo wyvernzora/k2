@@ -1852,9 +1852,8 @@ metadata:
   namespace: cert-manager
 spec:
   dnsNames:
-    - "*.k2.wyvernzora.io"
-    - wyvernzora.io
     - "*.wyvernzora.io"
+    - wyvernzora.io
   issuerRef:
     kind: ClusterIssuer
     name: letsencrypt-prod

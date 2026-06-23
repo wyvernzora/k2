@@ -376,6 +376,8 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     k2.wyvernzora.io/app: pomerium
     k2.wyvernzora.io/component: pomerium
@@ -595,7 +597,7 @@ metadata:
   name: global
 spec:
   authenticate:
-    url: https://login.k2.wyvernzora.io
+    url: https://login.wyvernzora.io
   certificates:
     - pomerium/default-certificate
   codecType: http3
@@ -608,7 +610,7 @@ spec:
       - email
       - profile
     secret: pomerium/pocket-id
-    url: https://id.k2.wyvernzora.io
+    url: https://id.wyvernzora.io
   jwtClaimHeaders:
     X-Pomerium-Claim-Email: email
     X-Pomerium-Claim-Preferred-Username: preferred_username
@@ -669,12 +671,12 @@ specs:
                 protocol: TCP
             rules:
               dns:
-                - matchName: id.k2.wyvernzora.io
+                - matchName: id.wyvernzora.io
                 - matchName: chatgpt.com
                 - matchName: chat.openai.com
                 - matchName: claude.ai
       - toFQDNs:
-          - matchName: id.k2.wyvernzora.io
+          - matchName: id.wyvernzora.io
           - matchName: chatgpt.com
           - matchName: chat.openai.com
           - matchName: claude.ai

@@ -28,7 +28,7 @@ metadata:
 data:
   Corefile: |-
     .:1053 {
-        k8s_gateway k2.wyvernzora.io wyvernzora.io {
+        k8s_gateway wyvernzora.io {
           apex k8s-gateway.blocky
           ttl 60
           resources Ingress Service HTTPRoute
@@ -38,14 +38,14 @@ data:
         errors
         hosts { 
           ttl 60
-          10.10.1.1 unifi.k2.wyvernzora.io
-          10.10.7.1 roxy.k2.wyvernzora.io
-          10.10.7.2 eris.k2.wyvernzora.io
-          10.10.7.3 sylphy.k2.wyvernzora.io
-          10.10.7.254 pve.k2.wyvernzora.io
-          10.10.8.1 rumi.k2.wyvernzora.io
-          10.10.13.1 login.k2.wyvernzora.io
-          10.10.9.1 k8s.k2.wyvernzora.io
+          10.10.1.1 unifi.wyvernzora.io
+          10.10.7.1 roxy.wyvernzora.io
+          10.10.7.2 eris.wyvernzora.io
+          10.10.7.3 sylphy.wyvernzora.io
+          10.10.7.254 pve.wyvernzora.io
+          10.10.8.1 rumi.wyvernzora.io
+          10.10.13.1 login.wyvernzora.io
+          10.10.9.1 k8s.wyvernzora.io
           fallthrough
         }
         health { 
@@ -180,7 +180,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 9cf1d33f480b04230586e525eee996109cdaa7bfce0b68bfe17d66c23a7a4cae
+        checksum/config: 830884679b886599ff58ebb6e2707e82ae3384b938f58acbdae384e6de373fce
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
@@ -263,8 +263,8 @@ metadata:
   name: coredns-custom
   namespace: kube-system
 data:
-  k2.server: |
-    k2.wyvernzora.io:53 {
+  apex.server: |
+    wyvernzora.io:53 {
         errors
         forward . 10.43.250.122
         cache 30

@@ -225,7 +225,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: kura.k2.wyvernzora.io
+    - host: kura.wyvernzora.io
       http:
         paths:
           - backend:
@@ -237,7 +237,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - kura.k2.wyvernzora.io
+        - kura.wyvernzora.io
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -257,7 +257,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: kura.k2.wyvernzora.io
+    - host: kura.wyvernzora.io
       http:
         paths:
           - backend:
@@ -269,7 +269,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - kura.k2.wyvernzora.io
+        - kura.wyvernzora.io
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -388,7 +388,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: dmhy.k2.wyvernzora.io
+    - host: dmhy.wyvernzora.io
       http:
         paths:
           - backend:
@@ -400,7 +400,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - dmhy.k2.wyvernzora.io
+        - dmhy.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

@@ -104,7 +104,7 @@ spec:
       containers:
         - env:
             - name: APP_URL
-              value: https://id.k2.wyvernzora.io
+              value: https://id.wyvernzora.io
             - name: HOST
               value: 0.0.0.0
             - name: PORT
@@ -660,6 +660,8 @@ subjects:
 apiVersion: batch/v1
 kind: Job
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     k2.wyvernzora.io/app: pocket-id
     k2.wyvernzora.io/component: pocket-id
@@ -722,9 +724,9 @@ spec:
             - name: POMERIUM_CLIENT_ID
               value: pomerium
             - name: POMERIUM_CALLBACK_URL
-              value: https://login.k2.wyvernzora.io/oauth2/callback
+              value: https://login.wyvernzora.io/oauth2/callback
             - name: POMERIUM_LAUNCH_URL
-              value: https://login.k2.wyvernzora.io
+              value: https://login.wyvernzora.io
             - name: FORGEJO_NAMESPACE
               value: forgejo
             - name: FORGEJO_SECRET
@@ -782,7 +784,6 @@ spec:
         - emptyDir:
             sizeLimit: 16Mi
           name: tmp
-  ttlSecondsAfterFinished: 86400
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -871,7 +872,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: id.k2.wyvernzora.io
+    - host: id.wyvernzora.io
       http:
         paths:
           - backend:
@@ -883,7 +884,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - id.k2.wyvernzora.io
+        - id.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

@@ -172,7 +172,7 @@ data:
   configuration.yaml: |
     frontend:
       enabled: true
-      url: https://z2m.k2.wyvernzora.io
+      url: https://z2m.wyvernzora.io
     mqtt:
       base_topic: zigbee2mqtt
       server: mqtt://mosquitto:1883
@@ -210,7 +210,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/zigbee2mqtt-config: 4dcc4d3f74096efe1dca8ab2dc91515cf47de17c293a2347e49d2af954e991a7
+        checksum/zigbee2mqtt-config: ccdde8b492093b215bb970c715b03d3f92bea3710a18d19d5b4e8c64d0592180
       labels:
         app.kubernetes.io/component: zigbee2mqtt
         app.kubernetes.io/name: home-assistant
@@ -368,7 +368,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: z2m.k2.wyvernzora.io
+    - host: z2m.wyvernzora.io
       http:
         paths:
           - backend:
@@ -380,7 +380,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - z2m.k2.wyvernzora.io
+        - z2m.wyvernzora.io
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -602,7 +602,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: ha.k2.wyvernzora.io
+    - host: ha.wyvernzora.io
       http:
         paths:
           - backend:
@@ -614,7 +614,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - ha.k2.wyvernzora.io
+        - ha.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

@@ -14,7 +14,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: argo.k2.wyvernzora.io
+    - host: argo.wyvernzora.io
       http:
         paths:
           - backend:
@@ -26,7 +26,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - argo.k2.wyvernzora.io
+        - argo.wyvernzora.io
 ---
 apiVersion: v1
 kind: ServiceAccount

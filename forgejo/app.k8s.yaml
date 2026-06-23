@@ -533,6 +533,8 @@ immutable: false
 apiVersion: batch/v1
 kind: Job
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     k2.wyvernzora.io/app: forgejo
     k2.wyvernzora.io/component: forgejo
@@ -690,7 +692,7 @@ spec:
                   key: client_secret
                   name: forgejo-oidc
             - name: OIDC_DISCOVERY_URL
-              value: https://id.k2.wyvernzora.io/.well-known/openid-configuration
+              value: https://id.wyvernzora.io/.well-known/openid-configuration
           image: codeberg.org/forgejo/forgejo:15-rootless
           imagePullPolicy: IfNotPresent
           name: setup
@@ -747,7 +749,6 @@ spec:
           persistentVolumeClaim:
             claimName: forgejo-appdata
             readOnly: false
-  ttlSecondsAfterFinished: 86400
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

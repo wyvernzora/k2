@@ -67,7 +67,7 @@ spec:
             - name: UNIFI_API_TYPE
               value: local
             - name: UNIFI_LOCAL_HOST
-              value: unifi.k2.wyvernzora.io
+              value: unifi.wyvernzora.io
             - name: UNIFI_LOCAL_VERIFY_SSL
               value: "false"
             - name: UNIFI_PROFILE
@@ -160,7 +160,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: unifi-mcp.k2.wyvernzora.io
+    - host: unifi-mcp.wyvernzora.io
       http:
         paths:
           - backend:
@@ -172,7 +172,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - unifi-mcp.k2.wyvernzora.io
+        - unifi-mcp.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

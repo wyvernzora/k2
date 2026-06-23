@@ -1325,7 +1325,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: kagent.k2.wyvernzora.io
+    - host: kagent.wyvernzora.io
       http:
         paths:
           - backend:
@@ -1337,7 +1337,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - kagent.k2.wyvernzora.io
+        - kagent.wyvernzora.io
 ---
 apiVersion: v1
 kind: ConfigMap

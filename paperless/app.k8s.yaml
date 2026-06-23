@@ -706,6 +706,8 @@ subjects:
 apiVersion: batch/v1
 kind: Job
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     k2.wyvernzora.io/app: paperless
     k2.wyvernzora.io/component: paperless
@@ -830,7 +832,6 @@ spec:
         - emptyDir:
             sizeLimit: 16Mi
           name: tmp
-  ttlSecondsAfterFinished: 86400
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -921,9 +922,9 @@ spec:
             - name: PAPERLESS_REDIS
               value: redis://:$(PAPERLESS_REDIS_PASSWORD)@paperless-redis:6379
             - name: PAPERLESS_URL
-              value: https://paperless.k2.wyvernzora.io
+              value: https://paperless.wyvernzora.io
             - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
-              value: https://paperless.k2.wyvernzora.io
+              value: https://paperless.wyvernzora.io
             - name: PAPERLESS_TIME_ZONE
               value: America/Los_Angeles
             - name: PAPERLESS_OCR_LANGUAGE
@@ -1010,7 +1011,7 @@ spec:
             - name: PAPERLESS_URL
               value: http://127.0.0.1:8000
             - name: PAPERLESS_PUBLIC_URL
-              value: https://paperless.k2.wyvernzora.io
+              value: https://paperless.wyvernzora.io
             - name: PAPERLESS_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -1172,7 +1173,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: paperless.k2.wyvernzora.io
+    - host: paperless.wyvernzora.io
       http:
         paths:
           - backend:
@@ -1184,7 +1185,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - paperless.k2.wyvernzora.io
+        - paperless.wyvernzora.io
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -1216,7 +1217,7 @@ metadata:
 spec:
   ingressClassName: pomerium
   rules:
-    - host: paperless.k2.wyvernzora.io
+    - host: paperless.wyvernzora.io
       http:
         paths:
           - backend:
@@ -1228,7 +1229,7 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - paperless.k2.wyvernzora.io
+        - paperless.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
