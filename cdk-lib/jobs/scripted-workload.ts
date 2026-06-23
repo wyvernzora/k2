@@ -1,4 +1,4 @@
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
   Capability,
   ConfigMap,
@@ -157,7 +157,6 @@ function scriptedJobProps(options: ScriptedJobPropsOptions): JobProps {
     metadata: { name: options.props.name },
     backoffLimit: 6,
     restartPolicy: RestartPolicy.ON_FAILURE,
-    ttlAfterFinished: Duration.days(1),
     podMetadata: { labels: podLabels(options.props.labels, options.type) },
     automountServiceAccountToken: options.serviceAccount !== undefined,
     enableServiceLinks: false,

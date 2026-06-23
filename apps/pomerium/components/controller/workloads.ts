@@ -19,7 +19,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { linux, only, Scheduling, workers } from "@k2/cdk-lib";
+import { linux, only, Scheduling, withReplaceableJobSyncOptions, workers } from "@k2/cdk-lib";
 
 import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js";
 
@@ -62,7 +62,7 @@ function createControllerDeployment(scope: Construct, serviceAccount: IServiceAc
 
 function createGenSecretsJob(scope: Construct, serviceAccount: IServiceAccount): void {
   const job = new Job(scope, "gen-secrets-job", {
-    metadata: metadata("pomerium-gen-secrets"),
+    metadata: withReplaceableJobSyncOptions(metadata("pomerium-gen-secrets")),
     select: false,
     podMetadata: { name: "pomerium-gen-secrets" },
     automountServiceAccountToken: true,
