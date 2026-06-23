@@ -216,6 +216,7 @@ metadata:
   name: pomerium-proxy
   namespace: pomerium
 spec:
+  clusterIP: 10.43.62.173
   externalIPs: []
   ipFamilyPolicy: PreferDualStack
   ports:

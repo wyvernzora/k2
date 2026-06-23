@@ -297,6 +297,9 @@ spec:
             timeoutSeconds: 5
           name: caddy
           ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
             - containerPort: 8443
               name: https
               protocol: TCP
@@ -343,6 +346,10 @@ spec:
               name: caddy-tmp
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
+      hostAliases:
+        - hostnames:
+            - id.wyvernzora.io
+          ip: 10.43.62.173
       hostNetwork: false
       initContainers:
         - command:
@@ -433,6 +440,10 @@ data:
       auto_https off
     }
 
+    :80 {
+      redir https://{host}{uri} permanent
+    }
+
     :8443 {
       tls /tls/tls.crt /tls/tls.key
       reverse_proxy 127.0.0.1:3000
@@ -458,6 +469,10 @@ spec:
     - 10.8.0.0/16
     - 10.10.0.0/16
   ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
     - name: https
       port: 443
       protocol: TCP
@@ -512,8 +527,20 @@ data:
       exit 1
     fi
 
-    if grep -q "PocketID" /tmp/forgejo-auth-list.out; then
-      log "PocketID OAuth source already exists"
+    auth_id="$(awk '$2 == "PocketID" { print $1; exit }' /tmp/forgejo-auth-list.out)"
+    if [ -n "$auth_id" ]; then
+      log "updating PocketID OAuth source ${auth_id}"
+      forgejo_admin auth update-oauth \
+        --id "$auth_id" \
+        --name PocketID \
+        --provider openidConnect \
+        --key "$OIDC_CLIENT_ID" \
+        --secret "$OIDC_CLIENT_SECRET" \
+        --auto-discover-url "$OIDC_DISCOVERY_URL" \
+        --scopes openid \
+        --scopes profile \
+        --scopes email
+      log "PocketID OAuth source updated"
       exit 0
     fi
 
@@ -692,7 +719,7 @@ spec:
                   key: client_secret
                   name: forgejo-oidc
             - name: OIDC_DISCOVERY_URL
-              value: https://id.wyvernzora.io/.well-known/openid-configuration
+              value: http://pocket-id.pocket-id.svc.cluster.local/.well-known/openid-configuration
           image: codeberg.org/forgejo/forgejo:15-rootless
           imagePullPolicy: IfNotPresent
           name: setup
@@ -813,6 +840,8 @@ specs:
           - 10.1.0.0/16
         toPorts:
           - ports:
+              - port: "80"
+                protocol: TCP
               - port: "8443"
                 protocol: TCP
               - port: "2222"
@@ -821,6 +850,8 @@ specs:
           - 10.8.0.0/16
         toPorts:
           - ports:
+              - port: "80"
+                protocol: TCP
               - port: "8443"
                 protocol: TCP
               - port: "2222"
@@ -829,6 +860,8 @@ specs:
           - 10.10.0.0/16
         toPorts:
           - ports:
+              - port: "80"
+                protocol: TCP
               - port: "8443"
                 protocol: TCP
               - port: "2222"
@@ -837,6 +870,8 @@ specs:
           - host
         toPorts:
           - ports:
+              - port: "80"
+                protocol: TCP
               - port: "8443"
                 protocol: TCP
               - port: "2222"
@@ -918,6 +953,88 @@ metadata:
   labels:
     k2.wyvernzora.io/app: forgejo
     k2.wyvernzora.io/component: network-policy
+  name: forgejo-pocket-id-forgejo-to-pocket-id
+specs:
+  - description: forgejo to pocket-id
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: app
+              app.kubernetes.io/name: pocket-id
+              k8s:io.kubernetes.pod.namespace: pocket-id
+        toPorts:
+          - ports:
+              - port: "1411"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: forge
+        app.kubernetes.io/name: forgejo
+        k8s:io.kubernetes.pod.namespace: forgejo
+  - description: forgejo to pocket-id
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: pocket-id
+        k8s:io.kubernetes.pod.namespace: pocket-id
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: forge
+              app.kubernetes.io/name: forgejo
+              k8s:io.kubernetes.pod.namespace: forgejo
+        toPorts:
+          - ports:
+              - port: "1411"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
+  name: forgejo-pomerium-forgejo-to-pomerium-idp
+specs:
+  - description: forgejo to pomerium
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: forge
+        app.kubernetes.io/name: forgejo
+        k8s:io.kubernetes.pod.namespace: forgejo
+  - description: forgejo to pomerium
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: forge
+              app.kubernetes.io/name: forgejo
+              k8s:io.kubernetes.pod.namespace: forgejo
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
   name: forgejo-postgresql-forgejo-setup-to-postgresql
 specs:
   - description: forgejo-setup to nexus-postgresql
@@ -949,4 +1066,45 @@ specs:
         toPorts:
           - ports:
               - port: "5432"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: network-policy
+  name: forgejo-pocket-id-forgejo-setup-to-pocket-id
+specs:
+  - description: forgejo-setup to pocket-id
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: app
+              app.kubernetes.io/name: pocket-id
+              k8s:io.kubernetes.pod.namespace: pocket-id
+        toPorts:
+          - ports:
+              - port: "1411"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: setup
+        app.kubernetes.io/name: forgejo
+        k8s:io.kubernetes.pod.namespace: forgejo
+  - description: forgejo-setup to pocket-id
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: app
+        app.kubernetes.io/name: pocket-id
+        k8s:io.kubernetes.pod.namespace: pocket-id
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: setup
+              app.kubernetes.io/name: forgejo
+              k8s:io.kubernetes.pod.namespace: forgejo
+        toPorts:
+          - ports:
+              - port: "1411"
                 protocol: TCP
