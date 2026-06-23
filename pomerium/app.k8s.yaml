@@ -629,6 +629,81 @@ spec:
       secret: pomerium/pomerium-storage
 ---
 apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: pomerium
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: pomerium
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: pomerium
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-proxy-load-balancer-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+    ingress:
+      - fromEntities:
+          - host
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromEntities:
+          - remote-node
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromEntities:
+          - kube-apiserver
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
   labels:
