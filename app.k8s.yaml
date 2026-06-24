@@ -509,3 +509,26 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: takuhai
+  namespace: argocd
+spec:
+  destination:
+    namespace: takuhai
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: takuhai
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true

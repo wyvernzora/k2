@@ -2305,6 +2305,7 @@ data:
             log("UI certificate already current", current_fingerprint=fingerprint_prefix(current_fingerprint))
             return
 
+        stale_name = None
         log(
             "UI certificate differs",
             current_fingerprint=fingerprint_prefix(current_fingerprint),
@@ -2313,22 +2314,13 @@ data:
         managed = await certificate_by_name(client, certificate_name)
         if managed is None:
             log("Creating imported certificate", certificate_name=certificate_name)
-            job_id = await client.call(
-                "certificate.create",
-                [
-                    {
-                        "name": certificate_name,
-                        "create_type": "CERTIFICATE_CREATE_IMPORTED",
-                        "certificate": cert,
-                        "privatekey": key,
-                    }
-                ],
-            )
-            await client.wait_for_job(job_id)
+            await create_imported_certificate(client, certificate_name, cert, key)
         else:
-            log("Updating imported certificate", certificate_name=certificate_name, certificate_id=managed["id"])
-            job_id = await client.call("certificate.update", [managed["id"], {"certificate": cert, "privatekey": key}])
+            stale_name = f"{certificate_name}-old-{managed['id']}"
+            log("Replacing imported certificate", certificate_name=certificate_name, certificate_id=managed["id"], stale_name=stale_name)
+            job_id = await client.call("certificate.update", [managed["id"], {"name": stale_name}])
             await client.wait_for_job(job_id)
+            await create_imported_certificate(client, certificate_name, cert, key)
 
         managed = await certificate_by_name(client, certificate_name)
         if managed is None:
@@ -2342,6 +2334,27 @@ data:
         else:
             log("Managed certificate already selected; restarting UI", certificate_name=certificate_name)
             await client.call("system.general.ui_restart")
+
+        stale = await certificate_by_name(client, stale_name) if stale_name is not None else None
+        if stale is not None:
+            log("Deleting stale imported certificate", certificate_name=stale_name, certificate_id=stale["id"])
+            job_id = await client.call("certificate.delete", [stale["id"], False])
+            await client.wait_for_job(job_id)
+
+
+    async def create_imported_certificate(client: "TrueNasClient", certificate_name: str, cert: str, key: str) -> None:
+        job_id = await client.call(
+            "certificate.create",
+            [
+                {
+                    "name": certificate_name,
+                    "create_type": "CERTIFICATE_CREATE_IMPORTED",
+                    "certificate": cert,
+                    "privatekey": key,
+                }
+            ],
+        )
+        await client.wait_for_job(job_id)
 
 
     async def current_ui_certificate(client: "TrueNasClient") -> dict[str, Any] | None:
