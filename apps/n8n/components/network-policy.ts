@@ -2,8 +2,10 @@ import type { Construct } from "constructs";
 
 import { ClusterContext, K2Chart, Namespace } from "@k2/cdk-lib";
 import { EndpointNetworkPolicy, egress, endpoint, NamespaceBoundaryPolicy, PrivateConnection, tcp } from "@k2/cilium";
+import * as kura from "@k2/kura";
 import { NEXUS_CLUSTER_NAME, NEXUS_CLUSTER_NAMESPACE } from "@k2/postgresql";
 import { AllowPomeriumToBackend, workloads as pomeriumWorkloads } from "@k2/pomerium";
+import * as qbittorrent from "@k2/qbittorrent";
 import * as takuhai from "@k2/takuhai";
 
 import { N8N_HTTP_PORT, N8N_LABELS } from "./n8n/labels.js";
@@ -41,6 +43,14 @@ export class NetworkPolicy extends K2Chart {
       from: n8n,
       to: takuhai.workloads.crawler(),
       ports: [tcp(takuhai.TAKUHAI_CRAWLER_PORT)],
+    });
+    new PrivateConnection(this, "n8n-to-kura-mcp", {
+      from: n8n,
+      ...kura.endpoints.mcp(),
+    });
+    new PrivateConnection(this, "n8n-to-qbittorrent-mcp", {
+      from: n8n,
+      ...qbittorrent.endpoints.mcp(),
     });
     new PrivateConnection(this, "n8n-to-pomerium-jwks", {
       from: n8n,
