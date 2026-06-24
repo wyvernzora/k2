@@ -31,6 +31,11 @@ export class NetworkPolicy extends K2Chart {
       to: endpoint(NEXUS_CLUSTER_NAMESPACE, { "cnpg.io/cluster": NEXUS_CLUSTER_NAME }, "nexus-postgresql"),
       ports: [tcp(POSTGRES_PORT)],
     });
+    new PrivateConnection(this, "n8n-to-pomerium-jwks", {
+      from: n8n,
+      to: pomeriumWorkloads.proxy(),
+      ports: [tcp(POMERIUM_PROXY_HTTP_TARGET_PORT), tcp(POMERIUM_PROXY_HTTPS_TARGET_PORT)],
+    });
     new EndpointNetworkPolicy(this, "n8n-egress", {
       endpoint: n8n,
       egress: [

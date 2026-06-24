@@ -7,6 +7,7 @@ import {
   POMERIUM_PROXY_CLUSTER_IP,
   POMERIUM_PROXY_HTTP_PORT,
   POMERIUM_PROXY_HTTPS_PORT,
+  POMERIUM_PROXY_LOAD_BALANCER_IP,
   POMERIUM_PROXY_SERVICE_NAME,
 } from "../../constants.js";
 
@@ -35,6 +36,9 @@ function proxyService(scope: Construct) {
   return {
     metadata: {
       ...proxyMetadata,
+      annotations: {
+        "lbipam.cilium.io/ips": POMERIUM_PROXY_LOAD_BALANCER_IP,
+      },
       labels: { ...proxyMetadata.labels, ...POMERIUM_LABELS },
     },
     type: ServiceType.LOAD_BALANCER,

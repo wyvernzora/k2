@@ -6,6 +6,7 @@ export const POMERIUM_AUTHENTICATE_HOST_PREFIX = "login";
 export const POMERIUM_IDP_HOST_PREFIX = "id";
 export const POMERIUM_IDP_SECRET_NAME = "pocket-id";
 export const POMERIUM_PROXY_SERVICE_NAME = "pomerium-proxy";
+export const POMERIUM_PROXY_LOAD_BALANCER_IP = "10.10.13.1";
 export const POMERIUM_PROXY_CLUSTER_IP = "10.43.62.173";
 export const POMERIUM_PROXY_HTTP_PORT = 8080;
 export const POMERIUM_PROXY_HTTPS_PORT = 8443;
