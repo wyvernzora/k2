@@ -146,6 +146,14 @@ func TestParseCRDDocumentsUsesStructuredKind(t *testing.T) {
 	}
 }
 
+func TestIsCRDYAMLPathSkipsTemplatesUnderCRDSChart(t *testing.T) {
+	path := "kube-prometheus-stack/charts/crds/templates/upgrade/crds.yaml"
+
+	if isCRDYAMLPath(path) {
+		t.Fatalf("isCRDYAMLPath(%q) = true, want false", path)
+	}
+}
+
 func TestChartYAMLAllowCRDTemplateFailureIsExplicit(t *testing.T) {
 	chart := chartYAML{}
 	if chart.AllowCRDTemplateFailure() {

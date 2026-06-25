@@ -1,7 +1,8 @@
 import type { Construct } from "constructs";
 
-import { ApexDomain, K2Chart } from "@k2/cdk-lib";
+import { ApexDomain, ClusterContext, K2Chart } from "@k2/cdk-lib";
 import * as postgresql from "@k2/postgresql";
+import * as tailscale from "@k2/tailscale";
 
 import {
   egress,
@@ -23,6 +24,7 @@ const POSTGRES_DNS_HOSTS = [
   fqdn.name("nexus-rw.postgresql.svc.pomerium.svc.cluster.local"),
   fqdn.name("nexus-rw.postgresql.svc.svc.cluster.local"),
 ];
+const RFC1918_CIDRS = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"];
 
 export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -30,13 +32,18 @@ export class NetworkPolicy extends K2Chart {
     const idpHost = ApexDomain.of(this).subdomain(POMERIUM_IDP_HOST_PREFIX);
     const authMetadataHosts = [idpHost, ...MCP_CLIENT_METADATA_EGRESS_HOSTS];
     const proxy = workloads.proxy();
+    const clusterSubnets = ClusterContext.of(this).config.kubernetes.subnets;
+    const proxyIngressPorts = [tcp(POMERIUM_PROXY_HTTP_PORT), tcp(POMERIUM_PROXY_HTTPS_PORT)];
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
     new EndpointNetworkPolicy(this, "proxy-load-balancer-ingress", {
       endpoint: proxy,
       ingress: [
-        ...ingress.fromNodes(tcp(POMERIUM_PROXY_HTTP_PORT), tcp(POMERIUM_PROXY_HTTPS_PORT)),
-        ...ingress.fromKubeApiServer(tcp(POMERIUM_PROXY_HTTP_PORT), tcp(POMERIUM_PROXY_HTTPS_PORT)),
+        ...ingress.fromNodes(...proxyIngressPorts),
+        ...ingress.fromKubeApiServer(...proxyIngressPorts),
+        ...ingress.fromCluster(...proxyIngressPorts),
+        ...ingress.fromCidrs([...RFC1918_CIDRS, clusterSubnets.pods, clusterSubnets.services], ...proxyIngressPorts),
+        ...ingress.fromCidrTarget(tailscale.endpoints.tailnetClients(...proxyIngressPorts)),
       ],
     });
     new EndpointNetworkPolicy(this, "controller-kube-api-egress", {

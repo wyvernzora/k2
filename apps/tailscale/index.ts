@@ -1,5 +1,5 @@
 import type { AppResourceFunc } from "@k2/cdk-lib";
-import { endpoint, tcp, udp, type CidrTarget, type PolicyEndpoint } from "@k2/cilium";
+import { endpoint, tcp, udp, type CidrTarget, type PolicyEndpoint, type PortSpec } from "@k2/cilium";
 
 import { TailscaleConnector } from "./components/connector.js";
 import { TailscaleOperator } from "./components/tailscale-operator.js";
@@ -10,10 +10,17 @@ const TAILNET_IPV4_CIDRS = ["100.64.0.0/10"];
 const DNS_PORTS = [udp(53), tcp(53)];
 
 export const endpoints = {
+  tailnetClients(...ports: PortSpec[]): CidrTarget {
+    return tailnetClients(...ports);
+  },
   tailnetDnsClients(): CidrTarget {
-    return { cidrs: TAILNET_IPV4_CIDRS, ports: DNS_PORTS };
+    return tailnetClients(...DNS_PORTS);
   },
 };
+
+function tailnetClients(...ports: PortSpec[]): CidrTarget {
+  return { cidrs: TAILNET_IPV4_CIDRS, ports };
+}
 
 export const workloads = {
   router(): PolicyEndpoint {
