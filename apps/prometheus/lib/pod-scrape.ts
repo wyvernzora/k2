@@ -30,7 +30,10 @@ export class PrometheusPodScrape extends PodMonitor {
 
     new EndpointNetworkPolicy(scope, `${id}-ingress`, {
       endpoint: props.target,
-      ingress: [{ from: { endpoint: prometheusEndpoint() }, ports: props.ports }],
+      ingress: [
+        { from: { endpoint: namespaceEndpoint(props.target.namespace) } },
+        { from: { endpoint: prometheusEndpoint() }, ports: props.ports },
+      ],
     });
   }
 }
@@ -48,4 +51,8 @@ function podMetricsEndpoint(port: PortSpec, props: PrometheusPodScrapeProps): Po
 
 function prometheusEndpoint(): PolicyEndpoint {
   return endpoint(PROMETHEUS_NAMESPACE, PROMETHEUS_LABELS, "prometheus");
+}
+
+function namespaceEndpoint(namespace: string): PolicyEndpoint {
+  return endpoint(namespace, {}, namespace);
 }
