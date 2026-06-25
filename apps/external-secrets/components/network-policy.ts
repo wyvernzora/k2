@@ -2,6 +2,7 @@ import type { Construct } from "constructs";
 
 import { K2Chart, Namespace } from "@k2/cdk-lib";
 import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, egress, endpoint, fqdn, ingress, tcp } from "@k2/cilium";
+import { PrometheusPodScrape } from "@k2/prometheus";
 
 export class NetworkPolicy extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -37,6 +38,39 @@ export class NetworkPolicy extends K2Chart {
         "external-secrets-webhook",
       ),
       ingress: ingress.fromNodes(tcp(10250)),
+    });
+    new PrometheusPodScrape(this, "external-secrets-controller-metrics", {
+      target: endpoint(
+        namespace,
+        {
+          "app.kubernetes.io/instance": "external-secrets",
+          "app.kubernetes.io/name": "external-secrets",
+        },
+        "external-secrets-controller",
+      ),
+      ports: [tcp(8080)],
+    });
+    new PrometheusPodScrape(this, "external-secrets-cert-controller-metrics", {
+      target: endpoint(
+        namespace,
+        {
+          "app.kubernetes.io/instance": "external-secrets",
+          "app.kubernetes.io/name": "external-secrets-cert-controller",
+        },
+        "external-secrets-cert-controller",
+      ),
+      ports: [tcp(8080)],
+    });
+    new PrometheusPodScrape(this, "external-secrets-webhook-metrics", {
+      target: endpoint(
+        namespace,
+        {
+          "app.kubernetes.io/instance": "external-secrets",
+          "app.kubernetes.io/name": "external-secrets-webhook",
+        },
+        "external-secrets-webhook",
+      ),
+      ports: [tcp(8080)],
     });
   }
 }

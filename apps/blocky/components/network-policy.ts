@@ -12,6 +12,7 @@ import {
   tcp,
   udp,
 } from "@k2/cilium";
+import { PrometheusPodScrape } from "@k2/prometheus";
 import * as tailscale from "@k2/tailscale";
 
 const DNS_PORTS = [udp(53), tcp(53)];
@@ -53,6 +54,28 @@ export class NetworkPolicy extends K2Chart {
       }),
       ingress: [...ingress.fromNodes(tcp(8080)), ...ingress.fromCluster(...K8S_GATEWAY_DNS_PORTS)],
       egress: egress.toCidrs(publicDnsCidrs, ...DNS_PORTS),
+    });
+    new PrometheusPodScrape(this, "blocky-metrics", {
+      target: endpoint(
+        namespace,
+        {
+          "app.kubernetes.io/component": "resolver",
+          "app.kubernetes.io/name": "blocky",
+        },
+        "blocky",
+      ),
+      ports: [tcp(4000)],
+    });
+    new PrometheusPodScrape(this, "k8s-gateway-metrics", {
+      target: endpoint(
+        namespace,
+        {
+          "app.kubernetes.io/instance": "k8s-gateway",
+          "app.kubernetes.io/name": "k8s-gateway",
+        },
+        "k8s-gateway",
+      ),
+      ports: [tcp(9153)],
     });
   }
 }

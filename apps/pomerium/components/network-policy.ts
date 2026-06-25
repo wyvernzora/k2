@@ -2,6 +2,7 @@ import type { Construct } from "constructs";
 
 import { ApexDomain, ClusterContext, K2Chart } from "@k2/cdk-lib";
 import * as postgresql from "@k2/postgresql";
+import { PrometheusPodScrape } from "@k2/prometheus";
 import * as tailscale from "@k2/tailscale";
 
 import {
@@ -61,6 +62,10 @@ export class NetworkPolicy extends K2Chart {
     new PrivateConnection(this, "controller-to-postgresql", {
       from: proxy,
       ...postgresql.endpoints.nexus(),
+    });
+    new PrometheusPodScrape(this, "pomerium-metrics", {
+      target: proxy,
+      ports: [tcp(9090)],
     });
   }
 }

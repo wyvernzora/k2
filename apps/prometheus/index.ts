@@ -6,6 +6,7 @@ import { Prometheus } from "./components/prometheus/index.js";
 import { NetworkPolicy } from "./components/network-policy.js";
 
 export * as crd from "./lib/crd.js";
+export * from "./lib/pod-scrape.js";
 
 const PROMETHEUS_NAMESPACE = "prometheus";
 const GRAFANA_HTTP_PORT = 3000;
