@@ -1,9 +1,9 @@
 import type { Construct } from "constructs";
 
 import { K2Chart, Namespace } from "@k2/cdk-lib";
-import { endpoint, tcp, type PolicyEndpoint, type PortSpec } from "@k2/cilium";
+import { EndpointNetworkPolicy, endpoint, tcp, type PolicyEndpoint, type PortSpec } from "@k2/cilium";
 import { AllowPomeriumToBackend } from "@k2/pomerium";
-import { PrometheusPodScrape } from "@k2/prometheus";
+import { PrometheusPodScrape, workloads as prometheusWorkloads } from "@k2/prometheus";
 
 import { endpoints } from "../index.js";
 
@@ -51,10 +51,17 @@ export class NetworkPolicy extends K2Chart {
       ...endpoints.http(),
     });
     for (const target of ARGOCD_METRICS_TARGETS) {
+      const targetEndpoint = metricsEndpoint(namespace, target);
       new PrometheusPodScrape(this, `${target.name}-metrics`, {
-        target: metricsEndpoint(namespace, target),
+        target: targetEndpoint,
         ports: target.ports,
       });
+      if (target.name === "argocd-server") {
+        new EndpointNetworkPolicy(this, "prometheus-to-argocd-server-metrics", {
+          endpoint: targetEndpoint,
+          ingress: [{ from: { endpoint: prometheusWorkloads.prometheus() }, ports: target.ports }],
+        });
+      }
     }
   }
 }
