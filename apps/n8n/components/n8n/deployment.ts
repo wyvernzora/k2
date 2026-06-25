@@ -142,6 +142,7 @@ function n8nContainer(
       N8N_HOST: EnvValue.fromValue(url.host),
       N8N_PROTOCOL: EnvValue.fromValue(url.protocol.replace(":", "")),
       N8N_EDITOR_BASE_URL: EnvValue.fromValue(props.appUrl),
+      N8N_DIAGNOSTICS_ENABLED: EnvValue.fromValue("false"),
       N8N_ENCRYPTION_KEY: n8nSecret.envValue("encryptionKey"),
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: EnvValue.fromValue("true"),
       N8N_RUNNERS_ENABLED: EnvValue.fromValue("true"),
