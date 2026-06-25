@@ -228,11 +228,16 @@ func isCRDYAMLPath(path string) bool {
 		return false
 	}
 	parts := strings.Split(slashPath, "/")
-	for i, part := range parts {
+	for _, part := range parts {
+		if part == "templates" {
+			return false
+		}
+	}
+	for _, part := range parts {
 		if part != "crds" {
 			continue
 		}
-		return i == 0 || parts[i-1] != "templates"
+		return true
 	}
 	return false
 }
