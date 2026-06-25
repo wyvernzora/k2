@@ -2894,3 +2894,192 @@ specs:
         app.kubernetes.io/component: truenas
         app.kubernetes.io/name: cert-sync
         k8s:io.kubernetes.pod.namespace: cert-manager
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: cert-manager-controller-metrics
+  namespace: cert-manager
+spec:
+  namespaceSelector:
+    matchNames:
+      - cert-manager
+  podMetricsEndpoints:
+    - portNumber: 9402
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/name: cert-manager
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-cert-manager-cert-manager-controller-metrics-network
+specs:
+  - description: prometheus to cert-manager-controller
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: controller
+              app.kubernetes.io/instance: cert-manager
+              app.kubernetes.io/name: cert-manager
+              k8s:io.kubernetes.pod.namespace: cert-manager
+        toPorts:
+          - ports:
+              - port: "9402"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
+        k8s:io.kubernetes.pod.namespace: prometheus
+        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+  - description: prometheus to cert-manager-controller
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/name: cert-manager
+        k8s:io.kubernetes.pod.namespace: cert-manager
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "9402"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: cert-manager-cainjector-metrics
+  namespace: cert-manager
+spec:
+  namespaceSelector:
+    matchNames:
+      - cert-manager
+  podMetricsEndpoints:
+    - portNumber: 9402
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: cainjector
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/name: cainjector
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-cert-manager-cert-manager-cainjector-metrics-network
+specs:
+  - description: prometheus to cert-manager-cainjector
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: cainjector
+              app.kubernetes.io/instance: cert-manager
+              app.kubernetes.io/name: cainjector
+              k8s:io.kubernetes.pod.namespace: cert-manager
+        toPorts:
+          - ports:
+              - port: "9402"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
+        k8s:io.kubernetes.pod.namespace: prometheus
+        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+  - description: prometheus to cert-manager-cainjector
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: cainjector
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/name: cainjector
+        k8s:io.kubernetes.pod.namespace: cert-manager
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "9402"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: cert-manager-webhook-metrics
+  namespace: cert-manager
+spec:
+  namespaceSelector:
+    matchNames:
+      - cert-manager
+  podMetricsEndpoints:
+    - portNumber: 9402
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: webhook
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/name: webhook
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: cert-manager
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-cert-manager-cert-manager-webhook-metrics-network
+specs:
+  - description: prometheus to cert-manager-webhook
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: webhook
+              app.kubernetes.io/instance: cert-manager
+              app.kubernetes.io/name: webhook
+              k8s:io.kubernetes.pod.namespace: cert-manager
+        toPorts:
+          - ports:
+              - port: "9402"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
+        k8s:io.kubernetes.pod.namespace: prometheus
+        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+  - description: prometheus to cert-manager-webhook
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: webhook
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/name: webhook
+        k8s:io.kubernetes.pod.namespace: cert-manager
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "9402"
+                protocol: TCP

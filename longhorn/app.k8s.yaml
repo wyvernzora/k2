@@ -1013,3 +1013,60 @@ specs:
           - ports:
               - port: "8000"
                 protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: longhorn
+    k2.wyvernzora.io/component: network-policy
+  name: longhorn-manager-metrics
+  namespace: longhorn
+spec:
+  namespaceSelector:
+    matchNames:
+      - longhorn
+  podMetricsEndpoints:
+    - portNumber: 9500
+  selector:
+    matchLabels:
+      app: longhorn-manager
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: longhorn
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-longhorn-longhorn-manager-metrics-network
+specs:
+  - description: prometheus to longhorn-manager
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app: longhorn-manager
+              k8s:io.kubernetes.pod.namespace: longhorn
+        toPorts:
+          - ports:
+              - port: "9500"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
+        k8s:io.kubernetes.pod.namespace: prometheus
+        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+  - description: prometheus to longhorn-manager
+    endpointSelector:
+      matchLabels:
+        app: longhorn-manager
+        k8s:io.kubernetes.pod.namespace: longhorn
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "9500"
+                protocol: TCP

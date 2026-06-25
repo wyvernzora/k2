@@ -5937,34 +5937,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.1.0
-    helm.sh/chart: grafana-12.7.1
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-grafana
-  namespace: prometheus
-spec:
-  endpoints:
-    - honorLabels: true
-      path: /metrics
-      port: http-web
-      scheme: http
-  jobLabel: prometheus
-  namespaceSelector:
-    matchNames:
-      - prometheus
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: prometheus
-      app.kubernetes.io/name: grafana
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
@@ -6823,6 +6795,66 @@ specs:
               app.kubernetes.io/component: proxy
               app.kubernetes.io/name: pomerium
               k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: network-policy
+  name: grafana-metrics
+  namespace: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - prometheus
+  podMetricsEndpoints:
+    - portNumber: 3000
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: prometheus
+      app.kubernetes.io/name: grafana
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-prometheus-grafana-metrics-network
+specs:
+  - description: prometheus to grafana
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/instance: prometheus
+              app.kubernetes.io/name: grafana
+              k8s:io.kubernetes.pod.namespace: prometheus
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
+        k8s:io.kubernetes.pod.namespace: prometheus
+        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+  - description: prometheus to grafana
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/instance: prometheus
+        app.kubernetes.io/name: grafana
+        k8s:io.kubernetes.pod.namespace: prometheus
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
         toPorts:
           - ports:
               - port: "3000"

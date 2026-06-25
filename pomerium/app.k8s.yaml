@@ -203,6 +203,9 @@ spec:
       port: 9090
       protocol: TCP
       targetPort: 9090
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/name: pomerium
   type: ClusterIP
 ---
 apiVersion: v1
@@ -892,4 +895,64 @@ specs:
         toPorts:
           - ports:
               - port: "5432"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-metrics
+  namespace: pomerium
+spec:
+  namespaceSelector:
+    matchNames:
+      - pomerium
+  podMetricsEndpoints:
+    - portNumber: 9090
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: proxy
+      app.kubernetes.io/name: pomerium
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: pomerium
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-pomerium-pomerium-metrics-network
+specs:
+  - description: prometheus to pomerium
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "9090"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
+        k8s:io.kubernetes.pod.namespace: prometheus
+        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+  - description: prometheus to pomerium
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "9090"
                 protocol: TCP
