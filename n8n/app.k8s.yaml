@@ -153,6 +153,8 @@ spec:
               value: https
             - name: N8N_EDITOR_BASE_URL
               value: https://n8n.wyvernzora.io/
+            - name: N8N_DIAGNOSTICS_ENABLED
+              value: "false"
             - name: N8N_ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
