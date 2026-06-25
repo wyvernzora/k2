@@ -1642,10 +1642,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: network-policies
-  name: prometheus-postgresql-nexus-postgresql-metrics-network
+  name: prometheus-nexus-postgresql-metrics-network
 specs:
-  - description: prometheus to nexus-postgresql
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               cnpg.io/cluster: nexus
@@ -1660,22 +1659,6 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to nexus-postgresql
-    endpointSelector:
-      matchLabels:
-        cnpg.io/cluster: nexus
-        cnpg.io/podRole: instance
-        k8s:io.kubernetes.pod.namespace: postgresql
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "9187"
-                protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -1702,10 +1685,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: network-policies
-  name: prometheus-postgresql-dbclaim-operator-metrics-network
+  name: prometheus-dbclaim-operator-metrics-network
 specs:
-  - description: prometheus to dbclaim-operator
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: dbclaim-operator
@@ -1720,19 +1702,3 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to dbclaim-operator
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: dbclaim-operator
-        app.kubernetes.io/name: dbclaim-operator
-        k8s:io.kubernetes.pod.namespace: postgresql
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP

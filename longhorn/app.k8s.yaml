@@ -1038,10 +1038,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: longhorn
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-longhorn-longhorn-manager-metrics-network
+  name: prometheus-longhorn-manager-metrics-network
 specs:
-  - description: prometheus to longhorn-manager
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app: longhorn-manager
@@ -1055,18 +1054,3 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to longhorn-manager
-    endpointSelector:
-      matchLabels:
-        app: longhorn-manager
-        k8s:io.kubernetes.pod.namespace: longhorn
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "9500"
-                protocol: TCP

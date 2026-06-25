@@ -2897,10 +2897,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-argocd-application-controller-metrics-network
+  name: prometheus-argocd-application-controller-metrics-network
 specs:
-  - description: prometheus to argocd-application-controller
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: argocd
@@ -2915,22 +2914,6 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to argocd-application-controller
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: argocd
-        app.kubernetes.io/name: argocd-application-controller
-        k8s:io.kubernetes.pod.namespace: argocd
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8082"
-                protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -2957,10 +2940,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-argocd-applicationset-controller-metrics-network
+  name: prometheus-argocd-applicationset-controller-metrics-network
 specs:
-  - description: prometheus to argocd-applicationset-controller
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: argocd
@@ -2975,22 +2957,6 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to argocd-applicationset-controller
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: argocd
-        app.kubernetes.io/name: argocd-applicationset-controller
-        k8s:io.kubernetes.pod.namespace: argocd
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -3017,10 +2983,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-argocd-repo-server-metrics-network
+  name: prometheus-argocd-repo-server-metrics-network
 specs:
-  - description: prometheus to argocd-repo-server
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: argocd
@@ -3035,22 +3000,6 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to argocd-repo-server
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: argocd
-        app.kubernetes.io/name: argocd-repo-server
-        k8s:io.kubernetes.pod.namespace: argocd
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8084"
-                protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -3077,10 +3026,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-argocd-server-metrics-network
+  name: prometheus-argocd-server-metrics-network
 specs:
-  - description: prometheus to argocd-server
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: argocd
@@ -3095,19 +3043,3 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to argocd-server
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: argocd
-        app.kubernetes.io/name: argocd-server
-        k8s:io.kubernetes.pod.namespace: argocd
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8083"
-                protocol: TCP

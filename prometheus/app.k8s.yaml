@@ -6825,10 +6825,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-prometheus-grafana-metrics-network
+  name: prometheus-grafana-metrics-network
 specs:
-  - description: prometheus to grafana
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: prometheus
@@ -6843,19 +6842,3 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to grafana
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: prometheus
-        app.kubernetes.io/name: grafana
-        k8s:io.kubernetes.pod.namespace: prometheus
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "3000"
-                protocol: TCP

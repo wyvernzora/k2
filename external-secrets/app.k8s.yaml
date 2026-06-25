@@ -1010,10 +1010,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: external-secrets
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-external-secrets-external-secrets-controller-metrics-network
+  name: prometheus-external-secrets-controller-metrics-network
 specs:
-  - description: prometheus to external-secrets-controller
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: external-secrets
@@ -1028,22 +1027,6 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to external-secrets-controller
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: external-secrets
-        app.kubernetes.io/name: external-secrets
-        k8s:io.kubernetes.pod.namespace: external-secrets
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -1070,10 +1053,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: external-secrets
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-external-secrets-external-secrets-cert-controller-metrics-network
+  name: prometheus-external-secrets-cert-controller-metrics-network
 specs:
-  - description: prometheus to external-secrets-cert-controller
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: external-secrets
@@ -1088,22 +1070,6 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to external-secrets-cert-controller
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: external-secrets
-        app.kubernetes.io/name: external-secrets-cert-controller
-        k8s:io.kubernetes.pod.namespace: external-secrets
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -1130,10 +1096,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: external-secrets
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-external-secrets-external-secrets-webhook-metrics-network
+  name: prometheus-external-secrets-webhook-metrics-network
 specs:
-  - description: prometheus to external-secrets-webhook
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/instance: external-secrets
@@ -1148,19 +1113,3 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to external-secrets-webhook
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/instance: external-secrets
-        app.kubernetes.io/name: external-secrets-webhook
-        k8s:io.kubernetes.pod.namespace: external-secrets
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP

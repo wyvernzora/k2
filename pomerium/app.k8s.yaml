@@ -922,10 +922,9 @@ metadata:
   labels:
     k2.wyvernzora.io/app: pomerium
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-pomerium-pomerium-metrics-network
+  name: prometheus-pomerium-metrics-network
 specs:
-  - description: prometheus to pomerium
-    egress:
+  - egress:
       - toEndpoints:
           - matchLabels:
               app.kubernetes.io/component: proxy
@@ -940,19 +939,3 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-  - description: prometheus to pomerium
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: proxy
-        app.kubernetes.io/name: pomerium
-        k8s:io.kubernetes.pod.namespace: pomerium
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/name: prometheus
-              k8s:io.kubernetes.pod.namespace: prometheus
-              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
-        toPorts:
-          - ports:
-              - port: "9090"
-                protocol: TCP
