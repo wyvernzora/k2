@@ -704,6 +704,62 @@ specs:
                 protocol: TCP
               - port: "8443"
                 protocol: TCP
+      - fromEntities:
+          - cluster
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 10.0.0.0/8
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 172.16.0.0/12
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 192.168.0.0/16
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 10.42.0.0/16
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 10.43.0.0/16
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 100.64.0.0/10
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
