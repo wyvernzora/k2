@@ -218,6 +218,14 @@ data:
   grafana.ini: |
     [analytics]
     check_for_updates = true
+    [auth.jwt]
+    auto_sign_up = true
+    cache_ttl = 60m
+    email_claim = email
+    enabled = true
+    header_name = X-Pomerium-Jwt-Assertion
+    jwk_set_url = https://grafana.wyvernzora.io/.well-known/pomerium/jwks.json
+    username_claim = email
     [log]
     mode = console
     [paths]
@@ -1803,7 +1811,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 5bceeca3808849664f09f642547ce17fdf495522238ef9ce952b20cfa36b7de5
+        checksum/config: aa0f89ec3a0ed58b888522876142db2c0c013d109f42687635c31d3ed9e8afde
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
         kubectl.kubernetes.io/default-container: grafana
       labels:
@@ -6752,6 +6760,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
+    ingress.pomerium.io/pass_identity_headers: "true"
     ingress.pomerium.io/policy: |
       - allow:
           and:
