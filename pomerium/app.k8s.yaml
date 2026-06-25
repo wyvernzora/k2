@@ -922,30 +922,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: pomerium
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-pomerium-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: proxy
-              app.kubernetes.io/name: pomerium
-              k8s:io.kubernetes.pod.namespace: pomerium
-        toPorts:
-          - ports:
-              - port: "9090"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: pomerium
-    k2.wyvernzora.io/component: network-policy
   name: pomerium-pomerium-metrics-ingress
 specs:
   - endpointSelector:

@@ -1010,30 +1010,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: external-secrets
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-external-secrets-controller-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: external-secrets
-              app.kubernetes.io/name: external-secrets
-              k8s:io.kubernetes.pod.namespace: external-secrets
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: external-secrets
-    k2.wyvernzora.io/component: network-policy
   name: external-secrets-external-secrets-controller-metrics-ingress
 specs:
   - endpointSelector:
@@ -1077,30 +1053,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: external-secrets
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-external-secrets-cert-controller-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: external-secrets
-              app.kubernetes.io/name: external-secrets-cert-controller
-              k8s:io.kubernetes.pod.namespace: external-secrets
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: external-secrets
-    k2.wyvernzora.io/component: network-policy
   name: external-secrets-external-secrets-cert-controller-metrics-ingress
 specs:
   - endpointSelector:
@@ -1137,30 +1089,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: external-secrets
       app.kubernetes.io/name: external-secrets-webhook
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: external-secrets
-    k2.wyvernzora.io/component: network-policy
-  name: prometheus-external-secrets-webhook-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: external-secrets
-              app.kubernetes.io/name: external-secrets-webhook
-              k8s:io.kubernetes.pod.namespace: external-secrets
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy

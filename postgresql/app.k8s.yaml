@@ -1642,30 +1642,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: network-policies
-  name: prometheus-nexus-postgresql-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              cnpg.io/cluster: nexus
-              cnpg.io/podRole: instance
-              k8s:io.kubernetes.pod.namespace: postgresql
-        toPorts:
-          - ports:
-              - port: "9187"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: postgresql
-    k2.wyvernzora.io/component: network-policies
   name: postgresql-nexus-postgresql-metrics-ingress
 specs:
   - endpointSelector:
@@ -1702,30 +1678,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: dbclaim-operator
       app.kubernetes.io/name: dbclaim-operator
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: postgresql
-    k2.wyvernzora.io/component: network-policies
-  name: prometheus-dbclaim-operator-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: dbclaim-operator
-              app.kubernetes.io/name: dbclaim-operator
-              k8s:io.kubernetes.pod.namespace: postgresql
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy

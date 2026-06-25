@@ -1038,29 +1038,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: longhorn
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-longhorn-manager-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app: longhorn-manager
-              k8s:io.kubernetes.pod.namespace: longhorn
-        toPorts:
-          - ports:
-              - port: "9500"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: longhorn
-    k2.wyvernzora.io/component: network-policy
   name: longhorn-longhorn-manager-metrics-ingress
 specs:
   - endpointSelector:

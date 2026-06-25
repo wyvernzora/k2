@@ -2897,30 +2897,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-application-controller-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: argocd
-              app.kubernetes.io/name: argocd-application-controller
-              k8s:io.kubernetes.pod.namespace: argocd
-        toPorts:
-          - ports:
-              - port: "8082"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: argocd
-    k2.wyvernzora.io/component: network-policy
   name: argocd-argocd-application-controller-metrics-ingress
 specs:
   - endpointSelector:
@@ -2957,30 +2933,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: argocd
       app.kubernetes.io/name: argocd-applicationset-controller
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: argocd
-    k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-applicationset-controller-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: argocd
-              app.kubernetes.io/name: argocd-applicationset-controller
-              k8s:io.kubernetes.pod.namespace: argocd
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
@@ -3031,30 +2983,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-repo-server-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: argocd
-              app.kubernetes.io/name: argocd-repo-server
-              k8s:io.kubernetes.pod.namespace: argocd
-        toPorts:
-          - ports:
-              - port: "8084"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: argocd
-    k2.wyvernzora.io/component: network-policy
   name: argocd-argocd-repo-server-metrics-ingress
 specs:
   - endpointSelector:
@@ -3091,30 +3019,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: argocd
       app.kubernetes.io/name: argocd-server
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: argocd
-    k2.wyvernzora.io/component: network-policy
-  name: prometheus-argocd-server-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: argocd
-              app.kubernetes.io/name: argocd-server
-              k8s:io.kubernetes.pod.namespace: argocd
-        toPorts:
-          - ports:
-              - port: "8083"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy

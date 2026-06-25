@@ -2921,31 +2921,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: cert-manager
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-cert-manager-controller-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: controller
-              app.kubernetes.io/instance: cert-manager
-              app.kubernetes.io/name: cert-manager
-              k8s:io.kubernetes.pod.namespace: cert-manager
-        toPorts:
-          - ports:
-              - port: "9402"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: cert-manager
-    k2.wyvernzora.io/component: network-policy
   name: cert-manager-cert-manager-controller-metrics-ingress
 specs:
   - endpointSelector:
@@ -2991,31 +2966,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: cert-manager
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-cert-manager-cainjector-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: cainjector
-              app.kubernetes.io/instance: cert-manager
-              app.kubernetes.io/name: cainjector
-              k8s:io.kubernetes.pod.namespace: cert-manager
-        toPorts:
-          - ports:
-              - port: "9402"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: cert-manager
-    k2.wyvernzora.io/component: network-policy
   name: cert-manager-cert-manager-cainjector-metrics-ingress
 specs:
   - endpointSelector:
@@ -3054,31 +3004,6 @@ spec:
       app.kubernetes.io/component: webhook
       app.kubernetes.io/instance: cert-manager
       app.kubernetes.io/name: webhook
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: cert-manager
-    k2.wyvernzora.io/component: network-policy
-  name: prometheus-cert-manager-webhook-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: webhook
-              app.kubernetes.io/instance: cert-manager
-              app.kubernetes.io/name: webhook
-              k8s:io.kubernetes.pod.namespace: cert-manager
-        toPorts:
-          - ports:
-              - port: "9402"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy

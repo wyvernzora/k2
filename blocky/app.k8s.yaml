@@ -654,30 +654,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: network-policy
-  name: prometheus-blocky-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: resolver
-              app.kubernetes.io/name: blocky
-              k8s:io.kubernetes.pod.namespace: blocky
-        toPorts:
-          - ports:
-              - port: "4000"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: blocky
-    k2.wyvernzora.io/component: network-policy
   name: blocky-blocky-metrics-ingress
 specs:
   - endpointSelector:
@@ -714,30 +690,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: k8s-gateway
       app.kubernetes.io/name: k8s-gateway
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: blocky
-    k2.wyvernzora.io/component: network-policy
-  name: prometheus-k8s-gateway-metrics-network
-specs:
-  - egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/instance: k8s-gateway
-              app.kubernetes.io/name: k8s-gateway
-              k8s:io.kubernetes.pod.namespace: blocky
-        toPorts:
-          - ports:
-              - port: "9153"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/name: prometheus
-        k8s:io.kubernetes.pod.namespace: prometheus
-        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
