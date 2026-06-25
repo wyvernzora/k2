@@ -5,18 +5,11 @@ import { crd } from "@k2/external-secrets";
 export const GRAFANA_ADMIN_SECRET_NAME = "prometheus-grafana-admin";
 
 const GRAFANA_ADMIN_PASSWORD_GENERATOR_NAME = "prometheus-grafana-admin-password";
-const PasswordApiVersion = crd.Password.GVK.apiVersion;
-const PasswordEncoding = crd.PasswordSpecEncoding;
-const ExternalSecretRefreshPolicy = crd.ExternalSecretSpecRefreshPolicy;
-const GeneratorKind = crd.ExternalSecretSpecDataFromSourceRefGeneratorRefKind;
-const TargetCreationPolicy = crd.ExternalSecretSpecTargetCreationPolicy;
-const TargetDeletionPolicy = crd.ExternalSecretSpecTargetDeletionPolicy;
-const TargetTemplateEngineVersion = crd.ExternalSecretSpecTargetTemplateEngineVersion;
-const TargetTemplateMergePolicy = crd.ExternalSecretSpecTargetTemplateMergePolicy;
 
 export class GrafanaAdminSecret extends Construct {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
+    const PasswordEncoding = crd.PasswordSpecEncoding;
 
     new crd.Password(this, "password-generator", {
       metadata: { name: GRAFANA_ADMIN_PASSWORD_GENERATOR_NAME },
@@ -39,6 +32,8 @@ export class GrafanaAdminSecret extends Construct {
 }
 
 function grafanaAdminExternalSecretSpec(): crd.ExternalSecretSpec {
+  const ExternalSecretRefreshPolicy = crd.ExternalSecretSpecRefreshPolicy;
+
   return {
     refreshPolicy: ExternalSecretRefreshPolicy.CREATED_ONCE,
     target: grafanaAdminTarget(),
@@ -47,6 +42,11 @@ function grafanaAdminExternalSecretSpec(): crd.ExternalSecretSpec {
 }
 
 function grafanaAdminTarget(): crd.ExternalSecretSpecTarget {
+  const TargetCreationPolicy = crd.ExternalSecretSpecTargetCreationPolicy;
+  const TargetDeletionPolicy = crd.ExternalSecretSpecTargetDeletionPolicy;
+  const TargetTemplateEngineVersion = crd.ExternalSecretSpecTargetTemplateEngineVersion;
+  const TargetTemplateMergePolicy = crd.ExternalSecretSpecTargetTemplateMergePolicy;
+
   return {
     creationPolicy: TargetCreationPolicy.OWNER,
     deletionPolicy: TargetDeletionPolicy.RETAIN,
@@ -65,6 +65,9 @@ function grafanaAdminTarget(): crd.ExternalSecretSpecTarget {
 }
 
 function grafanaAdminPasswordDataFrom(): crd.ExternalSecretSpecDataFrom {
+  const GeneratorKind = crd.ExternalSecretSpecDataFromSourceRefGeneratorRefKind;
+  const PasswordApiVersion = crd.Password.GVK.apiVersion;
+
   return {
     sourceRef: {
       generatorRef: {

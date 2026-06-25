@@ -16,17 +16,17 @@ import { metadata } from "./metadata.js";
 const METRICS_SERVICE_NAME = "pomerium-metrics";
 
 export function createServices(scope: Construct): void {
-  const metrics = new Service(scope, "metrics-service", metricsService());
-  ApiObject.of(metrics).addJsonPatch(JsonPatch.remove("/spec/selector"));
+  new Service(scope, "metrics-service", metricsService(scope));
 
   const proxy = new Service(scope, "proxy-service", proxyService(scope));
   ApiObject.of(proxy).addJsonPatch(JsonPatch.add("/spec/ipFamilyPolicy", "PreferDualStack"));
 }
 
-function metricsService() {
+function metricsService(scope: Construct) {
   return {
     metadata: metadata(METRICS_SERVICE_NAME),
     type: ServiceType.CLUSTER_IP,
+    selector: Pods.select(scope, "pomerium-metrics-service-pods", { labels: POMERIUM_LABELS }),
     ports: [servicePort("metrics", 9090, 9090)],
   };
 }

@@ -6,12 +6,17 @@ import { Prometheus } from "./components/prometheus/index.js";
 import { NetworkPolicy } from "./components/network-policy.js";
 
 export * as crd from "./lib/crd.js";
+export * from "./lib/pod-scrape.js";
 
 const PROMETHEUS_NAMESPACE = "prometheus";
 const GRAFANA_HTTP_PORT = 3000;
 const GRAFANA_LABELS = {
   "app.kubernetes.io/name": "grafana",
   "app.kubernetes.io/instance": "prometheus",
+};
+const PROMETHEUS_LABELS = {
+  "app.kubernetes.io/name": "prometheus",
+  "operator.prometheus.io/name": "prometheus-kube-prometheus-prometheus",
 };
 
 export const endpoints = {
@@ -20,8 +25,18 @@ export const endpoints = {
   },
 };
 
+export const workloads = {
+  prometheus(): PolicyEndpoint {
+    return prometheusEndpoint();
+  },
+};
+
 function grafanaEndpoint(): PolicyEndpoint {
   return endpoint(PROMETHEUS_NAMESPACE, GRAFANA_LABELS, "grafana");
+}
+
+function prometheusEndpoint(): PolicyEndpoint {
+  return endpoint(PROMETHEUS_NAMESPACE, PROMETHEUS_LABELS, "prometheus");
 }
 
 export const createAppResources: AppResourceFunc = app => {

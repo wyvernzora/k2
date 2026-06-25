@@ -41,6 +41,7 @@ function grafanaValues(grafanaHost: string) {
       userKey: "admin-user",
       passwordKey: "admin-password",
     },
+    serviceMonitor: { enabled: false },
     "grafana.ini": {
       "auth.jwt": {
         enabled: true,
