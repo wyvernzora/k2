@@ -28,10 +28,6 @@ export class PrometheusPodScrape extends PodMonitor {
       },
     });
 
-    new EndpointNetworkPolicy(scope, `${id}-network`, {
-      endpoint: prometheusEndpoint(),
-      egress: [{ to: { endpoint: props.target }, ports: props.ports }],
-    });
     new EndpointNetworkPolicy(scope, `${id}-ingress`, {
       endpoint: props.target,
       ingress: [{ from: { endpoint: prometheusEndpoint() }, ports: props.ports }],
