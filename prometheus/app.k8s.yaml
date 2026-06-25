@@ -6842,3 +6842,27 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-grafana-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/instance: prometheus
+        app.kubernetes.io/name: grafana
+        k8s:io.kubernetes.pod.namespace: prometheus
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "3000"
+                protocol: TCP

@@ -1028,6 +1028,30 @@ specs:
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: external-secrets
+    k2.wyvernzora.io/component: network-policy
+  name: external-secrets-external-secrets-controller-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/instance: external-secrets
+        app.kubernetes.io/name: external-secrets
+        k8s:io.kubernetes.pod.namespace: external-secrets
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
@@ -1071,6 +1095,30 @@ specs:
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
 ---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: external-secrets
+    k2.wyvernzora.io/component: network-policy
+  name: external-secrets-external-secrets-cert-controller-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/instance: external-secrets
+        app.kubernetes.io/name: external-secrets-cert-controller
+        k8s:io.kubernetes.pod.namespace: external-secrets
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
@@ -1113,3 +1161,27 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: external-secrets
+    k2.wyvernzora.io/component: network-policy
+  name: external-secrets-external-secrets-webhook-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/instance: external-secrets
+        app.kubernetes.io/name: external-secrets-webhook
+        k8s:io.kubernetes.pod.namespace: external-secrets
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
