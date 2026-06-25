@@ -3043,3 +3043,27 @@ specs:
         app.kubernetes.io/name: prometheus
         k8s:io.kubernetes.pod.namespace: prometheus
         operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: argocd
+    k2.wyvernzora.io/component: network-policy
+  name: argocd-prometheus-to-argocd-server-metrics
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/instance: argocd
+        app.kubernetes.io/name: argocd-server
+        k8s:io.kubernetes.pod.namespace: argocd
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8083"
+                protocol: TCP
