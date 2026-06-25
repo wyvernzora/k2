@@ -1,6 +1,6 @@
 import type { Construct } from "constructs";
 
-import { endpoint, PrivateConnection, type PolicyEndpoint, type PortSpec } from "@k2/cilium";
+import { endpoint, EndpointNetworkPolicy, type PolicyEndpoint, type PortSpec } from "@k2/cilium";
 
 import { PodMonitor, type PodMonitorSpecPodMetricsEndpoints } from "../crds/monitoring.coreos.com.js";
 
@@ -28,10 +28,9 @@ export class PrometheusPodScrape extends PodMonitor {
       },
     });
 
-    new PrivateConnection(scope, `${id}-network`, {
-      from: prometheusEndpoint(),
-      to: props.target,
-      ports: props.ports,
+    new EndpointNetworkPolicy(scope, `${id}-network`, {
+      endpoint: prometheusEndpoint(),
+      egress: [{ to: { endpoint: props.target }, ports: props.ports }],
     });
   }
 }
