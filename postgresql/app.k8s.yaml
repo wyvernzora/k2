@@ -1652,6 +1652,9 @@ specs:
     ingress:
       - fromEndpoints:
           - matchLabels:
+              k8s:io.kubernetes.pod.namespace: postgresql
+      - fromEndpoints:
+          - matchLabels:
               app.kubernetes.io/name: prometheus
               k8s:io.kubernetes.pod.namespace: prometheus
               operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
@@ -1693,6 +1696,9 @@ specs:
         app.kubernetes.io/name: dbclaim-operator
         k8s:io.kubernetes.pod.namespace: postgresql
     ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: postgresql
       - fromEndpoints:
           - matchLabels:
               app.kubernetes.io/name: prometheus

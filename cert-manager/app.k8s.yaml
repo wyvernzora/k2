@@ -2932,6 +2932,9 @@ specs:
     ingress:
       - fromEndpoints:
           - matchLabels:
+              k8s:io.kubernetes.pod.namespace: cert-manager
+      - fromEndpoints:
+          - matchLabels:
               app.kubernetes.io/name: prometheus
               k8s:io.kubernetes.pod.namespace: prometheus
               operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
@@ -2977,6 +2980,9 @@ specs:
     ingress:
       - fromEndpoints:
           - matchLabels:
+              k8s:io.kubernetes.pod.namespace: cert-manager
+      - fromEndpoints:
+          - matchLabels:
               app.kubernetes.io/name: prometheus
               k8s:io.kubernetes.pod.namespace: prometheus
               operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
@@ -3020,6 +3026,9 @@ specs:
         app.kubernetes.io/name: webhook
         k8s:io.kubernetes.pod.namespace: cert-manager
     ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: cert-manager
       - fromEndpoints:
           - matchLabels:
               app.kubernetes.io/name: prometheus
