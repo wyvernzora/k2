@@ -8,6 +8,9 @@ on:
     branches:
       - main
       - renovate/*
+  pull_request:
+    branches:
+      - main
   schedule:
     - cron: "0 3 * * 0" # every Sunday 03:00 UTC
   workflow_dispatch:
@@ -21,6 +24,10 @@ jobs:
   manifests:
     name: 📜 Build k8s deployment manifests
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - name: 📥 Checkout source code
         uses: actions/checkout@v6
@@ -35,6 +42,76 @@ jobs:
           earthly +lint
           earthly +k8s-manifests
           earthly +diff-manifests
+
+      - name: 🔎 Check deploy diff
+        id: deploy-diff
+        run: |
+          if [ -s deploy-diff.md ]; then
+            echo "has_diff=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_diff=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 💬 Post deploy diff status to PR
+        if: >
+          github.event_name == 'pull_request' &&
+          (
+            steps.deploy-diff.outputs.has_diff == 'true' ||
+            (
+              steps.deploy-diff.outputs.has_diff == 'false' &&
+              (github.event.pull_request.user.login == 'renovate[bot]' || startsWith(github.event.pull_request.head.ref, 'renovate/'))
+            )
+          )
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HAS_DIFF: ${{ steps.deploy-diff.outputs.has_diff }}
+        run: |
+          marker="<!-- Sticky Pull Request Commentdeploy-diff -->"
+          generated="$(date -u '+%Y-%m-%d %H:%M:%SZ')"
+          short_sha="${GITHUB_SHA::8}"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          body_file="$(mktemp)"
+          payload_file="$(mktemp)"
+          if [ "$HAS_DIFF" = "true" ]; then
+            {
+              echo "## 📝 Changes to the k8s manifests"
+              echo
+              cat deploy-diff.md
+            } > "$body_file"
+          else
+            echo "## ✅ No manifest changes — enabling auto-merge" > "$body_file"
+          fi
+          {
+            echo
+            echo "_Generated on ${generated} for commit \`${short_sha}\`._"
+            echo "[View workflow run](${run_url}) · [Artifacts](${run_url}#artifacts)"
+            echo
+            echo "$marker"
+          } >> "$body_file"
+          jq -n --rawfile body "$body_file" '{body: $body}' > "$payload_file"
+
+          comment_id="$(
+            gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+              --jq ".[] | select(.body | contains(\"$marker\")) | .id" \
+              | head -n1
+          )"
+          if [ -n "$comment_id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$comment_id" --input "$payload_file" >/dev/null
+          else
+            gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" --input "$payload_file" >/dev/null
+          fi
+
+      - name: 🤖 Auto-merge Renovate PR without deploy diff
+        if: >
+          github.event_name == 'pull_request' &&
+          steps.deploy-diff.outputs.has_diff == 'false' &&
+          (github.event.pull_request.user.login == 'renovate[bot]' || startsWith(github.event.pull_request.head.ref, 'renovate/'))
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge "$PR_URL" --auto --squash --delete-branch
 
       - name: 📦 Upload deploy-diff.md
         uses: actions/upload-artifact@v7
