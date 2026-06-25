@@ -467,6 +467,29 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: prometheus
+  namespace: argocd
+spec:
+  destination:
+    namespace: prometheus
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: prometheus
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: qbittorrent
   namespace: argocd
 spec:
