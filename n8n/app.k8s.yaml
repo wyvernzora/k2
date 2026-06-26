@@ -681,6 +681,47 @@ metadata:
   labels:
     k2.wyvernzora.io/app: n8n
     k2.wyvernzora.io/component: network-policy
+  name: n8n-kura-n8n-to-kura-rest
+specs:
+  - description: n8n to kura
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: library-manager
+              app.kubernetes.io/name: kura
+              k8s:io.kubernetes.pod.namespace: kura
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: automation
+        app.kubernetes.io/name: n8n
+        k8s:io.kubernetes.pod.namespace: n8n
+  - description: n8n to kura
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: library-manager
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: automation
+              app.kubernetes.io/name: n8n
+              k8s:io.kubernetes.pod.namespace: n8n
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: network-policy
   name: n8n-qbittorrent-n8n-to-qbittorrent-mcp
 specs:
   - description: n8n to qbittorrent
