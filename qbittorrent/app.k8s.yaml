@@ -160,7 +160,7 @@ spec:
               value: http://127.0.0.1:8080
             - name: QBITTORRENT_SAVE_PATHS
               value: kura-inbox=/downloads/anime/downloads,other=/downloads/default
-          image: ghcr.io/wyvernzora/qbittorrent-mcp:dev
+          image: ghcr.io/wyvernzora/qbit-bridge:dev
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -168,10 +168,10 @@ spec:
               path: /healthz
               port: 8082
               scheme: HTTP
-          name: qbittorrent-mcp
+          name: qbit-bridge
           ports:
             - containerPort: 8082
-              name: mcp
+              name: http
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
@@ -378,12 +378,12 @@ metadata:
   labels:
     k2.wyvernzora.io/app: qbittorrent
     k2.wyvernzora.io/component: qbittorrent
-  name: qbittorrent-mcp
+  name: qbit-bridge
   namespace: qbittorrent
 spec:
   externalIPs: []
   ports:
-    - name: mcp
+    - name: http
       port: 80
       targetPort: 8082
   selector:
@@ -444,9 +444,9 @@ spec:
         paths:
           - backend:
               service:
-                name: qbittorrent-mcp
+                name: qbit-bridge
                 port:
-                  name: mcp
+                  name: http
             path: /mcp
             pathType: Prefix
   tls:

@@ -347,6 +347,30 @@ spec:
           volumeMounts:
             - mountPath: /opt/n8n/custom
               name: n8n-custom-nodes
+        - env:
+            - name: QBIT_BRIDGE_NODES_TARGET
+              value: /opt/n8n/custom
+          image: ghcr.io/wyvernzora/qbit-bridge/n8n-nodes:dev
+          imagePullPolicy: Always
+          name: install-qbit-bridge-nodes
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: false
+          volumeMounts:
+            - mountPath: /opt/n8n/custom
+              name: n8n-custom-nodes
       restartPolicy: Always
       securityContext:
         fsGroup: 1000
@@ -722,7 +746,7 @@ metadata:
   labels:
     k2.wyvernzora.io/app: n8n
     k2.wyvernzora.io/component: network-policy
-  name: n8n-qbittorrent-n8n-to-qbittorrent-mcp
+  name: n8n-qbittorrent-n8n-to-qbit-bridge
 specs:
   - description: n8n to qbittorrent
     egress:

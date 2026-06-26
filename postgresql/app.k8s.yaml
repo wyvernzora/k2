@@ -1504,7 +1504,7 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   annotations:
-    cnpg.wyvernzora.io/allowed-claim-namespaces: paperless,pocket-id,kagent,pomerium,n8n,forgejo,takuhai
+    cnpg.wyvernzora.io/allowed-claim-namespaces: paperless,pocket-id,pomerium,n8n,forgejo,takuhai
   labels:
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: nexus-cluster
