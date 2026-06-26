@@ -15,6 +15,8 @@ import { NetworkPolicy } from "./components/network-policy.js";
 import { DMHY_MCP_LABELS, DMHY_MCP_PORT, KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "./constants.js";
 import { DMHY_MCP_SERVICE_NAME, KURA_MCP_SERVICE_NAME } from "./constants.js";
 
+export * from "./lib/n8n-custom-nodes.js";
+
 const KURA_NAMESPACE = "kura";
 const KURA_MCP_TOOL_NAMES = [
   "kura_resolve",

@@ -23,6 +23,7 @@ export class NetworkPolicy extends K2Chart {
     super(scope, id);
 
     const n8n = endpoint(Namespace.of(this).namespace, N8N_LABELS, "n8n");
+    const kuraRest = kura.endpoints.http();
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
     new AllowPomeriumToBackend(this, "pomerium-to-n8n", {
@@ -47,6 +48,11 @@ export class NetworkPolicy extends K2Chart {
     new PrivateConnection(this, "n8n-to-kura-mcp", {
       from: n8n,
       ...kura.endpoints.mcp(),
+    });
+    new PrivateConnection(this, "n8n-to-kura-rest", {
+      from: n8n,
+      to: kuraRest.backend,
+      ports: kuraRest.ports,
     });
     new PrivateConnection(this, "n8n-to-qbittorrent-mcp", {
       from: n8n,

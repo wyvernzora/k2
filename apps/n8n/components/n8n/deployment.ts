@@ -17,6 +17,7 @@ import {
 import type { Construct } from "constructs";
 
 import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import * as kura from "@k2/kura";
 import * as takuhai from "@k2/takuhai";
 
 import { N8N_HTTP_PORT, N8N_LABELS } from "./labels.js";
@@ -28,8 +29,8 @@ const PROXY_AUTH_HOOK_VOLUME_NAME = "proxy-auth-hook";
 const PROXY_AUTH_HOOK_INSTALL_PATH = "/out";
 const PROXY_AUTH_HOOK_MOUNT_PATH = "/opt/proxy-auth";
 const PROXY_AUTH_HOOK_FILE = `${PROXY_AUTH_HOOK_MOUNT_PATH}/hook.cjs`;
-const TAKUHAI_NODES_VOLUME_NAME = "takuhai-custom-nodes";
-const TAKUHAI_NODES_MOUNT_PATH = "/opt/n8n/custom";
+const CUSTOM_NODES_VOLUME_NAME = "n8n-custom-nodes";
+const CUSTOM_NODES_MOUNT_PATH = "/opt/n8n/custom";
 const N8N_HEALTH_PATH = "/n8n-healthz";
 
 export interface N8NDeploymentProps {
@@ -64,7 +65,7 @@ export class N8NDeployment extends K2Deployment {
     const proxyAuthHookVolume = Volume.fromEmptyDir(this, "proxy-auth-hook-volume", PROXY_AUTH_HOOK_VOLUME_NAME, {
       sizeLimit: Size.mebibytes(1),
     });
-    const takuhaiNodesVolume = Volume.fromEmptyDir(this, "takuhai-nodes-volume", TAKUHAI_NODES_VOLUME_NAME, {
+    const customNodesVolume = Volume.fromEmptyDir(this, "custom-nodes-volume", CUSTOM_NODES_VOLUME_NAME, {
       sizeLimit: Size.mebibytes(32),
     });
     const proxyAuthHookInstallMount: VolumeMount = {
@@ -76,17 +77,24 @@ export class N8NDeployment extends K2Deployment {
       path: PROXY_AUTH_HOOK_MOUNT_PATH,
       readOnly: true,
     };
-    const takuhaiNodesMount: VolumeMount = {
-      volume: takuhaiNodesVolume,
-      path: TAKUHAI_NODES_MOUNT_PATH,
+    const customNodesMount: VolumeMount = {
+      volume: customNodesVolume,
+      path: CUSTOM_NODES_MOUNT_PATH,
       readOnly: true,
     };
 
     this.addInitContainer(proxyAuthHookInitContainer(proxyAuthHookInstallMount));
     this.addInitContainer(
       takuhai.n8nCustomNodesInitContainer({
-        volume: takuhaiNodesVolume,
-        path: TAKUHAI_NODES_MOUNT_PATH,
+        volume: customNodesVolume,
+        path: CUSTOM_NODES_MOUNT_PATH,
+        resources: initResources(),
+      }),
+    );
+    this.addInitContainer(
+      kura.n8nCustomNodesInitContainer({
+        volume: customNodesVolume,
+        path: CUSTOM_NODES_MOUNT_PATH,
         resources: initResources(),
       }),
     );
@@ -98,7 +106,7 @@ export class N8NDeployment extends K2Deployment {
         n8nSecret,
         userManagementSecret,
         proxyAuthHookMount,
-        takuhaiNodesMount,
+        customNodesMount,
       ),
     );
   }
@@ -128,7 +136,7 @@ function n8nContainer(
   n8nSecret: ISecret,
   userManagementSecret: ISecret,
   proxyAuthHookMount: VolumeMount,
-  takuhaiNodesMount: VolumeMount,
+  customNodesMount: VolumeMount,
 ): ContainerProps {
   const url = new URL(props.appUrl);
   const jwksUrl = new URL("/.well-known/pomerium/jwks.json", props.appUrl);
@@ -146,7 +154,7 @@ function n8nContainer(
       N8N_ENCRYPTION_KEY: n8nSecret.envValue("encryptionKey"),
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: EnvValue.fromValue("true"),
       N8N_RUNNERS_ENABLED: EnvValue.fromValue("true"),
-      N8N_CUSTOM_EXTENSIONS: EnvValue.fromValue(TAKUHAI_NODES_MOUNT_PATH),
+      N8N_CUSTOM_EXTENSIONS: EnvValue.fromValue(CUSTOM_NODES_MOUNT_PATH),
       N8N_ENDPOINT_HEALTH: EnvValue.fromValue(N8N_HEALTH_PATH),
       N8N_USER_MANAGEMENT_JWT_SECRET: userManagementSecret.envValue("jwtSecret"),
       N8N_PROXY_HOPS: EnvValue.fromValue("1"),
@@ -166,7 +174,7 @@ function n8nContainer(
       GENERIC_TIMEZONE: EnvValue.fromValue("America/Los_Angeles"),
       TZ: EnvValue.fromValue("America/Los_Angeles"),
     },
-    volumeMounts: [volumes.appdata(APPDATA_MOUNT_PATH), proxyAuthHookMount, takuhaiNodesMount],
+    volumeMounts: [volumes.appdata(APPDATA_MOUNT_PATH), proxyAuthHookMount, customNodesMount],
     liveness: Probe.fromHttpGet(N8N_HEALTH_PATH, { port: N8N_HTTP_PORT }),
     readiness: Probe.fromHttpGet(`${N8N_HEALTH_PATH}/readiness`, { port: N8N_HTTP_PORT }),
     startup: n8nStartupProbe(),
