@@ -127,7 +127,7 @@ class StreamableHttpRemoteMcpServer extends RemoteMcpServer {
 }
 
 function remoteMcpServers(): McpServer[] {
-  return [kura.mcpServers.kura(), kura.mcpServers.dmhy(), qbittorrent.mcpServers.qbittorrent()];
+  return [kura.mcpServers.kura(), kura.mcpServers.dmhy(), qbittorrent.mcpServers.qbitBridge()];
 }
 
 function databaseValues() {

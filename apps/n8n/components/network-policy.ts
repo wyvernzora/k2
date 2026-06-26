@@ -54,9 +54,9 @@ export class NetworkPolicy extends K2Chart {
       to: kuraRest.backend,
       ports: kuraRest.ports,
     });
-    new PrivateConnection(this, "n8n-to-qbittorrent-mcp", {
+    new PrivateConnection(this, "n8n-to-qbit-bridge", {
       from: n8n,
-      ...qbittorrent.endpoints.mcp(),
+      ...qbittorrent.endpoints.bridge(),
     });
     new PrivateConnection(this, "n8n-to-pomerium-jwks", {
       from: n8n,

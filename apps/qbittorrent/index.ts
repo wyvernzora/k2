@@ -11,37 +11,47 @@ import {
 
 import { NetworkPolicy } from "./components/network-policy.js";
 import { Qbittorrent } from "./components/qbittorrent/index.js";
-import {
-  FLOOD_HTTP_PORT,
-  QBITTORRENT_LABELS,
-  QBITTORRENT_MCP_PORT,
-  QBITTORRENT_MCP_SERVICE_NAME,
-} from "./constants.js";
+import { FLOOD_HTTP_PORT, QBITTORRENT_LABELS, QBIT_BRIDGE_PORT, QBIT_BRIDGE_SERVICE_NAME } from "./constants.js";
+
+export * from "./lib/n8n-custom-nodes.js";
 
 const QBITTORRENT_NAMESPACE = "qbittorrent";
-const QBITTORRENT_MCP_TOOL_NAMES = ["qbit_add_download", "qbit_search_downloads", "qbit_remove_downloads"];
+const QBIT_BRIDGE_TOOL_NAMES = [
+  "qbit_search_downloads",
+  "qbit_add_download",
+  "qbit_remove_downloads",
+  "qbit_list_tags",
+  "qbit_list_destinations",
+  "qbit_search_subscriptions",
+  "qbit_subscribe",
+  "qbit_unsubscribe",
+];
 
 export const endpoints = {
   web(): BackendTarget {
-    return { backend: qbittorrentEndpoint(), ports: [tcp(FLOOD_HTTP_PORT), tcp(QBITTORRENT_MCP_PORT)] };
+    return { backend: qbittorrentEndpoint(), ports: [tcp(FLOOD_HTTP_PORT), tcp(QBIT_BRIDGE_PORT)] };
+  },
+
+  bridge(): PrivateConnectionTarget {
+    return {
+      to: qbittorrentEndpoint(),
+      ports: [tcp(QBIT_BRIDGE_PORT)],
+    };
   },
 
   mcp(): PrivateConnectionTarget {
-    return {
-      to: qbittorrentEndpoint(),
-      ports: [tcp(QBITTORRENT_MCP_PORT)],
-    };
+    return endpoints.bridge();
   },
 };
 
 export const mcpServers = {
-  qbittorrent(): McpServer {
+  qbitBridge(): McpServer {
     return {
-      name: QBITTORRENT_MCP_SERVICE_NAME,
-      description: "qBittorrent download management MCP server.",
-      url: `http://${QBITTORRENT_MCP_SERVICE_NAME}.${QBITTORRENT_NAMESPACE}.svc.cluster.local/mcp`,
+      name: QBIT_BRIDGE_SERVICE_NAME,
+      description: "qbit-bridge qBittorrent automation MCP server.",
+      url: `http://${QBIT_BRIDGE_SERVICE_NAME}.${QBITTORRENT_NAMESPACE}.svc.cluster.local/mcp`,
       connection: endpoints.mcp(),
-      toolNames: QBITTORRENT_MCP_TOOL_NAMES,
+      toolNames: QBIT_BRIDGE_TOOL_NAMES,
     };
   },
 };

@@ -17,11 +17,11 @@ import dedent from "dedent-js";
 
 import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBITTORRENT_MCP_PORT } from "../../constants.js";
+import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBIT_BRIDGE_PORT } from "../../constants.js";
 
 const QBITTORRENT_IMAGE = "lscr.io/linuxserver/qbittorrent:4.6.7";
 const FLOOD_IMAGE = "jesec/flood:4.14.0";
-const QBITTORRENT_MCP_IMAGE = "ghcr.io/wyvernzora/qbittorrent-mcp:dev";
+const QBIT_BRIDGE_IMAGE = "ghcr.io/wyvernzora/qbit-bridge:dev";
 const PUID = 3005;
 const PGID = 2001;
 const UMASK = "0007";
@@ -56,7 +56,7 @@ export class QbittorrentDeployment extends K2Deployment {
     this.addInitContainer(initDownloadsContainer(volumes, initMount));
     this.addContainer(qbittorrentContainer(volumes));
     this.addContainer(floodContainer(volumes));
-    this.addContainer(qbittorrentMcpContainer());
+    this.addContainer(qbitBridgeContainer());
   }
 }
 
@@ -155,14 +155,14 @@ function floodContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
   };
 }
 
-function qbittorrentMcpContainer(): ContainerProps {
-  const probe = Probe.fromHttpGet("/healthz", { port: QBITTORRENT_MCP_PORT });
+function qbitBridgeContainer(): ContainerProps {
+  const probe = Probe.fromHttpGet("/healthz", { port: QBIT_BRIDGE_PORT });
   return {
-    name: "qbittorrent-mcp",
-    image: QBITTORRENT_MCP_IMAGE,
+    name: "qbit-bridge",
+    image: QBIT_BRIDGE_IMAGE,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
-    args: ["--transport=http", `--addr=:${QBITTORRENT_MCP_PORT}`],
-    ports: [{ name: "mcp", number: QBITTORRENT_MCP_PORT, protocol: Protocol.TCP }],
+    args: ["--transport=http", `--addr=:${QBIT_BRIDGE_PORT}`],
+    ports: [{ name: "http", number: QBIT_BRIDGE_PORT, protocol: Protocol.TCP }],
     envVariables: {
       QBITTORRENT_URL: EnvValue.fromValue(`http://127.0.0.1:${QBITTORRENT_HTTP_PORT}`),
       QBITTORRENT_SAVE_PATHS: EnvValue.fromValue(QBITTORRENT_SAVE_PATHS),

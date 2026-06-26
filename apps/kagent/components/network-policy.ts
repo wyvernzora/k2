@@ -40,9 +40,9 @@ export class NetworkPolicy extends K2Chart {
       from: kagent,
       ...kura.mcpServers.dmhy().connection,
     });
-    new PrivateConnection(this, "kagent-to-qbittorrent-mcp", {
+    new PrivateConnection(this, "kagent-to-qbit-bridge", {
       from: kagent,
-      ...qbittorrent.mcpServers.qbittorrent().connection,
+      ...qbittorrent.mcpServers.qbitBridge().connection,
     });
     new PrivateConnection(this, "kagent-to-postgresql", {
       from: kagent,

@@ -4,7 +4,7 @@ import type { Construct } from "constructs";
 
 import { K2Chart } from "@k2/cdk-lib";
 import { mcpServers as kuraMcpServers } from "@k2/kura";
-import { mcpServers as qbittorrentMcpServers } from "@k2/qbittorrent";
+import { mcpServers as qbitBridgeMcpServers } from "@k2/qbittorrent";
 
 import {
   ANIME_MANAGER_AGENT_NAME,
@@ -49,7 +49,7 @@ export class AnimeManagerAgent extends K2Chart {
           requireApproval: [KURA_RECONCILE_APPLY_TOOL],
         }),
         mcpTool(kuraMcpServers.dmhy(), { toolNames: ["get_magnets"] }),
-        mcpTool(qbittorrentMcpServers.qbittorrent(), {
+        mcpTool(qbitBridgeMcpServers.qbitBridge(), {
           toolNames: [QBIT_ADD_DOWNLOAD_TOOL, "qbit_search_downloads", QBIT_REMOVE_DOWNLOADS_TOOL],
           requireApproval: [QBIT_ADD_DOWNLOAD_TOOL, QBIT_REMOVE_DOWNLOADS_TOOL],
         }),

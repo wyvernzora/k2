@@ -4,10 +4,10 @@ import type { Construct } from "constructs";
 import { ApexDomain, K2Chart, K2Volume } from "@k2/cdk-lib";
 import { AuthenticatedIngress, AuthenticatedMcpIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
 
-import { FLOOD_SERVICE_NAME, QBITTORRENT_MCP_SERVICE_NAME } from "../../constants.js";
+import { FLOOD_SERVICE_NAME, QBIT_BRIDGE_SERVICE_NAME } from "../../constants.js";
 
 import { QbittorrentDeployment } from "./deployment.js";
-import { FloodService, QbittorrentMcpService, QbittorrentService } from "./service.js";
+import { FloodService, QbitBridgeService, QbittorrentService } from "./service.js";
 
 const DOWNLOAD_HOST_PREFIX = "dl";
 
@@ -25,7 +25,7 @@ export class Qbittorrent extends K2Chart {
     });
     new FloodService(this, "flood-service");
     new QbittorrentService(this, "qbittorrent-service");
-    new QbittorrentMcpService(this, "qbittorrent-mcp-service");
+    new QbitBridgeService(this, "qbit-bridge-service");
     new AuthenticatedIngress(this, "flood-ingress", {
       host,
       serviceName: FLOOD_SERVICE_NAME,
@@ -36,8 +36,8 @@ export class Qbittorrent extends K2Chart {
       host,
       path: "/mcp",
       mcpPath: "/mcp",
-      serviceName: QBITTORRENT_MCP_SERVICE_NAME,
-      servicePort: "mcp",
+      serviceName: QBIT_BRIDGE_SERVICE_NAME,
+      servicePort: "http",
       policy: authenticatedSourceIpPolicy(),
     });
   }
