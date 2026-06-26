@@ -46,6 +46,1788 @@ spec:
       type: Opaque
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Applications
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-scrape-targets
+  namespace: prometheus
+data:
+  k2-scrape-targets.json: |-
+    {
+      "editable": true,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+        "k2"
+      ],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "K2 / Scrape Targets",
+      "uid": "k2-scrape-targets",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(up)",
+              "refId": "A"
+            }
+          ],
+          "title": "Scrape targets up",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(up == 0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Scrape targets down",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(scrape_samples_scraped[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "Scraped samples / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "avg(scrape_duration_seconds)",
+              "refId": "A"
+            }
+          ],
+          "title": "Avg scrape duration",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (namespace, job) (up)",
+              "legendFormat": "{{namespace}} / {{job}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Target health by job",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (namespace, job) (rate(scrape_samples_scraped[$__rate_interval]))",
+              "legendFormat": "{{namespace}} / {{job}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Scraped samples by job",
+          "type": "timeseries"
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Applications
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-argocd
+  namespace: prometheus
+data:
+  k2-argocd.json: |-
+    {
+      "editable": true,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+        "k2"
+      ],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "K2 / Argo CD",
+      "uid": "k2-argocd",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(argocd_app_info)",
+              "refId": "A"
+            }
+          ],
+          "title": "Applications",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(argocd_app_sync_status{sync_status!=\"Synced\"})",
+              "refId": "A"
+            }
+          ],
+          "title": "Out of sync",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(argocd_app_health_status{health_status!=\"Healthy\"})",
+              "refId": "A"
+            }
+          ],
+          "title": "Unhealthy",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(argocd_app_reconcile_count[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "Reconciles / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (namespace, name) (rate(argocd_app_reconcile_count[$__rate_interval]))",
+              "legendFormat": "{{namespace}} / {{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Reconcile rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (phase) (rate(argocd_app_sync_total[$__rate_interval]))",
+              "legendFormat": "{{phase}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Sync operations",
+          "type": "timeseries"
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Networking
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-dns
+  namespace: prometheus
+data:
+  k2-dns.json: |-
+    {
+      "editable": true,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+        "k2"
+      ],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "K2 / DNS",
+      "uid": "k2-dns",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(blocky_query_total[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "DNS queries / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(blocky_error_total[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "DNS errors / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(blocky_cache_hits_total[$__rate_interval])) / clamp_min(sum(rate(blocky_cache_hits_total[$__rate_interval])) + sum(rate(blocky_cache_misses_total[$__rate_interval])), 1)",
+              "refId": "A"
+            }
+          ],
+          "title": "Cache hit ratio",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(blocky_response_total{response_type=\"BLOCKED\"}[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "Blocked responses / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (type) (rate(blocky_query_total[$__rate_interval]))",
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "title": "DNS query volume",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (response_type) (rate(blocky_response_total[$__rate_interval]))",
+              "legendFormat": "{{response_type}}",
+              "refId": "A"
+            }
+          ],
+          "title": "DNS response volume",
+          "type": "timeseries"
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Security
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-security-controllers
+  namespace: prometheus
+data:
+  k2-security-controllers.json: |-
+    {
+      "editable": true,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+        "k2"
+      ],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "K2 / Certificates and Secrets",
+      "uid": "k2-security-controllers",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(certmanager_certificate_ready_status{condition=\"True\"})",
+              "refId": "A"
+            }
+          ],
+          "title": "Ready certificates",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(certmanager_controller_sync_error_count[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "Certificate sync errors / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(externalsecret_sync_calls_total[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "ExternalSecret syncs / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(externalsecret_sync_calls_error[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "ExternalSecret errors / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "d"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "(certmanager_certificate_expiration_timestamp_seconds - time()) / 86400",
+              "legendFormat": "{{namespace}} / {{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Certificate expiration",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (namespace, name, condition, status) (externalsecret_status_condition)",
+              "legendFormat": "{{namespace}} / {{name}} {{condition}}={{status}}",
+              "refId": "A"
+            }
+          ],
+          "title": "ExternalSecret status",
+          "type": "timeseries"
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Networking
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-networking
+  namespace: prometheus
+data:
+  k2-networking.json: |-
+    {
+      "editable": true,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+        "k2"
+      ],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "K2 / Cilium and Pomerium",
+      "uid": "k2-networking",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(cilium_operator_errors_warnings_total[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "Cilium operator warnings / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(cilium_operator_lbipam_ips_used)",
+              "refId": "A"
+            }
+          ],
+          "title": "LB IPs used",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(cilium_operator_lbipam_ips_available)",
+              "refId": "A"
+            }
+          ],
+          "title": "LB IPs available",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(envoy_cluster_upstream_rq_total[$__rate_interval]))",
+              "refId": "A"
+            }
+          ],
+          "title": "Pomerium upstream req / sec",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (name) (cilium_k8s_workqueue_depth)",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Cilium workqueue depth",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (envoy_response_code_class) (rate(envoy_cluster_upstream_rq_xx[$__rate_interval]))",
+              "legendFormat": "{{envoy_response_code_class}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Pomerium upstream responses",
+          "type": "timeseries"
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Storage
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-storage-databases
+  namespace: prometheus
+data:
+  k2-storage-databases.json: |-
+    {
+      "editable": true,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+        "k2"
+      ],
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "K2 / Storage and Databases",
+      "uid": "k2-storage-databases",
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "count(longhorn_volume_state)",
+              "refId": "A"
+            }
+          ],
+          "title": "Longhorn volumes",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(longhorn_node_status{condition=\"Ready\",status=\"True\"})",
+              "refId": "A"
+            }
+          ],
+          "title": "Longhorn nodes ready",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(cnpg_collector_up)",
+              "refId": "A"
+            }
+          ],
+          "title": "Postgres collectors up",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(cnpg_pg_database_size_bytes)",
+              "refId": "A"
+            }
+          ],
+          "title": "Postgres DB size",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 4
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (volume) (longhorn_volume_read_throughput)",
+              "legendFormat": "{{volume}} read",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (volume) (longhorn_volume_write_throughput)",
+              "legendFormat": "{{volume}} write",
+              "refId": "B"
+            }
+          ],
+          "title": "Longhorn volume throughput",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (datname) (rate(cnpg_pg_stat_database_xact_commit[$__rate_interval]))",
+              "legendFormat": "{{datname}} commits",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (datname) (rate(cnpg_pg_stat_database_xact_rollback[$__rate_interval]))",
+              "legendFormat": "{{datname}} rollbacks",
+              "refId": "B"
+            }
+          ],
+          "title": "Postgres transactions",
+          "type": "timeseries"
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -192,14 +1974,12 @@ data:
     providers:
       - name: 'sidecarProvider'
         orgId: 1
-        folder: ''
-        folderUid: ''
         type: file
         disableDeletion: false
         allowUiUpdates: false
         updateIntervalSeconds: 30
         options:
-          foldersFromFilesStructure: false
+          foldersFromFilesStructure: true
           path: /tmp/dashboards
 ---
 apiVersion: v1
@@ -280,6 +2060,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -300,6 +2082,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -320,6 +2104,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -340,6 +2126,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -360,6 +2148,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -380,6 +2170,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -400,6 +2192,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -420,6 +2214,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -440,6 +2236,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -460,6 +2258,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -480,6 +2280,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -500,6 +2302,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -520,6 +2324,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -540,6 +2346,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -560,6 +2368,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -580,6 +2390,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -600,6 +2412,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -620,6 +2434,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -640,6 +2456,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -660,6 +2478,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -680,6 +2500,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -700,6 +2522,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -720,6 +2544,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -740,6 +2566,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -760,6 +2588,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -780,6 +2610,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -800,6 +2632,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -820,6 +2654,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: prometheus
@@ -1812,7 +3648,7 @@ spec:
     metadata:
       annotations:
         checksum/config: aa0f89ec3a0ed58b888522876142db2c0c013d109f42687635c31d3ed9e8afde
-        checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
+        checksum/sc-dashboard-provider-config: 81f722b8194d01e4a84ce12a0cbbe9b705b2d9145719c803ac264b4786c64a09
         kubectl.kubernetes.io/default-container: grafana
       labels:
         app.kubernetes.io/instance: prometheus
@@ -1835,6 +3671,8 @@ spec:
               value: both
             - name: NAMESPACE
               value: ALL
+            - name: FOLDER_ANNOTATION
+              value: k8s-sidecar-target-directory
             - name: REQ_USERNAME
               valueFrom:
                 secretKeyRef:
