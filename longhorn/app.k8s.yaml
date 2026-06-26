@@ -1014,6 +1014,49 @@ specs:
               - port: "8000"
                 protocol: TCP
 ---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: longhorn
+    k2.wyvernzora.io/component: network-policy
+  name: longhorn-longhorn-cluster-access
+specs:
+  - egress:
+      - toEntities:
+          - cluster
+      - toEntities:
+          - host
+      - toEntities:
+          - remote-node
+      - toEntities:
+          - kube-apiserver
+      - toEndpoints:
+          - matchLabels:
+              k8s-app: kube-dns
+              k8s:io.kubernetes.pod.namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+            rules:
+              dns:
+                - matchPattern: "*"
+      - toCIDR:
+          - 10.10.8.1/32
+    endpointSelector:
+      matchLabels:
+        k8s:io.kubernetes.pod.namespace: longhorn
+    ingress:
+      - fromEntities:
+          - cluster
+      - fromEntities:
+          - host
+      - fromEntities:
+          - remote-node
+---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
