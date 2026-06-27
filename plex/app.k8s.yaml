@@ -460,6 +460,14 @@ specs:
                 protocol: TCP
               - port: "32400"
                 protocol: TCP
+      - fromEntities:
+          - remote-node
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+              - port: "32400"
+                protocol: TCP
     ingressDeny:
       - fromEndpoints:
           - matchLabels:
