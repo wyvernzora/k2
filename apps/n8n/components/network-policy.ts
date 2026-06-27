@@ -8,7 +8,7 @@ import { AllowPomeriumToBackend, workloads as pomeriumWorkloads } from "@k2/pome
 import * as qbittorrent from "@k2/qbittorrent";
 import * as takuhai from "@k2/takuhai";
 
-import { N8N_HTTP_PORT, N8N_LABELS } from "./n8n/labels.js";
+import { N8N_ACP_AUTH_PORT, N8N_HTTP_PORT, N8N_LABELS } from "./n8n/labels.js";
 
 const POSTGRES_PORT = 5432;
 const POMERIUM_JWKS_PORT = 443;
@@ -29,6 +29,10 @@ export class NetworkPolicy extends K2Chart {
     new AllowPomeriumToBackend(this, "pomerium-to-n8n", {
       backend: n8n,
       ports: [tcp(N8N_HTTP_PORT)],
+    });
+    new AllowPomeriumToBackend(this, "pomerium-to-n8n-acp-auth", {
+      backend: n8n,
+      ports: [tcp(N8N_ACP_AUTH_PORT)],
     });
     new PrivateConnection(this, "n8n-to-postgresql", {
       from: n8n,

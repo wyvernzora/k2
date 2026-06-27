@@ -39,5 +39,13 @@ export class N8N extends K2Chart {
       policy: authenticatedSourceIpPolicy(),
       preserveHostHeader: true,
     });
+    new AuthenticatedIngress(this, "acp-auth-ingress", {
+      host,
+      path: "/acp",
+      serviceName: N8N_SERVICE_NAME,
+      servicePort: "acp-auth",
+      policy: authenticatedSourceIpPolicy(),
+      preserveHostHeader: true,
+    });
   }
 }
