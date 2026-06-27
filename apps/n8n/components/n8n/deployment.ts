@@ -24,8 +24,11 @@ import * as takuhai from "@k2/takuhai";
 import { N8N_HTTP_PORT, N8N_LABELS } from "./labels.js";
 
 const N8N_IMAGE = "n8nio/n8n:2.20.6";
+const N8N_ACP_HARNESS_OPENCODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/harness-opencode:dev";
 const N8N_PROXY_AUTH_HOOK_IMAGE = "ghcr.io/wyvernzora/n8n-proxy-auth-hook:v0.1.0";
 const APPDATA_MOUNT_PATH = "/home/node/.n8n";
+const OPENCODE_ACP_HOST = "127.0.0.1";
+const OPENCODE_ACP_PORT = 8080;
 const PROXY_AUTH_HOOK_VOLUME_NAME = "proxy-auth-hook";
 const PROXY_AUTH_HOOK_INSTALL_PATH = "/out";
 const PROXY_AUTH_HOOK_MOUNT_PATH = "/opt/proxy-auth";
@@ -78,6 +81,7 @@ export class N8NDeployment extends K2Deployment {
       path: PROXY_AUTH_HOOK_MOUNT_PATH,
       readOnly: true,
     };
+    const opencodeAcpHarnessMounts = opencodeAcpHarnessVolumeMounts(this);
     const customNodesMount: VolumeMount = {
       volume: customNodesVolume,
       path: CUSTOM_NODES_MOUNT_PATH,
@@ -117,6 +121,7 @@ export class N8NDeployment extends K2Deployment {
         customNodesMount,
       ),
     );
+    this.addContainer(opencodeAcpHarnessContainer(opencodeAcpHarnessMounts));
   }
 }
 
@@ -164,6 +169,9 @@ function n8nContainer(
       N8N_RUNNERS_ENABLED: EnvValue.fromValue("true"),
       N8N_CUSTOM_EXTENSIONS: EnvValue.fromValue(CUSTOM_NODES_MOUNT_PATH),
       N8N_ENDPOINT_HEALTH: EnvValue.fromValue(N8N_HEALTH_PATH),
+      OPENCODE_ACP_HOST: EnvValue.fromValue(OPENCODE_ACP_HOST),
+      OPENCODE_ACP_PORT: EnvValue.fromValue(String(OPENCODE_ACP_PORT)),
+      OPENCODE_ACP_ADDRESS: EnvValue.fromValue(`${OPENCODE_ACP_HOST}:${OPENCODE_ACP_PORT}`),
       N8N_USER_MANAGEMENT_JWT_SECRET: userManagementSecret.envValue("jwtSecret"),
       N8N_PROXY_HOPS: EnvValue.fromValue("1"),
       EXTERNAL_HOOK_FILES: EnvValue.fromValue(PROXY_AUTH_HOOK_FILE),
@@ -211,6 +219,43 @@ function n8nContainer(
   };
 }
 
+function opencodeAcpHarnessContainer(volumeMounts: VolumeMount[]): ContainerProps {
+  return {
+    name: "harness-opencode",
+    image: N8N_ACP_HARNESS_OPENCODE_IMAGE,
+    imagePullPolicy: ImagePullPolicy.ALWAYS,
+    ports: [{ name: "acp", number: OPENCODE_ACP_PORT, protocol: Protocol.TCP }],
+    envVariables: {
+      ACP_HOST: EnvValue.fromValue(OPENCODE_ACP_HOST),
+      ACP_PORT: EnvValue.fromValue(String(OPENCODE_ACP_PORT)),
+    },
+    volumeMounts,
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(2000),
+      },
+      memory: {
+        request: Size.mebibytes(128),
+        limit: Size.gibibytes(2),
+      },
+      ephemeralStorage: {
+        limit: Size.gibibytes(4),
+      },
+    },
+    securityContext: {
+      capabilities: {
+        drop: [Capability.ALL],
+      },
+      user: 10001,
+      group: 10001,
+      allowPrivilegeEscalation: false,
+      ensureNonRoot: true,
+      readOnlyRootFilesystem: true,
+    },
+  };
+}
+
 function initResources(): ContainerProps["resources"] {
   return {
     cpu: {
@@ -231,4 +276,39 @@ function n8nStartupProbe(): Probe {
     periodSeconds: Duration.seconds(10),
     timeoutSeconds: Duration.seconds(5),
   });
+}
+
+function opencodeAcpHarnessVolumeMounts(scope: Construct): VolumeMount[] {
+  return [
+    {
+      volume: Volume.fromEmptyDir(scope, "opencode-workspace-volume", "opencode-workspace", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/workspace",
+    },
+    {
+      volume: Volume.fromEmptyDir(scope, "opencode-data-volume", "opencode-data", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/home/opencode/.local/share",
+    },
+    {
+      volume: Volume.fromEmptyDir(scope, "opencode-state-volume", "opencode-state", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/home/opencode/.local/state",
+    },
+    {
+      volume: Volume.fromEmptyDir(scope, "opencode-cache-volume", "opencode-cache", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/home/opencode/.cache",
+    },
+    {
+      volume: Volume.fromEmptyDir(scope, "opencode-tmp-volume", "opencode-tmp", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/tmp/opencode",
+    },
+  ];
 }
