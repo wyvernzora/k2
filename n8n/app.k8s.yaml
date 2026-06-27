@@ -168,6 +168,12 @@ spec:
               value: /opt/n8n/custom
             - name: N8N_ENDPOINT_HEALTH
               value: /n8n-healthz
+            - name: OPENCODE_ACP_HOST
+              value: 127.0.0.1
+            - name: OPENCODE_ACP_PORT
+              value: "8080"
+            - name: OPENCODE_ACP_ADDRESS
+              value: 127.0.0.1:8080
             - name: N8N_USER_MANAGEMENT_JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -274,6 +280,47 @@ spec:
             - mountPath: /opt/n8n/custom
               name: n8n-custom-nodes
               readOnly: true
+        - env:
+            - name: ACP_HOST
+              value: 127.0.0.1
+            - name: ACP_PORT
+              value: "8080"
+          image: ghcr.io/wyvernzora/n8n-acp/harness-opencode:dev
+          imagePullPolicy: Always
+          name: harness-opencode
+          ports:
+            - containerPort: 8080
+              name: acp
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 2000m
+              ephemeral-storage: 4Gi
+              memory: 2048Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /workspace
+              name: opencode-workspace
+            - mountPath: /home/opencode/.local/share
+              name: opencode-data
+            - mountPath: /home/opencode/.local/state
+              name: opencode-state
+            - mountPath: /home/opencode/.cache
+              name: opencode-cache
+            - mountPath: /tmp/opencode
+              name: opencode-tmp
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
       hostNetwork: false
@@ -390,6 +437,21 @@ spec:
         - emptyDir:
             sizeLimit: 32Mi
           name: n8n-custom-nodes
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: opencode-workspace
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: opencode-data
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: opencode-state
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: opencode-cache
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: opencode-tmp
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
