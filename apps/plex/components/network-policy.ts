@@ -22,7 +22,7 @@ export class NetworkPolicy extends K2Chart {
       ingress: [
         ...ingress.fromCidrs(plexClientCidrs, tcp(PLEX_CADDY_PORT)),
         ...ingress.fromWorld(tcp(PLEX_CADDY_PORT)),
-        ...ingress.fromHost(tcp(PLEX_CADDY_PORT), tcp(PLEX_HTTP_PORT)),
+        ...ingress.fromNodes(tcp(PLEX_CADDY_PORT), tcp(PLEX_HTTP_PORT)),
       ],
       ingressDeny: [
         {
