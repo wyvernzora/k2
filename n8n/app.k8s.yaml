@@ -285,12 +285,23 @@ spec:
               value: 127.0.0.1
             - name: ACP_PORT
               value: "8080"
+            - name: ACP_AUTH_HOST
+              value: 0.0.0.0
+            - name: ACP_AUTH_PORT
+              value: "8081"
+            - name: ACP_AUTH_PUBLIC_URL
+              value: https://n8n.wyvernzora.io/acp
+            - name: ACP_AUTH_PATH_PREFIX
+              value: /acp
           image: ghcr.io/wyvernzora/n8n-acp/harness-opencode:dev
           imagePullPolicy: Always
           name: harness-opencode
           ports:
             - containerPort: 8080
               name: acp
+              protocol: TCP
+            - containerPort: 8081
+              name: auth-http
               protocol: TCP
           resources:
             limits:
@@ -307,14 +318,15 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-            runAsGroup: 10001
+            runAsGroup: 1000
             runAsNonRoot: true
             runAsUser: 10001
           volumeMounts:
             - mountPath: /workspace
               name: opencode-workspace
             - mountPath: /home/opencode/.local/share
-              name: opencode-data
+              name: pvc-n8n-appdata
+              subPath: opencode-data
             - mountPath: /home/opencode/.local/state
               name: opencode-state
             - mountPath: /home/opencode/.cache
@@ -442,9 +454,6 @@ spec:
           name: opencode-workspace
         - emptyDir:
             sizeLimit: 1024Mi
-          name: opencode-data
-        - emptyDir:
-            sizeLimit: 1024Mi
           name: opencode-state
         - emptyDir:
             sizeLimit: 1024Mi
@@ -484,6 +493,9 @@ spec:
     - name: http
       port: 80
       targetPort: 5678
+    - name: acp-auth
+      port: 8081
+      targetPort: 8081
   selector:
     app.kubernetes.io/component: automation
     app.kubernetes.io/name: n8n
@@ -517,6 +529,37 @@ spec:
                 port:
                   name: http
             path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - n8n.wyvernzora.io
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+    ingress.pomerium.io/preserve_host_header: "true"
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: acp-auth-ingress
+  namespace: n8n
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: n8n.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: n8n
+                port:
+                  name: acp-auth
+            path: /acp
             pathType: Prefix
   tls:
     - hosts:
@@ -597,6 +640,47 @@ specs:
         toPorts:
           - ports:
               - port: "5678"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-n8n-pomerium-to-n8n-acp-auth
+specs:
+  - description: pomerium to n8n
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: automation
+              app.kubernetes.io/name: n8n
+              k8s:io.kubernetes.pod.namespace: n8n
+        toPorts:
+          - ports:
+              - port: "8081"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to n8n
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: automation
+        app.kubernetes.io/name: n8n
+        k8s:io.kubernetes.pod.namespace: n8n
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8081"
                 protocol: TCP
 ---
 apiVersion: cilium.io/v2
