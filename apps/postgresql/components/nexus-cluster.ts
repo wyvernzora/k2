@@ -50,7 +50,7 @@ function nexusClusterSpec(): ClusterSpec {
   const name = NEXUS_CLUSTER_NAME;
   return {
     instances: 3,
-    imageName: "ghcr.io/cloudnative-pg/postgresql:17.9-standard-bookworm",
+    imageName: "ghcr.io/cloudnative-pg/postgresql:17.10-standard-bookworm",
     enableSuperuserAccess: true,
     storage: volumeStorage(),
     walStorage: volumeStorage(),
