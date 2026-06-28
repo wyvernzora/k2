@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.25
 
 ARG BASE_IMAGE=ubuntu:24.04
 ARG KAIROS_INIT_VERSION=v0.13.1
