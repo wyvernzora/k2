@@ -25,7 +25,7 @@ import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js
 
 import { metadata } from "./metadata.js";
 
-const POMERIUM_IMAGE = "pomerium/ingress-controller:v0.32.8";
+const POMERIUM_IMAGE = "pomerium/ingress-controller:v0.32.9";
 const TMP_VOLUME_NAME = "tmp";
 
 export function createWorkloads(
