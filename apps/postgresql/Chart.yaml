@@ -4,7 +4,7 @@ version: 1.0.0
 dependencies:
   - name: cloudnative-pg
     repository: https://cloudnative-pg.github.io/charts
-    version: 0.28.2
+    version: 0.28.3
   - name: dbclaim-operator
     repository: oci://ghcr.io/wyvernzora/charts
     version: 0.3.1
