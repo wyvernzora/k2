@@ -23,7 +23,7 @@ import * as takuhai from "@k2/takuhai";
 
 import { N8N_HTTP_PORT, N8N_LABELS } from "./labels.js";
 
-const N8N_IMAGE = "n8nio/n8n:2.20.6";
+const N8N_IMAGE = "n8nio/n8n:2.27.4";
 const N8N_ACP_NODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/node:dev";
 const N8N_ACP_OPENCODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/opencode:dev";
 const N8N_ACP_CODEX_IMAGE = "ghcr.io/wyvernzora/n8n-acp/codex:dev";
