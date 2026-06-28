@@ -21,15 +21,18 @@ import * as kura from "@k2/kura";
 import * as qbittorrent from "@k2/qbittorrent";
 import * as takuhai from "@k2/takuhai";
 
-import { N8N_ACP_AUTH_PORT, N8N_HTTP_PORT, N8N_LABELS } from "./labels.js";
+import { N8N_HTTP_PORT, N8N_LABELS } from "./labels.js";
 
 const N8N_IMAGE = "n8nio/n8n:2.20.6";
-const N8N_ACP_HARNESS_OPENCODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/harness-opencode:dev";
+const N8N_ACP_NODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/node:dev";
+const N8N_ACP_OPENCODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/opencode:dev";
+const N8N_ACP_CODEX_IMAGE = "ghcr.io/wyvernzora/n8n-acp/codex:dev";
 const N8N_PROXY_AUTH_HOOK_IMAGE = "ghcr.io/wyvernzora/n8n-proxy-auth-hook:v0.1.0";
 const APPDATA_MOUNT_PATH = "/home/node/.n8n";
 const OPENCODE_ACP_HOST = "127.0.0.1";
 const OPENCODE_ACP_PORT = 8080;
-const OPENCODE_ACP_AUTH_PATH_PREFIX = "/acp";
+const CODEX_ACP_HOST = "127.0.0.1";
+const CODEX_ACP_PORT = 8081;
 const PROXY_AUTH_HOOK_VOLUME_NAME = "proxy-auth-hook";
 const PROXY_AUTH_HOOK_INSTALL_PATH = "/out";
 const PROXY_AUTH_HOOK_MOUNT_PATH = "/opt/proxy-auth";
@@ -83,6 +86,7 @@ export class N8NDeployment extends K2Deployment {
       readOnly: true,
     };
     const opencodeAcpHarnessMounts = opencodeAcpHarnessVolumeMounts(this, volumes);
+    const codexAcpHarnessMounts = codexAcpHarnessVolumeMounts(this, volumes);
     const customNodesMount: VolumeMount = {
       volume: customNodesVolume,
       path: CUSTOM_NODES_MOUNT_PATH,
@@ -90,6 +94,7 @@ export class N8NDeployment extends K2Deployment {
     };
 
     this.addInitContainer(proxyAuthHookInitContainer(proxyAuthHookInstallMount));
+    this.addInitContainer(acpNodeInitContainer({ volume: customNodesVolume, path: CUSTOM_NODES_MOUNT_PATH }));
     this.addInitContainer(
       takuhai.n8nCustomNodesInitContainer({
         volume: customNodesVolume,
@@ -122,12 +127,8 @@ export class N8NDeployment extends K2Deployment {
         customNodesMount,
       ),
     );
-    this.addContainer(
-      opencodeAcpHarnessContainer(
-        opencodeAcpHarnessMounts,
-        new URL(OPENCODE_ACP_AUTH_PATH_PREFIX, props.appUrl).toString(),
-      ),
-    );
+    this.addContainer(opencodeAcpHarnessContainer(opencodeAcpHarnessMounts));
+    this.addContainer(codexAcpHarnessContainer(codexAcpHarnessMounts));
   }
 }
 
@@ -137,6 +138,31 @@ function proxyAuthHookInitContainer(proxyAuthHookMount: VolumeMount): ContainerP
     image: N8N_PROXY_AUTH_HOOK_IMAGE,
     imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
     volumeMounts: [proxyAuthHookMount],
+    resources: initResources(),
+    securityContext: {
+      capabilities: {
+        drop: [Capability.ALL],
+      },
+      ensureNonRoot: false,
+      readOnlyRootFilesystem: true,
+    },
+  };
+}
+
+interface AcpNodeInitContainerProps {
+  readonly volume: Volume;
+  readonly path: string;
+}
+
+function acpNodeInitContainer(props: AcpNodeInitContainerProps): ContainerProps {
+  return {
+    name: "install-acp-agent-node",
+    image: N8N_ACP_NODE_IMAGE,
+    imagePullPolicy: ImagePullPolicy.ALWAYS,
+    envVariables: {
+      N8N_ACP_NODES_TARGET: EnvValue.fromValue(props.path),
+    },
+    volumeMounts: [{ volume: props.volume, path: props.path }],
     resources: initResources(),
     securityContext: {
       capabilities: {
@@ -178,6 +204,11 @@ function n8nContainer(
       OPENCODE_ACP_HOST: EnvValue.fromValue(OPENCODE_ACP_HOST),
       OPENCODE_ACP_PORT: EnvValue.fromValue(String(OPENCODE_ACP_PORT)),
       OPENCODE_ACP_ADDRESS: EnvValue.fromValue(`${OPENCODE_ACP_HOST}:${OPENCODE_ACP_PORT}`),
+      OPENCODE_ACP_URL: EnvValue.fromValue(`tcp://${OPENCODE_ACP_HOST}:${OPENCODE_ACP_PORT}`),
+      CODEX_ACP_HOST: EnvValue.fromValue(CODEX_ACP_HOST),
+      CODEX_ACP_PORT: EnvValue.fromValue(String(CODEX_ACP_PORT)),
+      CODEX_ACP_ADDRESS: EnvValue.fromValue(`${CODEX_ACP_HOST}:${CODEX_ACP_PORT}`),
+      CODEX_ACP_URL: EnvValue.fromValue(`tcp://${CODEX_ACP_HOST}:${CODEX_ACP_PORT}`),
       N8N_USER_MANAGEMENT_JWT_SECRET: userManagementSecret.envValue("jwtSecret"),
       N8N_PROXY_HOPS: EnvValue.fromValue("1"),
       EXTERNAL_HOOK_FILES: EnvValue.fromValue(PROXY_AUTH_HOOK_FILE),
@@ -225,22 +256,15 @@ function n8nContainer(
   };
 }
 
-function opencodeAcpHarnessContainer(volumeMounts: VolumeMount[], authPublicUrl: string): ContainerProps {
+function opencodeAcpHarnessContainer(volumeMounts: VolumeMount[]): ContainerProps {
   return {
     name: "harness-opencode",
-    image: N8N_ACP_HARNESS_OPENCODE_IMAGE,
+    image: N8N_ACP_OPENCODE_IMAGE,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
-    ports: [
-      { name: "acp", number: OPENCODE_ACP_PORT, protocol: Protocol.TCP },
-      { name: "auth-http", number: N8N_ACP_AUTH_PORT, protocol: Protocol.TCP },
-    ],
+    ports: [{ name: "opencode-acp", number: OPENCODE_ACP_PORT, protocol: Protocol.TCP }],
     envVariables: {
       ACP_HOST: EnvValue.fromValue(OPENCODE_ACP_HOST),
       ACP_PORT: EnvValue.fromValue(String(OPENCODE_ACP_PORT)),
-      ACP_AUTH_HOST: EnvValue.fromValue("0.0.0.0"),
-      ACP_AUTH_PORT: EnvValue.fromValue(String(N8N_ACP_AUTH_PORT)),
-      ACP_AUTH_PUBLIC_URL: EnvValue.fromValue(authPublicUrl),
-      ACP_AUTH_PATH_PREFIX: EnvValue.fromValue(OPENCODE_ACP_AUTH_PATH_PREFIX),
     },
     volumeMounts,
     resources: {
@@ -261,7 +285,44 @@ function opencodeAcpHarnessContainer(volumeMounts: VolumeMount[], authPublicUrl:
         drop: [Capability.ALL],
       },
       user: 10001,
-      group: 1000,
+      group: 10001,
+      allowPrivilegeEscalation: false,
+      ensureNonRoot: true,
+      readOnlyRootFilesystem: true,
+    },
+  };
+}
+
+function codexAcpHarnessContainer(volumeMounts: VolumeMount[]): ContainerProps {
+  return {
+    name: "harness-codex",
+    image: N8N_ACP_CODEX_IMAGE,
+    imagePullPolicy: ImagePullPolicy.ALWAYS,
+    ports: [{ name: "codex-acp", number: CODEX_ACP_PORT, protocol: Protocol.TCP }],
+    envVariables: {
+      ACP_HOST: EnvValue.fromValue(CODEX_ACP_HOST),
+      ACP_PORT: EnvValue.fromValue(String(CODEX_ACP_PORT)),
+    },
+    volumeMounts,
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(2000),
+      },
+      memory: {
+        request: Size.mebibytes(128),
+        limit: Size.gibibytes(2),
+      },
+      ephemeralStorage: {
+        limit: Size.gibibytes(4),
+      },
+    },
+    securityContext: {
+      capabilities: {
+        drop: [Capability.ALL],
+      },
+      user: 10001,
+      group: 10001,
       allowPrivilegeEscalation: false,
       ensureNonRoot: true,
       readOnlyRootFilesystem: true,
@@ -299,24 +360,30 @@ function opencodeAcpHarnessVolumeMounts(scope: Construct, volumes: K2Mounters<K2
       }),
       path: "/workspace",
     },
-    volumes.appdata("/home/opencode/.local/share", { subPath: "opencode-data" }),
-    {
-      volume: Volume.fromEmptyDir(scope, "opencode-state-volume", "opencode-state", {
-        sizeLimit: Size.gibibytes(1),
-      }),
-      path: "/home/opencode/.local/state",
-    },
-    {
-      volume: Volume.fromEmptyDir(scope, "opencode-cache-volume", "opencode-cache", {
-        sizeLimit: Size.gibibytes(1),
-      }),
-      path: "/home/opencode/.cache",
-    },
+    volumes.opencodeHome("/home/opencode"),
     {
       volume: Volume.fromEmptyDir(scope, "opencode-tmp-volume", "opencode-tmp", {
         sizeLimit: Size.gibibytes(1),
       }),
       path: "/tmp/opencode",
+    },
+  ];
+}
+
+function codexAcpHarnessVolumeMounts(scope: Construct, volumes: K2Mounters<K2Volumes>): VolumeMount[] {
+  return [
+    {
+      volume: Volume.fromEmptyDir(scope, "codex-workspace-volume", "codex-workspace", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/workspace",
+    },
+    volumes.codexHome("/home/codex"),
+    {
+      volume: Volume.fromEmptyDir(scope, "codex-tmp-volume", "codex-tmp", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/tmp/codex",
     },
   ];
 }

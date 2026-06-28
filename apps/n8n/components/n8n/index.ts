@@ -27,6 +27,8 @@ export class N8N extends K2Chart {
       userManagementSecretName: secret.userManagementSecretName,
       volumes: {
         appdata: K2Volume.replicated({ name: "n8n-appdata", size: Size.gibibytes(4) }),
+        opencodeHome: K2Volume.replicated({ name: "n8n-opencode-home", size: Size.gibibytes(1) }),
+        codexHome: K2Volume.replicated({ name: "n8n-codex-home", size: Size.gibibytes(1) }),
       },
     });
     new N8NService(this, "service");
@@ -36,14 +38,6 @@ export class N8N extends K2Chart {
       servicePort: "http",
       allowWebsockets: true,
       passIdentityHeaders: true,
-      policy: authenticatedSourceIpPolicy(),
-      preserveHostHeader: true,
-    });
-    new AuthenticatedIngress(this, "acp-auth-ingress", {
-      host,
-      path: "/acp",
-      serviceName: N8N_SERVICE_NAME,
-      servicePort: "acp-auth",
       policy: authenticatedSourceIpPolicy(),
       preserveHostHeader: true,
     });
