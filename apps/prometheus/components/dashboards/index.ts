@@ -100,6 +100,7 @@ function dashboards(): DashboardSpec[] {
         "ops",
       ),
     ]),
+    takuhaiDashboard(),
     dashboard("k2-dns", "Networking", "K2 / DNS", [
       stat(1, "DNS queries / sec", "sum(rate(blocky_query_total[$__rate_interval]))", 0, 0, "ops"),
       stat(2, "DNS errors / sec", "sum(rate(blocky_error_total[$__rate_interval]))", 6, 0, "ops"),
@@ -268,6 +269,155 @@ function dashboards(): DashboardSpec[] {
       ),
     ]),
   ];
+}
+
+function takuhaiDashboard(): DashboardSpec {
+  return dashboard("takuhai-overview", "Applications", "Takuhai", [
+    stat(1, "Claimable Releases", 'takuhai_queue_items{state="claimable"}', 0, 0, "short"),
+    stat(2, "Exhausted Releases", 'takuhai_queue_items{state="exhausted"}', 6, 0, "short"),
+    stat(3, "Known Releases", "takuhai_catalog_infohashes", 12, 0, "short"),
+    stat(4, "Matched Refs", "takuhai_catalog_refs", 18, 0, "short"),
+    timeSeries(
+      5,
+      "Submission Rate",
+      [
+        {
+          expr: "sum by (status, result) (rate(takuhai_submit_total[$__rate_interval]))",
+          legendFormat: "{{status}} {{result}}",
+        },
+      ],
+      0,
+      4,
+      "ops",
+    ),
+    timeSeries(6, "Queue State", [{ expr: "takuhai_queue_items", legendFormat: "{{state}}" }], 0, 12),
+    timeSeries(
+      7,
+      "Submission Confidence Quantiles",
+      [
+        {
+          expr: "histogram_quantile(0.5, sum by (le, status) (rate(takuhai_submit_confidence_bucket[$__rate_interval])))",
+          legendFormat: "p50 {{status}}",
+        },
+        {
+          expr: "histogram_quantile(0.9, sum by (le, status) (rate(takuhai_submit_confidence_bucket[$__rate_interval])))",
+          legendFormat: "p90 {{status}}",
+        },
+      ],
+      0,
+      20,
+    ),
+    timeSeries(
+      8,
+      "Submission Confidence Mean / P99",
+      [
+        {
+          expr: "sum by (status) (rate(takuhai_submit_confidence_sum[$__rate_interval])) / sum by (status) (rate(takuhai_submit_confidence_count[$__rate_interval]))",
+          legendFormat: "mean {{status}}",
+        },
+        {
+          expr: "histogram_quantile(0.99, sum by (le, status) (rate(takuhai_submit_confidence_bucket[$__rate_interval])))",
+          legendFormat: "p99 {{status}}",
+        },
+      ],
+      0,
+      28,
+    ),
+    timeSeries(
+      9,
+      "Ingest Post Rate",
+      [
+        {
+          expr: "sum by (source, result) (rate(takuhai_ingest_posts_total[$__rate_interval]))",
+          legendFormat: "{{source}} {{result}}",
+        },
+      ],
+      0,
+      36,
+      "ops",
+    ),
+    timeSeries(
+      10,
+      "HTTP Latency",
+      [
+        {
+          expr: "histogram_quantile(0.95, sum by (le, path) (rate(takuhai_http_request_duration_seconds_bucket[$__rate_interval])))",
+          legendFormat: "p95 {{path}}",
+        },
+        {
+          expr: "histogram_quantile(0.99, sum by (le, path) (rate(takuhai_http_request_duration_seconds_bucket[$__rate_interval])))",
+          legendFormat: "p99 {{path}}",
+        },
+      ],
+      0,
+      44,
+      "s",
+    ),
+    timeSeries(
+      11,
+      "HTTP Error Rate",
+      [
+        {
+          expr: 'sum by (path, status) (rate(takuhai_http_requests_total{status=~"4..|5.."}[$__rate_interval]))',
+          legendFormat: "{{path}} {{status}}",
+        },
+      ],
+      0,
+      52,
+      "ops",
+    ),
+    timeSeries(
+      12,
+      "MCP Activity",
+      [
+        {
+          expr: "sum by (tool, result) (rate(takuhai_mcp_tool_calls_total[$__rate_interval]))",
+          legendFormat: "{{tool}} {{result}}",
+        },
+        {
+          expr: "sum by (result) (rate(takuhai_mcp_resolve_magnets_infohashes_total[$__rate_interval]))",
+          legendFormat: "resolve_magnets {{result}}",
+        },
+      ],
+      0,
+      60,
+      "ops",
+    ),
+    timeSeries(
+      13,
+      "DMHY Crawler Activity",
+      [
+        {
+          expr: "sum by (result) (rate(takuhai_dmhy_crawl_requests_total[$__rate_interval]))",
+          legendFormat: "crawl {{result}}",
+        },
+        {
+          expr: "sum(rate(takuhai_dmhy_parse_posts_total[$__rate_interval]))",
+          legendFormat: "parsed posts",
+        },
+      ],
+      0,
+      68,
+      "ops",
+    ),
+    timeSeries(
+      14,
+      "DMHY Crawler Latency",
+      [
+        {
+          expr: "histogram_quantile(0.95, sum by (le) (rate(takuhai_dmhy_crawl_duration_seconds_bucket[$__rate_interval])))",
+          legendFormat: "crawl p95",
+        },
+        {
+          expr: "histogram_quantile(0.95, sum by (le) (rate(takuhai_dmhy_fetch_duration_seconds_bucket[$__rate_interval])))",
+          legendFormat: "fetch p95",
+        },
+      ],
+      0,
+      76,
+      "s",
+    ),
+  ]);
 }
 
 function dashboard(uid: string, folder: string, title: string, panels: Record<string, unknown>[]): DashboardSpec {

@@ -4,6 +4,7 @@ import { K2Chart } from "@k2/cdk-lib";
 import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, PrivateConnection, egress, tcp } from "@k2/cilium";
 import * as postgresql from "@k2/postgresql";
 import { AllowPomeriumToBackend } from "@k2/pomerium";
+import { PrometheusPodScrape } from "@k2/prometheus";
 
 import { endpoints } from "../index.js";
 
@@ -27,6 +28,14 @@ export class NetworkPolicy extends K2Chart {
     new PrivateConnection(this, "takuhai-to-postgresql", {
       from: takuhai.backend,
       ...postgresql.endpoints.nexus(),
+    });
+    new PrometheusPodScrape(this, "takuhai-metrics", {
+      target: takuhai.backend,
+      ports: takuhai.ports,
+    });
+    new PrometheusPodScrape(this, "crawler-dmhy-metrics", {
+      target: crawler.backend,
+      ports: crawler.ports,
     });
   }
 }
