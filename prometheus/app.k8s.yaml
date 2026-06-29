@@ -697,7 +697,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "takuhai_queue_items{state=\"claimable\"}",
+              "expr": "max(takuhai_queue_items{state=\"claimable\"})",
               "refId": "A"
             }
           ],
@@ -740,7 +740,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "takuhai_queue_items{state=\"exhausted\"}",
+              "expr": "max(takuhai_queue_items{state=\"exhausted\"})",
               "refId": "A"
             }
           ],
@@ -783,7 +783,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "takuhai_catalog_infohashes",
+              "expr": "max(takuhai_catalog_infohashes)",
               "refId": "A"
             }
           ],
@@ -826,7 +826,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "takuhai_catalog_refs",
+              "expr": "max(takuhai_catalog_refs)",
               "refId": "A"
             }
           ],
@@ -915,7 +915,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "takuhai_queue_items",
+              "expr": "max by (state) (takuhai_queue_items)",
               "legendFormat": "{{state}}",
               "refId": "A"
             }
