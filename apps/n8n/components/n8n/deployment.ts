@@ -304,6 +304,12 @@ function codexAcpHarnessContainer(volumeMounts: VolumeMount[]): ContainerProps {
       ACP_PORT: EnvValue.fromValue(String(CODEX_ACP_PORT)),
     },
     volumeMounts,
+    liveness: Probe.fromCommand(["codex-acp-health"], {
+      initialDelaySeconds: Duration.seconds(30),
+      periodSeconds: Duration.seconds(30),
+      timeoutSeconds: Duration.seconds(5),
+      failureThreshold: 3,
+    }),
     resources: {
       cpu: {
         request: Cpu.millis(50),
