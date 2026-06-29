@@ -273,10 +273,10 @@ function dashboards(): DashboardSpec[] {
 
 function takuhaiDashboard(): DashboardSpec {
   return dashboard("takuhai-overview", "Applications", "Takuhai", [
-    stat(1, "Claimable Releases", 'takuhai_queue_items{state="claimable"}', 0, 0, "short"),
-    stat(2, "Exhausted Releases", 'takuhai_queue_items{state="exhausted"}', 6, 0, "short"),
-    stat(3, "Known Releases", "takuhai_catalog_infohashes", 12, 0, "short"),
-    stat(4, "Matched Refs", "takuhai_catalog_refs", 18, 0, "short"),
+    stat(1, "Claimable Releases", 'max(takuhai_queue_items{state="claimable"})', 0, 0, "short"),
+    stat(2, "Exhausted Releases", 'max(takuhai_queue_items{state="exhausted"})', 6, 0, "short"),
+    stat(3, "Known Releases", "max(takuhai_catalog_infohashes)", 12, 0, "short"),
+    stat(4, "Matched Refs", "max(takuhai_catalog_refs)", 18, 0, "short"),
     timeSeries(
       5,
       "Submission Rate",
@@ -290,7 +290,7 @@ function takuhaiDashboard(): DashboardSpec {
       4,
       "ops",
     ),
-    timeSeries(6, "Queue State", [{ expr: "takuhai_queue_items", legendFormat: "{{state}}" }], 0, 12),
+    timeSeries(6, "Queue State", [{ expr: "max by (state) (takuhai_queue_items)", legendFormat: "{{state}}" }], 0, 12),
     timeSeries(
       7,
       "Submission Confidence Quantiles",
