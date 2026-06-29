@@ -334,6 +334,14 @@ spec:
               value: "8081"
           image: ghcr.io/wyvernzora/n8n-acp/codex:dev
           imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - codex-acp-health
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
           name: harness-codex
           ports:
             - containerPort: 8081
