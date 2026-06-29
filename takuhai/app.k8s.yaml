@@ -446,3 +446,95 @@ specs:
           - ports:
               - port: "5432"
                 protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: network-policy
+  name: takuhai-metrics
+  namespace: takuhai
+spec:
+  namespaceSelector:
+    matchNames:
+      - takuhai
+  podMetricsEndpoints:
+    - portNumber: 8080
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: service
+      app.kubernetes.io/name: takuhai
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: network-policy
+  name: takuhai-takuhai-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: service
+        app.kubernetes.io/name: takuhai
+        k8s:io.kubernetes.pod.namespace: takuhai
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: takuhai
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: network-policy
+  name: crawler-dmhy-metrics
+  namespace: takuhai
+spec:
+  namespaceSelector:
+    matchNames:
+      - takuhai
+  podMetricsEndpoints:
+    - portNumber: 8080
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: crawler-dmhy
+      app.kubernetes.io/name: takuhai
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: network-policy
+  name: takuhai-crawler-dmhy-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: crawler-dmhy
+        app.kubernetes.io/name: takuhai
+        k8s:io.kubernetes.pod.namespace: takuhai
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: takuhai
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
