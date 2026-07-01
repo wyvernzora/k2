@@ -14,7 +14,7 @@ import type { Construct } from "constructs";
 
 import { prefer, Scheduling, workers } from "@k2/cdk-lib";
 
-const BLOCKY_IMAGE = "ghcr.io/0xerr0r/blocky:v0.26.2";
+const BLOCKY_IMAGE = "ghcr.io/0xerr0r/blocky:v0.33.0";
 const CONFIG_KEY = "blocky.yaml";
 const CONFIG_VOLUME_NAME = "config";
 const CONFIG_MOUNT_PATH = "/app/config.yml";
