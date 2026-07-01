@@ -17,7 +17,7 @@ import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "../../constants.js";
 
-const KURA_IMAGE = "ghcr.io/wyvernzora/kura:v0.1.0";
+const KURA_IMAGE = "ghcr.io/wyvernzora/kura:v0.3.0";
 const PUID = 3000;
 const PGID = 2001;
 const UMASK = "0007";
