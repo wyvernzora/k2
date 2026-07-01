@@ -2129,7 +2129,7 @@ spec:
                 - /scripts/sync.py
               env:
                 - name: PROXMOX_HOSTS
-                  value: '[{"name":"roxy","address":"10.10.7.1"},{"name":"eris","address":"10.10.7.2"},{"name":"sylphy","address":"10.10.7.3"}]'
+                  value: '[{"name":"roxy","address":"10.10.7.1"}]'
                 - name: PROXMOX_PORT
                   value: "8006"
               image: ghcr.io/wyvernzora/k2-job-runner:v2
@@ -2857,18 +2857,6 @@ specs:
   - egress:
       - toCIDR:
           - 10.10.7.1/32
-        toPorts:
-          - ports:
-              - port: "8006"
-                protocol: TCP
-      - toCIDR:
-          - 10.10.7.2/32
-        toPorts:
-          - ports:
-              - port: "8006"
-                protocol: TCP
-      - toCIDR:
-          - 10.10.7.3/32
         toPorts:
           - ports:
               - port: "8006"
