@@ -7,7 +7,7 @@ export interface CertSyncHost {
   readonly address: string;
 }
 
-export const PROXMOX_HOST_NAMES = ["roxy", "eris", "sylphy"] as const;
+export const PROXMOX_HOST_NAMES = ["roxy"] as const;
 export const PROXMOX_PORT = 8006;
 export const TRUENAS_HOST_NAME = "rumi";
 export const TRUENAS_PORT = 443;
