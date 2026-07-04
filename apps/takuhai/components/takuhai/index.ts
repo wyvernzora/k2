@@ -6,8 +6,8 @@ import { AuthenticatedMcpIngress, authenticatedSourceIpPolicy } from "@k2/pomeri
 import { TAKUHAI_MCP_SERVICE_NAME } from "../../constants.js";
 
 import { TakuhaiDatabase } from "./database.js";
-import { TakuhaiCrawlerDeployment, TakuhaiDeployment } from "./deployment.js";
-import { TakuhaiCrawlerService, TakuhaiMcpService, TakuhaiService } from "./service.js";
+import { TakuhaiCrawlerDeployment, TakuhaiDeployment, TakuhaiNyaaCrawlerDeployment } from "./deployment.js";
+import { TakuhaiCrawlerService, TakuhaiMcpService, TakuhaiNyaaCrawlerService, TakuhaiService } from "./service.js";
 
 const TAKUHAI_HOST_PREFIX = "takuhai";
 
@@ -21,9 +21,11 @@ export class Takuhai extends K2Chart {
       credentialsSecretName: database.credentialsSecretName,
     });
     new TakuhaiCrawlerDeployment(this, "crawler-deployment");
+    new TakuhaiNyaaCrawlerDeployment(this, "crawler-nyaa-deployment");
     new TakuhaiService(this, "service");
     new TakuhaiMcpService(this, "mcp-service");
     new TakuhaiCrawlerService(this, "crawler-service");
+    new TakuhaiNyaaCrawlerService(this, "crawler-nyaa-service");
     new AuthenticatedMcpIngress(this, "mcp-ingress", {
       host: ApexDomain.of(this).subdomain(TAKUHAI_HOST_PREFIX),
       path: "/mcp",

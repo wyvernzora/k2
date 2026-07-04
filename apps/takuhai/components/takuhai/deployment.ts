@@ -15,10 +15,17 @@ import type { Construct } from "constructs";
 
 import { K2Deployment } from "@k2/cdk-lib";
 
-import { TAKUHAI_CRAWLER_LABELS, TAKUHAI_CRAWLER_PORT, TAKUHAI_HTTP_PORT, TAKUHAI_LABELS } from "../../constants.js";
+import {
+  TAKUHAI_CRAWLER_DMHY_LABELS,
+  TAKUHAI_CRAWLER_NYAA_LABELS,
+  TAKUHAI_CRAWLER_PORT,
+  TAKUHAI_HTTP_PORT,
+  TAKUHAI_LABELS,
+} from "../../constants.js";
 
 const TAKUHAI_IMAGE = "ghcr.io/wyvernzora/takuhai:dev";
-const TAKUHAI_CRAWLER_IMAGE = "ghcr.io/wyvernzora/takuhai/crawler-dmhy:dev";
+const TAKUHAI_CRAWLER_DMHY_IMAGE = "ghcr.io/wyvernzora/takuhai/crawler-dmhy:dev";
+const TAKUHAI_CRAWLER_NYAA_IMAGE = "ghcr.io/wyvernzora/takuhai/crawler-nyaa:dev";
 const APP_UID = 65532;
 const APP_GID = 65532;
 
@@ -54,7 +61,7 @@ export class TakuhaiCrawlerDeployment extends K2Deployment {
       replicas: 1,
       select: false,
       strategy: DeploymentStrategy.recreate(),
-      podMetadata: { labels: TAKUHAI_CRAWLER_LABELS },
+      podMetadata: { labels: TAKUHAI_CRAWLER_DMHY_LABELS },
       automountServiceAccountToken: false,
       enableServiceLinks: false,
       securityContext: {
@@ -62,8 +69,50 @@ export class TakuhaiCrawlerDeployment extends K2Deployment {
       },
     });
 
-    this.select(LabelSelector.of({ labels: TAKUHAI_CRAWLER_LABELS }));
-    this.addContainer(crawlerContainer());
+    this.select(LabelSelector.of({ labels: TAKUHAI_CRAWLER_DMHY_LABELS }));
+    this.addContainer(
+      crawlerContainer({
+        name: "crawler-dmhy",
+        image: TAKUHAI_CRAWLER_DMHY_IMAGE,
+        envVariables: {
+          TAKUHAI_DMHY_ADDR: EnvValue.fromValue(`:${TAKUHAI_CRAWLER_PORT}`),
+          TAKUHAI_DMHY_BASE_URL: EnvValue.fromValue("https://share.dmhy.org"),
+          TZ: EnvValue.fromValue("America/Los_Angeles"),
+        },
+      }),
+    );
+  }
+}
+
+export class TakuhaiNyaaCrawlerDeployment extends K2Deployment {
+  public constructor(scope: Construct, id: string) {
+    super(scope, id, {
+      metadata: { name: "crawler-nyaa" },
+      replicas: 1,
+      select: false,
+      strategy: DeploymentStrategy.recreate(),
+      podMetadata: { labels: TAKUHAI_CRAWLER_NYAA_LABELS },
+      automountServiceAccountToken: false,
+      enableServiceLinks: false,
+      securityContext: {
+        ensureNonRoot: true,
+      },
+    });
+
+    this.select(LabelSelector.of({ labels: TAKUHAI_CRAWLER_NYAA_LABELS }));
+    this.addContainer(
+      crawlerContainer({
+        name: "crawler-nyaa",
+        image: TAKUHAI_CRAWLER_NYAA_IMAGE,
+        envVariables: {
+          TAKUHAI_NYAA_ADDR: EnvValue.fromValue(`:${TAKUHAI_CRAWLER_PORT}`),
+          TAKUHAI_NYAA_BASE_URL: EnvValue.fromValue("https://nyaa.si"),
+          TAKUHAI_NYAA_CATEGORY: EnvValue.fromValue("1_4"),
+          TAKUHAI_NYAA_FILTER: EnvValue.fromValue("0"),
+          TZ: EnvValue.fromValue("America/Los_Angeles"),
+        },
+      }),
+    );
   }
 }
 
@@ -115,7 +164,13 @@ function takuhaiContainer(credentials: ISecret): ContainerProps {
   };
 }
 
-function crawlerContainer(): ContainerProps {
+interface CrawlerContainerProps {
+  readonly name: string;
+  readonly image: string;
+  readonly envVariables: Record<string, EnvValue>;
+}
+
+function crawlerContainer(props: CrawlerContainerProps): ContainerProps {
   const probe = Probe.fromTcpSocket({
     port: TAKUHAI_CRAWLER_PORT,
     failureThreshold: 6,
@@ -123,15 +178,11 @@ function crawlerContainer(): ContainerProps {
     timeoutSeconds: Duration.seconds(5),
   });
   return {
-    name: "crawler-dmhy",
-    image: TAKUHAI_CRAWLER_IMAGE,
+    name: props.name,
+    image: props.image,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
     ports: [{ name: "http", number: TAKUHAI_CRAWLER_PORT, protocol: Protocol.TCP }],
-    envVariables: {
-      TAKUHAI_DMHY_ADDR: EnvValue.fromValue(`:${TAKUHAI_CRAWLER_PORT}`),
-      TAKUHAI_DMHY_BASE_URL: EnvValue.fromValue("https://share.dmhy.org"),
-      TZ: EnvValue.fromValue("America/Los_Angeles"),
-    },
+    envVariables: props.envVariables,
     liveness: probe,
     readiness: probe,
     resources: {

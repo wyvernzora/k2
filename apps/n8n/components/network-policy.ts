@@ -42,7 +42,12 @@ export class NetworkPolicy extends K2Chart {
     });
     new PrivateConnection(this, "n8n-to-takuhai-crawler-dmhy", {
       from: n8n,
-      to: takuhai.workloads.crawler(),
+      to: takuhai.workloads.crawlerDmhy(),
+      ports: [tcp(takuhai.TAKUHAI_CRAWLER_PORT)],
+    });
+    new PrivateConnection(this, "n8n-to-takuhai-crawler-nyaa", {
+      from: n8n,
+      to: takuhai.workloads.crawlerNyaa(),
       ports: [tcp(takuhai.TAKUHAI_CRAWLER_PORT)],
     });
     new PrivateConnection(this, "n8n-to-kura-mcp", {
