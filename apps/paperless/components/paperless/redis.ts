@@ -15,7 +15,7 @@ import { K2Deployment, oci } from "@k2/cdk-lib";
 
 import { REDIS_LABELS, REDIS_PORT } from "../../constants.js";
 
-const REDIS_IMAGE = oci`redis:7.4-alpine`;
+const REDIS_IMAGE = oci`redis:8.8-alpine`;
 
 export interface RedisDeploymentProps {
   readonly secretName: string;
