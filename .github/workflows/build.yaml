@@ -81,7 +81,7 @@ jobs:
               cat deploy-diff.md
             } > "$body_file"
           else
-            echo "## ✅ No manifest changes — enabling auto-merge" > "$body_file"
+            echo "## ✅ No manifest changes" > "$body_file"
           fi
           {
             echo
@@ -111,7 +111,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge "$PR_URL" --auto --squash --delete-branch
+        run: |
+          # Query labels live: the pull_request event payload can race Renovate's label call.
+          if gh pr view "$PR_URL" --json labels --jq '.labels[].name' | grep -qx 'risk/high'; then
+            echo "risk/high label present (e.g. kairos/k3s: no manifest diff but boots the control plane) — skipping auto-merge"
+            exit 0
+          fi
+          gh pr merge "$PR_URL" --auto --squash --delete-branch
 
       - name: 📦 Upload deploy-diff.md
         uses: actions/upload-artifact@v7

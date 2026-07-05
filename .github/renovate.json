@@ -42,8 +42,7 @@
     },
     {
       "matchUpdateTypes": ["major"],
-      "addLabels": ["major-update"],
-      "automerge": false
+      "addLabels": ["major-update"]
     },
     {
       "description": "Automerge low-risk npm patch updates for development-only tooling after CI passes.",
@@ -59,6 +58,7 @@
       "matchManagers": ["npm"],
       "matchPackageNames": ["cdk8s", "cdk8s-plus-32", "constructs"],
       "groupName": "cdk8s stack",
+      "labels": ["risk/medium", "ai-triage"],
       "addLabels": ["cdk8s", "manifest-impact"],
       "automerge": false
     },
@@ -95,34 +95,44 @@
         "yaml"
       ],
       "groupName": "npm runtime libraries",
+      "labels": ["risk/medium", "ai-triage"],
       "addLabels": ["npm-runtime"]
     },
     {
+      "description": "CI-only dependencies: automerge once checks pass.",
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "groupName": "github actions",
-      "addLabels": ["ci"]
+      "labels": ["risk/low"],
+      "addLabels": ["ci"],
+      "automerge": true
     },
     {
-      "matchDatasources": ["helm"],
-      "matchPackageNames": ["kube-vip", "k8s-gateway"],
+      "description": "Tier: medium. App container images referenced from cdk8s source get AI triage via n8n; major bumps included on purpose.",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["apps/**", "cdk-lib/**"],
+      "labels": ["risk/medium", "ai-triage"],
+      "addLabels": ["container"]
+    },
+    {
+      "description": "Tier: low. Utility/sidecar images; minor+patch automerge, majors fall back to the medium tier.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["busybox", "caddy", "redis"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "low-risk helm charts",
-      "addLabels": ["helm", "cluster-infra"],
-      "automerge": false
+      "groupName": "utility container images",
+      "labels": ["risk/low"],
+      "addLabels": ["container", "utility"],
+      "automergeType": "pr",
+      "automerge": true
     },
     {
-      "matchDatasources": ["helm"],
-      "matchPackageNames": [
-        "argo-cd",
-        "cert-manager",
-        "cilium",
-        "cloudnative-pg",
-        "longhorn",
-        "tailscale-operator"
-      ],
-      "addLabels": ["helm", "manual-review", "manifest-impact"],
-      "automerge": false
+      "description": "Tier: low. Own images: a version bump is a release I already cut deliberately.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/wyvernzora/**"],
+      "labels": ["risk/low"],
+      "addLabels": ["container"],
+      "automergeType": "pr",
+      "automerge": true
     },
     {
       "matchDatasources": ["docker"],
@@ -133,39 +143,45 @@
       "enabled": false
     },
     {
+      "description": "Tier: high. Database engine and apps whose majors run irreversible schema migrations.",
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["busybox", "caddy"],
+      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql", "codeberg.org/forgejo/forgejo"],
+      "labels": ["risk/high", "manual-review"],
+      "addLabels": ["container", "database"],
+      "automerge": false
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/paperless-ngx/paperless-ngx"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["risk/high", "manual-review"],
+      "addLabels": ["container", "database"],
+      "automerge": false
+    },
+    {
+      "description": "Tier: high by default for helm charts (cluster infrastructure).",
+      "matchDatasources": ["helm"],
+      "labels": ["risk/high", "manual-review"],
+      "addLabels": ["helm", "manifest-impact"],
+      "automerge": false
+    },
+    {
+      "description": "Tier: medium. Chart patch releases get AI triage instead of manual review.",
+      "matchDatasources": ["helm"],
+      "matchUpdateTypes": ["patch"],
+      "labels": ["risk/medium", "ai-triage"]
+    },
+    {
+      "description": "Tier: medium. Lower-stakes charts also triage minors.",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["kube-vip", "k8s-gateway"],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "utility container images",
-      "addLabels": ["container", "utility"],
-      "automergeType": "pr",
-      "automerge": true
+      "labels": ["risk/medium", "ai-triage"]
     },
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "eclipse-mosquitto",
-        "b4bz/homer",
-        "koenkk/zigbee2mqtt",
-        "linuxserver/homeassistant",
-        "lscr.io/linuxserver/qbittorrent",
-        "n8nio/n8n",
-        "plexinc/pms-docker"
-      ],
-      "addLabels": ["container", "manual-review", "manifest-impact"],
-      "automerge": false
-    },
-    {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/cloudnative-pg/postgresql"],
-      "addLabels": ["container", "database", "manual-review"],
-      "automerge": false
-    },
-    {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["jesec/flood", "ghcr.io/0xerr0r/blocky"],
-      "groupName": "service container images",
-      "addLabels": ["container", "manual-review"],
+      "description": "Tier: high. Node OS / k3s: no manifest diff, but changes what the control plane boots. Blocks the no-diff automerge in build.yaml.",
+      "matchFileNames": ["kairos/**"],
+      "labels": ["risk/high", "manual-review"],
       "automerge": false
     },
     {
