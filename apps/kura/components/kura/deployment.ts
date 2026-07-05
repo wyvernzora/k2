@@ -56,7 +56,7 @@ export class KuraDeployment extends K2Deployment {
 function initContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
   return {
     name: "init-library",
-    image: oci`busybox:1.37.0`,
+    image: oci`busybox:1.38.0`,
     command: ["sh", "-c", `set -eu; umask ${UMASK}; mkdir -p ${LIBRARY_ROOT} ${INBOX_ROOT}`],
     volumeMounts: [volumes.anime(ANIME_MOUNT_PATH)],
     securityContext: {

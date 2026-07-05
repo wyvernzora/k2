@@ -63,7 +63,7 @@ export class QbittorrentDeployment extends K2Deployment {
 function initAppdataContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeMount): ContainerProps {
   return {
     name: "init-appdata",
-    image: oci`busybox:1.37.0`,
+    image: oci`busybox:1.38.0`,
     command: ["sh", "/init/appdata.sh"],
     volumeMounts: [volumes.appdata(APPDATA_MOUNT_PATH), initMount],
     securityContext: {
@@ -75,7 +75,7 @@ function initAppdataContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeM
 function initDownloadsContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeMount): ContainerProps {
   return {
     name: "init-downloads",
-    image: oci`busybox:1.37.0`,
+    image: oci`busybox:1.38.0`,
     command: ["sh", "/init/downloads.sh"],
     volumeMounts: [volumes.anime("/downloads/anime"), volumes.default("/downloads/default"), initMount],
     securityContext: {

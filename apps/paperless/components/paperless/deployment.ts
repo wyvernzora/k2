@@ -71,7 +71,7 @@ export class PaperlessDeployment extends K2Deployment {
 function initDocumentsContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
   return {
     name: "init-documents",
-    image: oci`busybox:1.37.0`,
+    image: oci`busybox:1.38.0`,
     command: ["sh", "-c"],
     args: [initDocumentsScript()],
     volumeMounts: [volumes.documents(DOCUMENTS_MOUNT_PATH)],

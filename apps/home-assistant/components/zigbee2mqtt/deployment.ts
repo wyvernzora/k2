@@ -58,7 +58,7 @@ export class Zigbee2MqttDeployment extends K2Deployment {
 function initConfigContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeMount): ContainerProps {
   return {
     name: "setup-config",
-    image: oci`busybox:1.37.0`,
+    image: oci`busybox:1.38.0`,
     imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
     command: ["sh", `${INIT_MOUNT_PATH}/init.sh`],
     volumeMounts: [volumes.data(DATA_MOUNT_PATH), initMount],
