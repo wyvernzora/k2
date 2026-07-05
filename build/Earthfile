@@ -10,6 +10,7 @@ image:
     # Install dyff from a pinned GitHub release asset. Do not use the
     # GitHub releases API here: multi-arch CI builds can exhaust the
     # unauthenticated API rate limit while resolving "latest" and assets.
+    # renovate: datasource=github-releases depName=homeport/dyff extractVersion=^v(?<version>.+)$
     ARG DYFF_VERSION=1.12.0
     RUN set -eux; \
         case "$(apk --print-arch)" in \

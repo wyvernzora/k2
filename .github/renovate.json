@@ -27,14 +27,12 @@
       "description": "Wait 7 days for Docker Hub image updates; non-Docker Hub registries often lack tag timestamps.",
       "matchDatasources": ["docker"],
       "matchPackageNames": [
-        "bash",
         "busybox",
         "caddy",
         "eclipse-mosquitto",
         "jesec/flood",
         "koenkk/zigbee2mqtt",
         "linuxserver/homeassistant",
-        "mikefarah/yq",
         "n8nio/n8n",
         "node",
         "plexinc/pms-docker",
@@ -136,7 +134,7 @@
     },
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["bash", "busybox", "caddy", "mikefarah/yq"],
+      "matchPackageNames": ["busybox", "caddy"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "utility container images",
       "addLabels": ["container", "utility"],
@@ -165,18 +163,19 @@
     },
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["jesec/flood", "ghcr.io/0xerr0r/blocky", "ghcr.io/wyvernzora/claude-remote"],
+      "matchPackageNames": ["jesec/flood", "ghcr.io/0xerr0r/blocky"],
       "groupName": "service container images",
       "addLabels": ["container", "manual-review"],
       "automerge": false
     },
     {
+      "description": "Plex tags are 4-part versions plus a build hash (1.43.1.10611-1e34174b1); docker versioning treats the hash as an incompatible suffix, so compare loosely instead.",
       "matchDatasources": ["docker"],
       "matchDepNames": ["plexinc/pms-docker"],
-      "extractVersion": "(?<version>\\d+\\.\\d+\\.\\d+)\\.\\d+-.*"
+      "versioning": "loose"
     }
   ],
-  "ignorePaths": ["**/node_modules/**", "**/cdk-lib/src/helm.ts"],
+  "ignorePaths": ["**/node_modules/**"],
   "customManagers": [
     {
       "customType": "regex",
@@ -191,6 +190,21 @@
       "matchStrings": ["FROM\\s+(?<depName>[^\\s:@]+(?:/[^\\s:@]+)*):(?<currentValue>[^\\s$]+)"],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Earthfile$/", "/(^|/)Dockerfile$/", "/(^|/)versions\\.env$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?\\n\\s*(?:ARG |ENV )?\\w+=\"?(?<currentValue>[^\"\\n]+)\"?"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)versions\\.env$/"],
+      "matchStrings": ["BASE_IMAGE=(?<depName>[^:\\s]+):(?<currentValue>\\S+)"],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "ubuntu"
     }
   ]
 }

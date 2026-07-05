@@ -9,8 +9,11 @@ job-runner-image:
 
 job-runner-image-base:
     ARG TAG="latest"
-    ARG ALPINE_VERSION="3.22"
+    # renovate: datasource=docker depName=alpine
+    ARG ALPINE_VERSION="3.24"
+    # renovate: datasource=github-releases depName=kubernetes/kubernetes
     ARG KUBECTL_VERSION="v1.36.1"
+    # renovate: datasource=github-releases depName=homeport/dyff extractVersion=^v(?<version>.+)$
     ARG DYFF_VERSION="1.12.0"
     FROM DOCKERFILE --build-arg ALPINE_VERSION=$ALPINE_VERSION --build-arg KUBECTL_VERSION=$KUBECTL_VERSION --build-arg DYFF_VERSION=$DYFF_VERSION images/job-runner
     SAVE IMAGE ghcr.io/wyvernzora/k2-job-runner:${TAG}
