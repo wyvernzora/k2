@@ -83,6 +83,22 @@
       "addLabels": ["typescript"]
     },
     {
+      "description": "Keep the K2 tools TUI stack together; these packages share major-version API and module-path changes.",
+      "matchManagers": ["gomod"],
+      "matchFileNames": ["tools/go.mod"],
+      "matchPackageNames": [
+        "github.com/charmbracelet/bubbles",
+        "github.com/charmbracelet/bubbletea",
+        "github.com/charmbracelet/lipgloss"
+      ],
+      "groupName": "go tui stack",
+      "groupSlug": "go-tui-stack",
+      "addLabels": ["go", "tools"],
+      "postUpdateOptions": ["gomodTidy"],
+      "automergeType": "pr",
+      "automerge": true
+    },
+    {
       "matchManagers": ["npm"],
       "matchPackageNames": [
         "common-tags",
