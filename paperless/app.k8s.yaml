@@ -219,7 +219,7 @@ spec:
                 secretKeyRef:
                   key: redisPassword
                   name: paperless
-          image: redis:7.4-alpine
+          image: redis:8.8-alpine
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
