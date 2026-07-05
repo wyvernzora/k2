@@ -17,7 +17,7 @@ import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib"
 
 import { HOME_ASSISTANT_HTTP_PORT, HOME_ASSISTANT_LABELS } from "../../constants.js";
 
-const HOME_ASSISTANT_IMAGE = oci`linuxserver/homeassistant:2026.5.1`;
+const HOME_ASSISTANT_IMAGE = oci`linuxserver/homeassistant:2026.6.3`;
 const CONFIG_MOUNT_PATH = "/config";
 const INIT_MOUNT_PATH = "/init";
 
