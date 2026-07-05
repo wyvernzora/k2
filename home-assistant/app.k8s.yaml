@@ -279,7 +279,7 @@ spec:
         - command:
             - sh
             - /init/init.sh
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           name: setup-config
           resources:
@@ -516,7 +516,7 @@ spec:
         - command:
             - sh
             - /init/init.sh
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           name: setup-config
           resources:

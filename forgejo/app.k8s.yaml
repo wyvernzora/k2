@@ -287,7 +287,7 @@ spec:
               value: /config
             - name: XDG_DATA_HOME
               value: /data
-          image: caddy:2.10.0-alpine
+          image: caddy:2.11.4-alpine
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 6
@@ -360,7 +360,7 @@ spec:
 
               mkdir -p "/forgejo/data" "/forgejo/config"
               chown -R 1000:1000 "/forgejo/data" "/forgejo/config"
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           name: init-forgejo-appdata
           resources:

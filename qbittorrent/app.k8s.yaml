@@ -201,7 +201,7 @@ spec:
         - command:
             - sh
             - /init/appdata.sh
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           imagePullPolicy: Always
           name: init-appdata
           resources:
@@ -224,7 +224,7 @@ spec:
         - command:
             - sh
             - /init/downloads.sh
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           imagePullPolicy: Always
           name: init-downloads
           resources:

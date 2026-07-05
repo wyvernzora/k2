@@ -114,7 +114,7 @@ spec:
               value: /config
             - name: XDG_DATA_HOME
               value: /data
-          image: caddy:2.10.0-alpine
+          image: caddy:2.11.4-alpine
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 6
@@ -184,7 +184,7 @@ spec:
               mkdir -p "/config/Library/Application Support/Plex Media Server/Plug-in Support"
               mkdir -p "/config/Library/Application Support/Plex Media Server/Plug-in Support/Databases"
               touch "/config/.k2-plex-config-initialized"
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           name: init-plex-config
           resources:
@@ -217,7 +217,7 @@ spec:
                 touch "/databases/.k2-plex-permissions-3001-2001-initialized"
                 chown 3001:2001 "/databases/.k2-plex-permissions-3001-2001-initialized"
               fi
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           name: init-plex-databases
           resources:
