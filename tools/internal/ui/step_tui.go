@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
 )
 
 const scrollbackLines = 5
@@ -174,12 +174,12 @@ func (m stepModel) Init() tea.Cmd {
 
 func (m stepModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		// Bubbletea puts the terminal in raw mode, so Ctrl-C arrives as
 		// a key event rather than SIGINT. Invoke the reporter's
 		// interrupt-cancel func — this kills any subprocess started
 		// with `exec.CommandContext` against the same context.
-		if msg.Type == tea.KeyCtrlC {
+		if msg.String() == "ctrl+c" {
 			m.reporter.interrupt()
 			return m, tea.Quit
 		}
@@ -203,9 +203,9 @@ func (m stepModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m stepModel) View() string {
+func (m stepModel) View() tea.View {
 	if m.label == "" && len(m.lines) == 0 {
-		return ""
+		return tea.NewView("")
 	}
 	var b strings.Builder
 	b.WriteString("  ")
@@ -218,5 +218,5 @@ func (m stepModel) View() string {
 		b.WriteString(DimStyle.Render(line))
 		b.WriteString("\n")
 	}
-	return b.String()
+	return tea.NewView(b.String())
 }

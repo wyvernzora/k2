@@ -87,6 +87,9 @@
       "matchManagers": ["gomod"],
       "matchFileNames": ["tools/go.mod"],
       "matchPackageNames": [
+        "charm.land/bubbles/v2",
+        "charm.land/bubbletea/v2",
+        "charm.land/lipgloss/v2",
         "github.com/charmbracelet/bubbles",
         "github.com/charmbracelet/bubbletea",
         "github.com/charmbracelet/lipgloss"

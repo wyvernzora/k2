@@ -1,6 +1,6 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import "charm.land/lipgloss/v2"
 
 // Direction D palette — adopted as the canonical k2-tools style 2026-05-22.
 // All styling references in this package and downstream consumers should

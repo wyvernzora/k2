@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 // Progress is the Step Kind for byte-stream operations with a known
@@ -171,8 +171,8 @@ func (m progressModel) Init() tea.Cmd {
 
 func (m progressModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.Type == tea.KeyCtrlC {
+	case tea.KeyPressMsg:
+		if msg.String() == "ctrl+c" {
 			m.reporter.interrupt()
 			return m, tea.Quit
 		}
@@ -193,9 +193,9 @@ func (m progressModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m progressModel) View() string {
+func (m progressModel) View() tea.View {
 	if m.label == "" {
-		return ""
+		return tea.NewView("")
 	}
 	written := m.parent.count.Load()
 	var pct float64
@@ -232,7 +232,7 @@ func (m progressModel) View() string {
 		eta,
 	)))
 	b.WriteString("\n")
-	return b.String()
+	return tea.NewView(b.String())
 }
 
 // renderProgressBar draws Direction D's 30-cell magenta-on-dark-gray
