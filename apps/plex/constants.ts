@@ -1,4 +1,5 @@
 export const PLEX_HTTP_PORT = 32400;
+export const PLEX_CADDY_HTTP_REDIRECT_PORT = 80;
 export const PLEX_CADDY_PORT = 8443;
 export const PLEX_ALLOW_VLANS = ["default", "privileged", "infrastructure"];
 

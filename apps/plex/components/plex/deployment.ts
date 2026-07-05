@@ -20,7 +20,7 @@ import dedent from "dedent-js";
 
 import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { PLEX_CADDY_PORT, PLEX_HTTP_PORT, PLEX_LABELS } from "../../constants.js";
+import { PLEX_CADDY_HTTP_REDIRECT_PORT, PLEX_CADDY_PORT, PLEX_HTTP_PORT, PLEX_LABELS } from "../../constants.js";
 
 const PLEX_IMAGE = "plexinc/pms-docker:1.43.1.10611-1e34174b1";
 const CADDY_IMAGE = "caddy:2.10.0-alpine";
@@ -169,7 +169,10 @@ function caddyContainer(volumeMounts: VolumeMount[]): ContainerProps {
     name: "caddy",
     image: CADDY_IMAGE,
     imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
-    ports: [{ name: "https", number: PLEX_CADDY_PORT, protocol: Protocol.TCP }],
+    ports: [
+      { name: "http", number: PLEX_CADDY_HTTP_REDIRECT_PORT, protocol: Protocol.TCP },
+      { name: "https", number: PLEX_CADDY_PORT, protocol: Protocol.TCP },
+    ],
     volumeMounts,
     envVariables: {
       XDG_CONFIG_HOME: EnvValue.fromValue("/config"),
@@ -291,6 +294,10 @@ function caddyfile(): string {
   return dedent`
     {
       auto_https off
+    }
+
+    :${PLEX_CADDY_HTTP_REDIRECT_PORT} {
+      redir https://{host}{uri} permanent
     }
 
     :${PLEX_CADDY_PORT} {

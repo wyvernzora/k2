@@ -3,8 +3,9 @@ import type { Construct } from "constructs";
 
 import { LoadBalancerService } from "@k2/cilium";
 
-import { PLEX_ALLOW_VLANS, PLEX_CADDY_PORT, PLEX_LABELS } from "../../constants.js";
+import { PLEX_ALLOW_VLANS, PLEX_CADDY_HTTP_REDIRECT_PORT, PLEX_CADDY_PORT, PLEX_LABELS } from "../../constants.js";
 
+const PLEX_HTTP_REDIRECT_PORT = 80;
 const PLEX_HTTPS_PORT = 443;
 const PLEX_SERVICE_NAME = "plex";
 
@@ -22,6 +23,12 @@ export class PlexService extends LoadBalancerService {
       externalTrafficPolicy: "Cluster",
       selector: Pods.select(scope, "plex-service-pods", { labels: PLEX_LABELS }),
       ports: [
+        {
+          name: "http",
+          protocol: Protocol.TCP,
+          port: PLEX_HTTP_REDIRECT_PORT,
+          targetPort: PLEX_CADDY_HTTP_REDIRECT_PORT,
+        },
         {
           name: "https",
           protocol: Protocol.TCP,
