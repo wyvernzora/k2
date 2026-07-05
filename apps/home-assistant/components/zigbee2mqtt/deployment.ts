@@ -17,7 +17,7 @@ import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib"
 
 import { ZIGBEE2MQTT_HTTP_PORT, ZIGBEE2MQTT_LABELS } from "../../constants.js";
 
-const ZIGBEE2MQTT_IMAGE = oci`koenkk/zigbee2mqtt:2.10.1`;
+const ZIGBEE2MQTT_IMAGE = oci`koenkk/zigbee2mqtt:2.12.0`;
 const DATA_MOUNT_PATH = "/app/data";
 const INIT_MOUNT_PATH = "/init";
 
