@@ -188,6 +188,7 @@
       "description": "Plex tags are 4-part versions plus a build hash (1.43.1.10611-1e34174b1); docker versioning treats the hash as an incompatible suffix, so compare loosely instead.",
       "matchDatasources": ["docker"],
       "matchDepNames": ["plexinc/pms-docker"],
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+\\.\\d+-[0-9a-f]+$/",
       "versioning": "loose"
     }
   ],
