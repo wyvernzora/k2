@@ -3,7 +3,7 @@ ARG ALPINE_VERSION=3.24
 FROM alpine:${ALPINE_VERSION}
 
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-ARG KUBECTL_VERSION=v1.36.1
+ARG KUBECTL_VERSION=v1.36.2
 # renovate: datasource=github-releases depName=homeport/dyff extractVersion=^v(?<version>.+)$
 ARG DYFF_VERSION=1.12.0
 

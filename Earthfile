@@ -12,7 +12,7 @@ job-runner-image-base:
     # renovate: datasource=docker depName=alpine
     ARG ALPINE_VERSION="3.24"
     # renovate: datasource=github-releases depName=kubernetes/kubernetes
-    ARG KUBECTL_VERSION="v1.36.1"
+    ARG KUBECTL_VERSION="v1.36.2"
     # renovate: datasource=github-releases depName=homeport/dyff extractVersion=^v(?<version>.+)$
     ARG DYFF_VERSION="1.12.0"
     FROM DOCKERFILE --build-arg ALPINE_VERSION=$ALPINE_VERSION --build-arg KUBECTL_VERSION=$KUBECTL_VERSION --build-arg DYFF_VERSION=$DYFF_VERSION images/job-runner
