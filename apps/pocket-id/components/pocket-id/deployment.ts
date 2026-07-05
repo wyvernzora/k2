@@ -15,11 +15,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { only, Scheduling, workers } from "@k2/cdk-lib";
+import { oci, only, Scheduling, workers } from "@k2/cdk-lib";
 
 import { POCKET_ID_HTTP_PORT, POCKET_ID_LABELS } from "../../constants.js";
 
-const POCKET_ID_IMAGE = "ghcr.io/pocket-id/pocket-id:v2.7.0";
+const POCKET_ID_IMAGE = oci`ghcr.io/pocket-id/pocket-id:v2.7.0`;
 const DATA_VOLUME_NAME = "data";
 const DATA_MOUNT_PATH = "/app/data";
 export const STATIC_API_KEY_SECRET_NAME = "pocket-id-bootstrap-api-key";

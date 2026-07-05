@@ -1,6 +1,8 @@
 import { Capability, EnvValue, ImagePullPolicy, type ContainerProps, type Volume } from "cdk8s-plus-32";
 
-const KURA_N8N_NODES_IMAGE = "ghcr.io/wyvernzora/kura/n8n-nodes:v0.3.0";
+import { oci } from "@k2/cdk-lib";
+
+const KURA_N8N_NODES_IMAGE = oci`ghcr.io/wyvernzora/kura/n8n-nodes:v0.3.0`;
 
 export interface N8NCustomNodesInitContainerProps {
   readonly volume: Volume;

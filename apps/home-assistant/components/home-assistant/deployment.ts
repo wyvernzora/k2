@@ -13,11 +13,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { HOME_ASSISTANT_HTTP_PORT, HOME_ASSISTANT_LABELS } from "../../constants.js";
 
-const HOME_ASSISTANT_IMAGE = "linuxserver/homeassistant:2026.5.1";
+const HOME_ASSISTANT_IMAGE = oci`linuxserver/homeassistant:2026.5.1`;
 const CONFIG_MOUNT_PATH = "/config";
 const INIT_MOUNT_PATH = "/init";
 
@@ -58,7 +58,7 @@ export class HomeAssistantDeployment extends K2Deployment {
 function initConfigContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeMount): ContainerProps {
   return {
     name: "setup-config",
-    image: "busybox:1.37.0",
+    image: oci`busybox:1.37.0`,
     imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
     command: ["sh", `${INIT_MOUNT_PATH}/init.sh`],
     volumeMounts: [volumes.config(CONFIG_MOUNT_PATH), initMount],

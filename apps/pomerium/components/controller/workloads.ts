@@ -19,13 +19,13 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { linux, only, Scheduling, withReplaceableJobSyncOptions, workers } from "@k2/cdk-lib";
+import { linux, oci, only, Scheduling, withReplaceableJobSyncOptions, workers } from "@k2/cdk-lib";
 
 import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js";
 
 import { metadata } from "./metadata.js";
 
-const POMERIUM_IMAGE = "pomerium/ingress-controller:v0.32.9";
+const POMERIUM_IMAGE = oci`pomerium/ingress-controller:v0.32.9`;
 const TMP_VOLUME_NAME = "tmp";
 
 export function createWorkloads(

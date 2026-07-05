@@ -13,11 +13,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { ZIGBEE2MQTT_HTTP_PORT, ZIGBEE2MQTT_LABELS } from "../../constants.js";
 
-const ZIGBEE2MQTT_IMAGE = "koenkk/zigbee2mqtt:2.10.1";
+const ZIGBEE2MQTT_IMAGE = oci`koenkk/zigbee2mqtt:2.10.1`;
 const DATA_MOUNT_PATH = "/app/data";
 const INIT_MOUNT_PATH = "/init";
 
@@ -58,7 +58,7 @@ export class Zigbee2MqttDeployment extends K2Deployment {
 function initConfigContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeMount): ContainerProps {
   return {
     name: "setup-config",
-    image: "busybox:1.37.0",
+    image: oci`busybox:1.37.0`,
     imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
     command: ["sh", `${INIT_MOUNT_PATH}/init.sh`],
     volumeMounts: [volumes.data(DATA_MOUNT_PATH), initMount],

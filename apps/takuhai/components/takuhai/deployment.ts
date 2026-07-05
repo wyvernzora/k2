@@ -13,7 +13,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment } from "@k2/cdk-lib";
+import { K2Deployment, oci } from "@k2/cdk-lib";
 
 import {
   TAKUHAI_CRAWLER_DMHY_LABELS,
@@ -23,9 +23,9 @@ import {
   TAKUHAI_LABELS,
 } from "../../constants.js";
 
-const TAKUHAI_IMAGE = "ghcr.io/wyvernzora/takuhai:dev";
-const TAKUHAI_CRAWLER_DMHY_IMAGE = "ghcr.io/wyvernzora/takuhai/crawler-dmhy:dev";
-const TAKUHAI_CRAWLER_NYAA_IMAGE = "ghcr.io/wyvernzora/takuhai/crawler-nyaa:dev";
+const TAKUHAI_IMAGE = oci`ghcr.io/wyvernzora/takuhai:dev`;
+const TAKUHAI_CRAWLER_DMHY_IMAGE = oci`ghcr.io/wyvernzora/takuhai/crawler-dmhy:dev`;
+const TAKUHAI_CRAWLER_NYAA_IMAGE = oci`ghcr.io/wyvernzora/takuhai/crawler-nyaa:dev`;
 const APP_UID = 65532;
 const APP_GID = 65532;
 

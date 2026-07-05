@@ -12,11 +12,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { only, Scheduling, workers } from "@k2/cdk-lib";
+import { oci, only, Scheduling, workers } from "@k2/cdk-lib";
 
 import { HOMER_HTTP_PORT, HOMER_LABELS } from "../../constants.js";
 
-const HOMER_IMAGE = "b4bz/homer:v26.4.2";
+const HOMER_IMAGE = oci`b4bz/homer:v26.4.2`;
 const CONFIG_KEY = "config.yml";
 const CONFIG_VOLUME_NAME = "config";
 const CONFIG_MOUNT_PATH = "/www/assets/config.yml";

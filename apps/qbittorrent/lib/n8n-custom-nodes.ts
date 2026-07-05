@@ -1,6 +1,8 @@
 import { Capability, EnvValue, ImagePullPolicy, type ContainerProps, type Volume } from "cdk8s-plus-32";
 
-const QBIT_BRIDGE_N8N_NODES_IMAGE = "ghcr.io/wyvernzora/qbit-bridge/n8n-nodes:dev";
+import { oci } from "@k2/cdk-lib";
+
+const QBIT_BRIDGE_N8N_NODES_IMAGE = oci`ghcr.io/wyvernzora/qbit-bridge/n8n-nodes:dev`;
 
 export interface N8NCustomNodesInitContainerProps {
   readonly volume: Volume;

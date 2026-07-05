@@ -15,14 +15,14 @@ import {
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS, PAPERLESS_MCP_PORT } from "../../constants.js";
 
 import { PAPERLESS_SETUP_USER } from "./setup.js";
 
-const PAPERLESS_IMAGE = "ghcr.io/paperless-ngx/paperless-ngx:2.20.15";
-const PAPERLESS_MCP_IMAGE = "ghcr.io/baruchiro/paperless-mcp:latest";
+const PAPERLESS_IMAGE = oci`ghcr.io/paperless-ngx/paperless-ngx:2.20.15`;
+const PAPERLESS_MCP_IMAGE = oci`ghcr.io/baruchiro/paperless-mcp:latest`;
 const DATA_MOUNT_PATH = "/usr/src/paperless/data";
 const DOCUMENTS_MOUNT_PATH = "/paperless-documents";
 const MEDIA_MOUNT_PATH = "/usr/src/paperless/media";
@@ -71,7 +71,7 @@ export class PaperlessDeployment extends K2Deployment {
 function initDocumentsContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
   return {
     name: "init-documents",
-    image: "busybox:1.37.0",
+    image: oci`busybox:1.37.0`,
     command: ["sh", "-c"],
     args: [initDocumentsScript()],
     volumeMounts: [volumes.documents(DOCUMENTS_MOUNT_PATH)],

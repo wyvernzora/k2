@@ -16,18 +16,18 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 import * as kura from "@k2/kura";
 import * as qbittorrent from "@k2/qbittorrent";
 import * as takuhai from "@k2/takuhai";
 
 import { N8N_HTTP_PORT, N8N_LABELS } from "./labels.js";
 
-const N8N_IMAGE = "n8nio/n8n:2.27.4";
-const N8N_ACP_NODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/node:dev";
-const N8N_ACP_OPENCODE_IMAGE = "ghcr.io/wyvernzora/n8n-acp/opencode:dev";
-const N8N_ACP_CODEX_IMAGE = "ghcr.io/wyvernzora/n8n-acp/codex:dev";
-const N8N_PROXY_AUTH_HOOK_IMAGE = "ghcr.io/wyvernzora/n8n-proxy-auth-hook:v0.1.0";
+const N8N_IMAGE = oci`n8nio/n8n:2.27.4`;
+const N8N_ACP_NODE_IMAGE = oci`ghcr.io/wyvernzora/n8n-acp/node:dev`;
+const N8N_ACP_OPENCODE_IMAGE = oci`ghcr.io/wyvernzora/n8n-acp/opencode:dev`;
+const N8N_ACP_CODEX_IMAGE = oci`ghcr.io/wyvernzora/n8n-acp/codex:dev`;
+const N8N_PROXY_AUTH_HOOK_IMAGE = oci`ghcr.io/wyvernzora/n8n-proxy-auth-hook:v0.1.0`;
 const APPDATA_MOUNT_PATH = "/home/node/.n8n";
 const OPENCODE_ACP_HOST = "127.0.0.1";
 const OPENCODE_ACP_PORT = 8080;

@@ -17,8 +17,9 @@ import {
 import type { Construct } from "constructs";
 
 import { Namespace } from "../context/namespace.js";
+import { oci } from "../oci.js";
 
-const JOB_RUNNER_IMAGE = "ghcr.io/wyvernzora/k2-job-runner:v2";
+const JOB_RUNNER_IMAGE = oci`ghcr.io/wyvernzora/k2-job-runner:v2`;
 const SCRIPTED_WORKLOAD_TYPE_LABEL = "k2.wyvernzora.io/scripted-workload-type";
 const SCRIPT_MOUNT_PATH = "/scripts";
 const SCRIPT_VOLUME_NAME = "script";

@@ -13,11 +13,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment } from "@k2/cdk-lib";
+import { K2Deployment, oci } from "@k2/cdk-lib";
 
 import { UNIFI_NETWORK_MCP_LABELS, UNIFI_NETWORK_MCP_PORT } from "../../constants.js";
 
-const UNIFI_NETWORK_MCP_IMAGE = "ghcr.io/enuno/unifi-mcp-server:latest";
+const UNIFI_NETWORK_MCP_IMAGE = oci`ghcr.io/enuno/unifi-mcp-server:latest`;
 const MCP_UID = 1000;
 const MCP_GID = 1000;
 

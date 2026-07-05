@@ -10,11 +10,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment } from "@k2/cdk-lib";
+import { K2Deployment, oci } from "@k2/cdk-lib";
 
 import { DMHY_MCP_LABELS, DMHY_MCP_PORT } from "../../constants.js";
 
-const DMHY_MCP_IMAGE = "ghcr.io/wyvernzora/dmhy-mcp:dev";
+const DMHY_MCP_IMAGE = oci`ghcr.io/wyvernzora/dmhy-mcp:dev`;
 const NOBODY_UID = 65532;
 const NOBODY_GID = 65532;
 

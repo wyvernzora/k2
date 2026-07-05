@@ -19,7 +19,7 @@ import {
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { ApexDomain, K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { ApexDomain, K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 import { POMERIUM_IDP_HOST_PREFIX, POMERIUM_PROXY_CLUSTER_IP } from "@k2/pomerium";
 
 import {
@@ -32,11 +32,11 @@ import {
 
 import { forgejoEnv } from "./env.js";
 
-export const FORGEJO_IMAGE = "codeberg.org/forgejo/forgejo:15-rootless";
+export const FORGEJO_IMAGE = oci`codeberg.org/forgejo/forgejo:15-rootless`;
 export const FORGEJO_APPDATA_CLAIM_NAME = "forgejo-appdata";
 
-const CADDY_IMAGE = "caddy:2.10.0-alpine";
-const BUSYBOX_IMAGE = "busybox:1.37.0";
+const CADDY_IMAGE = oci`caddy:2.10.0-alpine`;
+const BUSYBOX_IMAGE = oci`busybox:1.37.0`;
 const DEFAULT_CERTIFICATE_SECRET_NAME = "default-certificate";
 const PUID = 1000;
 const PGID = 1000;

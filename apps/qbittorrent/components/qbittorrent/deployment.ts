@@ -15,13 +15,13 @@ import {
 import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
-import { K2Deployment, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
+import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
 import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBIT_BRIDGE_PORT } from "../../constants.js";
 
-const QBITTORRENT_IMAGE = "lscr.io/linuxserver/qbittorrent:4.6.7";
-const FLOOD_IMAGE = "jesec/flood:4.14.3";
-const QBIT_BRIDGE_IMAGE = "ghcr.io/wyvernzora/qbit-bridge:dev";
+const QBITTORRENT_IMAGE = oci`lscr.io/linuxserver/qbittorrent:4.6.7`;
+const FLOOD_IMAGE = oci`jesec/flood:4.14.3`;
+const QBIT_BRIDGE_IMAGE = oci`ghcr.io/wyvernzora/qbit-bridge:dev`;
 const PUID = 3005;
 const PGID = 2001;
 const UMASK = "0007";
@@ -63,7 +63,7 @@ export class QbittorrentDeployment extends K2Deployment {
 function initAppdataContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeMount): ContainerProps {
   return {
     name: "init-appdata",
-    image: "busybox:1.37.0",
+    image: oci`busybox:1.37.0`,
     command: ["sh", "/init/appdata.sh"],
     volumeMounts: [volumes.appdata(APPDATA_MOUNT_PATH), initMount],
     securityContext: {
@@ -75,7 +75,7 @@ function initAppdataContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeM
 function initDownloadsContainer(volumes: K2Mounters<K2Volumes>, initMount: VolumeMount): ContainerProps {
   return {
     name: "init-downloads",
-    image: "busybox:1.37.0",
+    image: oci`busybox:1.37.0`,
     command: ["sh", "/init/downloads.sh"],
     volumeMounts: [volumes.anime("/downloads/anime"), volumes.default("/downloads/default"), initMount],
     securityContext: {

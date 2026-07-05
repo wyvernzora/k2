@@ -11,11 +11,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment } from "@k2/cdk-lib";
+import { K2Deployment, oci } from "@k2/cdk-lib";
 
 import { REDIS_LABELS, REDIS_PORT } from "../../constants.js";
 
-const REDIS_IMAGE = "redis:7.4-alpine";
+const REDIS_IMAGE = oci`redis:7.4-alpine`;
 
 export interface RedisDeploymentProps {
   readonly secretName: string;
