@@ -840,6 +840,47 @@ metadata:
   labels:
     k2.wyvernzora.io/app: n8n
     k2.wyvernzora.io/component: network-policy
+  name: n8n-takuhai-n8n-to-takuhai-crawler-nyaa
+specs:
+  - description: n8n to crawler-nyaa
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: crawler-nyaa
+              app.kubernetes.io/name: takuhai
+              k8s:io.kubernetes.pod.namespace: takuhai
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: automation
+        app.kubernetes.io/name: n8n
+        k8s:io.kubernetes.pod.namespace: n8n
+  - description: n8n to crawler-nyaa
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: crawler-nyaa
+        app.kubernetes.io/name: takuhai
+        k8s:io.kubernetes.pod.namespace: takuhai
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: automation
+              app.kubernetes.io/name: n8n
+              k8s:io.kubernetes.pod.namespace: n8n
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: network-policy
   name: n8n-kura-n8n-to-kura-mcp
 specs:
   - description: n8n to kura

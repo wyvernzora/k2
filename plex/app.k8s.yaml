@@ -124,6 +124,9 @@ spec:
             timeoutSeconds: 5
           name: caddy
           ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
             - containerPort: 8443
               name: https
               protocol: TCP
@@ -329,6 +332,10 @@ data:
       auto_https off
     }
 
+    :80 {
+      redir https://{host}{uri} permanent
+    }
+
     :8443 {
       tls /tls/tls.crt /tls/tls.key
       reverse_proxy 127.0.0.1:32400
@@ -354,6 +361,10 @@ spec:
     - 10.8.0.0/16
     - 10.10.0.0/16
   ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
     - name: https
       port: 443
       protocol: TCP
@@ -432,6 +443,24 @@ specs:
           - 10.1.0.0/16
         toPorts:
           - ports:
+              - port: "80"
+                protocol: TCP
+      - fromCIDR:
+          - 10.8.0.0/16
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+      - fromCIDR:
+          - 10.10.0.0/16
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+      - fromCIDR:
+          - 10.1.0.0/16
+        toPorts:
+          - ports:
               - port: "8443"
                 protocol: TCP
       - fromCIDR:
@@ -445,6 +474,12 @@ specs:
         toPorts:
           - ports:
               - port: "8443"
+                protocol: TCP
+      - fromEntities:
+          - world
+        toPorts:
+          - ports:
+              - port: "80"
                 protocol: TCP
       - fromEntities:
           - world

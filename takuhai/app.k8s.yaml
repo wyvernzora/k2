@@ -220,6 +220,97 @@ spec:
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: takuhai
+  name: crawler-nyaa
+  namespace: takuhai
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: crawler-nyaa
+      app.kubernetes.io/name: takuhai
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: crawler-nyaa
+        app.kubernetes.io/name: takuhai
+        cdk8s.io/metadata.addr: takuhai-crawler-nyaa-deployment-c8610275
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: TAKUHAI_NYAA_ADDR
+              value: :8080
+            - name: TAKUHAI_NYAA_BASE_URL
+              value: https://nyaa.si
+            - name: TAKUHAI_NYAA_CATEGORY
+              value: "1_4"
+            - name: TAKUHAI_NYAA_FILTER
+              value: "0"
+            - name: TZ
+              value: America/Los_Angeles
+          image: ghcr.io/wyvernzora/takuhai/crawler-nyaa:dev
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 6
+            periodSeconds: 10
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 5
+          name: crawler-nyaa
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            periodSeconds: 10
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 1Gi
+              memory: 512Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -274,6 +365,25 @@ spec:
       targetPort: 8080
   selector:
     app.kubernetes.io/component: crawler-dmhy
+    app.kubernetes.io/name: takuhai
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: takuhai
+  name: takuhai-crawler-nyaa
+  namespace: takuhai
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: crawler-nyaa
     app.kubernetes.io/name: takuhai
   type: ClusterIP
 ---
@@ -414,6 +524,27 @@ metadata:
   labels:
     k2.wyvernzora.io/app: takuhai
     k2.wyvernzora.io/component: network-policy
+  name: takuhai-crawler-nyaa-egress
+specs:
+  - egress:
+      - toFQDNs:
+          - matchName: nyaa.si
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: crawler-nyaa
+        app.kubernetes.io/name: takuhai
+        k8s:io.kubernetes.pod.namespace: takuhai
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: network-policy
   name: takuhai-postgresql-takuhai-to-postgresql
 specs:
   - description: takuhai to nexus-postgresql
@@ -523,6 +654,52 @@ specs:
   - endpointSelector:
       matchLabels:
         app.kubernetes.io/component: crawler-dmhy
+        app.kubernetes.io/name: takuhai
+        k8s:io.kubernetes.pod.namespace: takuhai
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: takuhai
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: network-policy
+  name: crawler-nyaa-metrics
+  namespace: takuhai
+spec:
+  namespaceSelector:
+    matchNames:
+      - takuhai
+  podMetricsEndpoints:
+    - portNumber: 8080
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: crawler-nyaa
+      app.kubernetes.io/name: takuhai
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: takuhai
+    k2.wyvernzora.io/component: network-policy
+  name: takuhai-crawler-nyaa-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: crawler-nyaa
         app.kubernetes.io/name: takuhai
         k8s:io.kubernetes.pod.namespace: takuhai
     ingress:
