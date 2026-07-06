@@ -53,7 +53,7 @@ data:
         }
         ready
         prometheus 0.0.0.0:9153
-        forward . 1.1.1.1 9.9.9.9
+        forward . 10.10.1.1
         cache 30
         loop
         reload
@@ -180,7 +180,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 830884679b886599ff58ebb6e2707e82ae3384b938f58acbdae384e6de373fce
+        checksum/config: 10a4fc004790ce5f51e3dc5cd6abcb082ca17f14378b5d8bdb71969d5b17ecc7
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
@@ -293,15 +293,13 @@ data:
         10.1.0.0/16:
           - tcp+udp:k8s-gateway.blocky.svc.cluster.local:53
         10.2.0.0/16:
-          - 1.1.1.1
-          - 9.9.9.9
+          - 10.10.1.1
         10.8.0.0/16:
           - tcp+udp:k8s-gateway.blocky.svc.cluster.local:53
         10.10.0.0/16:
           - tcp+udp:k8s-gateway.blocky.svc.cluster.local:53
         default:
-          - 1.1.1.1
-          - 9.9.9.9
+          - 10.10.1.1
     conditional:
       fallbackUpstream: false
       mapping:
@@ -352,7 +350,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/blocky-config: 770981a1b81b7ff023bde4710d0cb6bdc69780c750551f9be9e37231fbc66d88
+        checksum/blocky-config: e08b602b2f91c38ef1c9102740ec9709891231dcae61e55c6d35ff07d546742d
       labels:
         app.kubernetes.io/component: resolver
         app.kubernetes.io/name: blocky
@@ -492,15 +490,7 @@ metadata:
 specs:
   - egress:
       - toCIDR:
-          - 1.1.1.1/32
-        toPorts:
-          - ports:
-              - port: "53"
-                protocol: UDP
-              - port: "53"
-                protocol: TCP
-      - toCIDR:
-          - 9.9.9.9/32
+          - 10.10.1.1/32
         toPorts:
           - ports:
               - port: "53"
@@ -587,15 +577,7 @@ metadata:
 specs:
   - egress:
       - toCIDR:
-          - 1.1.1.1/32
-        toPorts:
-          - ports:
-              - port: "53"
-                protocol: UDP
-              - port: "53"
-                protocol: TCP
-      - toCIDR:
-          - 9.9.9.9/32
+          - 10.10.1.1/32
         toPorts:
           - ports:
               - port: "53"
