@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.25
 
 ARG BASE_IMAGE=ubuntu:26.04
-ARG KAIROS_INIT_VERSION=v0.13.1
+ARG KAIROS_INIT_VERSION=v0.15.0
 
 FROM quay.io/kairos/kairos-init:${KAIROS_INIT_VERSION} AS kairos-init
 
