@@ -90,7 +90,7 @@ spec:
                   name: kura-tvdb
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/wyvernzora/kura:v0.4.2
+          image: ghcr.io/wyvernzora/kura:v0.4.3
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
