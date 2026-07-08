@@ -118,7 +118,9 @@ func LoadOverlayMetadata(path string) (OverlayMetadata, error) {
 	}
 
 	var metadata OverlayMetadata
-	if err := yaml.Unmarshal(data, &metadata); err != nil {
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&metadata); err != nil {
 		return OverlayMetadata{}, err
 	}
 	return metadata, nil

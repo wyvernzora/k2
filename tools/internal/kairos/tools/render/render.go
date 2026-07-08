@@ -38,6 +38,7 @@ type ImageMetadata struct {
 	Target   string `yaml:"target"`
 	Arch     string `yaml:"arch"`
 	Hardware string `yaml:"hardware"`
+	Role     string `yaml:"role"`
 }
 
 type activationStages struct {
@@ -45,8 +46,15 @@ type activationStages struct {
 }
 
 type activationStage struct {
-	Name     string `yaml:"name"`
-	Hostname string `yaml:"hostname"`
+	Name     string                    `yaml:"name"`
+	Hostname string                    `yaml:"hostname,omitempty"`
+	Commands []string                  `yaml:"commands,omitempty"`
+	Users    map[string]activationUser `yaml:"users,omitempty"`
+}
+
+type activationUser struct {
+	Groups            []string `yaml:"groups,omitempty"`
+	SSHAuthorizedKeys []string `yaml:"ssh_authorized_keys,omitempty"`
 }
 
 func ClusterConfig(c clusterconfig.Config) ([]byte, error) {
@@ -146,11 +154,7 @@ func ServerActivationCloudConfig(hostname string, operatorKeys []string) []byte 
 	_ = operatorKeys
 	out.K3s.Enabled = true
 
-	data, err := yaml.Marshal(out)
-	if err != nil {
-		panic(err)
-	}
-	return []byte("#cloud-config\n" + string(data))
+	return mustCloudConfig(out)
 }
 
 func AgentActivationCloudConfig(hostname string, operatorKeys []string) []byte {
@@ -168,15 +172,23 @@ func AgentActivationCloudConfig(hostname string, operatorKeys []string) []byte {
 	_ = operatorKeys
 	out.K3sAgent.Enabled = true
 
-	data, err := yaml.Marshal(out)
-	if err != nil {
-		panic(err)
-	}
-	return []byte("#cloud-config\n" + string(data))
+	return mustCloudConfig(out)
 }
 
 func ActivationCloudConfig(hostname string, operatorKeys []string) []byte {
 	return ServerActivationCloudConfig(hostname, operatorKeys)
+}
+
+func HostnameActivationCloudConfig(name string, hostname string) []byte {
+	type config struct {
+		Name   string           `yaml:"name"`
+		Stages activationStages `yaml:"stages"`
+	}
+	out := config{
+		Name:   name,
+		Stages: hostnameStages(hostname),
+	}
+	return mustCloudConfig(out)
 }
 
 func hostnameStages(hostname string) activationStages {
@@ -185,9 +197,59 @@ func hostnameStages(hostname string) activationStages {
 			{
 				Name:     "Set local hostname",
 				Hostname: hostname,
+				// /etc is ephemeral; without this entry every sudo warns
+				// "unable to resolve host <hostname>".
+				Commands: []string{hostsEntryCommand(hostname)},
 			},
 		},
 	}
+}
+
+func hostsEntryCommand(hostname string) string {
+	entry := "127.0.1.1 " + hostname
+	return fmt.Sprintf("grep -qxF %q /etc/hosts || echo %q >> /etc/hosts", entry, entry)
+}
+
+// OperatorKeysActivationCloudConfig renders an /oem stage that installs
+// operator SSH keys on every boot, including recovery boots. Keys under
+// /home/<user> alone do not survive `kairos-agent reset` (COS_PERSISTENT is
+// wiped) while hardening's removal of the default password DOES survive
+// (it edits /oem) — without this stage a hardened node comes out of reset
+// unreachable over SSH.
+func OperatorKeysActivationCloudConfig(name string, user string, keys []string) []byte {
+	type config struct {
+		Name   string           `yaml:"name"`
+		Stages activationStages `yaml:"stages"`
+	}
+	// A full users: definition (admin group, key-only) rather than bare
+	// authorized_keys: kairos-agent 2.30+/Kairos 3.3+ refuses reset/install
+	// unless some applied config defines an admin-group user — and hardening
+	// disables the stock 90_custom.yaml that used to.
+	out := config{
+		Name: name,
+		Stages: activationStages{
+			Initramfs: []activationStage{
+				{
+					Name: "Operator user and keys",
+					Users: map[string]activationUser{
+						user: {
+							Groups:            []string{"admin"},
+							SSHAuthorizedKeys: keys,
+						},
+					},
+				},
+			},
+		},
+	}
+	return mustCloudConfig(out)
+}
+
+func mustCloudConfig(value any) []byte {
+	data, err := yaml.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	return []byte("#cloud-config\n" + string(data))
 }
 
 func AuthorizedKeys(keys []string) []byte {

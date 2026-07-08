@@ -137,11 +137,16 @@ func (p Planner) EnabledTargets() []string {
 func (p Planner) BuildAllEnabled() ([]Plan, error) {
 	targets := p.EnabledTargets()
 	plans := make([]Plan, 0, len(targets))
+	tags := map[string]string{}
 	for _, target := range targets {
 		resolved, err := p.Build(target)
 		if err != nil {
 			return nil, err
 		}
+		if previous := tags[resolved.Image]; previous != "" {
+			return nil, fmt.Errorf("enabled targets %q and %q resolve to duplicate image tag %s", previous, target, resolved.Image)
+		}
+		tags[resolved.Image] = target
 		plans = append(plans, resolved)
 	}
 	return plans, nil
@@ -314,6 +319,14 @@ func validateArtifacts(resolved Plan) error {
 func (p Planner) validateOverlays(resolved Plan) error {
 	if !contains(resolved.Overlays, "base") {
 		return fmt.Errorf("target %q overlays must include base", resolved.Target)
+	}
+	if !containsOverlayPrefix(resolved.Overlays, "role/"+resolved.Role) {
+		return fmt.Errorf("target %q overlays must include role/%s", resolved.Target, resolved.Role)
+	}
+	hardwareOverlay := filepath.Join(p.Paths.OverlaysDir, "hardware", resolved.Hardware)
+	if info, err := os.Stat(hardwareOverlay); err == nil && info.IsDir() &&
+		!containsOverlayPrefix(resolved.Overlays, "hardware/"+resolved.Hardware) {
+		return fmt.Errorf("target %q overlays must include hardware/%s", resolved.Target, resolved.Hardware)
 	}
 	for _, overlay := range resolved.Overlays {
 		info, err := os.Stat(filepath.Join(p.Paths.OverlaysDir, overlay))
@@ -599,6 +612,15 @@ func dedupe(items []string) []string {
 func contains(items []string, want string) bool {
 	for _, item := range items {
 		if item == want {
+			return true
+		}
+	}
+	return false
+}
+
+func containsOverlayPrefix(items []string, want string) bool {
+	for _, item := range items {
+		if item == want || strings.HasPrefix(item, want+"/") {
 			return true
 		}
 	}

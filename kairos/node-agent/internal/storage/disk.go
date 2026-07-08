@@ -21,6 +21,7 @@ var (
 	rescanWait     = time.Second
 	currentTime    = time.Now
 	sleepForRescan = time.Sleep
+	statBlock      = os.Stat
 )
 
 func (m manager) targetDisk() (string, error) {
@@ -28,11 +29,22 @@ func (m manager) targetDisk() (string, error) {
 		if err := waitForBlock(m.cfg.Disk, m.cfg.WaitSeconds); err != nil {
 			return "", err
 		}
-		boot, _ := m.bootDisk()
-		if boot != "" && m.cfg.Disk == boot {
-			return "", fmt.Errorf("target disk %s is the boot disk", m.cfg.Disk)
+		resolved, err := filepath.EvalSymlinks(m.cfg.Disk)
+		if err != nil {
+			return "", fmt.Errorf("resolve target disk %s: %w", m.cfg.Disk, err)
 		}
-		return m.cfg.Disk, nil
+		disk, err := diskForDev(resolved, m.run)
+		if err != nil {
+			return "", fmt.Errorf("resolve target disk %s: %w", m.cfg.Disk, err)
+		}
+		boot, err := m.bootDisk()
+		if err != nil {
+			return "", fmt.Errorf("detect boot disk before using explicit target %s: %w", m.cfg.Disk, err)
+		}
+		if disk == boot {
+			return "", fmt.Errorf("target disk %s resolves to boot disk %s", m.cfg.Disk, boot)
+		}
+		return disk, nil
 	}
 
 	bootDisk, _ := m.bootDisk()
@@ -153,17 +165,15 @@ func skipBlockName(name string) bool {
 }
 
 func FirstPartition(disk string) string {
-	switch {
-	case strings.HasPrefix(disk, "/dev/nvme"), strings.HasPrefix(disk, "/dev/mmcblk"):
+	if len(disk) > 0 && disk[len(disk)-1] >= '0' && disk[len(disk)-1] <= '9' {
 		return disk + "p1"
-	default:
-		return disk + "1"
 	}
+	return disk + "1"
 }
 
 func waitForBlock(dev string, seconds int) error {
 	for i := 0; i <= seconds; i++ {
-		if st, err := os.Stat(dev); err == nil && st.Mode()&os.ModeDevice != 0 {
+		if st, err := statBlock(dev); err == nil && st.Mode()&os.ModeDevice != 0 {
 			return nil
 		}
 		time.Sleep(time.Second)

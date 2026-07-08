@@ -38,7 +38,7 @@ func (m manager) prepare() error {
 
 	targetDisk, err := m.targetDisk()
 	if err != nil {
-		if m.cfg.Required {
+		if m.cfg.Required || m.cfg.Disk != "auto" {
 			return err
 		}
 		m.log.Printf("%v; keeping original %s", err, persistLabel)
@@ -59,7 +59,11 @@ func (m manager) prepareTargetDisk(targetDisk string) error {
 	targetPart := FirstPartition(targetDisk)
 	m.log.Printf("using %s for %s", targetPart, persistLabel)
 
-	if existing, _ := m.persistentOnDisk(targetDisk); existing != "" {
+	existing, err := m.persistentOnDisk(targetDisk)
+	if err != nil {
+		return err
+	}
+	if existing != "" {
 		m.log.Printf("target disk already has %s at %s", persistLabel, existing)
 		if err := m.relabelOtherPersistent(targetDisk); err != nil {
 			return err
@@ -85,14 +89,17 @@ func (m manager) prepareTargetDisk(targetDisk string) error {
 		return fmt.Errorf("format %s: %w", targetPart, err)
 	}
 
-	current, _ := firstDeviceByLabel(persistLabel, m.run)
+	current, err := firstDeviceByLabel(persistLabel, m.run)
+	if err != nil {
+		return err
+	}
 	if err := m.copyPersistent(current, targetPart); err != nil {
 		return err
 	}
-	if err := m.relabelOtherPersistent(targetDisk); err != nil {
+	if err := m.labelExt(targetPart, persistLabel); err != nil {
 		return err
 	}
-	if err := m.labelExt(targetPart, persistLabel); err != nil {
+	if err := m.relabelOtherPersistent(targetDisk); err != nil {
 		return err
 	}
 	if err := m.grow(targetPart); err != nil {

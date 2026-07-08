@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestRunWithHealthyNoPools(t *testing.T) {
@@ -61,19 +62,11 @@ func TestRunWithUnhealthyPoolAndFailedLIO(t *testing.T) {
 }
 
 func TestRunWithPortalListening(t *testing.T) {
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
+	oldDial := dialPortal
+	dialPortal = func(network, address string, timeout time.Duration) (net.Conn, error) {
+		return fakeConn{}, nil
 	}
-	defer listener.Close()
-	done := make(chan struct{})
-	go func() {
-		conn, err := listener.Accept()
-		if err == nil {
-			_ = conn.Close()
-		}
-		close(done)
-	}()
+	t.Cleanup(func() { dialPortal = oldDial })
 
 	dir := t.TempDir()
 	saveConfig := filepath.Join(dir, "saveconfig.json")
@@ -92,12 +85,12 @@ func TestRunWithPortalListening(t *testing.T) {
 	}
 	var stdout, stderr bytes.Buffer
 
-	err = runWith(Config{SaveConfig: saveConfig, StatusFile: status, Portal: listener.Addr().String()}, run, &stdout, &stderr)
+	portal := "127.0.0.1:3260"
+	err := runWith(Config{SaveConfig: saveConfig, StatusFile: status, Portal: portal}, run, &stdout, &stderr)
 	if err != nil {
 		t.Fatal(err)
 	}
-	<-done
-	want := "healthy: pool tank ONLINE; 2 iSCSI target(s), portal listening on " + portalPort(listener.Addr().String()) + "\n"
+	want := "healthy: pool tank ONLINE; 2 iSCSI target(s), portal listening on " + portalPort(portal) + "\n"
 	if stdout.String() != want {
 		t.Fatalf("stdout = %q, want %q", stdout.String(), want)
 	}
@@ -105,6 +98,75 @@ func TestRunWithPortalListening(t *testing.T) {
 		t.Fatalf("stderr = %q, want empty", stderr.String())
 	}
 	assertStatus(t, status, want)
+}
+
+func TestRunWithPortalNotListeningIsUnhealthy(t *testing.T) {
+	oldDial := dialPortal
+	dialPortal = func(network, address string, timeout time.Duration) (net.Conn, error) {
+		return nil, errors.New("connect: connection refused")
+	}
+	t.Cleanup(func() { dialPortal = oldDial })
+
+	dir := t.TempDir()
+	saveConfig := filepath.Join(dir, "saveconfig.json")
+	status := filepath.Join(dir, "status")
+	if err := os.WriteFile(saveConfig, []byte(`{"targets":[{}]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run := fakeRunner{
+		outputs: map[string]string{
+			"zpool list -H -o name": "",
+		},
+		runErrs: map[string]error{
+			"systemctl is-failed --quiet rtslib-fb-targetctl.service": errors.New("not failed"),
+		},
+	}
+	var stdout, stderr bytes.Buffer
+
+	addr := "127.0.0.1:3261"
+	err := runWith(Config{SaveConfig: saveConfig, StatusFile: status, Portal: addr}, run, &stdout, &stderr)
+	if !errors.Is(err, ErrUnhealthy) {
+		t.Fatalf("err = %v, want ErrUnhealthy", err)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("stdout = %q, want empty", stdout.String())
+	}
+	got := stderr.String()
+	if !strings.HasPrefix(got, "UNHEALTHY: ") || !strings.Contains(got, "portal "+addr+" not listening") {
+		t.Fatalf("stderr = %q, want not listening unhealthy note", got)
+	}
+	assertStatus(t, status, got)
+}
+
+func TestRunWithUnparseableSaveConfigIsUnhealthy(t *testing.T) {
+	dir := t.TempDir()
+	saveConfig := filepath.Join(dir, "saveconfig.json")
+	status := filepath.Join(dir, "status")
+	if err := os.WriteFile(saveConfig, []byte(`{`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run := fakeRunner{
+		outputs: map[string]string{
+			"zpool list -H -o name": "",
+		},
+		runErrs: map[string]error{
+			"systemctl is-failed --quiet rtslib-fb-targetctl.service": errors.New("not failed"),
+		},
+	}
+	var stdout, stderr bytes.Buffer
+
+	err := runWith(Config{SaveConfig: saveConfig, StatusFile: status}, run, &stdout, &stderr)
+	if !errors.Is(err, ErrUnhealthy) {
+		t.Fatalf("err = %v, want ErrUnhealthy", err)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("stdout = %q, want empty", stdout.String())
+	}
+	got := stderr.String()
+	if !strings.Contains(got, "saveconfig.json unparseable") {
+		t.Fatalf("stderr = %q, want unparseable note", got)
+	}
+	assertStatus(t, status, got)
 }
 
 func assertStatus(t *testing.T, path, want string) {
@@ -123,6 +185,22 @@ type fakeRunner struct {
 	outErrs map[string]error
 	runErrs map[string]error
 }
+
+type fakeConn struct{}
+
+func (fakeConn) Read([]byte) (int, error)         { return 0, nil }
+func (fakeConn) Write([]byte) (int, error)        { return 0, nil }
+func (fakeConn) Close() error                     { return nil }
+func (fakeConn) LocalAddr() net.Addr              { return fakeAddr("local") }
+func (fakeConn) RemoteAddr() net.Addr             { return fakeAddr("remote") }
+func (fakeConn) SetDeadline(time.Time) error      { return nil }
+func (fakeConn) SetReadDeadline(time.Time) error  { return nil }
+func (fakeConn) SetWriteDeadline(time.Time) error { return nil }
+
+type fakeAddr string
+
+func (a fakeAddr) Network() string { return string(a) }
+func (a fakeAddr) String() string  { return string(a) }
 
 func (r fakeRunner) Run(name string, args ...string) error {
 	key := name + " " + strings.Join(args, " ")

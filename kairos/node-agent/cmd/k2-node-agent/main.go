@@ -26,7 +26,7 @@ type setupPersistenceCommand struct {
 }
 
 type storageHealthCommand struct {
-	SaveConfig string `name:"saveconfig" default:"/etc/rtslib-fb-target/saveconfig.json" help:"rtslib saveconfig path."`
+	SaveConfig string `name:"save-config" default:"/etc/rtslib-fb-target/saveconfig.json" help:"rtslib saveconfig path."`
 	StatusFile string `name:"status-file" default:"/run/k2-storage-health/status" help:"Status file to write."`
 	Portal     string `default:"127.0.0.1:3260" help:"iSCSI portal address to probe."`
 }

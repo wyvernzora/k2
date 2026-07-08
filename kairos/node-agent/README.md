@@ -77,8 +77,8 @@ When preparing a target disk, the helper:
 2. Selects an existing or empty non-boot target disk.
 3. Creates a single ext4 partition when the target disk needs initialization.
 4. Copies existing persistent data when an original `COS_PERSISTENT` exists.
-5. Relabels old persistent filesystems to `COS_PERSIST_OLD`.
-6. Labels the target partition `COS_PERSISTENT`.
+5. Labels the target partition `COS_PERSISTENT`.
+6. Relabels old persistent filesystems to `COS_PERSIST_OLD`.
 7. Grows the filesystem to fill the partition.
 
 When no suitable target disk exists and `--mode optional` is used, the helper
@@ -101,7 +101,7 @@ Important flags:
 
 | Flag | Default | Purpose |
 | --- | --- | --- |
-| `--saveconfig` | `/etc/rtslib-fb-target/saveconfig.json` | rtslib saveconfig path used to count configured targets. |
+| `--save-config` | `/etc/rtslib-fb-target/saveconfig.json` | rtslib saveconfig path used to count configured targets. |
 | `--status-file` | `/run/k2-storage-health/status` | Status file to write. |
 | `--portal` | `127.0.0.1:3260` | iSCSI portal address to probe when targets exist. |
 
