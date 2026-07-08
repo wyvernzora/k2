@@ -50,7 +50,7 @@ func TestBuilderImage(t *testing.T) {
 		"--build-arg", "IMAGE_REVISION=rev0",
 		"--build-arg", "TRUSTED_BOOT=false",
 		"--build-arg", "OVERLAYS=base,hardware/rpi4cb,role/k8s",
-		"--build-arg", "TARGET_NAME=ubuntu-24.04-arm64-rpi4cb-k8s",
+		"--build-arg", "TARGET_NAME=ubuntu-26.04-arm64-rpi4cb-k8s",
 		"--build-arg", "FLAVOR=ubuntu-24.04",
 		"--build-arg", "ROLE=k8s",
 		"--build-arg", "ARCH=arm64",
@@ -69,7 +69,7 @@ func TestBuilderImage(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Building ubuntu-24.04-arm64-rpi4cb-k8s",
+		"Building ubuntu-26.04-arm64-rpi4cb-k8s",
 		"image: ghcr.io/wyvernzora/k2-kairos:test",
 		"platform: linux/arm64",
 		"kairos model: rpi4",
@@ -201,7 +201,7 @@ func indexOf(values []string, needle string) int {
 
 func testPlan() plan.Plan {
 	return plan.Plan{
-		Target:           "ubuntu-24.04-arm64-rpi4cb-k8s",
+		Target:           "ubuntu-26.04-arm64-rpi4cb-k8s",
 		Flavor:           "ubuntu-24.04",
 		Role:             "k8s",
 		Arch:             "arm64",

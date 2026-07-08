@@ -128,7 +128,7 @@ kairos-image-build-cli:
 # +kairos-image-build-artifact: builds, patches, inspects, and exports Kairos boot artifacts in Linux
 #
 kairos-image-build-artifact:
-    ARG KAIROS_TARGET="ubuntu-24.04-arm64-rpi4cb-k8s"
+    ARG KAIROS_TARGET="ubuntu-26.04-arm64-rpi4cb-k8s"
     FROM earthly/dind:ubuntu-23.04-docker-25.0.2-1
     WORKDIR /src
     RUN command -v bash && command -v xz && command -v docker && command -v dockerd

@@ -10,11 +10,11 @@ import (
 func TestParseImageRefHappyPath(t *testing.T) {
 	in := `NAME="Kairos"
 IMAGE_REPO=ghcr.io/wyvernzora/k2-kairos
-IMAGE_LABEL=ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3
+IMAGE_LABEL=ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3
 KAIROS_RELEASE=v3.6.0
 `
 	got := parseImageRef(in)
-	want := "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3"
+	want := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
@@ -22,9 +22,9 @@ KAIROS_RELEASE=v3.6.0
 
 func TestParseImageRefStripsQuotes(t *testing.T) {
 	in := `IMAGE_REPO="ghcr.io/wyvernzora/k2-kairos"
-IMAGE_LABEL='ubuntu-24.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev0'`
+IMAGE_LABEL='ubuntu-26.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev0'`
 	got := parseImageRef(in)
-	want := "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev0"
+	want := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev0"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
@@ -41,11 +41,11 @@ func TestParseImageRefMissingFieldReturnsEmpty(t *testing.T) {
 
 func TestTagPrefixFromMetadata(t *testing.T) {
 	meta := NodeImageMetadata{
-		Target:   "ubuntu-24.04-arm64-rpi4cb-k8s",
+		Target:   "ubuntu-26.04-arm64-rpi4cb-k8s",
 		Arch:     "arm64",
 		Hardware: "rpi4cb",
 	}
-	if got := tagPrefix(meta); got != "ubuntu-24.04-arm64-rpi4cb-k8s-" {
+	if got := tagPrefix(meta); got != "ubuntu-26.04-arm64-rpi4cb-k8s-" {
 		t.Errorf("got %q", got)
 	}
 }

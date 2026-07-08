@@ -21,20 +21,20 @@ func TestBuildPlanGolden(t *testing.T) {
 		golden string
 	}{
 		{
-			target: "ubuntu-24.04-amd64-qemu-k8s",
-			golden: "ubuntu-24.04-amd64-qemu-k8s.golden.json",
+			target: "ubuntu-26.04-amd64-qemu-k8s",
+			golden: "ubuntu-26.04-amd64-qemu-k8s.golden.json",
 		},
 		{
-			target: "ubuntu-24.04-arm64-qemu-k8s",
-			golden: "ubuntu-24.04-arm64-qemu-k8s.golden.json",
+			target: "ubuntu-26.04-arm64-qemu-k8s",
+			golden: "ubuntu-26.04-arm64-qemu-k8s.golden.json",
 		},
 		{
-			target: "ubuntu-24.04-arm64-rpi4cb-k8s",
-			golden: "ubuntu-24.04-arm64-rpi4cb-k8s.golden.json",
+			target: "ubuntu-26.04-arm64-rpi4cb-k8s",
+			golden: "ubuntu-26.04-arm64-rpi4cb-k8s.golden.json",
 		},
 		{
-			target: "ubuntu-24.04-amd64-qemu-storage",
-			golden: "ubuntu-24.04-amd64-qemu-storage.golden.json",
+			target: "ubuntu-26.04-amd64-qemu-storage",
+			golden: "ubuntu-26.04-amd64-qemu-storage.golden.json",
 		},
 	}
 
@@ -54,10 +54,10 @@ func TestEnabledTargets(t *testing.T) {
 
 	got := planner.EnabledTargets()
 	want := []string{
-		"ubuntu-24.04-amd64-qemu-k8s",
-		"ubuntu-24.04-amd64-qemu-storage",
-		"ubuntu-24.04-arm64-qemu-k8s",
-		"ubuntu-24.04-arm64-rpi4cb-k8s",
+		"ubuntu-26.04-amd64-qemu-k8s",
+		"ubuntu-26.04-amd64-qemu-storage",
+		"ubuntu-26.04-arm64-qemu-k8s",
+		"ubuntu-26.04-arm64-rpi4cb-k8s",
 	}
 	if !slices.Equal(got, want) {
 		t.Fatalf("enabled targets = %#v, want %#v", got, want)
@@ -67,16 +67,16 @@ func TestEnabledTargets(t *testing.T) {
 func TestImageTagAndArtifactStemMatchShellContract(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 
-	got, err := planner.Build("ubuntu-24.04-arm64-rpi4cb-k8s")
+	got, err := planner.Build("ubuntu-26.04-arm64-rpi4cb-k8s")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0"
+	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0"
 	if got.Image != wantImage {
 		t.Fatalf("image = %q, want %q", got.Image, wantImage)
 	}
-	wantStem := "ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0"
+	wantStem := "ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0"
 	if got.ArtifactStem != wantStem {
 		t.Fatalf("artifact stem = %q, want %q", got.ArtifactStem, wantStem)
 	}
@@ -85,7 +85,7 @@ func TestImageTagAndArtifactStemMatchShellContract(t *testing.T) {
 func TestImageTagOmitsKubernetesSegmentsForStorageTarget(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 
-	got, err := planner.Build("ubuntu-24.04-amd64-qemu-storage")
+	got, err := planner.Build("ubuntu-26.04-amd64-qemu-storage")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,11 +93,11 @@ func TestImageTagOmitsKubernetesSegmentsForStorageTarget(t *testing.T) {
 	if got.KubernetesDistro != "" {
 		t.Fatalf("kubernetesDistro = %q, want empty", got.KubernetesDistro)
 	}
-	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-amd64-qemu-storage-rev0"
+	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0"
 	if got.Image != wantImage {
 		t.Fatalf("image = %q, want %q", got.Image, wantImage)
 	}
-	wantStem := "ubuntu-24.04-v4.1.0-amd64-qemu-storage-rev0"
+	wantStem := "ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0"
 	if got.ArtifactStem != wantStem {
 		t.Fatalf("artifact stem = %q, want %q", got.ArtifactStem, wantStem)
 	}
@@ -111,7 +111,7 @@ func TestRawPatchRejectsUnsupportedPatchTarget(t *testing.T) {
 	unsupported := filepath.Join(planner.Paths.OverlaysDir, "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt.patch")
 	mustWrite(t, unsupported, "- op: test\n  path: /value\n  value: nope\n")
 
-	_, err := planner.Build("ubuntu-24.04-arm64-rpi4cb-k8s")
+	_, err := planner.Build("ubuntu-26.04-arm64-rpi4cb-k8s")
 	if err == nil {
 		t.Fatal("expected unsupported .txt.patch error")
 	}
@@ -125,9 +125,9 @@ func TestTargetsRejectUnknownFields(t *testing.T) {
 	targetsPath := filepath.Join(root, "targets.yaml")
 	mustWrite(t, targetsPath, strings.TrimSpace(`
 targets:
-  ubuntu-24.04-amd64-qemu-k8s:
+  ubuntu-26.04-amd64-qemu-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     flavorRelease: "24.04"
     role: k8s
     arch: amd64
@@ -144,9 +144,9 @@ targets:
         diskSize: 8192
         diskStateSize: 4096
 
-  ubuntu-24.04-arm64-qemu-k8s:
+  ubuntu-26.04-arm64-qemu-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: arm64
     hardware: qemu
@@ -162,9 +162,9 @@ targets:
         diskSize: 8192
         diskStateSize: 4096
 
-  ubuntu-24.04-arm64-rpi4cb-k8s:
+  ubuntu-26.04-arm64-rpi4cb-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: arm64
     hardware: rpi4cb
@@ -200,7 +200,7 @@ inspect:
                 value: 250
 `)+"\n")
 
-	_, err := planner.Build("ubuntu-24.04-arm64-rpi4cb-k8s-extra")
+	_, err := planner.Build("ubuntu-26.04-arm64-rpi4cb-k8s-extra")
 	if err == nil {
 		t.Fatal("expected conflicting inspection error")
 	}
@@ -218,7 +218,7 @@ inspect:
       - /system/oem/05-persistent-storage.yaml
 `)+"\n")
 
-	_, err := planner.Build("ubuntu-24.04-arm64-rpi4cb-k8s-extra")
+	_, err := planner.Build("ubuntu-26.04-arm64-rpi4cb-k8s-extra")
 	if err == nil {
 		t.Fatal("expected absent/file conflict")
 	}
@@ -247,9 +247,9 @@ REGISTRY_IMAGE=ghcr.io/wyvernzora/k2-kairos
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "targets.yaml"), strings.TrimSpace(`
 targets:
-  ubuntu-24.04-amd64-qemu-k8s:
+  ubuntu-26.04-amd64-qemu-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: amd64
     hardware: qemu
@@ -265,9 +265,9 @@ targets:
         diskSize: 8192
         diskStateSize: 4096
 
-  ubuntu-24.04-arm64-qemu-k8s:
+  ubuntu-26.04-arm64-qemu-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: arm64
     hardware: qemu
@@ -283,9 +283,9 @@ targets:
         diskSize: 8192
         diskStateSize: 4096
 
-  ubuntu-24.04-arm64-rpi4cb-k8s:
+  ubuntu-26.04-arm64-rpi4cb-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: arm64
     hardware: rpi4cb
@@ -300,9 +300,9 @@ targets:
       raw:
         diskStateSize: 8192
 
-  ubuntu-24.04-amd64-qemu-storage:
+  ubuntu-26.04-amd64-qemu-storage:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: storage
     arch: amd64
     hardware: qemu
@@ -318,9 +318,9 @@ targets:
         diskSize: 16384
         diskStateSize: 6144
 
-  ubuntu-24.04-arm64-rpi4cb-k8s-extra:
+  ubuntu-26.04-arm64-rpi4cb-k8s-extra:
     enabled: false
-    inherits: ubuntu-24.04-arm64-rpi4cb-k8s
+    inherits: ubuntu-26.04-arm64-rpi4cb-k8s
     overlays:
       - extra
 `)+"\n")

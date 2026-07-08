@@ -451,7 +451,7 @@ func readCurrentImage(client *remote.Client) (string, error) {
 // IMAGE_REPO + IMAGE_LABEL pair. Format:
 //
 //	IMAGE_REPO=ghcr.io/wyvernzora/k2-kairos
-//	IMAGE_LABEL=ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3
+//	IMAGE_LABEL=ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3
 //
 // Returns "" if either field is missing.
 func parseImageRef(release string) string {

@@ -124,7 +124,7 @@ go test ./...
 go vet ./...
 go build -o k2-tools ./cmd/k2-tools
 ./k2-tools --help
-./k2-tools image plan ubuntu-24.04-amd64-qemu-k8s
+./k2-tools image plan ubuntu-26.04-amd64-qemu-k8s
 ```
 
 Use Go commands directly inside `tools/` for tool-level iteration. Use Earthly

@@ -78,9 +78,9 @@ func presetsDir(repoRoot string) string {
 func defaultQEMUTarget() (string, error) {
 	switch runtime.GOARCH {
 	case "arm64":
-		return "ubuntu-24.04-arm64-qemu-k8s", nil
+		return "ubuntu-26.04-arm64-qemu-k8s", nil
 	case "amd64":
-		return "ubuntu-24.04-amd64-qemu-k8s", nil
+		return "ubuntu-26.04-amd64-qemu-k8s", nil
 	default:
 		return "", fmt.Errorf("unsupported host architecture for default QEMU target: %s", runtime.GOARCH)
 	}

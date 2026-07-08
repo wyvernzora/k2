@@ -17,6 +17,6 @@ storage setup is role-owned by `role/k8s`.
 Run the checks with:
 
 ```sh
-./tools/k2-tools image inspect oci ubuntu-24.04-arm64-rpi4cb-k8s
-./tools/k2-tools image inspect artifact ubuntu-24.04-arm64-rpi4cb-k8s
+./tools/k2-tools image inspect oci ubuntu-26.04-arm64-rpi4cb-k8s
+./tools/k2-tools image inspect artifact ubuntu-26.04-arm64-rpi4cb-k8s
 ```
