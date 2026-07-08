@@ -11,6 +11,6 @@ on the boot disk so passed-through pool disks are never auto-claimed.
 Run the checks with:
 
 ```sh
-./tools/k2-tools image inspect oci ubuntu-24.04-amd64-qemu-storage
-./tools/k2-tools image inspect artifact ubuntu-24.04-amd64-qemu-storage
+./tools/k2-tools image inspect oci ubuntu-26.04-amd64-qemu-storage
+./tools/k2-tools image inspect artifact ubuntu-26.04-amd64-qemu-storage
 ```

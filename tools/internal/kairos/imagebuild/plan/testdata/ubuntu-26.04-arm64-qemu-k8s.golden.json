@@ -1,7 +1,7 @@
 {
-  "target": "ubuntu-24.04-arm64-qemu-k8s",
+  "target": "ubuntu-26.04-arm64-qemu-k8s",
   "enabled": true,
-  "flavor": "ubuntu-24.04",
+  "flavor": "ubuntu-26.04",
   "role": "k8s",
   "arch": "arm64",
   "platform": "linux/arm64",
@@ -113,9 +113,9 @@
       "diskSize": 8192
     }
   },
-  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-arm64-qemu-k8s-v1.36.0-k3s1-rev0",
-  "artifactStem": "ubuntu-24.04-v4.1.0-arm64-qemu-k8s-v1.36.0-k3s1-rev0",
-  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-arm64-qemu-k8s",
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-qemu-k8s-v1.36.0-k3s1-rev0",
+  "artifactStem": "ubuntu-26.04-v4.1.0-arm64-qemu-k8s-v1.36.0-k3s1-rev0",
+  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-26.04-arm64-qemu-k8s",
   "versions": {
     "kairosVersion": "v4.1.0",
     "kairosInitVersion": "v0.13.0",

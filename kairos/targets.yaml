@@ -1,7 +1,7 @@
 targets:
-  ubuntu-24.04-amd64-qemu-k8s:
+  ubuntu-26.04-amd64-qemu-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: amd64
     hardware: qemu
@@ -14,12 +14,12 @@ targets:
       - role/k8s
     artifactOptions:
       raw:
-        diskSize: 8192
-        diskStateSize: 4096
+        diskSize: 16384
+        diskStateSize: 8192
 
-  ubuntu-24.04-arm64-qemu-k8s:
+  ubuntu-26.04-arm64-qemu-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: arm64
     hardware: qemu
@@ -32,12 +32,12 @@ targets:
       - role/k8s
     artifactOptions:
       raw:
-        diskSize: 8192
-        diskStateSize: 4096
+        diskSize: 16384
+        diskStateSize: 8192
 
-  ubuntu-24.04-arm64-rpi4cb-k8s:
+  ubuntu-26.04-arm64-rpi4cb-k8s:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: k8s
     arch: arm64
     hardware: rpi4cb
@@ -55,9 +55,9 @@ targets:
   # Storage appliance targets: role "storage" yields a Kairos core image
   # (no Kubernetes). ZFS + LIO iSCSI target host managed by democratic-csi
   # over SSH.
-  ubuntu-24.04-amd64-qemu-storage:
+  ubuntu-26.04-amd64-qemu-storage:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: storage
     arch: amd64
     hardware: qemu
@@ -73,9 +73,9 @@ targets:
         diskSize: 16384
         diskStateSize: 6144
 
-  ubuntu-24.04-arm64-qemu-storage:
+  ubuntu-26.04-arm64-qemu-storage:
     enabled: true
-    flavor: ubuntu-24.04
+    flavor: ubuntu-26.04
     role: storage
     arch: arm64
     hardware: qemu

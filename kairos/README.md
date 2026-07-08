@@ -22,11 +22,11 @@ live here alongside the Dockerfile, image overlays, and CI helper scripts.
 The active targets in `targets.yaml` are:
 
 ```text
-ubuntu-24.04-amd64-qemu-k8s
-ubuntu-24.04-arm64-qemu-k8s
-ubuntu-24.04-arm64-rpi4cb-k8s
-ubuntu-24.04-amd64-qemu-storage
-ubuntu-24.04-arm64-qemu-storage
+ubuntu-26.04-amd64-qemu-k8s
+ubuntu-26.04-arm64-qemu-k8s
+ubuntu-26.04-arm64-rpi4cb-k8s
+ubuntu-26.04-amd64-qemu-storage
+ubuntu-26.04-arm64-qemu-storage
 ```
 
 All active targets build Ubuntu 24.04 Kairos images pinned by
@@ -66,14 +66,14 @@ not by making one-off Dockerfile edits.
 The preferred local artifact path is Earthly:
 
 ```sh
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-arm64-rpi4cb-k8s
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-26.04-arm64-rpi4cb-k8s
 ```
 
 For QEMU-backed VMs, build the QEMU target instead:
 
 ```sh
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-amd64-qemu-k8s
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-arm64-qemu-k8s
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-26.04-amd64-qemu-k8s
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-26.04-arm64-qemu-k8s
 ```
 
 `./tools/k2-tools vm create` prefers those local artifacts when present. If there is no
@@ -93,11 +93,11 @@ cd tools
 go build -o k2-tools ./cmd/k2-tools
 cd ..
 ./tools/k2-tools image --help
-./tools/k2-tools image plan ubuntu-24.04-arm64-rpi4cb-k8s
-./tools/k2-tools image build oci ubuntu-24.04-arm64-rpi4cb-k8s
-./tools/k2-tools image build artifact ubuntu-24.04-arm64-rpi4cb-k8s
-./tools/k2-tools image inspect oci ubuntu-24.04-arm64-rpi4cb-k8s
-./tools/k2-tools image inspect artifact ubuntu-24.04-arm64-rpi4cb-k8s
+./tools/k2-tools image plan ubuntu-26.04-arm64-rpi4cb-k8s
+./tools/k2-tools image build oci ubuntu-26.04-arm64-rpi4cb-k8s
+./tools/k2-tools image build artifact ubuntu-26.04-arm64-rpi4cb-k8s
+./tools/k2-tools image inspect oci ubuntu-26.04-arm64-rpi4cb-k8s
+./tools/k2-tools image inspect artifact ubuntu-26.04-arm64-rpi4cb-k8s
 ```
 
 The Kairos Go tools are documented in their module READMEs:

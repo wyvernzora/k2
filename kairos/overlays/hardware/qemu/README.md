@@ -17,6 +17,6 @@ must not auto-claim non-boot disks.
 Run the checks with:
 
 ```sh
-./tools/k2-tools image inspect oci ubuntu-24.04-amd64-qemu-k8s
-./tools/k2-tools image inspect artifact ubuntu-24.04-amd64-qemu-k8s
+./tools/k2-tools image inspect oci ubuntu-26.04-amd64-qemu-k8s
+./tools/k2-tools image inspect artifact ubuntu-26.04-amd64-qemu-k8s
 ```

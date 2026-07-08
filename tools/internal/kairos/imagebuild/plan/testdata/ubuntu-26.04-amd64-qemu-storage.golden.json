@@ -1,7 +1,7 @@
 {
-  "target": "ubuntu-24.04-amd64-qemu-storage",
+  "target": "ubuntu-26.04-amd64-qemu-storage",
   "enabled": true,
-  "flavor": "ubuntu-24.04",
+  "flavor": "ubuntu-26.04",
   "role": "storage",
   "arch": "amd64",
   "platform": "linux/amd64",
@@ -87,9 +87,9 @@
       "diskSize": 16384
     }
   },
-  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-amd64-qemu-storage-rev0",
-  "artifactStem": "ubuntu-24.04-v4.1.0-amd64-qemu-storage-rev0",
-  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-amd64-qemu-storage",
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0",
+  "artifactStem": "ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0",
+  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-26.04-amd64-qemu-storage",
   "versions": {
     "kairosVersion": "v4.1.0",
     "kairosInitVersion": "v0.13.0",

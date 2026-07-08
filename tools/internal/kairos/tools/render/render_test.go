@@ -14,7 +14,7 @@ func TestBootstrapConfigAddsAutomaticServerLabelsAndTaints(t *testing.T) {
 		Labels:   []string{"example.com/custom=true"},
 		Taints:   []string{"example.com/custom=true:NoSchedule"},
 		ImageMetadata: ImageMetadata{
-			Target:   "ubuntu-24.04-arm64-qemu-k8s",
+			Target:   "ubuntu-26.04-arm64-qemu-k8s",
 			Arch:     "arm64",
 			Hardware: "qemu",
 		},
@@ -27,7 +27,7 @@ func TestBootstrapConfigAddsAutomaticServerLabelsAndTaints(t *testing.T) {
 		"cluster-init: true",
 		"node-name: node-01",
 		"k2.wyvernzora.io/hardware=qemu",
-		"k2.wyvernzora.io/image-target=ubuntu-24.04-arm64-qemu-k8s",
+		"k2.wyvernzora.io/image-target=ubuntu-26.04-arm64-qemu-k8s",
 		"k2.wyvernzora.io/arch=arm64",
 		"node-role.kubernetes.io/control-plane=true:NoSchedule",
 		"example.com/custom=true",
@@ -149,7 +149,7 @@ func TestJoinConfigRendersServerJoinWithControlPlaneTaint(t *testing.T) {
 		Token:        "server-token",
 		ControlPlane: true,
 		ImageMetadata: ImageMetadata{
-			Target:   "ubuntu-24.04-arm64-rpi4cb-k8s",
+			Target:   "ubuntu-26.04-arm64-rpi4cb-k8s",
 			Arch:     "arm64",
 			Hardware: "rpi4cb",
 		},
