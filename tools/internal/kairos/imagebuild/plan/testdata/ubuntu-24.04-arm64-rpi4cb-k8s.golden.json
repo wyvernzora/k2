@@ -1,0 +1,182 @@
+{
+  "target": "ubuntu-24.04-arm64-rpi4cb-k8s",
+  "enabled": true,
+  "flavor": "ubuntu-24.04",
+  "role": "k8s",
+  "arch": "arm64",
+  "platform": "linux/arm64",
+  "hardware": "rpi4cb",
+  "kairosModel": "rpi4",
+  "kubernetesDistro": "k3s",
+  "artifacts": [
+    "raw"
+  ],
+  "overlays": [
+    "base",
+    "hardware/rpi4cb",
+    "role/k8s"
+  ],
+  "aptPackages": [
+    "parted",
+    "util-linux"
+  ],
+  "dracutInstallItems": [
+    "/usr/sbin/k2-node-agent",
+    "/usr/sbin/parted"
+  ],
+  "rawPatches": [
+    {
+      "type": "copy-to-partition",
+      "overlay": "hardware/rpi4cb",
+      "source": "raw/COS_GRUB/extraconfig.txt",
+      "partitionLabel": "COS_GRUB",
+      "path": "extraconfig.txt"
+    },
+    {
+      "type": "yaml-json-patch",
+      "overlay": "hardware/rpi4cb",
+      "source": "raw/COS_OEM/01_reset.yaml.patch",
+      "partitionLabel": "COS_OEM",
+      "path": "01_reset.yaml.patch",
+      "targetPath": "01_reset.yaml",
+      "operations": [
+        {
+          "op": "test",
+          "path": "/stages/rootfs.before/0/layout/add_partitions/1/fsLabel",
+          "value": "COS_PERSISTENT"
+        },
+        {
+          "op": "add",
+          "path": "/stages/rootfs.before/0/layout/add_partitions/1/size",
+          "value": 500
+        }
+      ]
+    }
+  ],
+  "inspection": {
+    "oci": {
+      "files": [
+        {
+          "source": "overlay:base",
+          "path": "/system/oem/01-k2-rescue-deactivate.yaml",
+          "contains": [
+            "K2 rescue user"
+          ]
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/system/oem/05-persistent-storage.yaml",
+          "contains": [
+            "K2 persistent storage"
+          ]
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/usr/share/k2/node-provision/k3s/10-k2-invariant.yaml",
+          "contains": [
+            "flannel-backend: none",
+            "disable-kube-proxy: true",
+            "secrets-encryption-provider: secretbox"
+          ]
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/usr/share/k2/node-provision/k3s/README.md",
+          "contains": [
+            "K2 K3s Node Provisioning Overlay",
+            "Active cluster-specific K3s configuration is written at provision time"
+          ]
+        }
+      ],
+      "absent": [
+        {
+          "source": "overlay:role/k8s",
+          "path": "/etc/rancher/k3s/config.yaml"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml"
+        },
+        {
+          "source": "overlay:hardware/rpi4cb",
+          "path": "/system/oem/20-rpi4cb-nvme-data.yaml"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/system/oem/30-k2-k3s-provider.yaml"
+        }
+      ],
+      "commands": [
+        {
+          "source": "overlay:role/k8s",
+          "name": "k2-node-agent"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "name": "parted"
+        }
+      ]
+    },
+    "raw": {
+      "partitions": [
+        {
+          "label": "COS_GRUB",
+          "files": [
+            {
+              "source": "overlay:hardware/rpi4cb",
+              "path": "extraconfig.txt",
+              "contains": [
+                "dtparam=pciex1"
+              ]
+            }
+          ]
+        },
+        {
+          "label": "COS_OEM",
+          "files": [
+            {
+              "source": "overlay:hardware/rpi4cb",
+              "path": "01_reset.yaml",
+              "structuredTests": [
+                {
+                  "op": "test",
+                  "path": "/stages/rootfs.before/0/layout/add_partitions/1/size",
+                  "value": 500
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "artifactOptions": {
+    "raw": {
+      "diskStateSize": 8192
+    }
+  },
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0",
+  "artifactStem": "ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0",
+  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-arm64-rpi4cb-k8s",
+  "versions": {
+    "kairosVersion": "v4.1.0",
+    "kairosInitVersion": "v0.13.0",
+    "aurorabootVersion": "v0.19.4",
+    "baseImage": "ubuntu:24.04",
+    "k3sVersion": "v1.36.0+k3s1",
+    "imageRevision": "rev0",
+    "registryImage": "ghcr.io/wyvernzora/k2-kairos"
+  },
+  "paths": {
+    "buildRoot": "$FIXTURE/kairos",
+    "kairosRoot": "$FIXTURE/kairos",
+    "targetsFile": "$FIXTURE/kairos/targets.yaml",
+    "versionsFile": "$FIXTURE/kairos/versions.env",
+    "overlaysDir": "$FIXTURE/kairos/overlays",
+    "artifactsDir": "$FIXTURE/kairos/artifacts"
+  }
+}

@@ -108,12 +108,12 @@ kairos-image-build-unit:
     COPY kairos/scripts ./kairos/scripts
     COPY kairos/tools/vm-presets ./kairos/tools/vm-presets
     COPY kairos/targets.yaml kairos/versions.env ./kairos/
-    COPY kairos/node-init ./kairos/node-init
+    COPY kairos/node-agent ./kairos/node-agent
     RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd tools && go test ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
     RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd tools && go vet ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
     RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd tools && CGO_ENABLED=0 go build -o k2-tools ./cmd/k2-tools
-    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd /src/kairos/node-init && go test ./...
-    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd /src/kairos/node-init && go vet ./...
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd /src/kairos/node-agent && go test ./...
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd /src/kairos/node-agent && go vet ./...
     RUN /src/tools/k2-tools --repo-root /src image --build-root /src/kairos --kairos-root /src/kairos plan --all --format json >/tmp/kairos-image-build-plans.json
 
 #
@@ -128,13 +128,13 @@ kairos-image-build-cli:
 # +kairos-image-build-artifact: builds, patches, inspects, and exports Kairos boot artifacts in Linux
 #
 kairos-image-build-artifact:
-    ARG KAIROS_TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s"
+    ARG KAIROS_TARGET="ubuntu-24.04-arm64-rpi4cb-k8s"
     FROM earthly/dind:ubuntu-23.04-docker-25.0.2-1
     WORKDIR /src
     RUN command -v bash && command -v xz && command -v docker && command -v dockerd
     COPY kairos/Dockerfile ./kairos/Dockerfile
     COPY kairos/overlays ./kairos/overlays
-    COPY kairos/node-init ./kairos/node-init
+    COPY kairos/node-agent ./kairos/node-agent
     COPY kairos/targets.yaml kairos/versions.env ./kairos/
     COPY +kairos-image-build-cli/k2-tools /usr/local/bin/k2-tools
     WITH DOCKER

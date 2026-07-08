@@ -19,26 +19,28 @@ type Planner struct {
 }
 
 type Plan struct {
-	Target           string          `json:"target" yaml:"target"`
-	Enabled          bool            `json:"enabled" yaml:"enabled"`
-	Flavor           string          `json:"flavor" yaml:"flavor"`
-	FlavorRelease    string          `json:"flavorRelease" yaml:"flavorRelease"`
-	Variant          string          `json:"variant" yaml:"variant"`
-	Arch             string          `json:"arch" yaml:"arch"`
-	Platform         string          `json:"platform" yaml:"platform"`
-	Hardware         string          `json:"hardware" yaml:"hardware"`
-	KairosModel      string          `json:"kairosModel" yaml:"kairosModel"`
-	KubernetesDistro string          `json:"kubernetesDistro" yaml:"kubernetesDistro"`
-	Artifacts        []string        `json:"artifacts" yaml:"artifacts"`
-	Overlays         []string        `json:"overlays" yaml:"overlays"`
-	RawPatches       []RawPatch      `json:"rawPatches" yaml:"rawPatches"`
-	Inspection       Inspection      `json:"inspection,omitempty" yaml:"inspection,omitempty"`
-	ArtifactOptions  ArtifactOptions `json:"artifactOptions" yaml:"artifactOptions"`
-	Image            string          `json:"image" yaml:"image"`
-	ArtifactStem     string          `json:"artifactStem" yaml:"artifactStem"`
-	ArtifactDir      string          `json:"artifactDir" yaml:"artifactDir"`
-	Versions         config.Versions `json:"versions" yaml:"versions"`
-	Paths            PlanPaths       `json:"paths" yaml:"paths"`
+	Target             string          `json:"target" yaml:"target"`
+	Enabled            bool            `json:"enabled" yaml:"enabled"`
+	Flavor             string          `json:"flavor" yaml:"flavor"`
+	Role               string          `json:"role" yaml:"role"`
+	Arch               string          `json:"arch" yaml:"arch"`
+	Platform           string          `json:"platform" yaml:"platform"`
+	Hardware           string          `json:"hardware" yaml:"hardware"`
+	KairosModel        string          `json:"kairosModel" yaml:"kairosModel"`
+	KubernetesDistro   string          `json:"kubernetesDistro" yaml:"kubernetesDistro"`
+	Artifacts          []string        `json:"artifacts" yaml:"artifacts"`
+	Overlays           []string        `json:"overlays" yaml:"overlays"`
+	AptPackages        []string        `json:"aptPackages,omitempty" yaml:"aptPackages,omitempty"`
+	DracutInstallItems []string        `json:"dracutInstallItems,omitempty" yaml:"dracutInstallItems,omitempty"`
+	PostInstallActions []string        `json:"postInstallActions,omitempty" yaml:"postInstallActions,omitempty"`
+	RawPatches         []RawPatch      `json:"rawPatches" yaml:"rawPatches"`
+	Inspection         Inspection      `json:"inspection,omitempty" yaml:"inspection,omitempty"`
+	ArtifactOptions    ArtifactOptions `json:"artifactOptions" yaml:"artifactOptions"`
+	Image              string          `json:"image" yaml:"image"`
+	ArtifactStem       string          `json:"artifactStem" yaml:"artifactStem"`
+	ArtifactDir        string          `json:"artifactDir" yaml:"artifactDir"`
+	Versions           config.Versions `json:"versions" yaml:"versions"`
+	Paths              PlanPaths       `json:"paths" yaml:"paths"`
 }
 
 type PlanPaths struct {
@@ -151,27 +153,36 @@ func (p Planner) Build(target string) (Plan, error) {
 		return Plan{}, err
 	}
 
+	platform := platformForArch(resolved.Arch)
+	kubernetesDistro := kubernetesDistroForRole(resolved.Role)
+	metadata, err := p.loadOverlayMetadata(resolved.Overlays)
+	if err != nil {
+		return Plan{}, err
+	}
+	build := mergeOverlayBuild(metadata)
 	image := p.imageTag(resolved)
 	artifactStem := image[strings.LastIndex(image, ":")+1:]
 	out := Plan{
-		Target:           target,
-		Enabled:          boolValue(resolved.Enabled),
-		Flavor:           resolved.Flavor,
-		FlavorRelease:    resolved.FlavorRelease,
-		Variant:          resolved.Variant,
-		Arch:             resolved.Arch,
-		Platform:         resolved.Platform,
-		Hardware:         resolved.Hardware,
-		KairosModel:      resolved.KairosModel,
-		KubernetesDistro: resolved.KubernetesDistro,
-		Artifacts:        append([]string(nil), resolved.Artifacts...),
-		Overlays:         append([]string(nil), resolved.Overlays...),
-		ArtifactOptions:  convertArtifactOptions(resolved.ArtifactOptions),
-		Image:            image,
-		ArtifactStem:     artifactStem,
-		ArtifactDir:      filepath.Join(p.Paths.ArtifactsDir, target),
-		Versions:         p.Versions,
-		Paths:            p.planPaths(),
+		Target:             target,
+		Enabled:            boolValue(resolved.Enabled),
+		Flavor:             resolved.Flavor,
+		Role:               resolved.Role,
+		Arch:               resolved.Arch,
+		Platform:           platform,
+		Hardware:           resolved.Hardware,
+		KairosModel:        resolved.KairosModel,
+		KubernetesDistro:   kubernetesDistro,
+		Artifacts:          append([]string(nil), resolved.Artifacts...),
+		Overlays:           append([]string(nil), resolved.Overlays...),
+		AptPackages:        build.AptPackages,
+		DracutInstallItems: build.DracutInstallItems,
+		PostInstallActions: build.PostInstall,
+		ArtifactOptions:    convertArtifactOptions(resolved.ArtifactOptions),
+		Image:              image,
+		ArtifactStem:       artifactStem,
+		ArtifactDir:        filepath.Join(p.Paths.ArtifactsDir, target),
+		Versions:           p.Versions,
+		Paths:              p.planPaths(),
 	}
 
 	rawPatches, err := p.rawPatches(resolved.Overlays)
@@ -179,7 +190,7 @@ func (p Planner) Build(target string) (Plan, error) {
 		return Plan{}, err
 	}
 	out.RawPatches = rawPatches
-	inspection, err := p.inspection(target, resolved)
+	inspection, err := p.inspection(target, resolved, metadata)
 	if err != nil {
 		return Plan{}, err
 	}
@@ -213,13 +224,10 @@ func (p Planner) resolveTarget(name string, seen map[string]bool) (config.Target
 	merged := parent
 	merged.Inherits = target.Inherits
 	mergeString(&merged.Flavor, target.Flavor)
-	mergeString(&merged.FlavorRelease, target.FlavorRelease)
-	mergeString(&merged.Variant, target.Variant)
+	mergeString(&merged.Role, target.Role)
 	mergeString(&merged.Arch, target.Arch)
-	mergeString(&merged.Platform, target.Platform)
 	mergeString(&merged.Hardware, target.Hardware)
 	mergeString(&merged.KairosModel, target.KairosModel)
-	mergeString(&merged.KubernetesDistro, target.KubernetesDistro)
 	if target.Enabled != nil {
 		merged.Enabled = target.Enabled
 	}
@@ -243,7 +251,10 @@ func (p Planner) validate(resolved Plan) error {
 	if err := validateRequiredFields(resolved); err != nil {
 		return err
 	}
-	if err := validatePlatform(resolved); err != nil {
+	if err := validateRole(resolved); err != nil {
+		return err
+	}
+	if err := validateArch(resolved); err != nil {
 		return err
 	}
 	if err := validateArtifacts(resolved); err != nil {
@@ -254,28 +265,25 @@ func (p Planner) validate(resolved Plan) error {
 
 func validateRequiredFields(resolved Plan) error {
 	if resolved.Flavor == "" ||
-		resolved.FlavorRelease == "" ||
-		resolved.Variant == "" ||
 		resolved.Arch == "" ||
-		resolved.Platform == "" ||
 		resolved.Hardware == "" ||
-		resolved.KairosModel == "" ||
-		resolved.KubernetesDistro == "" {
+		resolved.Role == "" ||
+		resolved.KairosModel == "" {
 		return fmt.Errorf("target %q is missing one or more required fields", resolved.Target)
 	}
 	return nil
 }
 
-func validatePlatform(resolved Plan) error {
-	expectedPlatform := map[string]string{
-		"amd64": "linux/amd64",
-		"arm64": "linux/arm64",
-	}[resolved.Arch]
-	if expectedPlatform == "" {
-		return fmt.Errorf("target %q has unsupported arch %q", resolved.Target, resolved.Arch)
+func validateRole(resolved Plan) error {
+	if resolved.Role != "k8s" && resolved.Role != "storage" {
+		return fmt.Errorf("target %q has unsupported role %q", resolved.Target, resolved.Role)
 	}
-	if resolved.Platform != expectedPlatform {
-		return fmt.Errorf("target %q arch/platform mismatch: %s expects %s, got %s", resolved.Target, resolved.Arch, expectedPlatform, resolved.Platform)
+	return nil
+}
+
+func validateArch(resolved Plan) error {
+	if resolved.Platform == "" {
+		return fmt.Errorf("target %q has unsupported arch %q", resolved.Target, resolved.Arch)
 	}
 	return nil
 }
@@ -304,6 +312,9 @@ func validateArtifacts(resolved Plan) error {
 }
 
 func (p Planner) validateOverlays(resolved Plan) error {
+	if !contains(resolved.Overlays, "base") {
+		return fmt.Errorf("target %q overlays must include base", resolved.Target)
+	}
 	for _, overlay := range resolved.Overlays {
 		info, err := os.Stat(filepath.Join(p.Paths.OverlaysDir, overlay))
 		if err != nil {
@@ -317,25 +328,54 @@ func (p Planner) validateOverlays(resolved Plan) error {
 	return nil
 }
 
-func (p Planner) inspection(targetName string, resolved config.Target) (Inspection, error) {
-	acc := newInspectionAccumulator()
-	if err := acc.addInspection("target:"+targetName, resolved.Inspect); err != nil {
-		return Inspection{}, err
-	}
+type loadedOverlayMetadata struct {
+	overlay string
+	content config.OverlayMetadata
+}
 
-	for _, overlay := range resolved.Overlays {
+func (p Planner) loadOverlayMetadata(overlays []string) ([]loadedOverlayMetadata, error) {
+	result := []loadedOverlayMetadata{}
+	for _, overlay := range overlays {
 		metadataPath := filepath.Join(p.Paths.OverlaysDir, overlay, "overlay.yaml")
 		if _, err := os.Stat(metadataPath); err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
-			return Inspection{}, err
+			return nil, err
 		}
 		metadata, err := config.LoadOverlayMetadata(metadataPath)
 		if err != nil {
-			return Inspection{}, fmt.Errorf("load overlay metadata %s: %w", metadataPath, err)
+			return nil, fmt.Errorf("load overlay metadata %s: %w", metadataPath, err)
 		}
-		if err := acc.addInspection("overlay:"+overlay, metadata.Inspect); err != nil {
+		result = append(result, loadedOverlayMetadata{
+			overlay: overlay,
+			content: metadata,
+		})
+	}
+	return result, nil
+}
+
+func mergeOverlayBuild(metadata []loadedOverlayMetadata) config.Build {
+	var build config.Build
+	for _, item := range metadata {
+		build.AptPackages = append(build.AptPackages, item.content.Build.AptPackages...)
+		build.DracutInstallItems = append(build.DracutInstallItems, item.content.Build.DracutInstallItems...)
+		build.PostInstall = append(build.PostInstall, item.content.Build.PostInstall...)
+	}
+	build.AptPackages = sortedUnique(build.AptPackages)
+	build.DracutInstallItems = sortedUnique(build.DracutInstallItems)
+	build.PostInstall = dedupe(build.PostInstall)
+	return build
+}
+
+func (p Planner) inspection(targetName string, resolved config.Target, metadata []loadedOverlayMetadata) (Inspection, error) {
+	acc := newInspectionAccumulator()
+	if err := acc.addInspection("target:"+targetName, resolved.Inspect); err != nil {
+		return Inspection{}, err
+	}
+
+	for _, item := range metadata {
+		if err := acc.addInspection("overlay:"+item.overlay, item.content.Inspect); err != nil {
 			return Inspection{}, err
 		}
 	}
@@ -344,20 +384,19 @@ func (p Planner) inspection(targetName string, resolved config.Target) (Inspecti
 }
 
 func (p Planner) imageTag(target config.Target) string {
-	k3sTag := strings.ReplaceAll(p.Versions.K3sVersion, "+", "-")
-	return fmt.Sprintf(
-		"%s:%s-%s-%s-%s-%s-%s-%s-%s-%s",
-		p.Versions.RegistryImage,
+	segments := []string{
 		target.Flavor,
-		target.FlavorRelease,
-		target.Variant,
 		p.Versions.KairosVersion,
 		target.Arch,
 		target.Hardware,
-		target.KubernetesDistro,
-		k3sTag,
-		p.Versions.ImageRevision,
-	)
+		target.Role,
+	}
+	if target.Role == "k8s" {
+		k3sTag := strings.ReplaceAll(p.Versions.K3sVersion, "+", "-")
+		segments = append(segments, k3sTag)
+	}
+	segments = append(segments, p.Versions.ImageRevision)
+	return p.Versions.RegistryImage + ":" + strings.Join(segments, "-")
 }
 
 func (p Planner) rawPatches(overlays []string) ([]RawPatch, error) {
@@ -518,8 +557,30 @@ func mergeString(dst *string, value string) {
 	}
 }
 
+func platformForArch(arch string) string {
+	switch arch {
+	case "amd64", "arm64":
+		return "linux/" + arch
+	default:
+		return ""
+	}
+}
+
+func kubernetesDistroForRole(role string) string {
+	if role == "k8s" {
+		return "k3s"
+	}
+	return ""
+}
+
 func boolValue(value *bool) bool {
 	return value != nil && *value
+}
+
+func sortedUnique(items []string) []string {
+	out := dedupe(items)
+	sort.Strings(out)
+	return out
 }
 
 func dedupe(items []string) []string {

@@ -1,0 +1,15 @@
+#cloud-config
+name: "K2 persistent storage"
+
+stages:
+  rootfs.before:
+    - name: "Prepare K2 COS_PERSISTENT"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - /usr/sbin/k2-node-agent setup-persistence --mode required --disk auto --wait-seconds 90 --log-prefix kairos-persistent --marker .k2-persistent-ok
+
+  fs:
+    - name: "Verify K2 persistent layout"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - /usr/sbin/k2-node-agent setup-persistence --verify-only --mode required --log-prefix kairos-persistent --marker .k2-persistent-ok

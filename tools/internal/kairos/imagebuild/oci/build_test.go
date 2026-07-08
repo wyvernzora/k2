@@ -49,14 +49,16 @@ func TestBuilderImage(t *testing.T) {
 		"--build-arg", "VERSION=v4.1.0-rev0",
 		"--build-arg", "IMAGE_REVISION=rev0",
 		"--build-arg", "TRUSTED_BOOT=false",
-		"--build-arg", "OVERLAYS=hardware/rpi4cb",
-		"--build-arg", "TARGET_NAME=ubuntu-24.04-standard-arm64-rpi4cb-k3s",
-		"--build-arg", "FLAVOR=ubuntu",
-		"--build-arg", "FLAVOR_RELEASE=24.04",
-		"--build-arg", "VARIANT=standard",
+		"--build-arg", "OVERLAYS=base,hardware/rpi4cb,role/k8s",
+		"--build-arg", "TARGET_NAME=ubuntu-24.04-arm64-rpi4cb-k8s",
+		"--build-arg", "FLAVOR=ubuntu-24.04",
+		"--build-arg", "ROLE=k8s",
 		"--build-arg", "ARCH=arm64",
 		"--build-arg", "PLATFORM=linux/arm64",
 		"--build-arg", "HARDWARE=rpi4cb",
+		"--build-arg", "APT_PACKAGES=parted util-linux",
+		"--build-arg", "DRACUT_INSTALL_ITEMS=/usr/sbin/k2-node-agent /usr/sbin/parted",
+		"--build-arg", "POST_INSTALL_ACTIONS=",
 		"--tag", "ghcr.io/wyvernzora/k2-kairos:test",
 		"--load",
 		"/repo",
@@ -67,12 +69,12 @@ func TestBuilderImage(t *testing.T) {
 
 	out := stdout.String()
 	for _, want := range []string{
-		"Building ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+		"Building ubuntu-24.04-arm64-rpi4cb-k8s",
 		"image: ghcr.io/wyvernzora/k2-kairos:test",
 		"platform: linux/arm64",
 		"kairos model: rpi4",
 		"hardware: rpi4cb",
-		"overlays: hardware/rpi4cb",
+		"overlays: base,hardware/rpi4cb,role/k8s",
 	} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("stdout missing %q:\n%s", want, out)
@@ -199,17 +201,21 @@ func indexOf(values []string, needle string) int {
 
 func testPlan() plan.Plan {
 	return plan.Plan{
-		Target:           "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
-		Flavor:           "ubuntu",
-		FlavorRelease:    "24.04",
-		Variant:          "standard",
+		Target:           "ubuntu-24.04-arm64-rpi4cb-k8s",
+		Flavor:           "ubuntu-24.04",
+		Role:             "k8s",
 		Arch:             "arm64",
 		Platform:         "linux/arm64",
 		KairosModel:      "rpi4",
 		Hardware:         "rpi4cb",
 		KubernetesDistro: "k3s",
-		Overlays:         []string{"hardware/rpi4cb"},
-		Image:            "ghcr.io/wyvernzora/k2-kairos:test",
+		Overlays:         []string{"base", "hardware/rpi4cb", "role/k8s"},
+		AptPackages:      []string{"parted", "util-linux"},
+		DracutInstallItems: []string{
+			"/usr/sbin/k2-node-agent",
+			"/usr/sbin/parted",
+		},
+		Image: "ghcr.io/wyvernzora/k2-kairos:test",
 		Versions: config.Versions{
 			KairosVersion:     "v4.1.0",
 			KairosInitVersion: "v0.13.0",

@@ -9,13 +9,13 @@ import (
 
 func TestResolveRpi4cbTargetSingleMatch(t *testing.T) {
 	root := t.TempDir()
-	writeManifest(t, root, "ubuntu-24.04-standard-arm64-rpi4cb-k3s")
+	writeManifest(t, root, "ubuntu-24.04-arm64-rpi4cb-k8s")
 
 	got, err := ResolveRpi4cbTarget(root)
 	if err != nil {
 		t.Fatalf("resolve: %v", err)
 	}
-	if got.Manifest.Target != "ubuntu-24.04-standard-arm64-rpi4cb-k3s" {
+	if got.Manifest.Target != "ubuntu-24.04-arm64-rpi4cb-k8s" {
 		t.Fatalf("target = %s", got.Manifest.Target)
 	}
 	if !strings.HasSuffix(got.CompressedPath, "image.raw.xz") {
@@ -28,8 +28,8 @@ func TestResolveRpi4cbTargetSingleMatch(t *testing.T) {
 
 func TestResolveRpi4cbTargetIgnoresNonRpi4cb(t *testing.T) {
 	root := t.TempDir()
-	writeManifest(t, root, "ubuntu-24.04-standard-arm64-qemu-k3s")
-	writeManifest(t, root, "ubuntu-24.04-standard-amd64-qemu-k3s")
+	writeManifest(t, root, "ubuntu-24.04-arm64-qemu-k8s")
+	writeManifest(t, root, "ubuntu-24.04-amd64-qemu-k8s")
 
 	_, err := ResolveRpi4cbTarget(root)
 	if !errors.Is(err, ErrNoTargets) {
@@ -39,8 +39,8 @@ func TestResolveRpi4cbTargetIgnoresNonRpi4cb(t *testing.T) {
 
 func TestResolveRpi4cbTargetMultipleMatchesAmbiguous(t *testing.T) {
 	root := t.TempDir()
-	writeManifest(t, root, "ubuntu-24.04-standard-arm64-rpi4cb-k3s")
-	writeManifest(t, root, "alpine-3.20-standard-arm64-rpi4cb-k3s")
+	writeManifest(t, root, "ubuntu-24.04-arm64-rpi4cb-k8s")
+	writeManifest(t, root, "alpine-3.20-arm64-rpi4cb-k8s")
 
 	_, err := ResolveRpi4cbTarget(root)
 	if err == nil {
@@ -55,13 +55,13 @@ func TestResolveRpi4cbTargetSkipsUnparseableManifests(t *testing.T) {
 	root := t.TempDir()
 	badPath := filepath.Join(root, "kairos", "artifacts", "broken", "artifact-manifest.json")
 	writeFile(t, badPath, "not json")
-	writeManifest(t, root, "ubuntu-24.04-standard-arm64-rpi4cb-k3s")
+	writeManifest(t, root, "ubuntu-24.04-arm64-rpi4cb-k8s")
 
 	got, err := ResolveRpi4cbTarget(root)
 	if err != nil {
 		t.Fatalf("resolve: %v", err)
 	}
-	if got.Manifest.Target != "ubuntu-24.04-standard-arm64-rpi4cb-k3s" {
+	if got.Manifest.Target != "ubuntu-24.04-arm64-rpi4cb-k8s" {
 		t.Fatalf("target = %s", got.Manifest.Target)
 	}
 }

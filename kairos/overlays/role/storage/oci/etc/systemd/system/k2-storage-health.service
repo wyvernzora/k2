@@ -1,0 +1,7 @@
+[Unit]
+Description=K2 storage appliance health check
+After=zfs.target rtslib-fb-targetctl.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/k2-node-agent storage-health

@@ -10,10 +10,10 @@ live here alongside the Dockerfile, image overlays, and CI helper scripts.
 | --- | --- |
 | `targets.yaml` | Enabled and planned image targets. Each target selects hardware, Kairos model, artifact types, overlays, and raw artifact sizing. |
 | `versions.env` | Pinned Kairos, kairos-init, AuroraBoot, Ubuntu, k3s, image revision, and registry values. |
-| `Dockerfile` | Image-build Dockerfile that turns Ubuntu into a Kairos+k3s OCI image. |
+| `Dockerfile` | Image-build Dockerfile that turns Ubuntu into Kairos role images. |
 | `overlays/` | Optional reviewable OCI/raw overlays plus overlay inspection metadata. |
 | `scripts/` | CI helpers for target selection and artifact publication. |
-| `node-init/` | Go helper baked into images for early-boot node initialization, currently persistent storage preparation. |
+| `node-agent/` | Go helper baked into images as `/usr/sbin/k2-node-agent` for early-boot setup and health checks. |
 | `tools/` | Presets and docs for provisioning clean Kairos nodes and managing local QEMU VMs through root `k2-tools`. |
 | `Earthfile` | Compatibility wrappers around root Earthly targets for image validation and artifact generation. |
 
@@ -22,25 +22,36 @@ live here alongside the Dockerfile, image overlays, and CI helper scripts.
 The active targets in `targets.yaml` are:
 
 ```text
-ubuntu-24.04-standard-amd64-qemu-k3s
-ubuntu-24.04-standard-arm64-qemu-k3s
-ubuntu-24.04-standard-arm64-rpi4cb-k3s
+ubuntu-24.04-amd64-qemu-k8s
+ubuntu-24.04-arm64-qemu-k8s
+ubuntu-24.04-arm64-rpi4cb-k8s
+ubuntu-24.04-amd64-qemu-storage
+ubuntu-24.04-arm64-qemu-storage
 ```
 
-All active targets build Ubuntu 24.04, Kairos v4.1.0 images with k3s
-v1.36.0+k3s1.
+All active targets build Ubuntu 24.04 Kairos images pinned by
+`versions.env`; `k8s` targets include k3s, and `storage` targets are
+Kubernetes-free.
 
-- `qemu` targets are generic Kairos VM images. Use `amd64` on x86 hosts and
-  `arm64` on Apple Silicon or other ARM hosts. The same target family is used
-  for local VM testing and for QEMU-backed cluster nodes in any provisioned
-  role.
+- `qemu` `k8s` targets are generic Kairos VM images. Use `amd64` on x86
+  hosts and `arm64` on Apple Silicon or other ARM hosts. The same target
+  family is used for local VM testing and for QEMU-backed cluster nodes in
+  any provisioned role.
 - `rpi4cb` is an arm64 Raspberry Pi 4 model image for Raspberry Pi CM4 modules
   on ComputeBlade.
+- `qemu-storage` targets are Kubernetes-free images for the ZFS + iSCSI storage
+  appliance VM. They combine the shared `base`, `hardware/qemu`, and
+  `role/storage` overlays.
 
 Hardware-specific behavior lives in the hardware overlay docs:
 
 - [QEMU overlay](overlays/hardware/qemu/README.md)
 - [Raspberry Pi ComputeBlade overlay](overlays/hardware/rpi4cb/README.md)
+
+Role-specific behavior lives in the role overlay docs:
+
+- [k8s role overlay](overlays/role/k8s/README.md)
+- [storage role overlay](overlays/role/storage/README.md)
 
 The targets are intentionally cluster-light: they include the OS, k3s, hardware
 defaults, and invariant K2 K3s server config, but do not enable the K3s service
@@ -55,14 +66,14 @@ not by making one-off Dockerfile edits.
 The preferred local artifact path is Earthly:
 
 ```sh
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-arm64-rpi4cb-k8s
 ```
 
 For QEMU-backed VMs, build the QEMU target instead:
 
 ```sh
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-amd64-qemu-k3s
-earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-standard-arm64-qemu-k3s
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-amd64-qemu-k8s
+earthly --allow-privileged ./kairos+image-build-artifact --KAIROS_TARGET=ubuntu-24.04-arm64-qemu-k8s
 ```
 
 `./tools/k2-tools vm create` prefers those local artifacts when present. If there is no
@@ -82,16 +93,16 @@ cd tools
 go build -o k2-tools ./cmd/k2-tools
 cd ..
 ./tools/k2-tools image --help
-./tools/k2-tools image plan ubuntu-24.04-standard-arm64-rpi4cb-k3s
-./tools/k2-tools image build oci ubuntu-24.04-standard-arm64-rpi4cb-k3s
-./tools/k2-tools image build artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s
-./tools/k2-tools image inspect oci ubuntu-24.04-standard-arm64-rpi4cb-k3s
-./tools/k2-tools image inspect artifact ubuntu-24.04-standard-arm64-rpi4cb-k3s
+./tools/k2-tools image plan ubuntu-24.04-arm64-rpi4cb-k8s
+./tools/k2-tools image build oci ubuntu-24.04-arm64-rpi4cb-k8s
+./tools/k2-tools image build artifact ubuntu-24.04-arm64-rpi4cb-k8s
+./tools/k2-tools image inspect oci ubuntu-24.04-arm64-rpi4cb-k8s
+./tools/k2-tools image inspect artifact ubuntu-24.04-arm64-rpi4cb-k8s
 ```
 
 The Kairos Go tools are documented in their module READMEs:
 
-- [k2-node-init](node-init/README.md) runs inside images for early-boot node initialization.
+- `k2-node-agent` runs inside images for early-boot setup and storage health checks.
 - [k2-tools](tools/README.md) provisions clean nodes and manages local QEMU VMs.
 
 ## Provisioning
@@ -119,14 +130,18 @@ Selected overlays from `overlays/` are applied in target order:
 - `overlay.yaml` declares inspection expectations consumed by `k2-tools image`
   to verify generated images and artifacts.
 
+Common target axes are `flavor`, `role`, `arch`, and `hardware`; `platform` and
+`kubernetesDistro` are derived by the planner.
+
 Hardware-specific behavior belongs in the hardware overlay README:
 
 - [QEMU](overlays/hardware/qemu/README.md)
 - [Raspberry Pi ComputeBlade](overlays/hardware/rpi4cb/README.md)
 
-Kubernetes-specific image content belongs in the Kubernetes overlay README:
+Role-specific image content belongs in the role overlay READMEs:
 
-- [K3s](overlays/kubernetes/k3s/README.md)
+- [k8s](overlays/role/k8s/README.md)
+- [storage](overlays/role/storage/README.md)
 
 ## Safety Notes
 

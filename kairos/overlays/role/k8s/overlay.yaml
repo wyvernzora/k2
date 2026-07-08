@@ -1,0 +1,146 @@
+build:
+  aptPackages:
+    - e2fsprogs
+    - fdisk
+    - kmod
+    - parted
+    - udev
+    - util-linux
+  dracutInstallItems:
+    - /usr/sbin/k2-node-agent
+    - /usr/sbin/blkid
+    - /usr/bin/findmnt
+    - /usr/bin/lsblk
+    - /usr/bin/mount
+    - /usr/bin/readlink
+    - /usr/bin/sh
+    - /usr/bin/tar
+    - /usr/bin/umount
+    - /usr/sbin/e2label
+    - /usr/sbin/mkfs.ext4
+    - /usr/sbin/modprobe
+    - /usr/sbin/parted
+    - /usr/sbin/partprobe
+    - /usr/sbin/resize2fs
+    - /usr/sbin/wipefs
+
+inspect:
+  oci:
+    files:
+      - path: /etc/issue
+        contains:
+          - K2 Kairos
+          - "IPv4:"
+          - '\4'
+          - '\n'
+      - path: /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml
+        structuredTests:
+          - op: test
+            path: /flannel-backend
+            value: none
+          - op: test
+            path: /disable-network-policy
+            value: true
+          - op: test
+            path: /disable-kube-proxy
+            value: true
+          - op: test
+            path: /disable-helm-controller
+            value: true
+          - op: test
+            path: /disable/0
+            value: traefik
+          - op: test
+            path: /disable/1
+            value: servicelb
+          - op: test
+            path: /disable/2
+            value: local-storage
+          - op: test
+            path: /disable/3
+            value: metrics-server
+          - op: test
+            path: /secrets-encryption
+            value: true
+          - op: test
+            path: /secrets-encryption-provider
+            value: secretbox
+      - path: /usr/share/k2/node-provision/k3s/README.md
+        contains:
+          - K2 K3s Node Provisioning Overlay
+          - Active cluster-specific K3s configuration is written at provision time
+      - path: /etc/systemd/system/k3s.service.d/wait-for-time-sync.conf
+        contains:
+          - "After=time-sync.target"
+          - "Requires=time-sync.target"
+      - path: /etc/systemd/system/k3s-agent.service.d/wait-for-time-sync.conf
+        contains:
+          - "After=time-sync.target"
+          - "Requires=time-sync.target"
+      - path: /etc/systemd/system/systemd-time-wait-sync.service.d/timeout.conf
+        contains:
+          - "TimeoutStartSec=60s"
+          - "OnFailure=k2-time-sync-warning.service"
+      - path: /etc/systemd/system/k2-time-sync-warning.service
+        contains:
+          - "K2 banner"
+          - "logger -p syslog.err -t k2"
+          - "NTP sync did not complete"
+          - "k3s will NOT start"
+      # The symlink under sysinit.target.wants/ enables
+      # systemd-time-wait-sync; following it should resolve to upstream's
+      # unit file which advertises this exact Description.
+      - path: /etc/systemd/system/sysinit.target.wants/systemd-time-wait-sync.service
+        contains:
+          - "Wait Until Kernel Time Synchronized"
+      - path: /etc/passwd
+        contains:
+          - "k2-rescue:"
+      - path: /etc/shadow
+        contains:
+          # Yescrypt-prefixed entry confirms the hash was actually
+          # applied (chpasswd -e succeeded), without pinning this test
+          # to the specific committed hash.
+          - "k2-rescue:$y$"
+      - path: /etc/sudoers.d/99-k2-rescue
+        contains:
+          - "k2-rescue ALL=(ALL) NOPASSWD: ALL"
+      - path: /etc/ssh/sshd_config.d/99-k2-rescue-block.conf
+        contains:
+          - "DenyUsers k2-rescue"
+      - path: /system/oem/05-persistent-storage.yaml
+        structuredTests:
+          - op: test
+            path: /name
+            value: K2 persistent storage
+          - op: test
+            path: /stages/rootfs.before/0/if
+            value: '[ ! -f "/run/cos/recovery_mode" ]'
+          - op: test
+            path: /stages/rootfs.before/0/commands/0
+            value: /usr/sbin/k2-node-agent setup-persistence --mode required --disk auto --wait-seconds 90 --log-prefix kairos-persistent --marker .k2-persistent-ok
+          - op: test
+            path: /stages/fs/0/commands/0
+            value: /usr/sbin/k2-node-agent setup-persistence --verify-only --mode required --log-prefix kairos-persistent --marker .k2-persistent-ok
+    absent:
+      - /system/oem/30-k2-k3s-provider.yaml
+      - /etc/rancher/k3s/config.yaml
+      - /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
+      - /etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml
+      - /var/lib/rancher/k3s/server/manifests/k2-bootstrap.yaml
+    commands:
+      - blkid
+      - e2label
+      - findmnt
+      - k2-node-agent
+      - lsblk
+      - mkfs.ext4
+      - mount
+      - parted
+      - partprobe
+      - readlink
+      - resize2fs
+      - tar
+      - udevadm
+      - umount
+      - wipefs

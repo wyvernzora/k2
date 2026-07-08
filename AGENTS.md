@@ -76,8 +76,8 @@ learnings. Global rules apply unless this file explicitly overrides them.
 - **CRDs:** generated CDK8s TypeScript bindings from app-owned CRD manifests.
 - **Build system:** Earthly v0.8+ with Docker or Podman, backed by the Go
   toolbox under `tools/`.
-- **Kairos image work:** `k2-tools image ...`, with `k2-node-init` kept as a
-  separate early-boot helper.
+- **Kairos image work:** `k2-tools image ...`, with `k2-node-agent` kept as a
+  separate early-boot and runtime node helper.
 - **Secrets and TLS:** backend-neutral secret helpers live in
   `@k2/external-secrets`; certificate defaults and replication live in the
   cert-manager app; AWS runtime access should prefer WebIdentity.
@@ -102,7 +102,7 @@ learnings. Global rules apply unless this file explicitly overrides them.
   image commands, and shared TUI/workflow primitives.
 - `clusters/v3.yaml` - the single v3 cluster config file.
 - `deploy/` - ignored generated manifests from `earthly +k8s-manifests`.
-- `kairos/` - Kairos image targets, versions, Dockerfile, overlays, node-init,
+- `kairos/` - Kairos image targets, versions, Dockerfile, overlays, node-agent,
   Earthly wrappers, and provisioning docs.
 - `notes/` and `.checkpoint/` - ignored design checkpoints and local planning
   notes.
@@ -124,7 +124,7 @@ go test ./...
 go vet ./...
 go build -o k2-tools ./cmd/k2-tools
 ./k2-tools --help
-./k2-tools image plan ubuntu-24.04-standard-amd64-qemu-k3s
+./k2-tools image plan ubuntu-24.04-amd64-qemu-k8s
 ```
 
 Use Go commands directly inside `tools/` for tool-level iteration. Use Earthly

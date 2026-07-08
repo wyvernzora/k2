@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodic K2 storage appliance health check
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target

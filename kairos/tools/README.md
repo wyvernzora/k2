@@ -303,10 +303,10 @@ worker join config, no server-only invariant or cluster config, and active
 
 ## Flash CM4 / ComputeBlade eMMC
 
-`./tools/k2-tools flash rpi4cb` writes a built `*-arm64-rpi4cb-k3s` artifact to the
+`./tools/k2-tools flash rpi4cb` writes a built `*-arm64-rpi4cb-k8s` artifact to the
 CM4 eMMC exposed through `rpiboot`. Build the artifact first
 (`earthly --allow-privileged ./kairos+image-build-artifact
---KAIROS_TARGET=ubuntu-24.04-standard-arm64-rpi4cb-k3s`), then with the
+--KAIROS_TARGET=ubuntu-24.04-arm64-rpi4cb-k8s`), then with the
 CM4 disconnected:
 
 ```sh
