@@ -172,6 +172,17 @@ func TestStorageKeyCHAPAndCredentialSecretBoundaries(t *testing.T) {
 	}) {
 		t.Fatalf("invalid chap secret %q", chap)
 	}
+	poolKey, err := generatePoolKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	rawPoolKey, err := decodePoolKey(poolKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rawPoolKey) != 32 {
+		t.Fatalf("raw pool key length = %d, want 32", len(rawPoolKey))
+	}
 
 	home := t.TempDir()
 	t.Setenv("HOME", home)
@@ -181,7 +192,7 @@ func TestStorageKeyCHAPAndCredentialSecretBoundaries(t *testing.T) {
 		SSHPort:            22,
 		Portal:             "10.0.0.2:3260",
 	}
-	state := &storageState{csiPublicKey: pub, csiPrivateKey: priv, chapUsername: "k2-v3", chapPassword: chap}
+	state := &storageState{csiPublicKey: pub, csiPrivateKey: priv, chapUsername: "k2-v3", chapPassword: chap, poolKey: poolKey}
 	path, summary, err := cmd.writeStorageCredentials(state)
 	if err != nil {
 		t.Fatal(err)
@@ -193,11 +204,18 @@ func TestStorageKeyCHAPAndCredentialSecretBoundaries(t *testing.T) {
 	if !strings.Contains(string(data), "csiPrivateKey") || !strings.Contains(string(data), "chapPassword") {
 		t.Fatalf("credential file missing secrets:\n%s", string(data))
 	}
+	if !strings.Contains(string(data), "poolKey") || !strings.Contains(string(data), poolKey) {
+		t.Fatalf("credential file missing pool key:\n%s", string(data))
+	}
 	summaryData, err := json.Marshal(summary)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Contains(summaryData, []byte("csiPrivateKey")) || bytes.Contains(summaryData, []byte("chapPassword")) || bytes.Contains(summaryData, []byte(chap)) {
+	if bytes.Contains(summaryData, []byte("csiPrivateKey")) ||
+		bytes.Contains(summaryData, []byte("chapPassword")) ||
+		bytes.Contains(summaryData, []byte("poolKey")) ||
+		bytes.Contains(summaryData, []byte(chap)) ||
+		bytes.Contains(summaryData, []byte(poolKey)) {
 		t.Fatalf("summary leaked secret fields: %s", string(summaryData))
 	}
 	info, err := os.Stat(path)
@@ -252,6 +270,7 @@ func TestLoadStorageCredentialsFixedSchema(t *testing.T) {
 		got.CSIPublicKey != "ssh-ed25519 PUBLIC" ||
 		got.CHAPUsername != "k2-v3" ||
 		got.CHAPPassword != "CHAP" ||
+		got.PoolKey != "" ||
 		got.ProvisionedAt != "2026-07-08T00:00:00Z" {
 		t.Fatalf("credentials = %#v", got)
 	}
@@ -266,11 +285,16 @@ func TestWriteLoadStorageCredentialsRoundTrip(t *testing.T) {
 		SSHPort:            2222,
 		Portal:             "10.0.0.2:3260",
 	}
+	poolKey, err := generatePoolKey()
+	if err != nil {
+		t.Fatal(err)
+	}
 	state := &storageState{
 		csiPublicKey:  "ssh-ed25519 PUBLIC",
 		csiPrivateKey: "PRIVATE",
 		chapUsername:  "k2-v3",
 		chapPassword:  "CHAP",
+		poolKey:       poolKey,
 	}
 
 	if _, _, err := cmd.writeStorageCredentials(state); err != nil {
@@ -283,7 +307,8 @@ func TestWriteLoadStorageCredentialsRoundTrip(t *testing.T) {
 	if got.CSIPrivateKey != state.csiPrivateKey ||
 		got.CSIPublicKey != state.csiPublicKey ||
 		got.CHAPUsername != state.chapUsername ||
-		got.CHAPPassword != state.chapPassword {
+		got.CHAPPassword != state.chapPassword ||
+		got.PoolKey != state.poolKey {
 		t.Fatalf("loaded credentials = %#v", got)
 	}
 }
@@ -296,7 +321,11 @@ func TestNewStorageStateBypassesCredentialReuseWhenRotatingOrKeySupplied(t *test
 		Host:               "10.0.0.2",
 		SSHPort:            22,
 	}
-	old := storageCredentials{CSIPublicKey: "old-public", CSIPrivateKey: "old-private", CHAPUsername: "old-user", CHAPPassword: "old-pass"}
+	poolKey, err := generatePoolKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := storageCredentials{CSIPublicKey: "old-public", CSIPrivateKey: "old-private", CHAPUsername: "old-user", CHAPPassword: "old-pass", PoolKey: poolKey}
 	dir := filepath.Join(home, ".kube", "k2", "v3")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
@@ -317,6 +346,9 @@ func TestNewStorageStateBypassesCredentialReuseWhenRotatingOrKeySupplied(t *test
 	if rotated.csiPublicKey == old.CSIPublicKey || rotated.chapPassword == old.CHAPPassword {
 		t.Fatalf("rotated state reused old credentials: %#v", rotated)
 	}
+	if rotated.poolKey != old.PoolKey {
+		t.Fatalf("rotated pool key = %q, want preserved %q", rotated.poolKey, old.PoolKey)
+	}
 
 	supplied, _, _, err := resolveCSIKey("")
 	if err != nil {
@@ -328,8 +360,44 @@ func TestNewStorageStateBypassesCredentialReuseWhenRotatingOrKeySupplied(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	if withKey.csiPublicKey != supplied || withKey.csiPrivateKey != "" || withKey.chapPassword == old.CHAPPassword {
+	if withKey.csiPublicKey != supplied || withKey.csiPrivateKey != "" || withKey.chapPassword == old.CHAPPassword || withKey.poolKey != old.PoolKey {
 		t.Fatalf("supplied-key state = %#v", withKey)
+	}
+}
+
+func TestNewStorageStateReusesOldCredentialsAndAddsMissingPoolKey(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	cmd := storageCmd{
+		commonStorageFlags: commonStorageFlags{ClusterName: "v3"},
+		Host:               "10.0.0.2",
+		SSHPort:            22,
+	}
+	old := storageCredentials{CSIPublicKey: "old-public", CSIPrivateKey: "old-private", CHAPUsername: "old-user", CHAPPassword: "old-pass"}
+	dir := filepath.Join(home, ".kube", "k2", "v3")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "storage-appliance.json"), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := cmd.newStorageState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.csiPublicKey != old.CSIPublicKey ||
+		got.csiPrivateKey != old.CSIPrivateKey ||
+		got.chapUsername != old.CHAPUsername ||
+		got.chapPassword != old.CHAPPassword {
+		t.Fatalf("state did not reuse existing fields: %#v", got)
+	}
+	if _, err := decodePoolKey(got.poolKey); err != nil {
+		t.Fatalf("generated pool key invalid: %v", err)
 	}
 }
 
@@ -354,12 +422,14 @@ func TestStorageStateFromCredentialsCopiesSecrets(t *testing.T) {
 		CSIPublicKey:  "PUBLIC",
 		CHAPUsername:  "USER",
 		CHAPPassword:  "PASS",
+		PoolKey:       "POOL",
 	}
 	got := (&storageCmd{}).storageStateFromCredentials(creds)
 	if got.csiPrivateKey != creds.CSIPrivateKey ||
 		got.csiPublicKey != creds.CSIPublicKey ||
 		got.chapUsername != creds.CHAPUsername ||
-		got.chapPassword != creds.CHAPPassword {
+		got.chapPassword != creds.CHAPPassword ||
+		got.poolKey != creds.PoolKey {
 		t.Fatalf("state = %#v", got)
 	}
 }
@@ -431,13 +501,17 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	poolKey, err := generatePoolKey()
+	if err != nil {
+		t.Fatal(err)
+	}
 	bundle, err := buildStorageBundle(commonStorageFlags{
 		ClusterName:       "v3",
 		NodeName:          "k2-storage",
 		Pool:              "tank",
 		PoolCompatibility: "openzfs-2.2-linux",
 		OperatorKey:       []string{testOperatorKey},
-	}, false, []storageVDev{{Topology: "mirror", Devices: []string{"/dev/disk/by-id/ata-a", "/dev/disk/by-id/ata-b"}}}, pub)
+	}, false, []storageVDev{{Topology: "mirror", Devices: []string{"/dev/disk/by-id/ata-a", "/dev/disk/by-id/ata-b"}}}, pub, poolKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -450,6 +524,7 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 		"99-csi":                      "csi ALL=(ALL) NOPASSWD:ALL",
 		"storage-install.sh":          "hostnamectl set-hostname 'k2-storage'",
 		"storage-pool.sh":             "sudo zpool create -m none",
+		"zfs_pool.key":                string(bundle.PoolKey),
 	}
 	for file, want := range checks {
 		data, err := os.ReadFile(filepath.Join(dir, file))
@@ -459,6 +534,13 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 		if !strings.Contains(string(data), want) {
 			t.Fatalf("%s missing %q:\n%s", file, want, string(data))
 		}
+	}
+	info, err := os.Stat(filepath.Join(dir, "zfs_pool.key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("zfs_pool.key mode = %v, want 0600", info.Mode().Perm())
 	}
 }
 

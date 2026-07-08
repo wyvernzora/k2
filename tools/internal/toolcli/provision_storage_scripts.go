@@ -126,16 +126,22 @@ func storageInstallScript(nodeName string) string {
 func storagePoolScript(in storagePoolScriptInput) string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "set -eu\n")
+	fmt.Fprintf(&buf, "remote_dir=\"$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)\"\n")
 	fmt.Fprintf(&buf, "pool=%s\n", shellQuote(in.Pool))
 	fmt.Fprintf(&buf, "compat=%s\n", shellQuote(in.Compatibility))
 	fmt.Fprintf(&buf, "cluster=%s\n", shellQuote(in.ClusterName))
+	fmt.Fprintf(&buf, "key_dir=/usr/local/.state/zfs\n")
+	fmt.Fprintf(&buf, "key_file=\"$key_dir/$pool.key\"\n")
 	fmt.Fprintf(&buf, "echo 'k2-tools: provisioning ZFS pool and datasets'\n")
+	fmt.Fprintf(&buf, "sudo install -d -o root -g root -m 0700 \"$key_dir\"\n")
+	fmt.Fprintf(&buf, "sudo install -o root -g root -m 0400 \"$remote_dir\"/zfs_pool.key \"$key_file\"\n")
 	fmt.Fprintf(&buf, "if sudo zpool list -H -o name \"$pool\" >/dev/null 2>&1; then\n")
 	fmt.Fprintf(&buf, "  health=\"$(sudo zpool list -H -o health \"$pool\")\"\n")
 	fmt.Fprintf(&buf, "  test \"$health\" = ONLINE || { echo \"pool $pool health is $health\" >&2; exit 1; }\n")
 	fmt.Fprintf(&buf, "  echo \"k2-tools: pool $pool already imported ($health)\"\n")
 	fmt.Fprintf(&buf, "elif sudo zpool import \"$pool\" >/dev/null 2>&1; then\n")
 	fmt.Fprintf(&buf, "  echo \"k2-tools: imported existing pool $pool\"\n")
+	fmt.Fprintf(&buf, "  sudo zfs load-key -a || true\n")
 	fmt.Fprintf(&buf, "else\n")
 	if !in.CreateAllowed {
 		fmt.Fprintf(&buf, "  echo \"pool $pool missing at execution time\" >&2\n")
@@ -150,7 +156,7 @@ func storagePoolScript(in storagePoolScriptInput) string {
 				fmt.Fprintf(&buf, "  if sudo wipefs -n %s | grep -q . || sudo blkid %s >/dev/null 2>&1; then echo 'device %s is not blank; pass --force-wipe' >&2; exit 1; fi\n", shellQuote(dev), shellQuote(dev), dev)
 			}
 		}
-		fmt.Fprintf(&buf, "  sudo zpool create -m none -o ashift=12 -o cachefile=none -o autotrim=on -o compatibility=\"$compat\" -O compression=lz4 -O atime=off -O canmount=off \"$pool\"")
+		fmt.Fprintf(&buf, "  sudo zpool create -m none -o ashift=12 -o cachefile=none -o autotrim=on -o compatibility=\"$compat\" -O compression=lz4 -O atime=off -O canmount=off -O encryption=aes-256-gcm -O keyformat=raw -O keylocation=\"file://$key_file\" \"$pool\"")
 		for _, arg := range storageZpoolVDevArgs(in.VDevs) {
 			fmt.Fprintf(&buf, " %s", shellQuote(arg))
 		}

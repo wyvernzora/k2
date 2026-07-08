@@ -63,6 +63,21 @@ func runWith(cfg Config, run runner.Runner, stdout, stderr io.Writer) error {
 				continue
 			}
 			notes = append(notes, fmt.Sprintf("pool %s ONLINE", pool))
+			keyStatus, err := run.Output("zfs", "get", "-H", "-o", "value", "keystatus", pool)
+			if err != nil {
+				fail(fmt.Sprintf("pool %s keystatus check failed: %v", pool, err))
+				continue
+			}
+			switch strings.TrimSpace(keyStatus) {
+			case "unavailable":
+				fail(fmt.Sprintf("pool %s keys unavailable", pool))
+			case "available":
+				notes = append(notes, fmt.Sprintf("pool %s keys loaded", pool))
+			case "none", "-", "":
+				notes = append(notes, fmt.Sprintf("pool %s unencrypted", pool))
+			default:
+				fail(fmt.Sprintf("pool %s unexpected keystatus %s", pool, strings.TrimSpace(keyStatus)))
+			}
 		}
 	}
 

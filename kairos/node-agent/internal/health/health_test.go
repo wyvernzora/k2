@@ -76,8 +76,9 @@ func TestRunWithPortalListening(t *testing.T) {
 	}
 	run := fakeRunner{
 		outputs: map[string]string{
-			"zpool list -H -o name":        "tank",
-			"zpool list -H -o health tank": "ONLINE",
+			"zpool list -H -o name":              "tank",
+			"zpool list -H -o health tank":       "ONLINE",
+			"zfs get -H -o value keystatus tank": "available",
 		},
 		runErrs: map[string]error{
 			"systemctl is-failed --quiet rtslib-fb-targetctl.service": errors.New("not failed"),
@@ -90,7 +91,7 @@ func TestRunWithPortalListening(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "healthy: pool tank ONLINE; 2 iSCSI target(s), portal listening on " + portalPort(portal) + "\n"
+	want := "healthy: pool tank ONLINE; pool tank keys loaded; 2 iSCSI target(s), portal listening on " + portalPort(portal) + "\n"
 	if stdout.String() != want {
 		t.Fatalf("stdout = %q, want %q", stdout.String(), want)
 	}
@@ -98,6 +99,87 @@ func TestRunWithPortalListening(t *testing.T) {
 		t.Fatalf("stderr = %q, want empty", stderr.String())
 	}
 	assertStatus(t, status, want)
+}
+
+func TestRunWithPoolKeyStatuses(t *testing.T) {
+	tests := []struct {
+		name       string
+		keyStatus  string
+		keyErr     error
+		wantErr    bool
+		wantOutput string
+	}{
+		{
+			name:       "available",
+			keyStatus:  "available",
+			wantOutput: "healthy: pool tank ONLINE; pool tank keys loaded\n",
+		},
+		{
+			name:       "none",
+			keyStatus:  "none",
+			wantOutput: "healthy: pool tank ONLINE; pool tank unencrypted\n",
+		},
+		{
+			name:       "dash",
+			keyStatus:  "-",
+			wantOutput: "healthy: pool tank ONLINE; pool tank unencrypted\n",
+		},
+		{
+			name:       "unavailable",
+			keyStatus:  "unavailable",
+			wantErr:    true,
+			wantOutput: "UNHEALTHY: pool tank ONLINE; pool tank keys unavailable\n",
+		},
+		{
+			name:       "error",
+			keyErr:     errors.New("zfs failed"),
+			wantErr:    true,
+			wantOutput: "UNHEALTHY: pool tank ONLINE; pool tank keystatus check failed: zfs failed\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			status := filepath.Join(t.TempDir(), "status")
+			run := fakeRunner{
+				outputs: map[string]string{
+					"zpool list -H -o name":              "tank",
+					"zpool list -H -o health tank":       "ONLINE",
+					"zfs get -H -o value keystatus tank": tt.keyStatus,
+				},
+				outErrs: map[string]error{
+					"zfs get -H -o value keystatus tank": tt.keyErr,
+				},
+				runErrs: map[string]error{
+					"systemctl is-failed --quiet rtslib-fb-targetctl.service": errors.New("not failed"),
+				},
+			}
+			var stdout, stderr bytes.Buffer
+
+			err := runWith(Config{StatusFile: status, SaveConfig: filepath.Join(t.TempDir(), "missing.json")}, run, &stdout, &stderr)
+			if tt.wantErr {
+				if !errors.Is(err, ErrUnhealthy) {
+					t.Fatalf("err = %v, want ErrUnhealthy", err)
+				}
+				if stderr.String() != tt.wantOutput {
+					t.Fatalf("stderr = %q, want %q", stderr.String(), tt.wantOutput)
+				}
+				if stdout.Len() != 0 {
+					t.Fatalf("stdout = %q, want empty", stdout.String())
+				}
+			} else {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if stdout.String() != tt.wantOutput {
+					t.Fatalf("stdout = %q, want %q", stdout.String(), tt.wantOutput)
+				}
+				if stderr.Len() != 0 {
+					t.Fatalf("stderr = %q, want empty", stderr.String())
+				}
+			}
+			assertStatus(t, status, tt.wantOutput)
+		})
+	}
 }
 
 func TestRunWithPortalNotListeningIsUnhealthy(t *testing.T) {
