@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (m manager) copyPersistent(oldDev, newDev string) error {
@@ -50,10 +51,17 @@ func (m manager) copyPersistent(oldDev, newDev string) error {
 	}
 	defer m.run.Run("umount", newMount)
 
-	cmd := fmt.Sprintf("tar -C %q -cpf - . | tar -C %q -xpf -", oldMount, newMount)
+	cmd := fmt.Sprintf("tar -C %s -cpf - . | tar -C %s -xpf -", shellQuote(oldMount), shellQuote(newMount))
 	if err := m.run.Run("sh", "-c", cmd); err != nil {
 		return fmt.Errorf("copy persistent data: %w", err)
 	}
 	_ = m.run.Run("sync")
 	return nil
+}
+
+func shellQuote(value string) string {
+	if value == "" {
+		return "''"
+	}
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
 }

@@ -36,6 +36,10 @@ type Client struct {
 	Stdout io.Writer
 	Stderr io.Writer
 	Logger func(format string, args ...any)
+	// IdentityFile optionally points at an unencrypted private key used
+	// for key auth, for operators whose agents cannot load the operator
+	// key (or headless runs with no agent at all).
+	IdentityFile string
 
 	authMode authMode
 	password string
@@ -82,6 +86,20 @@ func (c *Client) EnsureAuth() error {
 		return nil
 	}
 
+	// With an explicit identity, key auth goes first: hardened nodes reject
+	// passwords anyway, and modern sshd (PerSourcePenalties, OpenSSH 9.8+)
+	// penalty-boxes sources that rack up failed auth attempts.
+	if c.IdentityFile != "" {
+		c.logf("probing SSH auth with identity file and local SSH agent")
+		if err := c.probeLocalSSH(); err == nil {
+			c.authMode = authModeLocalSSH
+			c.logf("using local SSH key auth")
+			return nil
+		} else {
+			c.logf("local SSH key auth did not succeed: %v", err)
+		}
+	}
+
 	c.logf("probing SSH auth with default kairos password")
 	if err := c.probePassword("kairos"); err == nil {
 		c.authMode = authModePassword
@@ -92,13 +110,15 @@ func (c *Client) EnsureAuth() error {
 		c.logf("default kairos password auth did not succeed: %v", err)
 	}
 
-	c.logf("probing SSH auth with local SSH agent and keys")
-	if err := c.probeLocalSSH(); err == nil {
-		c.authMode = authModeLocalSSH
-		c.logf("using local SSH agent/key auth")
-		return nil
-	} else {
-		c.logf("local SSH agent/key auth did not succeed: %v", err)
+	if c.IdentityFile == "" {
+		c.logf("probing SSH auth with local SSH agent and keys")
+		if err := c.probeLocalSSH(); err == nil {
+			c.authMode = authModeLocalSSH
+			c.logf("using local SSH agent/key auth")
+			return nil
+		} else {
+			c.logf("local SSH agent/key auth did not succeed: %v", err)
+		}
 	}
 
 	password, err := c.promptPassword()
@@ -327,8 +347,18 @@ func (c *Client) probePassword(password string) error {
 }
 
 func (c *Client) probeLocalSSH() error {
-	auth, err := localSSHAuthMethods()
-	if err != nil {
+	var auth []ssh.AuthMethod
+	if c.IdentityFile != "" {
+		method, err := identityFileAuthMethod(c.IdentityFile)
+		if err != nil {
+			return err
+		}
+		auth = append(auth, method)
+	}
+	agentAuth, err := localSSHAuthMethods()
+	if err == nil {
+		auth = append(auth, agentAuth...)
+	} else if len(auth) == 0 {
 		return err
 	}
 	client, err := c.dial(auth)
@@ -344,8 +374,18 @@ func (c *Client) dialSelectedAuth() (*ssh.Client, error) {
 	case authModePassword:
 		return c.dial(passwordAuthMethods(c.password))
 	case authModeLocalSSH:
-		auth, err := localSSHAuthMethods()
-		if err != nil {
+		var auth []ssh.AuthMethod
+		if c.IdentityFile != "" {
+			method, err := identityFileAuthMethod(c.IdentityFile)
+			if err != nil {
+				return nil, err
+			}
+			auth = append(auth, method)
+		}
+		agentAuth, err := localSSHAuthMethods()
+		if err == nil {
+			auth = append(auth, agentAuth...)
+		} else if len(auth) == 0 {
 			return nil, err
 		}
 		return c.dial(auth)
@@ -379,6 +419,18 @@ func passwordAuthMethods(password string) []ssh.AuthMethod {
 			return answers, nil
 		}),
 	}
+}
+
+func identityFileAuthMethod(path string) (ssh.AuthMethod, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read identity file %s: %w", path, err)
+	}
+	signer, err := ssh.ParsePrivateKey(data)
+	if err != nil {
+		return nil, fmt.Errorf("parse identity file %s (must be unencrypted): %w", path, err)
+	}
+	return ssh.PublicKeys(signer), nil
 }
 
 func localSSHAuthMethods() ([]ssh.AuthMethod, error) {

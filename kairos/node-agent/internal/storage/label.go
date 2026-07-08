@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
+	"os/exec"
 	"strings"
 )
 
@@ -26,7 +28,10 @@ func (m manager) relabelOtherPersistent(targetDisk string) error {
 	}
 	for _, dev := range devices {
 		devDisk, err := diskForDev(dev, m.run)
-		if err != nil || devDisk == targetDisk {
+		if err != nil {
+			return fmt.Errorf("resolve persistent device %s: %w", dev, err)
+		}
+		if devDisk == targetDisk {
 			continue
 		}
 		if err := m.labelExt(dev, m.cfg.OldLabel); err != nil {
@@ -55,7 +60,14 @@ func firstDeviceByLabel(label string, runner Runner) (string, error) {
 
 func devicesByLabel(label string, runner Runner) ([]string, error) {
 	out, err := runner.Output("blkid", "-o", "device", "-t", "LABEL="+label)
-	if err != nil && out == "" {
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == 2 {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if out == "" {
 		return nil, nil
 	}
 	return strings.Fields(out), nil

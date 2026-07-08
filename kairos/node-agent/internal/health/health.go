@@ -22,6 +22,8 @@ const (
 
 var ErrUnhealthy = errors.New("storage unhealthy")
 
+var dialPortal = net.DialTimeout
+
 type Config struct {
 	SaveConfig string
 	StatusFile string
@@ -68,9 +70,12 @@ func runWith(cfg Config, run runner.Runner, stdout, stderr io.Writer) error {
 		fail("rtslib-fb-targetctl.service failed: LIO config not restored")
 	}
 
-	targets := targetCount(cfg.SaveConfig)
+	targets, err := targetCount(cfg.SaveConfig)
+	if err != nil {
+		fail(fmt.Sprintf("saveconfig.json unparseable: %v", err))
+	}
 	if targets > 0 {
-		conn, err := net.DialTimeout("tcp", cfg.Portal, 3*time.Second)
+		conn, err := dialPortal("tcp", cfg.Portal, 3*time.Second)
 		if err != nil {
 			fail(fmt.Sprintf("%d iSCSI target(s), portal %s not listening: %v", targets, cfg.Portal, err))
 		} else {
@@ -108,18 +113,24 @@ func normalize(cfg Config) Config {
 	return cfg
 }
 
-func targetCount(path string) int {
+func targetCount(path string) (int, error) {
 	data, err := os.ReadFile(path)
-	if err != nil || len(data) == 0 {
-		return 0
+	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	if len(data) == 0 {
+		return 0, nil
 	}
 	var saveConfig struct {
 		Targets []json.RawMessage `json:"targets"`
 	}
 	if err := json.Unmarshal(data, &saveConfig); err != nil {
-		return 0
+		return 0, err
 	}
-	return len(saveConfig.Targets)
+	return len(saveConfig.Targets), nil
 }
 
 func portalPort(addr string) string {

@@ -51,7 +51,7 @@ func TestBuilderImage(t *testing.T) {
 		"--build-arg", "TRUSTED_BOOT=false",
 		"--build-arg", "OVERLAYS=base,hardware/rpi4cb,role/k8s",
 		"--build-arg", "TARGET_NAME=ubuntu-26.04-arm64-rpi4cb-k8s",
-		"--build-arg", "FLAVOR=ubuntu-24.04",
+		"--build-arg", "FLAVOR=ubuntu-26.04",
 		"--build-arg", "ROLE=k8s",
 		"--build-arg", "ARCH=arm64",
 		"--build-arg", "PLATFORM=linux/arm64",
@@ -202,7 +202,7 @@ func indexOf(values []string, needle string) int {
 func testPlan() plan.Plan {
 	return plan.Plan{
 		Target:           "ubuntu-26.04-arm64-rpi4cb-k8s",
-		Flavor:           "ubuntu-24.04",
+		Flavor:           "ubuntu-26.04",
 		Role:             "k8s",
 		Arch:             "arm64",
 		Platform:         "linux/arm64",

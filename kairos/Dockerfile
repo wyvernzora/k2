@@ -42,9 +42,7 @@ RUN --mount=type=bind,from=kairos-init,src=/kairos-init,dst=/kairos-init \
     set -eux; \
     if [ -n "${KUBERNETES_DISTRO}" ]; then \
         K8S_FLAG="-p ${KUBERNETES_DISTRO}"; \
-        if [ "${KUBERNETES_DISTRO}" = "k0s" ] && [ -n "${KUBERNETES_VERSION}" ]; then \
-            K8S_VERSION_FLAG="--provider-k0s-version ${KUBERNETES_VERSION}"; \
-        elif [ "${KUBERNETES_DISTRO}" = "k3s" ] && [ -n "${KUBERNETES_VERSION}" ]; then \
+        if [ "${KUBERNETES_DISTRO}" = "k3s" ] && [ -n "${KUBERNETES_VERSION}" ]; then \
             K8S_VERSION_FLAG="--provider-k3s-version ${KUBERNETES_VERSION}"; \
         else \
             K8S_VERSION_FLAG=""; \

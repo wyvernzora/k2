@@ -227,6 +227,66 @@ inspect:
 	}
 }
 
+func TestBuildRejectsRoleOverlayMismatch(t *testing.T) {
+	planner, _ := newFixturePlanner(t)
+	target := planner.Targets.Targets["ubuntu-26.04-amd64-qemu-storage"]
+	target.Overlays = []string{"base", "hardware/qemu", "role/k8s"}
+	planner.Targets.Targets["ubuntu-26.04-amd64-qemu-storage"] = target
+
+	_, err := planner.Build("ubuntu-26.04-amd64-qemu-storage")
+	if err == nil {
+		t.Fatal("expected role overlay mismatch")
+	}
+	if !strings.Contains(err.Error(), "role/storage") {
+		t.Fatalf("error = %v, want role/storage", err)
+	}
+}
+
+func TestBuildAllEnabledRejectsDuplicateImageTags(t *testing.T) {
+	planner, _ := newFixturePlanner(t)
+	target := planner.Targets.Targets["ubuntu-26.04-amd64-qemu-k8s"]
+	planner.Targets.Targets["ubuntu-26.04-amd64-qemu-k8s-copy"] = target
+
+	_, err := planner.BuildAllEnabled()
+	if err == nil {
+		t.Fatal("expected duplicate image tag error")
+	}
+	if !strings.Contains(err.Error(), "duplicate image tag") {
+		t.Fatalf("error = %v, want duplicate image tag", err)
+	}
+}
+
+func TestRealRepoPlansBuildAllEnabledTargets(t *testing.T) {
+	kairosRoot := filepath.Clean(filepath.Join("..", "..", "..", "..", "..", "kairos"))
+	discovered, err := paths.Discover(kairosRoot, paths.Overrides{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	targets, err := config.LoadTargets(discovered.TargetsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	versions, err := config.LoadVersions(discovered.VersionsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	plans, err := plan.New(targets, versions, discovered).BuildAllEnabled()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plans) != 5 {
+		t.Fatalf("plan count = %d, want 5", len(plans))
+	}
+	tags := map[string]string{}
+	for _, got := range plans {
+		if previous := tags[got.Image]; previous != "" {
+			t.Fatalf("duplicate image %s for %s and %s", got.Image, previous, got.Target)
+		}
+		tags[got.Image] = got.Target
+	}
+}
+
 func newFixturePlanner(t *testing.T) (planner plan.Planner, root string) {
 	t.Helper()
 
