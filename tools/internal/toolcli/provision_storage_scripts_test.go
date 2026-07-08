@@ -86,7 +86,9 @@ func TestStoragePoolScriptImportOnlyHasNoCreateOrWipe(t *testing.T) {
 		CreateAllowed: false,
 	})
 	for _, want := range []string{
+		`sudo install -o root -g root -m 0400 "$remote_dir"/zfs_pool.key "$key_file"`,
 		`sudo zpool import "$pool"`,
+		`sudo zfs load-key -a || true`,
 		`pool $pool missing at execution time`,
 	} {
 		if !strings.Contains(got, want) {
@@ -96,6 +98,34 @@ func TestStoragePoolScriptImportOnlyHasNoCreateOrWipe(t *testing.T) {
 	for _, forbidden := range []string{"zpool create", "wipefs"} {
 		if strings.Contains(got, forbidden) {
 			t.Fatalf("script contains %q:\n%s", forbidden, got)
+		}
+	}
+}
+
+func TestStoragePoolScriptInstallsKeyBeforePoolCommandsAndCreatesEncryptedPool(t *testing.T) {
+	got := storagePoolScript(storagePoolScriptInput{
+		Pool:          "tank",
+		ClusterName:   "v3",
+		Compatibility: "openzfs-2.2-linux",
+		VDevs:         []storageVDev{{Devices: []string{"/dev/disk/by-id/ata-a"}}},
+		CreateAllowed: true,
+	})
+	keyInstall := strings.Index(got, `sudo install -o root -g root -m 0400 "$remote_dir"/zfs_pool.key "$key_file"`)
+	firstZpool := strings.Index(got, "sudo zpool")
+	if keyInstall < 0 {
+		t.Fatalf("script missing key install:\n%s", got)
+	}
+	if firstZpool < 0 || keyInstall > firstZpool {
+		t.Fatalf("key install must precede zpool commands:\n%s", got)
+	}
+	for _, want := range []string{
+		`key_file="$key_dir/$pool.key"`,
+		`-O encryption=aes-256-gcm`,
+		`-O keyformat=raw`,
+		`-O keylocation="file://$key_file"`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("script missing %q:\n%s", want, got)
 		}
 	}
 }

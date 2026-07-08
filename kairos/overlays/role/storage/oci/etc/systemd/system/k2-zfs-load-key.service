@@ -1,0 +1,14 @@
+[Unit]
+Description=Load ZFS encryption keys
+DefaultDependencies=no
+After=zfs-import-scan.service zfs-import-cache.service zfs-import.target
+Before=zfs-volume-wait.service zfs-mount.service
+ConditionPathExists=!/run/cos/recovery_mode
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/zfs load-key -a
+
+[Install]
+WantedBy=zfs.target

@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -41,6 +42,7 @@ type storageState struct {
 	csiKeyGenerated bool
 	chapUsername    string
 	chapPassword    string
+	poolKey         string
 	credentialsPath string
 	summary         storageSummary
 }
@@ -51,6 +53,7 @@ type storageBundle struct {
 	OperatorActivation []byte
 	CSIPublicKey       []byte
 	CSISudoers         []byte
+	PoolKey            []byte
 	InstallScript      []byte
 	PoolScript         []byte
 }
@@ -68,6 +71,7 @@ type storageCredentials struct {
 	CSIPublicKey                       string `json:"csiPublicKey"`
 	CHAPUsername                       string `json:"chapUsername"`
 	CHAPPassword                       string `json:"chapPassword"`
+	PoolKey                            string `json:"poolKey,omitempty"`
 	ProvisionedAt                      string `json:"provisionedAt"`
 }
 
@@ -150,12 +154,20 @@ func (c *storageCmd) prepare(rcx *runContext) error {
 }
 
 func (c *storageCmd) newStorageState() (*storageState, error) {
+	existing, haveExisting := loadStorageCredentials(c.ClusterName)
 	// Re-provisioning (the disaster-recovery drill: reset → provision) must
 	// restore the SAME csi key and CHAP credentials the cluster already
 	// holds, so an existing credentials file is reused unless the operator
 	// explicitly rotates or supplies a key.
 	if !c.RotateCredentials && c.CSIPublicKey == "" {
-		if existing, ok := loadStorageCredentials(c.ClusterName); ok {
+		if haveExisting {
+			if existing.PoolKey == "" {
+				var err error
+				existing.PoolKey, err = generatePoolKey()
+				if err != nil {
+					return nil, err
+				}
+			}
 			logf("reusing csi key and CHAP credentials from existing %s (pass --rotate-credentials to regenerate)", "storage-appliance.json")
 			return c.storageStateFromCredentials(existing), nil
 		}
@@ -167,6 +179,18 @@ func (c *storageCmd) newStorageState() (*storageState, error) {
 	chapPassword, err := randomBase62(16)
 	if err != nil {
 		return nil, err
+	}
+	poolKey := ""
+	if haveExisting {
+		// Pool wrapping keys outlive SSH/CHAP material; rotating this silently
+		// would strand an encrypted pool.
+		poolKey = existing.PoolKey
+	}
+	if poolKey == "" {
+		poolKey, err = generatePoolKey()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &storageState{
 		client: &remote.Client{
@@ -183,6 +207,7 @@ func (c *storageCmd) newStorageState() (*storageState, error) {
 		csiKeyGenerated: generated,
 		chapUsername:    "k2-" + c.ClusterName,
 		chapPassword:    chapPassword,
+		poolKey:         poolKey,
 	}, nil
 }
 
@@ -201,6 +226,7 @@ func (c *storageCmd) storageStateFromCredentials(creds storageCredentials) *stor
 		csiPrivateKey: creds.CSIPrivateKey,
 		chapUsername:  creds.CHAPUsername,
 		chapPassword:  creds.CHAPPassword,
+		poolKey:       creds.PoolKey,
 	}
 }
 
@@ -313,7 +339,7 @@ func (c *storageCmd) stepStorageResolvePlan(s *storageState) func(context.Contex
 func (c *storageCmd) stepRenderStorageBundle(s *storageState) func(context.Context) error {
 	return func(ctx context.Context) error {
 		var err error
-		s.bundle, err = buildStorageBundle(c.commonStorageFlags, c.ForceWipe, s.vdevs, s.csiPublicKey)
+		s.bundle, err = buildStorageBundle(c.commonStorageFlags, c.ForceWipe, s.vdevs, s.csiPublicKey, s.poolKey)
 		return err
 	}
 }
@@ -417,6 +443,7 @@ func (c *storageCmd) writeStorageCredentials(s *storageState) (string, storageSu
 		CSIPublicKey:                       s.csiPublicKey,
 		CHAPUsername:                       s.chapUsername,
 		CHAPPassword:                       s.chapPassword,
+		PoolKey:                            s.poolKey,
 		ProvisionedAt:                      now,
 	}
 	data, err := json.MarshalIndent(creds, "", "  ")
@@ -454,6 +481,7 @@ func (c *storageCmd) storagePlanFields(s *storageState) []ui.KV {
 		{Key: "Node name", Value: c.NodeName},
 		{Key: "Pool", Value: s.poolPlan.String()},
 		{Key: "Pool options", Value: "ashift=12, autotrim=on, compatibility=" + c.PoolCompatibility},
+		{Key: "Encryption", Value: "aes-256-gcm (raw key on persistent partition, escrowed in credentials file)"},
 		{Key: "Dataset parent", Value: c.datasetParent()},
 		{Key: "Detached snapshots", Value: c.snapshotsParent()},
 		{Key: "CSI user/key", Value: "csi, " + keyStatus},
@@ -504,7 +532,11 @@ func (c *renderStorageCmd) Run(ctx *runContext) error {
 	if err != nil {
 		return err
 	}
-	bundle, err := buildStorageBundle(c.commonStorageFlags, false, vdevs, csiPublicKey)
+	poolKey, err := generatePoolKey()
+	if err != nil {
+		return err
+	}
+	bundle, err := buildStorageBundle(c.commonStorageFlags, false, vdevs, csiPublicKey, poolKey)
 	if err != nil {
 		return err
 	}
@@ -515,8 +547,12 @@ func (c *renderStorageCmd) Run(ctx *runContext) error {
 	return nil
 }
 
-func buildStorageBundle(flags commonStorageFlags, forceWipe bool, vdevs []storageVDev, csiPublicKey string) (storageBundle, error) {
+func buildStorageBundle(flags commonStorageFlags, forceWipe bool, vdevs []storageVDev, csiPublicKey, poolKey string) (storageBundle, error) {
 	operatorKeys, err := loadOptionalOperatorKeys(flags.OperatorKey, flags.OperatorFiles)
+	if err != nil {
+		return storageBundle{}, err
+	}
+	rawPoolKey, err := decodePoolKey(poolKey)
 	if err != nil {
 		return storageBundle{}, err
 	}
@@ -533,6 +569,7 @@ func buildStorageBundle(flags commonStorageFlags, forceWipe bool, vdevs []storag
 		CSIPublicKey:       []byte(strings.TrimSpace(csiPublicKey) + "\n"),
 		// Design D7: targetcli requires root; the csi key is treated as a root credential.
 		CSISudoers: []byte("csi ALL=(ALL) NOPASSWD:ALL\n"),
+		PoolKey:    rawPoolKey,
 	}
 	bundle.InstallScript = []byte(storageInstallScript(flags.NodeName))
 	bundle.PoolScript = []byte(storagePoolScript(storagePoolScriptInput{
@@ -560,6 +597,7 @@ func writeStorageBundle(dir string, bundle storageBundle) error {
 		"operator_authorized_keys":         bundle.AuthorizedKeys,
 		"csi_authorized_keys":              bundle.CSIPublicKey,
 		"99-csi":                           bundle.CSISudoers,
+		"zfs_pool.key":                     bundle.PoolKey,
 		"storage-install.sh":               bundle.InstallScript,
 		"storage-pool.sh":                  bundle.PoolScript,
 	}
@@ -573,6 +611,8 @@ func writeStorageBundle(dir string, bundle storageBundle) error {
 		mode := os.FileMode(0o644)
 		if strings.HasSuffix(name, ".sh") {
 			mode = 0o755
+		} else if strings.HasSuffix(name, ".key") {
+			mode = 0o600
 		}
 		if err := os.WriteFile(filepath.Join(dir, name), data, mode); err != nil {
 			return err
@@ -602,6 +642,25 @@ func resolveCSIKey(value string) (publicKey string, privateKey string, generated
 		return "", "", false, err
 	}
 	return strings.TrimSpace(string(ssh.MarshalAuthorizedKey(sshPub))), string(pem.EncodeToMemory(block)), true, nil
+}
+
+func generatePoolKey() (string, error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(raw), nil
+}
+
+func decodePoolKey(value string) ([]byte, error) {
+	raw, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return nil, fmt.Errorf("decode pool key: %w", err)
+	}
+	if len(raw) != 32 {
+		return nil, fmt.Errorf("pool key must decode to 32 bytes, got %d", len(raw))
+	}
+	return raw, nil
 }
 
 func validateEd25519PublicKey(value string) error {

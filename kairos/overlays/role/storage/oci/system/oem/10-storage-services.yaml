@@ -26,6 +26,7 @@ stages:
       systemctl:
         enable:
           - zfs-import-scan.service
+          - k2-zfs-load-key.service
           - zfs-mount.service
           - zfs-volume-wait.service
           - zfs.target

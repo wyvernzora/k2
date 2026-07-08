@@ -27,8 +27,15 @@ inspect:
             path: /stages/initramfs/0/systemctl/enable/0
             value: zfs-import-scan.service
           - op: test
-            path: /stages/initramfs/0/systemctl/enable/4
+            path: /stages/initramfs/0/systemctl/enable/1
+            value: k2-zfs-load-key.service
+          - op: test
+            path: /stages/initramfs/0/systemctl/enable/5
             value: rtslib-fb-targetctl.service
+      - path: /etc/systemd/system/k2-zfs-load-key.service
+        contains:
+          - "ExecStart=/usr/sbin/zfs load-key -a"
+          - "Before=zfs-volume-wait.service zfs-mount.service"
       - path: /etc/systemd/system/rtslib-fb-targetctl.service.d/10-k2-after-zfs.conf
         contains:
           - "After=zfs.target zfs-volume-wait.service"
