@@ -44,4 +44,4 @@ Manifest synthesis starts from a clean generated `deploy/` tree. Earthly remains
 | `build/` | Build image definition and CDK-only synth entrypoints. |
 | `tools/` | Go toolbox module for build workflows, Kairos operations, image tooling, and shared TUI/workflow code. |
 | `deploy/` | Ignored generated manifests; committed through the `deploy` branch workflow. |
-| `kairos/` | Kairos image targets, Dockerfile, overlays, node-init, and provisioning docs. |
+| `kairos/` | Kairos image targets, Dockerfile, overlays, node-agent, and provisioning docs. |

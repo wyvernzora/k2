@@ -1,0 +1,136 @@
+{
+  "target": "ubuntu-24.04-arm64-qemu-k8s",
+  "enabled": true,
+  "flavor": "ubuntu-24.04",
+  "role": "k8s",
+  "arch": "arm64",
+  "platform": "linux/arm64",
+  "hardware": "qemu",
+  "kairosModel": "generic",
+  "kubernetesDistro": "k3s",
+  "artifacts": [
+    "raw"
+  ],
+  "overlays": [
+    "base",
+    "hardware/qemu",
+    "role/k8s"
+  ],
+  "aptPackages": [
+    "parted",
+    "qemu-guest-agent",
+    "util-linux"
+  ],
+  "dracutInstallItems": [
+    "/usr/sbin/k2-node-agent",
+    "/usr/sbin/parted"
+  ],
+  "rawPatches": null,
+  "inspection": {
+    "oci": {
+      "files": [
+        {
+          "source": "overlay:base",
+          "path": "/system/oem/01-k2-rescue-deactivate.yaml",
+          "contains": [
+            "K2 rescue user"
+          ]
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/system/oem/05-persistent-storage.yaml",
+          "contains": [
+            "K2 persistent storage"
+          ]
+        },
+        {
+          "source": "overlay:hardware/qemu",
+          "path": "/system/oem/07-qemu-guest-agent.yaml",
+          "contains": [
+            "QEMU guest agent"
+          ]
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/usr/share/k2/node-provision/k3s/10-k2-invariant.yaml",
+          "contains": [
+            "flannel-backend: none",
+            "disable-kube-proxy: true",
+            "secrets-encryption-provider: secretbox"
+          ]
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/usr/share/k2/node-provision/k3s/README.md",
+          "contains": [
+            "K2 K3s Node Provisioning Overlay",
+            "Active cluster-specific K3s configuration is written at provision time"
+          ]
+        }
+      ],
+      "absent": [
+        {
+          "source": "overlay:role/k8s",
+          "path": "/etc/rancher/k3s/config.yaml"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/etc/rancher/k3s/config.yaml.d/20-k2-intent.yaml"
+        },
+        {
+          "source": "overlay:hardware/qemu",
+          "path": "/system/oem/06-qemu-serial-console.yaml"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "path": "/system/oem/30-k2-k3s-provider.yaml"
+        }
+      ],
+      "commands": [
+        {
+          "source": "overlay:role/k8s",
+          "name": "k2-node-agent"
+        },
+        {
+          "source": "overlay:role/k8s",
+          "name": "parted"
+        },
+        {
+          "source": "overlay:hardware/qemu",
+          "name": "qemu-ga"
+        }
+      ]
+    },
+    "raw": {}
+  },
+  "artifactOptions": {
+    "raw": {
+      "diskStateSize": 4096,
+      "diskSize": 8192
+    }
+  },
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-arm64-qemu-k8s-v1.36.0-k3s1-rev0",
+  "artifactStem": "ubuntu-24.04-v4.1.0-arm64-qemu-k8s-v1.36.0-k3s1-rev0",
+  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-arm64-qemu-k8s",
+  "versions": {
+    "kairosVersion": "v4.1.0",
+    "kairosInitVersion": "v0.13.0",
+    "aurorabootVersion": "v0.19.4",
+    "baseImage": "ubuntu:24.04",
+    "k3sVersion": "v1.36.0+k3s1",
+    "imageRevision": "rev0",
+    "registryImage": "ghcr.io/wyvernzora/k2-kairos"
+  },
+  "paths": {
+    "buildRoot": "$FIXTURE/kairos",
+    "kairosRoot": "$FIXTURE/kairos",
+    "targetsFile": "$FIXTURE/kairos/targets.yaml",
+    "versionsFile": "$FIXTURE/kairos/versions.env",
+    "overlaysDir": "$FIXTURE/kairos/overlays",
+    "artifactsDir": "$FIXTURE/kairos/artifacts"
+  }
+}

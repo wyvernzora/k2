@@ -1,6 +1,6 @@
 VERSION 0.8
 
-ARG KAIROS_TARGET="ubuntu-24.04-standard-arm64-rpi4cb-k3s"
+ARG KAIROS_TARGET="ubuntu-24.04-arm64-rpi4cb-k8s"
 
 #
 # Compatibility wrapper: the implementation lives in the root Earthfile

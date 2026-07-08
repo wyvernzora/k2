@@ -72,6 +72,13 @@ func buildArgs(resolved plan.Plan, options Options) []string {
 		outputMode = "--push"
 	}
 
+	// Kubernetes-free targets must not bake the k3s version pin into the
+	// image metadata, so the version build-arg follows the distro.
+	kubernetesVersion := ""
+	if resolved.KubernetesDistro != "" {
+		kubernetesVersion = resolved.Versions.K3sVersion
+	}
+
 	args := []string{
 		"buildx", "build",
 		"--platform", resolved.Platform,
@@ -80,7 +87,7 @@ func buildArgs(resolved plan.Plan, options Options) []string {
 		"--build-arg", "KAIROS_INIT_VERSION=" + resolved.Versions.KairosInitVersion,
 		"--build-arg", "MODEL=" + resolved.KairosModel,
 		"--build-arg", "KUBERNETES_DISTRO=" + resolved.KubernetesDistro,
-		"--build-arg", "KUBERNETES_VERSION=" + resolved.Versions.K3sVersion,
+		"--build-arg", "KUBERNETES_VERSION=" + kubernetesVersion,
 		"--build-arg", "KAIROS_VERSION=" + resolved.Versions.KairosVersion,
 		"--build-arg", "VERSION=" + resolved.Versions.KairosVersion + "-" + resolved.Versions.ImageRevision,
 		"--build-arg", "IMAGE_REVISION=" + resolved.Versions.ImageRevision,
@@ -88,11 +95,13 @@ func buildArgs(resolved plan.Plan, options Options) []string {
 		"--build-arg", "OVERLAYS=" + strings.Join(resolved.Overlays, ","),
 		"--build-arg", "TARGET_NAME=" + resolved.Target,
 		"--build-arg", "FLAVOR=" + resolved.Flavor,
-		"--build-arg", "FLAVOR_RELEASE=" + resolved.FlavorRelease,
-		"--build-arg", "VARIANT=" + resolved.Variant,
+		"--build-arg", "ROLE=" + resolved.Role,
 		"--build-arg", "ARCH=" + resolved.Arch,
 		"--build-arg", "PLATFORM=" + resolved.Platform,
 		"--build-arg", "HARDWARE=" + resolved.Hardware,
+		"--build-arg", "APT_PACKAGES=" + strings.Join(resolved.AptPackages, " "),
+		"--build-arg", "DRACUT_INSTALL_ITEMS=" + strings.Join(resolved.DracutInstallItems, " "),
+		"--build-arg", "POST_INSTALL_ACTIONS=" + strings.Join(resolved.PostInstallActions, " "),
 		"--tag", resolved.Image,
 	}
 	if options.NoCache {

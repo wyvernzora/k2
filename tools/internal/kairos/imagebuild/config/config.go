@@ -28,13 +28,10 @@ type Target struct {
 	Enabled            *bool           `yaml:"enabled,omitempty"`
 	Inherits           string          `yaml:"inherits,omitempty"`
 	Flavor             string          `yaml:"flavor,omitempty"`
-	FlavorRelease      string          `yaml:"flavorRelease,omitempty"`
-	Variant            string          `yaml:"variant,omitempty"`
+	Role               string          `yaml:"role,omitempty"`
 	Arch               string          `yaml:"arch,omitempty"`
-	Platform           string          `yaml:"platform,omitempty"`
 	Hardware           string          `yaml:"hardware,omitempty"`
 	KairosModel        string          `yaml:"kairosModel,omitempty"`
-	KubernetesDistro   string          `yaml:"kubernetesDistro,omitempty"`
 	Artifacts          []string        `yaml:"artifacts,omitempty"`
 	Overlays           []string        `yaml:"overlays,omitempty"`
 	ArtifactOptions    ArtifactOptions `yaml:"artifactOptions,omitempty"`
@@ -54,6 +51,13 @@ type RawArtifactOptions struct {
 
 type OverlayMetadata struct {
 	Inspect Inspection `yaml:"inspect,omitempty"`
+	Build   Build      `yaml:"build,omitempty"`
+}
+
+type Build struct {
+	AptPackages        []string `yaml:"aptPackages,omitempty"`
+	DracutInstallItems []string `yaml:"dracutInstallItems,omitempty"`
+	PostInstall        []string `yaml:"postInstall,omitempty"`
 }
 
 type Inspection struct {
@@ -197,20 +201,17 @@ func rejectUnknownTargetKeys(node *yaml.Node) error {
 	}
 
 	allowed := map[string]bool{
-		"enabled":          true,
-		"inherits":         true,
-		"flavor":           true,
-		"flavorRelease":    true,
-		"variant":          true,
-		"arch":             true,
-		"platform":         true,
-		"hardware":         true,
-		"kairosModel":      true,
-		"kubernetesDistro": true,
-		"artifacts":        true,
-		"overlays":         true,
-		"artifactOptions":  true,
-		"inspect":          true,
+		"enabled":         true,
+		"inherits":        true,
+		"flavor":          true,
+		"role":            true,
+		"arch":            true,
+		"hardware":        true,
+		"kairosModel":     true,
+		"artifacts":       true,
+		"overlays":        true,
+		"artifactOptions": true,
+		"inspect":         true,
 	}
 	for i := 0; i+1 < len(node.Content); i += 2 {
 		key := node.Content[i].Value

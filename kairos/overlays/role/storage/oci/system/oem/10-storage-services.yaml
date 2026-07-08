@@ -1,0 +1,33 @@
+#cloud-config
+name: "K2 storage services"
+
+# ZFS + LIO service wiring for the storage appliance.
+#
+# Pool import is scan-based (zfs-import-scan) so the appliance carries no
+# import state that a Kairos reset could lose: the pool on the data disks is
+# the source of truth (design D5). zfs-import-cache stays harmlessly enabled
+# via its zpool.cache existence condition.
+#
+# /etc is ephemeral on Kairos, so the LIO configuration that targetcli
+# auto-saves to /etc/rtslib-fb-target/saveconfig.json must live on
+# COS_PERSISTENT via a custom bind mount (design D6). /etc/zfs is persisted
+# for zfs-list.cache / mount-generator state.
+
+stages:
+  rootfs:
+    - name: "Persist LIO and ZFS state directories"
+      environment_file: /run/cos/cos-layout.env
+      environment:
+        CUSTOM_BIND_MOUNTS: "/etc/rtslib-fb-target /etc/zfs"
+
+  initramfs:
+    - name: "Enable K2 storage services"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      systemctl:
+        enable:
+          - zfs-import-scan.service
+          - zfs-mount.service
+          - zfs-volume-wait.service
+          - zfs.target
+          - rtslib-fb-targetctl.service
+          - k2-storage-health.timer

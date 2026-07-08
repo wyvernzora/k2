@@ -1,0 +1,17 @@
+inspect:
+  oci:
+    files:
+      - path: /system/oem/01-k2-rescue-deactivate.yaml
+        structuredTests:
+          - op: test
+            path: /name
+            value: K2 rescue user — deactivate on active boot
+          - op: test
+            path: /stages/boot/0/if
+            value: '[ ! -f "/run/cos/recovery_mode" ]'
+          - op: test
+            path: /stages/boot/0/commands/0
+            value: passwd -l k2-rescue
+          - op: test
+            path: /stages/boot/0/commands/1
+            value: rm -f /etc/sudoers.d/99-k2-rescue

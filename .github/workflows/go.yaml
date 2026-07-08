@@ -14,7 +14,7 @@ on:
       - "kairos/Dockerfile"
       - "kairos/overlays/**"
       - "kairos/scripts/**"
-      - "kairos/node-init/**"
+      - "kairos/node-agent/**"
       - "kairos/tools/**"
       - "kairos/targets.yaml"
       - "kairos/versions.env"
@@ -28,7 +28,7 @@ on:
       - "kairos/Dockerfile"
       - "kairos/overlays/**"
       - "kairos/scripts/**"
-      - "kairos/node-init/**"
+      - "kairos/node-agent/**"
       - "kairos/tools/**"
       - "kairos/targets.yaml"
       - "kairos/versions.env"
@@ -46,7 +46,7 @@ jobs:
       matrix:
         module:
           - tools
-          - kairos/node-init
+          - kairos/node-agent
     defaults:
       run:
         working-directory: ${{ matrix.module }}

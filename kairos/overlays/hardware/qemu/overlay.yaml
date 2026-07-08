@@ -1,20 +1,10 @@
+build:
+  aptPackages:
+    - qemu-guest-agent
+
 inspect:
   oci:
     files:
-      - path: /system/oem/05-qemu-persistent.yaml
-        structuredTests:
-          - op: test
-            path: /name
-            value: QEMU required second-disk COS_PERSISTENT
-          - op: test
-            path: /stages/rootfs.before/0/name
-            value: Prepare QEMU COS_PERSISTENT
-          - op: test
-            path: /stages/rootfs.before/0/commands/0
-            value: /usr/local/bin/k2-node-init storage --mode required --disk auto --log-prefix kairos-qemu-persistent --marker .qemu-persistent-ok
-          - op: test
-            path: /stages/fs/0/name
-            value: Record QEMU persistent layout
       - path: /system/oem/07-qemu-guest-agent.yaml
         structuredTests:
           - op: test
@@ -27,23 +17,6 @@ inspect:
             path: /stages/boot/0/commands/0
             value: systemctl enable --now qemu-guest-agent.service
     absent:
-      - /system/oem/05-rpi4cb-nvme-persistent.yaml
       - /system/oem/06-qemu-serial-console.yaml
-      - /system/oem/20-rpi4cb-nvme-data.yaml
     commands:
-      - blkid
-      - e2label
-      - findmnt
-      - k2-node-init
-      - lsblk
-      - mkfs.ext4
-      - mount
-      - parted
-      - partprobe
       - qemu-ga
-      - readlink
-      - resize2fs
-      - tar
-      - udevadm
-      - umount
-      - wipefs

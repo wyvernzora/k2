@@ -1,0 +1,110 @@
+{
+  "target": "ubuntu-24.04-amd64-qemu-storage",
+  "enabled": true,
+  "flavor": "ubuntu-24.04",
+  "role": "storage",
+  "arch": "amd64",
+  "platform": "linux/amd64",
+  "hardware": "qemu",
+  "kairosModel": "generic",
+  "kubernetesDistro": "",
+  "artifacts": [
+    "raw"
+  ],
+  "overlays": [
+    "base",
+    "hardware/qemu",
+    "role/storage"
+  ],
+  "aptPackages": [
+    "qemu-guest-agent",
+    "targetcli-fb",
+    "zfsutils-linux"
+  ],
+  "postInstallActions": [
+    "zfs-hostid"
+  ],
+  "rawPatches": null,
+  "inspection": {
+    "oci": {
+      "files": [
+        {
+          "source": "overlay:base",
+          "path": "/system/oem/01-k2-rescue-deactivate.yaml",
+          "contains": [
+            "K2 rescue user"
+          ]
+        },
+        {
+          "source": "overlay:hardware/qemu",
+          "path": "/system/oem/07-qemu-guest-agent.yaml",
+          "contains": [
+            "QEMU guest agent"
+          ]
+        },
+        {
+          "source": "overlay:role/storage",
+          "path": "/system/oem/10-storage-services.yaml",
+          "contains": [
+            "K2 storage services"
+          ]
+        }
+      ],
+      "absent": [
+        {
+          "source": "overlay:role/storage",
+          "path": "/etc/rancher"
+        },
+        {
+          "source": "overlay:role/storage",
+          "path": "/system/oem/05-persistent-storage.yaml"
+        },
+        {
+          "source": "overlay:hardware/qemu",
+          "path": "/system/oem/06-qemu-serial-console.yaml"
+        }
+      ],
+      "commands": [
+        {
+          "source": "overlay:hardware/qemu",
+          "name": "qemu-ga"
+        },
+        {
+          "source": "overlay:role/storage",
+          "name": "targetcli"
+        },
+        {
+          "source": "overlay:role/storage",
+          "name": "zfs"
+        }
+      ]
+    },
+    "raw": {}
+  },
+  "artifactOptions": {
+    "raw": {
+      "diskStateSize": 6144,
+      "diskSize": 16384
+    }
+  },
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-v4.1.0-amd64-qemu-storage-rev0",
+  "artifactStem": "ubuntu-24.04-v4.1.0-amd64-qemu-storage-rev0",
+  "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-24.04-amd64-qemu-storage",
+  "versions": {
+    "kairosVersion": "v4.1.0",
+    "kairosInitVersion": "v0.13.0",
+    "aurorabootVersion": "v0.19.4",
+    "baseImage": "ubuntu:24.04",
+    "k3sVersion": "v1.36.0+k3s1",
+    "imageRevision": "rev0",
+    "registryImage": "ghcr.io/wyvernzora/k2-kairos"
+  },
+  "paths": {
+    "buildRoot": "$FIXTURE/kairos",
+    "kairosRoot": "$FIXTURE/kairos",
+    "targetsFile": "$FIXTURE/kairos/targets.yaml",
+    "versionsFile": "$FIXTURE/kairos/versions.env",
+    "overlaysDir": "$FIXTURE/kairos/overlays",
+    "artifactsDir": "$FIXTURE/kairos/artifacts"
+  }
+}

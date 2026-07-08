@@ -10,7 +10,7 @@ import (
 func TestLoadManifestReadsRpi4cbShape(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "artifact-manifest.json")
 	writeFile(t, path, `{
-  "target": "ubuntu-24.04-standard-arm64-rpi4cb-k3s",
+  "target": "ubuntu-24.04-arm64-rpi4cb-k8s",
   "kairosVersion": "v4.1.0",
   "k3sVersion": "v1.36.0+k3s1",
   "raw": {
@@ -30,7 +30,7 @@ func TestLoadManifestReadsRpi4cbShape(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadManifest: %v", err)
 	}
-	if m.Target != "ubuntu-24.04-standard-arm64-rpi4cb-k3s" {
+	if m.Target != "ubuntu-24.04-arm64-rpi4cb-k8s" {
 		t.Fatalf("target = %s", m.Target)
 	}
 	if m.Raw.File != "image.raw" || m.Raw.SHA256 != "d87037a2" || m.Raw.SizeBytes != 3586129920 {

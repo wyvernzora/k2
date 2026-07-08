@@ -19,7 +19,7 @@ on:
       - "kairos/Dockerfile"
       - "kairos/overlays/**"
       - "kairos/scripts/**"
-      - "kairos/node-init/**"
+      - "kairos/node-agent/**"
       - "kairos/Earthfile"
       - "kairos/targets.yaml"
       - "kairos/versions.env"
@@ -32,7 +32,7 @@ on:
       - "kairos/Dockerfile"
       - "kairos/overlays/**"
       - "kairos/scripts/**"
-      - "kairos/node-init/**"
+      - "kairos/node-agent/**"
       - "kairos/Earthfile"
       - "kairos/targets.yaml"
       - "kairos/versions.env"
@@ -60,7 +60,7 @@ jobs:
           go-version-file: tools/go.mod
           cache-dependency-path: |
             tools/go.sum
-            kairos/node-init/go.sum
+            kairos/node-agent/go.sum
 
       - name: Test k2-tools image command
         shell: bash
@@ -72,10 +72,10 @@ jobs:
           cd ..
           ./tools/k2-tools image plan --all --format json >/tmp/kairos-image-build-plans.json
 
-      - name: Test node-init helper
+      - name: Test node-agent helper
         shell: bash
         run: |
-          cd kairos/node-init
+          cd kairos/node-agent
           go test ./...
           go vet ./...
 

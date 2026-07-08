@@ -1,39 +1,7 @@
 inspect:
   oci:
-    files:
-      - path: /system/oem/05-rpi4cb-nvme-persistent.yaml
-        structuredTests:
-          - op: test
-            path: /name
-            value: RPi CM4 ComputeBlade NVMe COS_PERSISTENT
-          - op: test
-            path: /stages/rootfs.before/0/name
-            value: Prepare NVMe-backed COS_PERSISTENT
-          - op: test
-            path: /stages/rootfs.before/0/commands/0
-            value: /usr/local/bin/k2-node-init storage --mode required --disk /dev/nvme0n1 --wait-seconds 90 --log-prefix kairos-nvme-persistent --marker .nvme-persistent-ok
-          - op: test
-            path: /stages/fs/0/name
-            value: Verify /usr/local is on NVMe
     absent:
       - /system/oem/20-rpi4cb-nvme-data.yaml
-    commands:
-      - blkid
-      - e2label
-      - findmnt
-      - k2-node-init
-      - lsblk
-      - mkfs.ext4
-      - mount
-      - modprobe
-      - parted
-      - partprobe
-      - readlink
-      - resize2fs
-      - tar
-      - udevadm
-      - umount
-      - wipefs
   raw:
     partitions:
       COS_GRUB:

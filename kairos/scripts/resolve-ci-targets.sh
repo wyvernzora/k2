@@ -42,7 +42,7 @@ common_input_changed() {
       return 0
       ;;
     kairos/scripts/* | \
-    kairos/node-init/*)
+    kairos/node-agent/*)
       return 0
       ;;
     *)

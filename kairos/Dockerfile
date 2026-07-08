@@ -5,15 +5,15 @@ ARG KAIROS_INIT_VERSION=v0.15.0
 
 FROM quay.io/kairos/kairos-init:${KAIROS_INIT_VERSION} AS kairos-init
 
-FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS k2-node-init
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS k2-node-agent
 
 ARG TARGETOS
 ARG TARGETARCH
 
-WORKDIR /src/kairos/node-init
-COPY kairos/node-init/go.mod ./
-COPY kairos/node-init/ ./
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -o /out/k2-node-init ./cmd/k2-node-init
+WORKDIR /src/kairos/node-agent
+COPY kairos/node-agent/go.mod ./
+COPY kairos/node-agent/ ./
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -o /out/k2-node-agent ./cmd/k2-node-agent
 
 FROM ${BASE_IMAGE} AS base-kairos
 
@@ -27,14 +27,16 @@ ARG FIPS=no-fips
 ARG OVERLAYS=
 ARG TARGET_NAME
 ARG FLAVOR
-ARG FLAVOR_RELEASE
-ARG VARIANT
+ARG ROLE
 ARG ARCH
 ARG PLATFORM
 ARG HARDWARE
 ARG IMAGE_REVISION
+ARG APT_PACKAGES=
+ARG DRACUT_INSTALL_ITEMS=
+ARG POST_INSTALL_ACTIONS=
 
-COPY --from=k2-node-init /out/k2-node-init /usr/local/bin/k2-node-init
+COPY --from=k2-node-agent /out/k2-node-agent /usr/sbin/k2-node-agent
 
 RUN --mount=type=bind,from=kairos-init,src=/kairos-init,dst=/kairos-init \
     set -eux; \
@@ -56,14 +58,6 @@ RUN --mount=type=bind,from=kairos-init,src=/kairos-init,dst=/kairos-init \
     /kairos-init -l debug -s init -m "${MODEL}" -t "${TRUSTED_BOOT}" ${K8S_FLAG} ${K8S_VERSION_FLAG} --version "${VERSION}" ${FIPS_FLAG}
 
 RUN set -eux; \
-    needs_persistent_tools="0"; \
-    needs_qemu_agent="0"; \
-    if printf '%s' "${OVERLAYS}" | grep -Eq '(^|,)hardware/(qemu|rpi4cb)($|,)'; then \
-        needs_persistent_tools="1"; \
-    fi; \
-    if printf '%s' "${OVERLAYS}" | grep -Eq '(^|,)hardware/qemu($|,)'; then \
-        needs_qemu_agent="1"; \
-    fi; \
     if [ "${MODEL}" = "rpi4" ]; then \
         raspi_kernel="$(find /boot -maxdepth 1 -name 'vmlinuz-*-raspi' -printf '%f\n' | sed 's/^vmlinuz-//' | sort -V | tail -n 1)"; \
         if [ -z "${raspi_kernel}" ]; then \
@@ -85,26 +79,22 @@ RUN set -eux; \
         apt-get autoremove -y; \
         ln -sf "/boot/vmlinuz-${raspi_kernel}" /boot/vmlinuz; \
     fi; \
-    if [ "${needs_persistent_tools}" = "1" ] || [ "${needs_qemu_agent}" = "1" ]; then \
+    if [ -n "${APT_PACKAGES}" ]; then \
         apt-get update; \
+        apt-get install -y --no-install-recommends ${APT_PACKAGES}; \
     fi; \
-    if [ "${needs_persistent_tools}" = "1" ]; then \
-        apt-get install -y --no-install-recommends \
-            e2fsprogs \
-            fdisk \
-            kmod \
-            parted \
-            udev \
-            util-linux; \
+    if [ -n "${DRACUT_INSTALL_ITEMS}" ]; then \
         mkdir -p /etc/dracut.conf.d; \
-        printf '%s\n' \
-            'install_items+=" /usr/local/bin/k2-node-init /usr/sbin/blkid /usr/bin/findmnt /usr/bin/lsblk /usr/bin/mount /usr/bin/readlink /usr/bin/sh /usr/bin/tar /usr/bin/umount /usr/sbin/e2label /usr/sbin/mkfs.ext4 /usr/sbin/modprobe /usr/sbin/parted /usr/sbin/partprobe /usr/sbin/resize2fs /usr/sbin/wipefs "' \
-            > /etc/dracut.conf.d/90-k2-persistent-tools.conf; \
+        printf 'install_items+=" %s "\n' "${DRACUT_INSTALL_ITEMS}" > /etc/dracut.conf.d/90-k2-install-items.conf; \
     fi; \
-    if [ "${needs_qemu_agent}" = "1" ]; then \
-        apt-get install -y --no-install-recommends qemu-guest-agent; \
-    fi; \
-    if [ "${MODEL}" = "rpi4" ] || [ "${needs_persistent_tools}" = "1" ]; then \
+    for action in ${POST_INSTALL_ACTIONS}; do \
+        case "${action}" in \
+            zfs-hostid) [ -f /etc/hostid ] || zgenhostid ;; \
+            disable-motd) if [ -d /etc/update-motd.d ]; then chmod -x /etc/update-motd.d/* || true; fi ;; \
+            *) echo "Unknown post-install action: ${action}" >&2; exit 1 ;; \
+        esac; \
+    done; \
+    if [ "${MODEL}" = "rpi4" ] || [ -n "${DRACUT_INSTALL_ITEMS}" ]; then \
         kernel="$(readlink -f /boot/vmlinuz 2>/dev/null | sed 's|.*/vmlinuz-||')"; \
         if [ -z "${kernel}" ]; then \
             kernel="$(find /boot -maxdepth 1 -name 'vmlinuz-*' -printf '%f\n' | sed 's/^vmlinuz-//' | sort -V | tail -n 1)"; \
@@ -123,8 +113,7 @@ RUN set -eux; \
     { \
         printf 'target: %s\n' "${TARGET_NAME}"; \
         printf 'flavor: %s\n' "${FLAVOR}"; \
-        printf 'flavorRelease: "%s"\n' "${FLAVOR_RELEASE}"; \
-        printf 'variant: %s\n' "${VARIANT}"; \
+        printf 'role: %s\n' "${ROLE}"; \
         printf 'arch: %s\n' "${ARCH}"; \
         printf 'platform: %s\n' "${PLATFORM}"; \
         printf 'hardware: %s\n' "${HARDWARE}"; \
@@ -148,7 +137,7 @@ RUN set -eux; \
 # Network access denied unconditionally (DenyUsers in sshd_config.d
 # below): use is UART-at-the-rack only. On active boot, the user is
 # additionally locked + de-sudo'd by a yip cloud-config stage
-# shipped alongside the k3s overlay; effective access is recovery-
+# shipped by the base overlay; effective access is recovery-
 # boot only.
 #
 # Cleartext password lives on a laser-engraved metal plate kept with

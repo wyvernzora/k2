@@ -56,7 +56,7 @@ func cfg(t time.Time) *v1.ConfigFile {
 func TestDiscoverLatestPicksNewestByCreated(t *testing.T) {
 	now := time.Date(2026, 5, 22, 10, 0, 0, 0, time.UTC)
 	repo := "ghcr.io/wyvernzora/k2-kairos"
-	prefix := "ubuntu-24.04-standard-arm64-rpi4cb-k3s-v1.36.0-k3s1-"
+	prefix := "ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-"
 	fr := &fakeRegistry{
 		tags: map[string][]string{
 			repo: {
@@ -64,20 +64,20 @@ func TestDiscoverLatestPicksNewestByCreated(t *testing.T) {
 				prefix + "rev1",
 				prefix + "rev2",
 				// Different prefix — must be ignored.
-				"ubuntu-24.04-standard-amd64-qemu-k3s-v1.36.0-k3s1-rev9",
+				"ubuntu-24.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev9",
 			},
 		},
 		configs: map[string]*v1.ConfigFile{
-			repo + ":" + prefix + "rev0":                                     cfg(now.Add(-72 * time.Hour)),
-			repo + ":" + prefix + "rev1":                                     cfg(now.Add(-48 * time.Hour)),
-			repo + ":" + prefix + "rev2":                                     cfg(now.Add(-24 * time.Hour)),
-			repo + ":ubuntu-24.04-standard-amd64-qemu-k3s-v1.36.0-k3s1-rev9": cfg(now), // newer but wrong arch
+			repo + ":" + prefix + "rev0":                                   cfg(now.Add(-72 * time.Hour)),
+			repo + ":" + prefix + "rev1":                                   cfg(now.Add(-48 * time.Hour)),
+			repo + ":" + prefix + "rev2":                                   cfg(now.Add(-24 * time.Hour)),
+			repo + ":ubuntu-24.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev9": cfg(now), // newer but wrong arch
 		},
 		digests: map[string]string{
-			repo + ":" + prefix + "rev0":                                     "sha256:000",
-			repo + ":" + prefix + "rev1":                                     "sha256:111",
-			repo + ":" + prefix + "rev2":                                     "sha256:222",
-			repo + ":ubuntu-24.04-standard-amd64-qemu-k3s-v1.36.0-k3s1-rev9": "sha256:999",
+			repo + ":" + prefix + "rev0":                                   "sha256:000",
+			repo + ":" + prefix + "rev1":                                   "sha256:111",
+			repo + ":" + prefix + "rev2":                                   "sha256:222",
+			repo + ":ubuntu-24.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev9": "sha256:999",
 		},
 	}
 	d := NewWithRegistry(fr)
@@ -101,11 +101,11 @@ func TestDiscoverLatestErrorsWhenPrefixUnmatched(t *testing.T) {
 	repo := "ghcr.io/wyvernzora/k2-kairos"
 	fr := &fakeRegistry{
 		tags: map[string][]string{
-			repo: {"ubuntu-24.04-standard-amd64-qemu-k3s-v1.36.0-k3s1-rev0"},
+			repo: {"ubuntu-24.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev0"},
 		},
 	}
 	d := NewWithRegistry(fr)
-	_, err := d.DiscoverLatest(context.Background(), repo, "ubuntu-24.04-standard-arm64-rpi4cb-k3s-")
+	_, err := d.DiscoverLatest(context.Background(), repo, "ubuntu-24.04-arm64-rpi4cb-k8s-")
 	if err == nil {
 		t.Fatal("expected an error when no tag matches the prefix")
 	}
@@ -114,7 +114,7 @@ func TestDiscoverLatestErrorsWhenPrefixUnmatched(t *testing.T) {
 func TestDiscoverLatestSkipsTagsThatFailInspection(t *testing.T) {
 	now := time.Date(2026, 5, 22, 10, 0, 0, 0, time.UTC)
 	repo := "ghcr.io/wyvernzora/k2-kairos"
-	prefix := "ubuntu-24.04-standard-arm64-rpi4cb-k3s-v1.36.0-k3s1-"
+	prefix := "ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-"
 	fr := &fakeRegistry{
 		tags: map[string][]string{
 			repo: {prefix + "rev0", prefix + "rev1"},
@@ -139,7 +139,7 @@ func TestDiscoverLatestSkipsTagsThatFailInspection(t *testing.T) {
 
 func TestDiscoverLatestErrorsWhenAllTagsFailInspection(t *testing.T) {
 	repo := "ghcr.io/wyvernzora/k2-kairos"
-	prefix := "ubuntu-24.04-standard-arm64-rpi4cb-k3s-v1.36.0-k3s1-"
+	prefix := "ubuntu-24.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-"
 	fr := &fakeRegistry{
 		tags: map[string][]string{
 			repo: {prefix + "rev0", prefix + "rev1"},

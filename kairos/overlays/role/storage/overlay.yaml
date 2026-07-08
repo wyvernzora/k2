@@ -1,0 +1,61 @@
+build:
+  aptPackages:
+    - targetcli-fb
+    - zfsutils-linux
+  postInstall:
+    - zfs-hostid
+    - disable-motd
+
+inspect:
+  oci:
+    files:
+      - path: /system/oem/10-storage-services.yaml
+        structuredTests:
+          - op: test
+            path: /name
+            value: K2 storage services
+          - op: test
+            path: /stages/rootfs/0/environment_file
+            value: /run/cos/cos-layout.env
+          - op: test
+            path: /stages/rootfs/0/environment/CUSTOM_BIND_MOUNTS
+            value: /etc/rtslib-fb-target /etc/zfs
+          - op: test
+            path: /stages/initramfs/0/name
+            value: Enable K2 storage services
+          - op: test
+            path: /stages/initramfs/0/systemctl/enable/0
+            value: zfs-import-scan.service
+          - op: test
+            path: /stages/initramfs/0/systemctl/enable/4
+            value: rtslib-fb-targetctl.service
+      - path: /etc/systemd/system/rtslib-fb-targetctl.service.d/10-k2-after-zfs.conf
+        contains:
+          - "After=zfs.target zfs-volume-wait.service"
+          - "Wants=zfs-volume-wait.service"
+      - path: /etc/systemd/system/k2-storage-health.service
+        contains:
+          - "ExecStart=/usr/sbin/k2-node-agent storage-health"
+      - path: /etc/systemd/system/k2-storage-health.timer
+        contains:
+          - "OnUnitActiveSec=1h"
+      - path: /etc/issue
+        contains:
+          - K2 Storage Appliance
+      # Baked by the zfs-hostid post-install action (zgenhostid): a stable ZFS
+      # hostid identical across A/B slots so pool import never looks foreign.
+      - path: /etc/hostid
+    absent:
+      - /etc/rancher
+      - /etc/systemd/system/k3s.service
+      - /etc/systemd/system/k3s-agent.service
+      - /system/oem/05-persistent-storage.yaml
+      - /usr/share/k2/node-provision
+    commands:
+      - sshd
+      - targetcli
+      - targetctl
+      - k2-node-agent
+      - zfs
+      - zgenhostid
+      - zpool
