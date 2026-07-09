@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +29,7 @@ const storagePVCScenarioName = "storage-pvc"
 var (
 	e2eProvisionTypes     = []string{"bootstrap", "storage", "worker"}
 	e2eStepTypes          = []string{"helmInstall", "nodePrepISCSI", "rebootVM"}
-	e2eCheckTypes         = []string{"deleteHygiene", "nodesReady", "pvcLifecycle", "zfsConsistency"}
+	e2eCheckTypes         = []string{"deleteHygiene", "nodesReady", "pvcLifecycle", "storageMetrics", "zfsConsistency"}
 	e2eValueGeneratorKeys = []string{"storageDriverValues"}
 )
 
@@ -119,6 +120,7 @@ type e2eScenarioCheck struct {
 	Type           string
 	PVCLifecycle   e2ePVCLifecycleCheck
 	ZFSConsistency e2eVMCheck
+	StorageMetrics e2eVMCheck
 	DeleteHygiene  e2eVMCheck
 	NodesReady     e2eNodesReadyCheck
 }
@@ -289,6 +291,10 @@ func validateE2EScenario(stem string, scenario *e2eScenario) error {
 		switch check.Type {
 		case "zfsConsistency":
 			if err := validateE2EVMRef(vms, check.ZFSConsistency.VM, check.Type); err != nil {
+				return err
+			}
+		case "storageMetrics":
+			if err := validateE2EVMRef(vms, check.StorageMetrics.VM, check.Type); err != nil {
 				return err
 			}
 		case "deleteHygiene":
@@ -869,6 +875,8 @@ func stepE2EScenarioCheck(s *e2eScenarioState, entry e2eScenarioCheck) func(cont
 		return recordedE2ECheck(s, "pvcLifecycle", stepE2EPVCLifecycle(s, entry.PVCLifecycle))
 	case "zfsConsistency":
 		return recordedE2ECheck(s, "zfsConsistency", stepE2EZFSConsistency(s, entry.ZFSConsistency))
+	case "storageMetrics":
+		return recordedE2ECheck(s, "storageMetrics", stepE2EStorageMetrics(s, entry.StorageMetrics))
 	case "deleteHygiene":
 		return recordedE2ECheck(s, "deleteHygiene", stepE2EDeleteHygiene(s, entry.DeleteHygiene))
 	case "nodesReady":
@@ -942,6 +950,33 @@ func stepE2EZFSConsistency(s *e2eScenarioState, check e2eVMCheck) func(context.C
 	}
 }
 
+func stepE2EStorageMetrics(s *e2eScenarioState, check e2eVMCheck) func(context.Context, ui.Step) error {
+	return func(ctx context.Context, sh ui.Step) error {
+		target, ok := s.targets[check.VM]
+		if !ok {
+			return fmt.Errorf("storageMetrics target %q is not reachable yet", check.VM)
+		}
+		host := target.GuestIPv4.Address
+		if host == "" {
+			host = target.Host
+		}
+		body, err := e2eGETBody(ctx, "http://"+host+":9100/metrics", 2*time.Minute)
+		if err != nil {
+			return err
+		}
+		if !strings.Contains(body, "node_") {
+			return fmt.Errorf("node_exporter metrics missing node_ series")
+		}
+		for _, metric := range []string{"k2_zfs_pool_health", "k2_zfs_keystatus_available", "k2_storage_healthy"} {
+			if !metricHasValue(body, metric, "1") {
+				return fmt.Errorf("storage metrics missing %s=1", metric)
+			}
+		}
+		sh.Successf("node_exporter and k2 textfile metrics are healthy on %s", host)
+		return nil
+	}
+}
+
 func stepE2EDeleteHygiene(s *e2eScenarioState, check e2eVMCheck) func(context.Context, ui.Step) error {
 	return func(ctx context.Context, sh ui.Step) error {
 		pvBytes, err := runKubectl(ctx, s.kubeconfig, nil, sh, nil, "-n", s.lastPVCNamespace, "get", "pvc", e2ePVCName, "-o", "jsonpath={.spec.volumeName}")
@@ -998,6 +1033,60 @@ func stepE2ENodesReady(s *e2eScenarioState, check e2eNodesReadyCheck) func(conte
 			}
 		}
 	}
+}
+
+func e2eGETBody(ctx context.Context, url string, timeout time.Duration) (string, error) {
+	client := http.Client{Timeout: 5 * time.Second}
+	deadline := time.Now().Add(timeout)
+	var lastErr error
+	for {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			return "", err
+		}
+		resp, err := client.Do(req)
+		if err == nil {
+			body, readErr := io.ReadAll(resp.Body)
+			closeErr := resp.Body.Close()
+			if readErr == nil && closeErr != nil {
+				readErr = closeErr
+			}
+			if resp.StatusCode == http.StatusOK && readErr == nil {
+				return string(body), nil
+			}
+			if readErr != nil {
+				lastErr = readErr
+			} else {
+				lastErr = fmt.Errorf("%s returned HTTP %d", url, resp.StatusCode)
+			}
+		} else {
+			lastErr = err
+		}
+		if time.Now().After(deadline) {
+			return "", fmt.Errorf("timed out waiting for %s: %w", url, lastErr)
+		}
+		timer := time.NewTimer(5 * time.Second)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return "", ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
+
+func metricHasValue(body string, name string, value string) bool {
+	for _, line := range strings.Split(body, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") || !strings.HasPrefix(line, name) {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 2 && fields[len(fields)-1] == value {
+			return true
+		}
+	}
+	return false
 }
 
 type e2eNodeList struct {
@@ -1128,6 +1217,8 @@ func e2eCheckLabel(entry e2eScenarioCheck) string {
 		return "PVC lifecycle"
 	case "zfsConsistency":
 		return "ZFS consistency"
+	case "storageMetrics":
+		return "Storage metrics"
 	case "deleteHygiene":
 		return "Delete hygiene"
 	case "nodesReady":
@@ -1197,6 +1288,8 @@ func (e *e2eScenarioCheck) UnmarshalYAML(value *yaml.Node) error {
 		return decodeKnownYAML(node, &e.PVCLifecycle, "pvcLifecycle", []string{"namespace", "size", "storageClass"})
 	case "zfsConsistency":
 		return decodeKnownYAML(node, &e.ZFSConsistency, "zfsConsistency", []string{"vm"})
+	case "storageMetrics":
+		return decodeKnownYAML(node, &e.StorageMetrics, "storageMetrics", []string{"vm"})
 	case "deleteHygiene":
 		return decodeKnownYAML(node, &e.DeleteHygiene, "deleteHygiene", []string{"vm"})
 	case "nodesReady":

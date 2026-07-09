@@ -1,0 +1,7 @@
+[Unit]
+Description=K2 storage appliance metrics textfile writer
+ConditionPathExists=!/run/cos/recovery_mode
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/k2-node-agent metrics

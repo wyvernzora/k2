@@ -40,6 +40,7 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 				"section Checks",
 				"shell PVC lifecycle",
 				"shell ZFS consistency",
+				"shell Storage metrics",
 				"shell Delete hygiene",
 				"section Teardown",
 				"shell Remove e2e resources",
@@ -129,6 +130,11 @@ func TestE2EScenarioStrictLoadErrors(t *testing.T) {
 			name:    "bad-vm-ref",
 			body:    baseScenarioYAML("bad-vm-ref", "provision:\n  - worker:\n      vm: missing\nsteps: []\nchecks: []\n"),
 			wantErr: "references undeclared vm \"missing\"",
+		},
+		{
+			name:    "bad-storage-metrics-vm-ref",
+			body:    baseScenarioYAML("bad-storage-metrics-vm-ref", "steps: []\nchecks:\n  - storageMetrics:\n      vm: missing\n"),
+			wantErr: "storageMetrics references undeclared vm \"missing\"",
 		},
 		{
 			name:    "duplicate-vm",

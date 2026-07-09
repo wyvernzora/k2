@@ -7,12 +7,14 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/health"
+	"github.com/wyvernzora/k2/kairos/node-agent/internal/metrics"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/storage"
 )
 
 type cli struct {
 	SetupPersistence setupPersistenceCommand `cmd:"" name:"setup-persistence" help:"Prepare or verify Kairos persistent storage."`
 	StorageHealth    storageHealthCommand    `cmd:"" name:"storage-health" help:"Report ZFS and iSCSI storage health."`
+	Metrics          metricsCommand          `cmd:"" name:"metrics" help:"Expose K2 storage appliance Prometheus metrics."`
 }
 
 type setupPersistenceCommand struct {
@@ -29,6 +31,10 @@ type storageHealthCommand struct {
 	SaveConfig string `name:"save-config" default:"/etc/rtslib-fb-target/saveconfig.json" help:"rtslib saveconfig path."`
 	StatusFile string `name:"status-file" default:"/run/k2-storage-health/status" help:"Status file to write."`
 	Portal     string `default:"127.0.0.1:3260" help:"iSCSI portal address to probe."`
+}
+
+type metricsCommand struct {
+	TextfileDir string `default:"/var/lib/prometheus/node-exporter" env:"K2_NODE_AGENT_METRICS_TEXTFILE_DIR" help:"node_exporter textfile collector directory to write k2.prom into."`
 }
 
 func main() {
@@ -79,5 +85,12 @@ func (cmd storageHealthCommand) Run() error {
 		SaveConfig: cmd.SaveConfig,
 		StatusFile: cmd.StatusFile,
 		Portal:     cmd.Portal,
+	})
+}
+
+func (cmd metricsCommand) Run() error {
+	return metrics.Run(metrics.Config{
+		TextfileDir: cmd.TextfileDir,
+		Debug:       os.Stderr,
 	})
 }
