@@ -8,6 +8,8 @@ import (
 )
 
 func TestSanitizeE2EName(t *testing.T) {
+	// Kong default tags own the flag defaults now; only the name
+	// sanitizer retains logic worth pinning.
 	if got := sanitizeE2EName("K2 E2E"); got != "k2-e2e" {
 		t.Fatalf("sanitizeE2EName = %q", got)
 	}

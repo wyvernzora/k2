@@ -537,8 +537,8 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 		// install script must place the stage in /oem (asserted below).
 		"95-k2-storage-csi.yaml": "/etc/sudoers.d/99-csi",
 		"storage-install.sh":     "hostnamectl set-hostname 'k2-storage'",
-		"storage-pool.sh":             "sudo zpool create -m none",
-		"zfs_pool.key":                string(bundle.PoolKey),
+		"storage-pool.sh":        "sudo zpool create -m none",
+		"zfs_pool.key":           string(bundle.PoolKey),
 	}
 	for file, want := range checks {
 		data, err := os.ReadFile(filepath.Join(dir, file))

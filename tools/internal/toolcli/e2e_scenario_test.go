@@ -74,12 +74,26 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := shippedScenarioNames(t, repoRoot, tt.name, defaultE2ETestOptions())
 			if !reflect.DeepEqual(got, tt.want) {
-				for _, n := range got {
-					t.Logf("GOLDEN %q,", n)
-				}
-				t.Fatalf("workflow names mismatch")
+				t.Fatalf("workflow names mismatch\n got: %#v\nwant: %#v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestE2EStorageAliasWorkflowMatchesRunStoragePVC(t *testing.T) {
+	repoRoot := testRepoRoot(t)
+	runNames := shippedScenarioNames(t, repoRoot, storagePVCScenarioName, defaultE2ETestOptions())
+
+	aliasScenario, err := loadE2EScenario(repoRoot, storagePVCScenarioName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	aliasCmd := e2eStorageCmd{Workers: 1, ClusterTarget: "v3", ClusterName: "k2e2e", Namespace: "e2e-storage", PVCSize: "1Gi"}
+	applyStorageAliasOverrides(aliasScenario, aliasCmd)
+	aliasNames := scenarioNames(t, repoRoot, aliasScenario, aliasCmd.options())
+
+	if !reflect.DeepEqual(aliasNames, runNames) {
+		t.Fatalf("alias names = %#v, run names = %#v", aliasNames, runNames)
 	}
 }
 
@@ -153,20 +167,10 @@ func TestE2EScenarioStrictLoadErrors(t *testing.T) {
 	}
 }
 
-func TestE2EStorageAliasWorkflowMatchesRunStoragePVC(t *testing.T) {
-	repoRoot := testRepoRoot(t)
-	runNames := shippedScenarioNames(t, repoRoot, storagePVCScenarioName, defaultE2ETestOptions())
-
-	aliasScenario, err := loadE2EScenario(repoRoot, storagePVCScenarioName)
-	if err != nil {
-		t.Fatal(err)
-	}
-	aliasCmd := e2eStorageCmd{Workers: 1, ClusterTarget: "v3", ClusterName: "k2e2e", Namespace: "e2e-storage", PVCSize: "1Gi"}
-	applyStorageAliasOverrides(aliasScenario, aliasCmd)
-	aliasNames := scenarioNames(t, repoRoot, aliasScenario, aliasCmd.options())
-
-	if !reflect.DeepEqual(aliasNames, runNames) {
-		t.Fatalf("alias names = %#v, run names = %#v", aliasNames, runNames)
+func TestE2EStorageMetricsCheckLabel(t *testing.T) {
+	entry := e2eScenarioCheck{Type: "storageMetrics", StorageMetrics: e2eVMCheck{VM: "storage"}}
+	if got := e2eCheckLabel(entry); got != "Storage metrics" {
+		t.Fatalf("label = %q, want %q", got, "Storage metrics")
 	}
 }
 
