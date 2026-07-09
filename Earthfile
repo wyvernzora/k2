@@ -107,6 +107,7 @@ kairos-image-build-unit:
     COPY kairos/overlays ./kairos/overlays
     COPY kairos/scripts ./kairos/scripts
     COPY kairos/tools/vm-presets ./kairos/tools/vm-presets
+    COPY kairos/tools/e2e-scenarios ./kairos/tools/e2e-scenarios
     COPY kairos/targets.yaml kairos/versions.env ./kairos/
     COPY kairos/node-agent ./kairos/node-agent
     RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build cd tools && go test ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui

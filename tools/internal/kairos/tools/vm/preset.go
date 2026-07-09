@@ -62,13 +62,24 @@ func resolvePreset(repoRoot string, name string) (Preset, string, error) {
 		preset.Network.Mode = "user"
 	}
 	target := preset.Target
-	if target == "host-qemu" || target == "" {
+	switch target {
+	case "host-qemu", "":
 		target, err = defaultQEMUTarget()
+		if err != nil {
+			return Preset{}, "", err
+		}
+	case "host-qemu-storage":
+		target, err = defaultQEMUStorageTarget()
 		if err != nil {
 			return Preset{}, "", err
 		}
 	}
 	return preset, target, nil
+}
+
+func ResolvePresetArtifactTarget(repoRoot string, name string) (string, error) {
+	_, target, err := resolvePreset(repoRoot, name)
+	return target, err
 }
 
 func presetsDir(repoRoot string) string {
@@ -83,5 +94,16 @@ func defaultQEMUTarget() (string, error) {
 		return "ubuntu-26.04-amd64-qemu-k8s", nil
 	default:
 		return "", fmt.Errorf("unsupported host architecture for default QEMU target: %s", runtime.GOARCH)
+	}
+}
+
+func defaultQEMUStorageTarget() (string, error) {
+	switch runtime.GOARCH {
+	case "arm64":
+		return "ubuntu-26.04-arm64-qemu-storage", nil
+	case "amd64":
+		return "ubuntu-26.04-amd64-qemu-storage", nil
+	default:
+		return "", fmt.Errorf("unsupported host architecture for default QEMU storage target: %s", runtime.GOARCH)
 	}
 }

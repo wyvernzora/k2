@@ -51,13 +51,16 @@ func (r Runner) successf(format string, args ...any) {
 }
 
 type CreateOptions struct {
-	Preset  string
-	ID      string
-	RawXZ   string
-	SSHPort string
-	APIPort string
-	Start   bool
-	Sudo    bool
+	Preset          string
+	ID              string
+	RawXZ           string
+	SSHPort         string
+	APIPort         string
+	MemoryMB        int
+	ExtraDisks      int
+	ExtraDiskSizeMB int
+	Start           bool
+	Sudo            bool
 }
 
 type StartOptions struct {
@@ -83,6 +86,7 @@ type Preset struct {
 	CPUs           int            `json:"cpus"`
 	Network        Network        `json:"network"`
 	PersistentDisk PersistentDisk `json:"persistentDisk"`
+	ExtraDisks     ExtraDisks     `json:"extraDisks"`
 	Forwards       []Forward      `json:"forwards"`
 	name           string
 }
@@ -94,6 +98,11 @@ type Network struct {
 type PersistentDisk struct {
 	Enabled bool `json:"enabled"`
 	SizeMB  int  `json:"sizeMb"`
+}
+
+type ExtraDisks struct {
+	Count  int `json:"count"`
+	SizeMB int `json:"sizeMb"`
 }
 
 type Forward struct {
@@ -114,6 +123,7 @@ type Metadata struct {
 	VMDir           string `json:"vmDir"`
 	KairosQCOW2     string `json:"kairosQcow2"`
 	PersistentQCOW2 string `json:"persistentQcow2"`
+	ExtraDisks      []Disk `json:"extraDisks,omitempty"`
 	SSHPort         int    `json:"sshPort"`
 	APIPort         int    `json:"apiPort"`
 	MonitorPort     int    `json:"monitorPort"`
@@ -126,6 +136,12 @@ type Metadata struct {
 	QEMULog         string `json:"qemuLog"`
 	ConsoleLog      string `json:"consoleLog"`
 	ConsoleSocket   string `json:"consoleSocket"`
+}
+
+type Disk struct {
+	ID     string `json:"id"`
+	QCOW2  string `json:"qcow2"`
+	SizeMB int    `json:"sizeMb"`
 }
 
 type artifactManifest struct {

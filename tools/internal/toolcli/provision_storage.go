@@ -108,22 +108,8 @@ type storageSummary struct {
 }
 
 func (c *storageCmd) Run(rcx *runContext) error {
-	if err := c.prepare(rcx); err != nil {
-		return err
-	}
-	state, err := c.newStorageState()
+	state, err := runStorageProvision(context.Background(), rcx, c)
 	if err != nil {
-		return err
-	}
-
-	parent, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	reporter.SetInterruptCancel(cancel)
-	defer reporter.SetInterruptCancel(nil)
-
-	wf := ui.NewWorkflow(reporter)
-	c.buildStorageWorkflow(wf, state)
-	if err := wf.Execute(parent); err != nil {
 		return err
 	}
 	if c.Output == "json" {
@@ -134,6 +120,28 @@ func (c *storageCmd) Run(rcx *runContext) error {
 		fmt.Fprintln(os.Stdout, string(data))
 	}
 	return nil
+}
+
+func runStorageProvision(parent context.Context, rcx *runContext, c *storageCmd) (*storageState, error) {
+	if err := c.prepare(rcx); err != nil {
+		return nil, err
+	}
+	state, err := c.newStorageState()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithCancel(parent)
+	defer cancel()
+	reporter.SetInterruptCancel(cancel)
+	defer reporter.SetInterruptCancel(nil)
+
+	wf := ui.NewWorkflow(reporter)
+	c.buildStorageWorkflow(wf, state)
+	if err := wf.Execute(ctx); err != nil {
+		return nil, err
+	}
+	return state, nil
 }
 
 func (c *storageCmd) prepare(rcx *runContext) error {

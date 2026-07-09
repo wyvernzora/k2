@@ -14,6 +14,7 @@ type cli struct {
 	Jobs     int    `name:"jobs" env:"K2_TOOLS_JOBS" default:"4" help:"Maximum concurrent jobs for build-style operations."`
 
 	Provision provisionCmd `cmd:"" help:"Provision Kairos-backed K3s nodes."`
+	E2E       e2eCmd       `cmd:"" name:"e2e" help:"Run end-to-end validation harnesses."`
 	VM        vmCmd        `cmd:"" help:"Manage local test VMs."`
 	Flash     flashCmd     `cmd:"" help:"Flash Kairos images to hardware."`
 	Upgrade   upgradeCmd   `cmd:"" help:"Upgrade a Kairos node's image in place."`

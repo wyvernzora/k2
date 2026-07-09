@@ -1,0 +1,18 @@
+{
+  "description": "QEMU storage appliance test VM on macOS vmnet-shared networking with two data disks.",
+  "target": "host-qemu-storage",
+  "memoryMb": 4096,
+  "cpus": 2,
+  "network": {
+    "mode": "vmnet-shared"
+  },
+  "persistentDisk": {
+    "enabled": true,
+    "sizeMb": 8192
+  },
+  "extraDisks": {
+    "count": 2,
+    "sizeMb": 4096
+  },
+  "forwards": []
+}

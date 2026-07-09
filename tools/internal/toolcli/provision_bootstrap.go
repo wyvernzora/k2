@@ -27,6 +27,10 @@ type bootstrapState struct {
 }
 
 func (c *bootstrapCmd) Run(rcx *runContext) error {
+	return runBootstrapProvision(context.Background(), rcx, c)
+}
+
+func runBootstrapProvision(parent context.Context, rcx *runContext, c *bootstrapCmd) error {
 	testTarget, err := c.prepareTestVM(rcx)
 	if err != nil {
 		return err
@@ -36,7 +40,7 @@ func (c *bootstrapCmd) Run(rcx *runContext) error {
 		return fmt.Errorf("inspect extra manifests for plan: %w", err)
 	}
 
-	parent, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
 	reporter.SetInterruptCancel(cancel)
 	defer reporter.SetInterruptCancel(nil)
@@ -56,7 +60,7 @@ func (c *bootstrapCmd) Run(rcx *runContext) error {
 
 	wf := ui.NewWorkflow(reporter)
 	c.buildBootstrapWorkflow(wf, rcx, state)
-	return wf.Execute(parent)
+	return wf.Execute(ctx)
 }
 
 func (c *bootstrapCmd) buildBootstrapWorkflow(wf *ui.Workflow, rcx *runContext, s *bootstrapState) {

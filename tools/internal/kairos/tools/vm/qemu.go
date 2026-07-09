@@ -120,6 +120,11 @@ func qemuArgs(meta Metadata, firmware string, netdev string) []string {
 			args = append(args, "-drive", "if=none,file="+meta.PersistentQCOW2+",format=qcow2,id=persistent", "-device", "virtio-blk-pci,drive=persistent")
 		}
 	}
+	for _, disk := range meta.ExtraDisks {
+		if _, err := os.Stat(disk.QCOW2); err == nil {
+			args = append(args, "-drive", "if=none,file="+disk.QCOW2+",format=qcow2,id="+disk.ID, "-device", "virtio-blk-pci,drive="+disk.ID)
+		}
+	}
 	return args
 }
 
