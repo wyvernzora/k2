@@ -29,8 +29,10 @@ type Plan struct {
 	KairosModel        string          `json:"kairosModel" yaml:"kairosModel"`
 	KubernetesDistro   string          `json:"kubernetesDistro" yaml:"kubernetesDistro"`
 	Artifacts          []string        `json:"artifacts" yaml:"artifacts"`
+	MaxRawXzMB         *int            `json:"maxRawXzMB,omitempty" yaml:"maxRawXzMB,omitempty"`
 	Overlays           []string        `json:"overlays" yaml:"overlays"`
 	AptPackages        []string        `json:"aptPackages,omitempty" yaml:"aptPackages,omitempty"`
+	AptPurge           []string        `json:"aptPurge,omitempty" yaml:"aptPurge,omitempty"`
 	DracutInstallItems []string        `json:"dracutInstallItems,omitempty" yaml:"dracutInstallItems,omitempty"`
 	PostInstallActions []string        `json:"postInstallActions,omitempty" yaml:"postInstallActions,omitempty"`
 	RawPatches         []RawPatch      `json:"rawPatches" yaml:"rawPatches"`
@@ -178,8 +180,10 @@ func (p Planner) Build(target string) (Plan, error) {
 		KairosModel:        resolved.KairosModel,
 		KubernetesDistro:   kubernetesDistro,
 		Artifacts:          append([]string(nil), resolved.Artifacts...),
+		MaxRawXzMB:         resolved.MaxRawXzMB,
 		Overlays:           append([]string(nil), resolved.Overlays...),
 		AptPackages:        build.AptPackages,
+		AptPurge:           build.AptPurge,
 		DracutInstallItems: build.DracutInstallItems,
 		PostInstallActions: build.PostInstall,
 		ArtifactOptions:    convertArtifactOptions(resolved.ArtifactOptions),
@@ -238,6 +242,9 @@ func (p Planner) resolveTarget(name string, seen map[string]bool) (config.Target
 	}
 	if target.ArtifactsSpecified() {
 		merged.Artifacts = append([]string(nil), target.Artifacts...)
+	}
+	if target.MaxRawXzMB != nil {
+		merged.MaxRawXzMB = target.MaxRawXzMB
 	}
 	if target.OverlaysSpecified() {
 		merged.Overlays = dedupe(append(append([]string(nil), parent.Overlays...), target.Overlays...))
@@ -372,10 +379,12 @@ func mergeOverlayBuild(metadata []loadedOverlayMetadata) config.Build {
 	var build config.Build
 	for _, item := range metadata {
 		build.AptPackages = append(build.AptPackages, item.content.Build.AptPackages...)
+		build.AptPurge = append(build.AptPurge, item.content.Build.AptPurge...)
 		build.DracutInstallItems = append(build.DracutInstallItems, item.content.Build.DracutInstallItems...)
 		build.PostInstall = append(build.PostInstall, item.content.Build.PostInstall...)
 	}
 	build.AptPackages = sortedUnique(build.AptPackages)
+	build.AptPurge = sortedUnique(build.AptPurge)
 	build.DracutInstallItems = sortedUnique(build.DracutInstallItems)
 	build.PostInstall = dedupe(build.PostInstall)
 	return build

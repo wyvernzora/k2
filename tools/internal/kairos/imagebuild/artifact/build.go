@@ -171,7 +171,7 @@ func (b Builder) buildRaw(resolved plan.Plan) error {
 	if err := b.Runner.Run(b.Context, "xz", []string{"-T0", "-zkf", expectedRaw}, b.Stdout, b.Stderr); err != nil {
 		return fmt.Errorf("compressing raw artifact failed: %w", err)
 	}
-	return nil
+	return checkRawXzBudget(expectedRaw+".xz", resolved.MaxRawXzMB)
 }
 
 func (b Builder) buildISO(resolved plan.Plan) error {
@@ -408,4 +408,19 @@ func singleGeneratedFile(dir string, pattern string) (string, error) {
 		return "", fmt.Errorf("expected one generated %s artifact in %s, found %d", pattern, dir, len(files))
 	}
 	return files[0], nil
+}
+
+func checkRawXzBudget(path string, maxMB *int) error {
+	if maxMB == nil {
+		return nil
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	actualMB := float64(info.Size()) / 1024 / 1024
+	if actualMB <= float64(*maxMB) {
+		return nil
+	}
+	return fmt.Errorf("%s raw.xz size %.1f MB exceeds budget %d MB", path, actualMB, *maxMB)
 }

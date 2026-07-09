@@ -13,7 +13,7 @@ ARG TARGETARCH
 WORKDIR /src/kairos/node-agent
 COPY kairos/node-agent/go.mod ./
 COPY kairos/node-agent/ ./
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -o /out/k2-node-agent ./cmd/k2-node-agent
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o /out/k2-node-agent ./cmd/k2-node-agent
 
 FROM ${BASE_IMAGE} AS base-kairos
 
@@ -33,6 +33,7 @@ ARG PLATFORM
 ARG HARDWARE
 ARG IMAGE_REVISION
 ARG APT_PACKAGES=
+ARG APT_PURGE_PACKAGES=
 ARG DRACUT_INSTALL_ITEMS=
 ARG POST_INSTALL_ACTIONS=
 
@@ -80,6 +81,21 @@ RUN set -eux; \
     if [ -n "${APT_PACKAGES}" ]; then \
         apt-get update; \
         apt-get install -y --no-install-recommends ${APT_PACKAGES}; \
+    fi; \
+    if [ -n "${APT_PURGE_PACKAGES}" ]; then \
+        purge_packages=""; \
+        for package in ${APT_PURGE_PACKAGES}; do \
+            installed="$(dpkg-query -W -f='${Package}' "${package}" 2>/dev/null || true)"; \
+            if [ -n "${installed}" ]; then \
+                purge_packages="${purge_packages} ${installed}"; \
+            fi; \
+        done; \
+        if [ -n "${purge_packages}" ]; then \
+            apt-get purge -y ${purge_packages}; \
+            apt-get autoremove -y --purge; \
+        fi; \
+        apt-get clean; \
+        rm -rf /var/lib/apt/lists/*; \
     fi; \
     if [ -n "${DRACUT_INSTALL_ITEMS}" ]; then \
         mkdir -p /etc/dracut.conf.d; \

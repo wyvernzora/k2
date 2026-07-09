@@ -33,6 +33,7 @@ type Target struct {
 	Hardware           string          `yaml:"hardware,omitempty"`
 	KairosModel        string          `yaml:"kairosModel,omitempty"`
 	Artifacts          []string        `yaml:"artifacts,omitempty"`
+	MaxRawXzMB         *int            `yaml:"maxRawXzMB,omitempty"`
 	Overlays           []string        `yaml:"overlays,omitempty"`
 	ArtifactOptions    ArtifactOptions `yaml:"artifactOptions,omitempty"`
 	Inspect            Inspection      `yaml:"inspect,omitempty"`
@@ -56,6 +57,7 @@ type OverlayMetadata struct {
 
 type Build struct {
 	AptPackages        []string `yaml:"aptPackages,omitempty"`
+	AptPurge           []string `yaml:"aptPurge,omitempty"`
 	DracutInstallItems []string `yaml:"dracutInstallItems,omitempty"`
 	PostInstall        []string `yaml:"postInstall,omitempty"`
 }
@@ -211,6 +213,7 @@ func rejectUnknownTargetKeys(node *yaml.Node) error {
 		"hardware":        true,
 		"kairosModel":     true,
 		"artifacts":       true,
+		"maxRawXzMB":      true,
 		"overlays":        true,
 		"artifactOptions": true,
 		"inspect":         true,
