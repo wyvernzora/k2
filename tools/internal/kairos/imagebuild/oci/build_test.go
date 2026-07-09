@@ -57,6 +57,7 @@ func TestBuilderImage(t *testing.T) {
 		"--build-arg", "PLATFORM=linux/arm64",
 		"--build-arg", "HARDWARE=rpi4cb",
 		"--build-arg", "APT_PACKAGES=parted util-linux",
+		"--build-arg", "APT_PURGE_PACKAGES=neovim neovim-runtime",
 		"--build-arg", "DRACUT_INSTALL_ITEMS=/usr/sbin/k2-node-agent /usr/sbin/parted",
 		"--build-arg", "POST_INSTALL_ACTIONS=",
 		"--tag", "ghcr.io/wyvernzora/k2-kairos:test",
@@ -211,6 +212,7 @@ func testPlan() plan.Plan {
 		KubernetesDistro: "k3s",
 		Overlays:         []string{"base", "hardware/rpi4cb", "role/k8s"},
 		AptPackages:      []string{"parted", "util-linux"},
+		AptPurge:         []string{"neovim", "neovim-runtime"},
 		DracutInstallItems: []string{
 			"/usr/sbin/k2-node-agent",
 			"/usr/sbin/parted",

@@ -106,6 +106,36 @@ func TestImageTagOmitsKubernetesSegmentsForStorageTarget(t *testing.T) {
 	}
 }
 
+func TestBuildMergesAptPurgeAcrossOverlays(t *testing.T) {
+	planner, _ := newFixturePlanner(t)
+	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "base", "overlay.yaml"), strings.TrimSpace(`
+build:
+  aptPurge:
+    - neovim
+    - libmagic-mgc
+`)+"\n")
+	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "hardware", "qemu", "overlay.yaml"), strings.TrimSpace(`
+build:
+  aptPurge:
+    - neovim
+    - binutils
+`)+"\n")
+	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "role", "storage", "overlay.yaml"), strings.TrimSpace(`
+build:
+  aptPurge:
+    - libmagic-mgc
+`)+"\n")
+
+	got, err := planner.Build("ubuntu-26.04-amd64-qemu-storage")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"binutils", "libmagic-mgc", "neovim"}
+	if !slices.Equal(got.AptPurge, want) {
+		t.Fatalf("aptPurge = %#v, want %#v", got.AptPurge, want)
+	}
+}
+
 func TestRawPatchRejectsUnsupportedPatchTarget(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 	unsupported := filepath.Join(planner.Paths.OverlaysDir, "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt.patch")

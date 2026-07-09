@@ -166,6 +166,26 @@ func TestBuilderPropagatesRunnerFailure(t *testing.T) {
 	}
 }
 
+func TestBuilderRawArtifactRejectsOversizeRawXz(t *testing.T) {
+	resolved := testPlan(t, []string{"raw"})
+	maxMB := 1
+	resolved.MaxRawXzMB = &maxMB
+	runner := &fakeRunner{
+		artifactDir: resolved.ArtifactDir,
+		rawData:     bytes.Repeat([]byte("x"), 2*1024*1024),
+	}
+
+	err := (Builder{Runner: runner, Patcher: &fakePatcher{}}).Artifact(resolved)
+	if err == nil {
+		t.Fatal("expected budget error")
+	}
+	for _, want := range []string{resolved.ArtifactStem + ".raw.xz", "2.0 MB", "1 MB"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("error = %v, want %q", err, want)
+		}
+	}
+}
+
 func TestBuilderPassesContextToRunner(t *testing.T) {
 	resolved := testPlan(t, []string{"raw"})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -183,6 +203,7 @@ func TestBuilderPassesContextToRunner(t *testing.T) {
 type fakeRunner struct {
 	artifactDir string
 	failCommand string
+	rawData     []byte
 	calls       []fakeCall
 	ctxErrs     []error
 }
@@ -203,7 +224,11 @@ func (r *fakeRunner) Run(ctx context.Context, name string, args []string, stdout
 	case name == "docker" && slices.Contains(args, "build-iso"):
 		return os.WriteFile(filepath.Join(r.artifactDir, "auroraboot.iso"), []byte("iso"), 0o644)
 	case name == "docker":
-		return os.WriteFile(filepath.Join(r.artifactDir, "auroraboot.raw"), []byte("raw"), 0o644)
+		rawData := r.rawData
+		if rawData == nil {
+			rawData = []byte("raw")
+		}
+		return os.WriteFile(filepath.Join(r.artifactDir, "auroraboot.raw"), rawData, 0o644)
 	case name == "xz":
 		if len(args) == 0 {
 			return errors.New("xz missing args")

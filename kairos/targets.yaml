@@ -26,6 +26,10 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    # Measured 1377.9 on 2026-07-09 (post slice-1 purge; growth vs Jul 8
+    # baseline is apt drift in the mutable base + the D28 agent). Slice 2
+    # (virtual kernel) should drop this by ~200; re-tighten then.
+    maxRawXzMB: 1380
     overlays:
       - base
       - hardware/qemu
@@ -82,6 +86,8 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    # Measured 1273.3 on 2026-07-09 (post slice-1 purge).
+    maxRawXzMB: 1280
     overlays:
       - base
       - hardware/qemu

@@ -1,3 +1,19 @@
+build:
+  # Universal size cuts. Verified against the 26.04 dependency solver —
+  # NOT cuttable despite looking like it (apt refuses, do not re-add):
+  #   libc-gconv-modules-extra  (libc6 hard-Depends on 26.04)
+  #   gnu-coreutils             (coreutils-from-uutils PreDepends it)
+  #   shim-signed / grub-*-signed (wired into grub meta; purge cascades
+  #                              into Essential packages)
+  aptPurge:
+    - neovim
+    - neovim-runtime
+    - libmagic-mgc
+    - console-setup-linux
+    - binutils
+    - binutils-aarch64-linux-gnu
+    - binutils-x86-64-linux-gnu
+    - binutils-common
 inspect:
   oci:
     files:

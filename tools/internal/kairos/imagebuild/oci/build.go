@@ -100,6 +100,7 @@ func buildArgs(resolved plan.Plan, options Options) []string {
 		"--build-arg", "PLATFORM=" + resolved.Platform,
 		"--build-arg", "HARDWARE=" + resolved.Hardware,
 		"--build-arg", "APT_PACKAGES=" + strings.Join(resolved.AptPackages, " "),
+		"--build-arg", "APT_PURGE_PACKAGES=" + strings.Join(resolved.AptPurge, " "),
 		"--build-arg", "DRACUT_INSTALL_ITEMS=" + strings.Join(resolved.DracutInstallItems, " "),
 		"--build-arg", "POST_INSTALL_ACTIONS=" + strings.Join(resolved.PostInstallActions, " "),
 		"--tag", resolved.Image,
