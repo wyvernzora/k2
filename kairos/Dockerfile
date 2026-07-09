@@ -101,14 +101,102 @@ RUN set -eux; \
         mkdir -p /etc/dracut.conf.d; \
         printf 'install_items+=" %s "\n' "${DRACUT_INSTALL_ITEMS}" > /etc/dracut.conf.d/90-k2-install-items.conf; \
     fi; \
+    needs_initrd_rebuild=false; \
     for action in ${POST_INSTALL_ACTIONS}; do \
         case "${action}" in \
             zfs-hostid) [ -f /etc/hostid ] || zgenhostid ;; \
             disable-motd) if [ -d /etc/update-motd.d ]; then chmod -x /etc/update-motd.d/* || true; fi ;; \
+            use-virtual-kernel) \
+                apt-get update; \
+                apt-get install -y --no-install-recommends linux-image-virtual; \
+                # linux-image-virtual Depends on the SAME versioned
+                # linux-image-<ver>-generic binary; only the METAS are
+                # purged below. linux-main-modules-zfs-* (zfs.ko) hangs off
+                # the generic meta alone, so pin it before the purge or
+                # autoremove sweeps it and the storage role dies at boot.
+                zfs_modules="$(dpkg-query -W -f='${binary:Package}\n' 'linux-main-modules-zfs-*' 2>/dev/null || true)"; \
+                if [ -n "${zfs_modules}" ]; then \
+                    apt-mark manual ${zfs_modules}; \
+                fi; \
+                purge_packages=""; \
+                for package in \
+                    linux-image-generic \
+                    linux-generic \
+                    linux-firmware \
+                    linux-firmware-amd-graphics \
+                    linux-firmware-amd-misc \
+                    linux-firmware-broadcom-wireless \
+                    linux-firmware-intel-graphics \
+                    linux-firmware-intel-misc \
+                    linux-firmware-intel-wireless \
+                    linux-firmware-marvell-prestera \
+                    linux-firmware-marvell-wireless \
+                    linux-firmware-mediatek \
+                    linux-firmware-mellanox-spectrum \
+                    linux-firmware-misc \
+                    linux-firmware-netronome \
+                    linux-firmware-nvidia-graphics \
+                    linux-firmware-qlogic \
+                    linux-firmware-qualcomm-graphics \
+                    linux-firmware-qualcomm-misc \
+                    linux-firmware-qualcomm-wireless \
+                    linux-firmware-realtek \
+                    linux-firmware-snapdragon \
+                    linux-firmware-raspi2; do \
+                    installed="$(dpkg-query -W -f='${binary:Package}\n' "${package}" 2>/dev/null || true)"; \
+                    if [ -n "${installed}" ]; then \
+                        purge_packages="${purge_packages} ${installed}"; \
+                    fi; \
+                done; \
+                if [ -n "${purge_packages}" ]; then \
+                    apt-get purge -y ${purge_packages}; \
+                fi; \
+                apt-get autoremove -y --purge; \
+                apt-get clean; \
+                rm -rf /var/lib/apt/lists/*; \
+                # linux-modules ships ~105MB of per-kernel firmware under
+                # /usr/lib/firmware/<kver> that apt cannot drop without
+                # dropping the drivers. A VM loads zero firmware files, so
+                # remove the tree outright; dpkg bookkeeping divergence is
+                # harmless on immutable images (every rebuild re-runs this).
+                rm -rf /usr/lib/firmware; \
+                kernel_paths="$(find /boot -maxdepth 1 -type f -name 'vmlinuz-*' -printf '%p\n' | sort -V)"; \
+                kernel_count="$(printf '%s\n' "${kernel_paths}" | sed '/^$/d' | wc -l)"; \
+                if [ "${kernel_count}" -ne 1 ]; then \
+                    echo "Expected exactly one vmlinuz-* under /boot after virtual kernel swap, found ${kernel_count}: ${kernel_paths}" >&2; \
+                    exit 1; \
+                fi; \
+                kernel_path="$(printf '%s\n' "${kernel_paths}" | sed -n '1p')"; \
+                kernel_version="$(basename "${kernel_path}" | sed 's/^vmlinuz-//')"; \
+                # The binary kernel keeps its -generic name under the
+                # virtual meta; assert the meta is what anchors it.
+                if ! dpkg -s linux-image-virtual >/dev/null 2>&1; then \
+                    echo "linux-image-virtual is not installed after the swap" >&2; \
+                    exit 1; \
+                fi; \
+                modules_dir="/usr/lib/modules/${kernel_version}"; \
+                if [ ! -d "${modules_dir}" ]; then \
+                    echo "Missing module directory for virtual kernel: ${modules_dir}" >&2; \
+                    exit 1; \
+                fi; \
+                for module in zfs iscsi_tcp target_core_mod; do \
+                    if ! find "${modules_dir}" -name "${module}.ko*" -print -quit | grep -q .; then \
+                        echo "Missing required module ${module}.ko* under ${modules_dir}" >&2; \
+                        exit 1; \
+                    fi; \
+                done; \
+                if [ -d /usr/lib/firmware ]; then \
+                    firmware_mb="$(du -sm /usr/lib/firmware | awk '{print $1}')"; \
+                    if [ "${firmware_mb}" -ge 5 ]; then \
+                        echo "Expected /usr/lib/firmware to be absent or under 5MB after virtual kernel swap, found ${firmware_mb}MB" >&2; \
+                        exit 1; \
+                    fi; \
+                fi; \
+                needs_initrd_rebuild=true ;; \
             *) echo "Unknown post-install action: ${action}" >&2; exit 1 ;; \
         esac; \
     done; \
-    if [ "${MODEL}" = "rpi4" ] || [ -n "${DRACUT_INSTALL_ITEMS}" ]; then \
+    if [ "${MODEL}" = "rpi4" ] || [ -n "${DRACUT_INSTALL_ITEMS}" ] || [ "${needs_initrd_rebuild}" = "true" ]; then \
         kernel="$(readlink -f /boot/vmlinuz 2>/dev/null | sed 's|.*/vmlinuz-||')"; \
         if [ -z "${kernel}" ]; then \
             kernel="$(find /boot -maxdepth 1 -name 'vmlinuz-*' -printf '%f\n' | sed 's/^vmlinuz-//' | sort -V | tail -n 1)"; \

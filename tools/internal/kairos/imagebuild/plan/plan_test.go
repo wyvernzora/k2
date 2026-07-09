@@ -136,6 +136,31 @@ build:
 	}
 }
 
+func TestBuildMergesPostInstallActionsAcrossOverlays(t *testing.T) {
+	planner, _ := newFixturePlanner(t)
+	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "hardware", "qemu", "overlay.yaml"), strings.TrimSpace(`
+build:
+  postInstall:
+    - use-virtual-kernel
+`)+"\n")
+	mustWrite(t, filepath.Join(planner.Paths.OverlaysDir, "role", "storage", "overlay.yaml"), strings.TrimSpace(`
+build:
+  postInstall:
+    - zfs-hostid
+    - use-virtual-kernel
+    - disable-motd
+`)+"\n")
+
+	got, err := planner.Build("ubuntu-26.04-amd64-qemu-storage")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"use-virtual-kernel", "zfs-hostid", "disable-motd"}
+	if !slices.Equal(got.PostInstallActions, want) {
+		t.Fatalf("postInstallActions = %#v, want %#v", got.PostInstallActions, want)
+	}
+}
+
 func TestRawPatchRejectsUnsupportedPatchTarget(t *testing.T) {
 	planner, _ := newFixturePlanner(t)
 	unsupported := filepath.Join(planner.Paths.OverlaysDir, "hardware", "rpi4cb", "raw", "COS_GRUB", "extraconfig.txt.patch")
@@ -314,6 +339,57 @@ func TestRealRepoPlansBuildAllEnabledTargets(t *testing.T) {
 			t.Fatalf("duplicate image %s for %s and %s", got.Image, previous, got.Target)
 		}
 		tags[got.Image] = got.Target
+	}
+}
+
+func TestRealRepoHardwareSlimmingMetadata(t *testing.T) {
+	kairosRoot := filepath.Clean(filepath.Join("..", "..", "..", "..", "..", "kairos"))
+	discovered, err := paths.Discover(kairosRoot, paths.Overrides{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	targets, err := config.LoadTargets(discovered.TargetsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	versions, err := config.LoadVersions(discovered.VersionsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	planner := plan.New(targets, versions, discovered)
+	qemuStorage, err := planner.Build("ubuntu-26.04-arm64-qemu-storage")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(qemuStorage.PostInstallActions, "use-virtual-kernel") {
+		t.Fatalf("qemu storage postInstallActions = %#v, want use-virtual-kernel", qemuStorage.PostInstallActions)
+	}
+
+	rpiOverlayPath := filepath.Join(discovered.OverlaysDir, "hardware", "rpi4cb", "overlay.yaml")
+	rpiOverlay, err := config.LoadOverlayMetadata(rpiOverlayPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(rpiOverlay.Build.AptPurge, rpiFirmwarePurgePackages) {
+		t.Fatalf("rpi4cb aptPurge = %#v, want %#v", rpiOverlay.Build.AptPurge, rpiFirmwarePurgePackages)
+	}
+	for _, kept := range []string{
+		"linux-firmware-broadcom-wireless",
+		"linux-firmware-raspi2",
+		"raspi-firmware",
+	} {
+		if slices.Contains(rpiOverlay.Build.AptPurge, kept) {
+			t.Fatalf("rpi4cb aptPurge contains retained package %q", kept)
+		}
+	}
+
+	rpiPlan, err := planner.Build("ubuntu-26.04-arm64-rpi4cb-k8s")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !containsOCIFile(rpiPlan, "/usr/lib/firmware/brcm/brcmfmac43455-sdio.bin") {
+		t.Fatalf("rpi4cb inspection files = %#v, want retained broadcom firmware path", rpiPlan.Inspection.OCI.Files)
 	}
 }
 
@@ -586,4 +662,35 @@ func mustMkdir(t *testing.T, path string) {
 	if err := os.MkdirAll(path, 0o755); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func containsOCIFile(resolved plan.Plan, path string) bool {
+	for _, file := range resolved.Inspection.OCI.Files {
+		if file.Path == path {
+			return true
+		}
+	}
+	return false
+}
+
+var rpiFirmwarePurgePackages = []string{
+	"linux-firmware",
+	"linux-firmware-amd-graphics",
+	"linux-firmware-amd-misc",
+	"linux-firmware-intel-graphics",
+	"linux-firmware-intel-misc",
+	"linux-firmware-intel-wireless",
+	"linux-firmware-marvell-prestera",
+	"linux-firmware-marvell-wireless",
+	"linux-firmware-mediatek",
+	"linux-firmware-mellanox-spectrum",
+	"linux-firmware-misc",
+	"linux-firmware-netronome",
+	"linux-firmware-nvidia-graphics",
+	"linux-firmware-qlogic",
+	"linux-firmware-qualcomm-graphics",
+	"linux-firmware-qualcomm-misc",
+	"linux-firmware-qualcomm-wireless",
+	"linux-firmware-realtek",
+	"linux-firmware-snapdragon",
 }

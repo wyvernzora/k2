@@ -1,6 +1,8 @@
 build:
   aptPackages:
     - qemu-guest-agent
+  postInstall:
+    - use-virtual-kernel
 
 inspect:
   oci:

@@ -1,7 +1,46 @@
+build:
+  # Curated firmware purge for ComputeBlade. The fleet's CM4s are the
+  # NON-WIRELESS variant (no WiFi/BT radio; user policy: never wireless
+  # for racked nodes), so broadcom/cypress wireless firmware goes too.
+  # Keep linux-firmware-raspi2 (Pi-specific bits, tiny). Pi BOOT firmware
+  # is not a dpkg package here — it arrives via kairos image assembly.
+  #
+  # needs-physical-validation: validate on one real ComputeBlade before
+  # fleet rollout via single-node A/B upgrade with kairos-agent bootentry
+  # rollback. Criterion: boots into active + ethernet up + rejoins the
+  # cluster (no radio bring-up to test).
+  aptPurge:
+    - linux-firmware-broadcom-wireless
+    # firmware-sof-signed is audio-DSP firmware outside the linux-firmware
+    # split (44MB); headless blades have no audio hardware.
+    - firmware-sof-signed
+    - linux-firmware
+    - linux-firmware-amd-graphics
+    - linux-firmware-amd-misc
+    - linux-firmware-intel-graphics
+    - linux-firmware-intel-misc
+    - linux-firmware-intel-wireless
+    - linux-firmware-marvell-prestera
+    - linux-firmware-marvell-wireless
+    - linux-firmware-mediatek
+    - linux-firmware-mellanox-spectrum
+    - linux-firmware-misc
+    - linux-firmware-netronome
+    - linux-firmware-nvidia-graphics
+    - linux-firmware-qlogic
+    - linux-firmware-qualcomm-graphics
+    - linux-firmware-qualcomm-misc
+    - linux-firmware-qualcomm-wireless
+    - linux-firmware-realtek
+    - linux-firmware-snapdragon
+
 inspect:
   oci:
     absent:
       - /system/oem/20-rpi4cb-nvme-data.yaml
+      - /usr/lib/firmware/brcm
+      - /usr/lib/firmware/qcom
+      - /usr/lib/firmware/nvidia
   raw:
     partitions:
       COS_GRUB:
