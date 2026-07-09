@@ -3,6 +3,8 @@ package toolcli
 import (
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestE2EStorageDefaultsAndVMNames(t *testing.T) {
@@ -60,6 +62,37 @@ func TestDemocraticCSIValuesYAML(t *testing.T) {
 		if !strings.Contains(text, want) {
 			t.Fatalf("values YAML missing %q:\n%s", want, text)
 		}
+	}
+
+	// Flat substring checks cannot catch a value rendered at the wrong
+	// nesting level, and democratic-csi silently ignores misplaced config
+	// keys. Walk the exact paths the driver reads.
+	var tree map[string]any
+	if err := yaml.Unmarshal(got, &tree); err != nil {
+		t.Fatal(err)
+	}
+	walk := func(path ...string) any {
+		node := any(tree)
+		for _, key := range path {
+			m, ok := node.(map[string]any)
+			if !ok {
+				t.Fatalf("values YAML: %v is not a map on the way to %v", node, path)
+			}
+			node = m[key]
+			if node == nil {
+				t.Fatalf("values YAML missing %v", path)
+			}
+		}
+		return node
+	}
+	if got := walk("driver", "config", "iscsi", "targetPortal"); got != "192.168.64.10:3260" {
+		t.Fatalf("driver.config.iscsi.targetPortal = %v", got)
+	}
+	if got := walk("driver", "config", "iscsi", "shareStrategyTargetCli", "block", "attributes", "emulate_tpu"); got != 1 {
+		t.Fatalf("shareStrategyTargetCli.block.attributes.emulate_tpu = %v", got)
+	}
+	if got := walk("driver", "config", "sshConnection", "host"); got != "192.168.64.10" {
+		t.Fatalf("driver.config.sshConnection.host = %v", got)
 	}
 }
 

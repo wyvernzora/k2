@@ -42,14 +42,15 @@ func runBootstrapProvision(parent context.Context, rcx *runContext, c *bootstrap
 
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
-	reporter.SetInterruptCancel(cancel)
-	defer reporter.SetInterruptCancel(nil)
+	prevCancel := reporter.SetInterruptCancel(cancel)
+	defer reporter.SetInterruptCancel(prevCancel)
 
 	state := &bootstrapState{
 		client: &remote.Client{
 			Host:             c.Host,
 			Port:             c.SSHPort,
 			User:             c.SSHUser,
+			IdentityFile:     c.Identity,
 			InsecureHostKey:  c.TestVM != "",
 			NoPasswordPrompt: c.noPasswordPrompt,
 			Stdout:           os.Stdout,
@@ -202,28 +203,28 @@ func (c *bootstrapCmd) stepHarvest(rcx *runContext, s *bootstrapState) func(cont
 		if clusterName == "" {
 			clusterName = c.ClusterTarget
 		}
-		return harvestBootstrapCredentials(s.client, cfg, clusterName)
+		return harvestBootstrapCredentials(ctx, s.client, cfg, clusterName)
 	}
 }
 
 func (c *bootstrapCmd) stepPatchKubeVIP(s *bootstrapState) func(context.Context, ui.Step) error {
 	return func(ctx context.Context, sh ui.Step) error {
 		defer s.client.SwapIO(sh)()
-		return patchRemoteKubeVIP(s.client, s.testTarget.KubeVIP, 3*time.Minute)
+		return patchRemoteKubeVIP(ctx, s.client, s.testTarget.KubeVIP, 3*time.Minute)
 	}
 }
 
 func (c *bootstrapCmd) stepApplyRootArgoApp(s *bootstrapState) func(context.Context, ui.Step) error {
 	return func(ctx context.Context, sh ui.Step) error {
 		defer s.client.SwapIO(sh)()
-		return applyRootArgoApp(s.client, 5*time.Minute)
+		return applyRootArgoApp(ctx, s.client, 5*time.Minute)
 	}
 }
 
 func (c *bootstrapCmd) stepVerify(s *bootstrapState) func(context.Context, ui.Step) error {
 	return func(ctx context.Context, sh ui.Step) error {
 		defer s.client.SwapIO(sh)()
-		return verifyRemoteProvisioning(s.client, "bootstrap node "+c.NodeName, bootstrapVerificationScript(c.NodeName), 5*time.Minute)
+		return verifyRemoteProvisioning(ctx, s.client, "bootstrap node "+c.NodeName, bootstrapVerificationScript(c.NodeName), 5*time.Minute)
 	}
 }
 

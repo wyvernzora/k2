@@ -24,7 +24,9 @@ func e2eStorageConsistencyScript(creds storageCredentials, pvName string, expect
 	fmt.Fprintf(&buf, "test -n \"$zvol\"\n")
 	fmt.Fprintf(&buf, "volsize=\"$(sudo zfs get -Hp -o value volsize \"$zvol\")\"\n")
 	fmt.Fprintf(&buf, "test \"$volsize\" -ge %d\n", expectedBytes)
-	fmt.Fprintf(&buf, "test \"$(sudo zfs get -H -o value keystatus %s)\" != '-'\n", shellQuote(creds.Pool))
+	// keystatus must be exactly 'available': '-' means unencrypted, and
+	// 'unavailable' means encrypted but NOT unlocked — both are failures.
+	fmt.Fprintf(&buf, "test \"$(sudo zfs get -H -o value keystatus %s)\" = 'available'\n", shellQuote(creds.Pool))
 	fmt.Fprintf(&buf, "test \"$(sudo zfs get -H -o value encryption \"$zvol\")\" != 'off'\n")
 	fmt.Fprintf(&buf, "sudo targetcli ls /iscsi | grep %s >/dev/null\n", shellQuote(creds.IQNBase))
 	fmt.Fprintf(&buf, "sudo targetcli ls /iscsi | grep %s >/dev/null\n", shellQuote(pvName))
@@ -38,7 +40,8 @@ func e2eStorageCleanupPollScript(creds storageCredentials, pvName string) string
 	fmt.Fprintf(&buf, "  zvols=\"$(sudo zfs list -H -o name -r %s 2>/dev/null | grep %s || true)\"\n", shellQuote(creds.DatasetParentName), shellQuote(pvName))
 	fmt.Fprintf(&buf, "  targets=\"$(sudo targetcli ls /iscsi 2>/dev/null | grep %s || true)\"\n", shellQuote(pvName))
 	fmt.Fprintf(&buf, "  children=\"$(sudo zfs list -H -o name -r %s 2>/dev/null | tail -n +2 || true)\"\n", shellQuote(creds.DatasetParentName))
-	fmt.Fprintf(&buf, "  if [ -z \"$zvols\" ] && [ -z \"$targets\" ] && [ -z \"$children\" ]; then exit 0; fi\n")
+	fmt.Fprintf(&buf, "  snapchildren=\"$(sudo zfs list -H -o name -r %s 2>/dev/null | tail -n +2 || true)\"\n", shellQuote(creds.DetachedSnapshotsDatasetParentName))
+	fmt.Fprintf(&buf, "  if [ -z \"$zvols\" ] && [ -z \"$targets\" ] && [ -z \"$children\" ] && [ -z \"$snapchildren\" ]; then exit 0; fi\n")
 	fmt.Fprintf(&buf, "  echo \"k2-tools: waiting for democratic-csi cleanup attempt $i\"\n")
 	fmt.Fprintf(&buf, "  sleep 5\n")
 	fmt.Fprintf(&buf, "done\n")
@@ -50,6 +53,14 @@ func e2eStorageCleanupPollScript(creds storageCredentials, pvName string) string
 	return buf.String()
 }
 
+// e2eNodeNoISCSISessionScript asserts no session against the appliance
+// remains. iscsiadm needs root, and "no sessions" is exit 21 — every other
+// failure must fail the check rather than read as "no sessions found".
 func e2eNodeNoISCSISessionScript(iqnBase string) string {
-	return fmt.Sprintf("set -eu\nif iscsiadm -m session 2>/dev/null | grep %s; then exit 1; fi\n", shellQuote(iqnBase))
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "set -eu\n")
+	fmt.Fprintf(&buf, "out=\"$(sudo iscsiadm -m session 2>&1)\" && rc=0 || rc=$?\n")
+	fmt.Fprintf(&buf, "if [ \"$rc\" -ne 0 ] && [ \"$rc\" -ne 21 ]; then echo \"iscsiadm failed ($rc): $out\" >&2; exit 1; fi\n")
+	fmt.Fprintf(&buf, "if printf '%%s\\n' \"$out\" | grep %s; then exit 1; fi\n", shellQuote(iqnBase))
+	return buf.String()
 }

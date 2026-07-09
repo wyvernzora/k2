@@ -41,6 +41,9 @@ func (c *e2eStorageCmd) Run(rcx *runContext) error {
 		return err
 	}
 	applyStorageAliasOverrides(scenario, *c)
+	if err := preauthorizeSudoQEMU(); err != nil {
+		return err
+	}
 	return runE2EScenario(context.Background(), rcx, scenario, c.options())
 }
 

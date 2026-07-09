@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func TestRunWithHealthyNoPools(t *testing.T) {
+func TestRunWithNoPoolsIsUnhealthy(t *testing.T) {
 	status := filepath.Join(t.TempDir(), "status")
 	run := fakeRunner{
 		outputs: map[string]string{
@@ -24,15 +24,17 @@ func TestRunWithHealthyNoPools(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 
 	err := runWith(Config{StatusFile: status, SaveConfig: filepath.Join(t.TempDir(), "missing.json")}, run, &stdout, &stderr)
-	if err != nil {
-		t.Fatal(err)
+	// A storage appliance with zero imported pools is broken (failed import
+	// or failed key load), not idle.
+	if !errors.Is(err, ErrUnhealthy) {
+		t.Fatalf("err = %v, want ErrUnhealthy", err)
 	}
-	want := "healthy: no ZFS pools imported\n"
-	if stdout.String() != want {
-		t.Fatalf("stdout = %q, want %q", stdout.String(), want)
+	want := "UNHEALTHY: no ZFS pools imported\n"
+	if stderr.String() != want {
+		t.Fatalf("stderr = %q, want %q", stderr.String(), want)
 	}
-	if stderr.Len() != 0 {
-		t.Fatalf("stderr = %q, want empty", stderr.String())
+	if stdout.Len() != 0 {
+		t.Fatalf("stdout = %q, want empty", stdout.String())
 	}
 	assertStatus(t, status, want)
 }

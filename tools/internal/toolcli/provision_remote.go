@@ -125,15 +125,17 @@ func detectBootstrapAPIHost(client *remote.Client) (string, error) {
 	return host, nil
 }
 
-func harvestBootstrapCredentials(client *remote.Client, cfg clusterconfig.Config, clusterName string) error {
+func harvestBootstrapCredentials(ctx context.Context, client *remote.Client, cfg clusterconfig.Config, clusterName string) error {
 	logf("waiting for node to reboot and accept SSH")
-	time.Sleep(10 * time.Second)
-	if err := client.WaitForAuth(5 * time.Minute); err != nil {
+	if err := sleepCtx(ctx, 10*time.Second); err != nil {
+		return err
+	}
+	if err := client.WaitForAuthCtx(ctx, 5*time.Minute); err != nil {
 		return err
 	}
 
 	logf("waiting for k3s credentials on bootstrap node")
-	if err := waitForK3sCredentials(client, 5*time.Minute); err != nil {
+	if err := waitForK3sCredentials(ctx, client, 5*time.Minute); err != nil {
 		return err
 	}
 
@@ -184,7 +186,7 @@ func harvestBootstrapCredentials(client *remote.Client, cfg clusterconfig.Config
 	return nil
 }
 
-func waitForK3sCredentials(client *remote.Client, timeout time.Duration) error {
+func waitForK3sCredentials(ctx context.Context, client *remote.Client, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	var lastErr error
 	for {
@@ -201,11 +203,13 @@ func waitForK3sCredentials(client *remote.Client, timeout time.Duration) error {
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out waiting for k3s credentials: %w", lastErr)
 		}
-		time.Sleep(5 * time.Second)
+		if err := sleepCtx(ctx, 5*time.Second); err != nil {
+			return err
+		}
 	}
 }
 
-func patchRemoteKubeVIP(client *remote.Client, vip string, timeout time.Duration) error {
+func patchRemoteKubeVIP(ctx context.Context, client *remote.Client, vip string, timeout time.Duration) error {
 	logf("patching kube-vip VIP address for test VM bootstrap to %s", vip)
 	deadline := time.Now().Add(timeout)
 	var lastErr error
@@ -223,11 +227,13 @@ func patchRemoteKubeVIP(client *remote.Client, vip string, timeout time.Duration
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out patching kube-vip VIP address: %w", lastErr)
 		}
-		time.Sleep(5 * time.Second)
+		if err := sleepCtx(ctx, 5*time.Second); err != nil {
+			return err
+		}
 	}
 }
 
-func applyRootArgoApp(client *remote.Client, timeout time.Duration) error {
+func applyRootArgoApp(ctx context.Context, client *remote.Client, timeout time.Duration) error {
 	logf("applying root Argo CD app manifest")
 	deadline := time.Now().Add(timeout)
 	var lastErr error
@@ -241,11 +247,13 @@ func applyRootArgoApp(client *remote.Client, timeout time.Duration) error {
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out applying root Argo CD app manifest: %w", lastErr)
 		}
-		time.Sleep(5 * time.Second)
+		if err := sleepCtx(ctx, 5*time.Second); err != nil {
+			return err
+		}
 	}
 }
 
-func verifyRemoteProvisioning(client *remote.Client, description string, script string, timeout time.Duration) error {
+func verifyRemoteProvisioning(ctx context.Context, client *remote.Client, description string, script string, timeout time.Duration) error {
 	logf("verifying %s provisioning", description)
 	deadline := time.Now().Add(timeout)
 	var lastErr error
@@ -259,7 +267,9 @@ func verifyRemoteProvisioning(client *remote.Client, description string, script 
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out verifying %s provisioning: %w", description, lastErr)
 		}
-		time.Sleep(5 * time.Second)
+		if err := sleepCtx(ctx, 5*time.Second); err != nil {
+			return err
+		}
 	}
 }
 
@@ -276,4 +286,16 @@ func hardenRemoteDefaultAccess(client *remote.Client) error {
 	}
 	successf("default kairos access hardened")
 	return nil
+}
+
+// sleepCtx sleeps for d or until ctx is cancelled, so Ctrl-C actually stops
+// the multi-minute post-reboot retry loops instead of letting them run out
+// their full deadlines.
+func sleepCtx(ctx context.Context, d time.Duration) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(d):
+		return nil
+	}
 }

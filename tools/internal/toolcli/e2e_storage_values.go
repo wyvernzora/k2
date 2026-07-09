@@ -36,7 +36,6 @@ type democraticDriverConfig struct {
 	SSH    democraticSSHConfig   `yaml:"sshConnection"`
 	ZFS    democraticZFSConfig   `yaml:"zfs"`
 	ISCSI  democraticISCSIConfig `yaml:"iscsi"`
-	Portal string                `yaml:"targetPortal"`
 }
 
 type democraticSSHConfig struct {
@@ -54,16 +53,21 @@ type democraticZFSConfig struct {
 	ZvolBlocksize                      string          `yaml:"zvolBlocksize"`
 }
 
+// Field placement mirrors democratic-csi's examples/zfs-generic-iscsi.yaml:
+// targetPortal is a child of iscsi (NOT driver.config), and block sits under
+// shareStrategyTargetCli. The driver reads iscsi.targetPortal to build the
+// volume context; misplacing it leaves node staging with no portal at all.
 type democraticISCSIConfig struct {
 	ShareStrategy          string                        `yaml:"shareStrategy"`
 	ShareStrategyTargetCli democraticShareStrategyTarget `yaml:"shareStrategyTargetCli"`
-	Block                  democraticISCSIBlock          `yaml:"block"`
+	Portal                 string                        `yaml:"targetPortal"`
 }
 
 type democraticShareStrategyTarget struct {
 	SudoEnabled bool                   `yaml:"sudoEnabled"`
 	Basename    string                 `yaml:"basename"`
 	TPG         democraticTargetPortal `yaml:"tpg"`
+	Block       democraticISCSIBlock   `yaml:"block"`
 }
 
 type democraticTargetPortal struct {
@@ -138,10 +142,10 @@ func democraticCSIValuesYAML(creds storageCredentials) ([]byte, error) {
 							"password": creds.CHAPPassword,
 						},
 					},
+					Block: democraticISCSIBlock{Attributes: map[string]int{"emulate_tpu": 1}},
 				},
-				Block: democraticISCSIBlock{Attributes: map[string]int{"emulate_tpu": 1}},
+				Portal: creds.Portal,
 			},
-			Portal: creds.Portal,
 		}},
 		Node: democraticNodePlugin{Driver: democraticNodeDriver{
 			ISCSIDirHostPath:     "/etc/iscsi",

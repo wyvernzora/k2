@@ -37,6 +37,7 @@ func runJoinProvision(parent context.Context, rcx *runContext, role nodeRole, fl
 		Host:             remoteFlags.Host,
 		Port:             remoteFlags.SSHPort,
 		User:             remoteFlags.SSHUser,
+		IdentityFile:     remoteFlags.Identity,
 		InsecureHostKey:  remoteFlags.TestVM != "",
 		NoPasswordPrompt: remoteFlags.noPasswordPrompt,
 		Stdout:           os.Stdout,
@@ -46,8 +47,8 @@ func runJoinProvision(parent context.Context, rcx *runContext, role nodeRole, fl
 
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
-	reporter.SetInterruptCancel(cancel)
-	defer reporter.SetInterruptCancel(nil)
+	prevCancel := reporter.SetInterruptCancel(cancel)
+	defer reporter.SetInterruptCancel(prevCancel)
 
 	var (
 		metadata  render.ImageMetadata
@@ -120,8 +121,10 @@ func runJoinProvision(parent context.Context, rcx *runContext, role nodeRole, fl
 	wf.Section("Post-reboot").Unless(!postInstall)
 	wf.Shell("Wait for SSH after reboot", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()
-		time.Sleep(10 * time.Second)
-		if err := client.WaitForAuth(5 * time.Minute); err != nil {
+		if err := sleepCtx(ctx, 10*time.Second); err != nil {
+			return err
+		}
+		if err := client.WaitForAuthCtx(ctx, 5*time.Minute); err != nil {
 			return err
 		}
 		sh.Successf("%s node %s accepted SSH", role, flags.NodeName)
@@ -131,7 +134,7 @@ func runJoinProvision(parent context.Context, rcx *runContext, role nodeRole, fl
 		defer client.SwapIO(sh)()
 		// 10m, not 5m: a fresh cluster must pull Cilium/kube-vip images before
 		// the API VIP answers, and the joining agent blocks on that VIP.
-		return verifyRemoteProvisioning(&client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 10*time.Minute)
+		return verifyRemoteProvisioning(ctx, &client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 10*time.Minute)
 	}).Unless(!postInstall)
 	wf.Shell("Harden default access", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()

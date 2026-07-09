@@ -28,6 +28,7 @@ func TestE2EShippedScenarioPlans(t *testing.T) {
 				"Provision|storage|Provision storage appliance e2e-k2e2e-storage",
 				"Provision|bootstrap|Provision bootstrap server e2e-k2e2e-server",
 				"Provision|worker|Provision worker e2e-k2e2e-worker-1",
+				"Steps|rebootVM|Reboot storage and wait for active boot",
 				"Steps|nodePrepISCSI|Prepare node iSCSI initiators",
 				"Steps|helmInstall|Install zfs-iscsi",
 				"Checks|pvcLifecycle|PVC lifecycle",

@@ -134,7 +134,9 @@ func TestResolveStoragePoolPlan(t *testing.T) {
 		{name: "create", inspection: storageInspection{PoolState: storagePoolMissing}, vdevs: vdevs, want: storagePoolCreate},
 		{name: "import", inspection: storageInspection{PoolState: storagePoolImportable}, want: storagePoolImport},
 		{name: "already imported", inspection: storageInspection{PoolState: storagePoolImported, PoolHealth: "ONLINE"}, want: storagePoolAlreadyImported},
-		{name: "vdev conflict", inspection: storageInspection{PoolState: storagePoolImported}, vdevs: vdevs, wantErr: "already exists"},
+		// vdevs alongside an existing pool are tolerated (the caller drops
+		// them with a note) so scenario reruns stay plain reruns.
+		{name: "vdevs with existing pool", inspection: storageInspection{PoolState: storagePoolImported, PoolHealth: "ONLINE"}, vdevs: vdevs, want: storagePoolAlreadyImported},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -254,7 +256,10 @@ func TestLoadStorageCredentialsFixedSchema(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, ok := loadStorageCredentials("v3")
+	got, ok, err := loadStorageCredentials("v3")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !ok {
 		t.Fatal("loadStorageCredentials ok = false, want true")
 	}
@@ -300,7 +305,10 @@ func TestWriteLoadStorageCredentialsRoundTrip(t *testing.T) {
 	if _, _, err := cmd.writeStorageCredentials(state); err != nil {
 		t.Fatal(err)
 	}
-	got, ok := loadStorageCredentials("v3")
+	got, ok, err := loadStorageCredentials("v3")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !ok {
 		t.Fatal("loadStorageCredentials ok = false, want true")
 	}
@@ -401,7 +409,7 @@ func TestNewStorageStateReusesOldCredentialsAndAddsMissingPoolKey(t *testing.T) 
 	}
 }
 
-func TestLoadStorageCredentialsMissingCHAPPasswordReturnsFalse(t *testing.T) {
+func TestLoadStorageCredentialsMissingCHAPPasswordErrors(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	dir := filepath.Join(home, ".kube", "k2", "v3")
@@ -411,8 +419,11 @@ func TestLoadStorageCredentialsMissingCHAPPasswordReturnsFalse(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "storage-appliance.json"), []byte(`{"csiPublicKey":"ssh-ed25519 PUBLIC","chapUsername":"k2-v3"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := loadStorageCredentials("v3"); ok {
-		t.Fatal("loadStorageCredentials ok = true, want false")
+	// An existing-but-incomplete file must ERROR, not read as "absent":
+	// silently regenerating credentials also rotates the pool wrapping key
+	// of an existing encrypted pool.
+	if _, ok, err := loadStorageCredentials("v3"); err == nil || ok {
+		t.Fatalf("loadStorageCredentials = ok %v err %v, want error", ok, err)
 	}
 }
 

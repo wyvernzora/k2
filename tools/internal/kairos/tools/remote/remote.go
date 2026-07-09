@@ -2,6 +2,7 @@ package remote
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -151,6 +152,10 @@ func (c *Client) ResetAuth() {
 }
 
 func (c *Client) WaitForAuth(timeout time.Duration) error {
+	return c.WaitForAuthCtx(context.Background(), timeout)
+}
+
+func (c *Client) WaitForAuthCtx(ctx context.Context, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	var lastErr error
 	for {
@@ -174,7 +179,11 @@ func (c *Client) WaitForAuth(timeout time.Duration) error {
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out waiting for SSH auth to %s: %w", c.Address(), lastErr)
 		}
-		time.Sleep(5 * time.Second)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(5 * time.Second):
+		}
 	}
 }
 
@@ -245,13 +254,29 @@ func (c *Client) Run(script string) error {
 	return c.run(script)
 }
 
+// RunAllowDisconnect forgives a dropped connection ONLY once the command
+// actually started: reboot scripts sever the session mid-run by design. A
+// disconnect-looking error at dial/handshake time (reset, EOF) means the
+// script never ran at all and must fail loudly — swallowing it reported
+// "install complete" against untouched nodes.
 func (c *Client) RunAllowDisconnect(script string) error {
 	err := c.Run(script)
-	if err == nil || isSSHDisconnect(err) {
+	if err == nil {
+		return nil
+	}
+	var runErr sessionRunError
+	if errors.As(err, &runErr) && isSSHDisconnect(err) {
 		return nil
 	}
 	return err
 }
+
+// sessionRunError marks failures raised by the remote command itself,
+// after dial and session setup succeeded.
+type sessionRunError struct{ err error }
+
+func (e sessionRunError) Error() string { return e.err.Error() }
+func (e sessionRunError) Unwrap() error { return e.err }
 
 func (c *Client) run(script string) error {
 	return c.runWithWriters(script, writer(c.Stdout), writer(c.Stderr))
@@ -282,7 +307,7 @@ func (c *Client) runWithWriters(script string, stdout io.Writer, stderr io.Write
 	session.Stdout = stdout
 	session.Stderr = stderr
 	if err := session.Run("sh -lc " + shellQuote(script)); err != nil {
-		return fmt.Errorf("ssh %s failed: %w", c.Address(), err)
+		return sessionRunError{fmt.Errorf("ssh %s failed: %w", c.Address(), err)}
 	}
 	return nil
 }
