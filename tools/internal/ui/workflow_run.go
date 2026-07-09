@@ -3,6 +3,8 @@ package ui
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 )
 
 func (h *StepHandle) Unless(skip bool) *StepHandle {
@@ -24,6 +26,25 @@ func (h *StepHandle) When(condFn func() bool) *StepHandle {
 }
 
 func (w *Workflow) Execute(ctx context.Context) (err error) {
+	// Steps no longer put the terminal in raw mode, so Ctrl-C arrives as a
+	// real SIGINT: route the first one through the reporter's interrupt
+	// cancel (graceful context cancellation); a second Ctrl-C falls through
+	// to the default handler and kills the process.
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt)
+	sigDone := make(chan struct{})
+	go func() {
+		select {
+		case <-sigCh:
+			w.reporter.interrupt()
+			signal.Stop(sigCh)
+		case <-sigDone:
+		}
+	}()
+	defer func() {
+		signal.Stop(sigCh)
+		close(sigDone)
+	}()
 	defer func() {
 		for i := len(w.deferred) - 1; i >= 0; i-- {
 			w.deferred[i]()

@@ -40,6 +40,14 @@ type Client struct {
 	// for key auth, for operators whose agents cannot load the operator
 	// key (or headless runs with no agent at all).
 	IdentityFile string
+	// InsecureHostKey skips known_hosts pinning. Local test VMs recycle
+	// addresses (loopback ports, vmnet leases) across generations with
+	// fresh host keys, so pinning guarantees spurious mismatches.
+	InsecureHostKey bool
+	// NoPasswordPrompt fails auth instead of prompting on stdin. Set by
+	// non-interactive callers (e2e harness) where a prompt would render
+	// invisibly under the progress UI and block Ctrl-C.
+	NoPasswordPrompt bool
 
 	authMode authMode
 	password string
@@ -121,6 +129,9 @@ func (c *Client) EnsureAuth() error {
 		}
 	}
 
+	if c.NoPasswordPrompt {
+		return fmt.Errorf("SSH authentication to %s failed (key and default password probes exhausted; interactive prompt disabled)", c.Address())
+	}
 	password, err := c.promptPassword()
 	if err != nil {
 		return err
@@ -473,7 +484,7 @@ func defaultPrivateKeySigners() []ssh.Signer {
 }
 
 func (c *Client) hostKeyCallback() (ssh.HostKeyCallback, error) {
-	if isLoopbackHost(c.Host) {
+	if c.InsecureHostKey || isLoopbackHost(c.Host) {
 		return ssh.InsecureIgnoreHostKey(), nil
 	}
 

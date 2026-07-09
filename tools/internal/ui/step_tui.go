@@ -6,54 +6,114 @@ import (
 	"io"
 	"strings"
 	"sync"
-
-	"charm.land/bubbles/v2/spinner"
-	tea "charm.land/bubbletea/v2"
+	"time"
 )
 
 const scrollbackLines = 5
 
-// tuiStep drives a bubbletea program that renders an animated MiniDot
-// spinner next to the step label, with a dim ring-buffered scrollback
-// panel of the last N lines of subprocess output below. Finalization
-// (Successf/Failf/Warnf) replaces the spinner area with a static
-// `  <badge>  <message>` line that persists in scrollback.
+// spinnerFrames matches bubbles' MiniDot cadence.
+var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+
+const (
+	ansiCursorUpLine = "\x1b[%dF" // to column 1, n lines up
+	ansiEraseBelow   = "\x1b[J"
+)
+
+// tuiStep renders an animated spinner next to the step label with a dim
+// ring-buffered scrollback panel of the last N lines of subprocess output
+// below, using plain in-place ANSI redraws on the shared writer.
+//
+// It deliberately does NOT use bubbletea: one Program per step means dozens
+// of short-lived programs per run, each mutating terminal state (raw mode,
+// kitty keyboard push/pop, capability queries). Interleaved with reporter
+// output and process exits, that reliably wedged terminals — kitty-encoded
+// Ctrl-C (^[[99;5u), orphaned query replies, swallowed lines. This renderer
+// changes no terminal modes and reads no input; Ctrl-C stays a signal.
 type tuiStep struct {
-	prog  *tea.Program
-	done  chan error
+	r     *Reporter
 	out   io.Writer
 	label string
+
+	// guarded by r.mu (all terminal writes serialize through the Reporter)
+	lines     []string
+	drawn     int // terminal lines currently occupied by the live block
+	frame     int
+	finalized bool
 
 	writeMu sync.Mutex
 	buf     bytes.Buffer
 
-	finalMu   sync.Mutex
-	finalized bool
+	stop chan struct{}
+	done chan struct{}
 }
 
 func newTUIStep(r *Reporter, label string) *tuiStep {
-	model := newStepModel(label, r)
-	prog := tea.NewProgram(
-		model,
-		tea.WithOutput(r.out),
-	)
-	step := &tuiStep{
-		prog:  prog,
-		done:  make(chan error, 1),
+	s := &tuiStep{
+		r:     r,
 		out:   r.out,
 		label: label,
+		stop:  make(chan struct{}),
+		done:  make(chan struct{}),
 	}
-	go func() {
-		_, err := prog.Run()
-		step.done <- err
-		close(step.done)
-	}()
-	return step
+	r.mu.Lock()
+	r.activeStep = s
+	s.drawLocked()
+	r.mu.Unlock()
+	go s.tick()
+	return s
+}
+
+func (s *tuiStep) tick() {
+	defer close(s.done)
+	ticker := time.NewTicker(120 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-s.stop:
+			return
+		case <-ticker.C:
+			s.r.mu.Lock()
+			if !s.finalized {
+				s.frame++
+				s.drawLocked()
+			}
+			s.r.mu.Unlock()
+		}
+	}
+}
+
+// eraseLocked removes the live block from the terminal. Caller holds r.mu.
+func (s *tuiStep) eraseLocked() {
+	if s.drawn == 0 {
+		return
+	}
+	fmt.Fprintf(s.out, ansiCursorUpLine, s.drawn)
+	fmt.Fprint(s.out, ansiEraseBelow)
+	s.drawn = 0
+}
+
+// drawLocked redraws the live block in place. Caller holds r.mu.
+func (s *tuiStep) drawLocked() {
+	s.eraseLocked()
+	var b strings.Builder
+	b.WriteString("  ")
+	b.WriteString(SpinnerStyle.Render(spinnerFrames[s.frame%len(spinnerFrames)]))
+	b.WriteString("  ")
+	b.WriteString(s.label)
+	b.WriteString("\n")
+	for _, line := range s.lines {
+		b.WriteString("      ")
+		b.WriteString(DimStyle.Render(line))
+		b.WriteString("\n")
+	}
+	fmt.Fprint(s.out, b.String())
+	s.drawn = 1 + len(s.lines)
 }
 
 func (s *tuiStep) Write(p []byte) (int, error) {
 	s.writeMu.Lock()
 	s.buf.Write(p)
+	var newLines []string
 	for {
 		raw := s.buf.Bytes()
 		if len(raw) == 0 {
@@ -75,16 +135,22 @@ func (s *tuiStep) Write(p []byte) (int, error) {
 		if line == "" {
 			continue
 		}
-		s.writeMu.Unlock()
-		s.sendLine(line)
-		s.writeMu.Lock()
+		newLines = append(newLines, line)
 	}
 	s.writeMu.Unlock()
-	return len(p), nil
-}
 
-func (s *tuiStep) sendLine(line string) {
-	s.prog.Send(stepLineMsg(line))
+	if len(newLines) > 0 {
+		s.r.mu.Lock()
+		if !s.finalized {
+			s.lines = append(s.lines, newLines...)
+			if len(s.lines) > scrollbackLines {
+				s.lines = s.lines[len(s.lines)-scrollbackLines:]
+			}
+			s.drawLocked()
+		}
+		s.r.mu.Unlock()
+	}
+	return len(p), nil
 }
 
 func (s *tuiStep) Successf(format string, args ...any) {
@@ -100,9 +166,9 @@ func (s *tuiStep) Warnf(format string, args ...any) {
 }
 
 func (s *tuiStep) Close() error {
-	s.finalMu.Lock()
+	s.r.mu.Lock()
 	already := s.finalized
-	s.finalMu.Unlock()
+	s.r.mu.Unlock()
 	if already {
 		return nil
 	}
@@ -111,112 +177,35 @@ func (s *tuiStep) Close() error {
 }
 
 func (s *tuiStep) finalize(badge, format string, args ...any) {
-	s.finalMu.Lock()
-	if s.finalized {
-		s.finalMu.Unlock()
-		return
-	}
-	s.finalized = true
-	s.finalMu.Unlock()
-
 	// Flush any partial line still buffered without a trailing newline.
 	s.writeMu.Lock()
-	if s.buf.Len() > 0 {
-		rest := strings.TrimRight(s.buf.String(), "\r")
-		s.buf.Reset()
-		s.writeMu.Unlock()
-		s.sendLine(rest)
-	} else {
-		s.writeMu.Unlock()
-	}
+	rest := strings.TrimRight(s.buf.String(), "\r")
+	s.buf.Reset()
+	s.writeMu.Unlock()
 
+	s.r.mu.Lock()
+	if s.finalized {
+		s.r.mu.Unlock()
+		return
+	}
+	if rest != "" {
+		s.lines = append(s.lines, rest)
+		if len(s.lines) > scrollbackLines {
+			s.lines = s.lines[len(s.lines)-scrollbackLines:]
+		}
+	}
+	s.finalized = true
+	if s.r.activeStep == s {
+		s.r.activeStep = nil
+	}
 	msg := fmt.Sprintf(format, args...)
 	if msg == "" {
 		msg = s.label
 	}
-	s.prog.Send(stepFinalMsg{})
-	s.prog.Quit()
-	<-s.done
-	// After the bubbletea program tears down, print the final status
-	// line as a flat record so it survives in the scrollback.
+	s.eraseLocked()
 	fmt.Fprintf(s.out, "  %s  %s\n", badge, msg)
-}
+	s.r.mu.Unlock()
 
-// stepModel is the bubbletea Model used by tuiStep. Spinner = MiniDot
-// (10-frame braille `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`, ora-default), styled cyan.
-type stepModel struct {
-	spinner  spinner.Model
-	label    string
-	lines    []string
-	maxLines int
-	reporter *Reporter // for surfacing Ctrl-C up to the runner's cancel func
-}
-
-type stepLineMsg string
-type stepFinalMsg struct{}
-
-func newStepModel(label string, reporter *Reporter) stepModel {
-	sp := spinner.New()
-	sp.Spinner = spinner.MiniDot
-	sp.Style = SpinnerStyle
-	return stepModel{
-		spinner:  sp,
-		label:    label,
-		lines:    make([]string, 0, scrollbackLines),
-		maxLines: scrollbackLines,
-		reporter: reporter,
-	}
-}
-
-func (m stepModel) Init() tea.Cmd {
-	return m.spinner.Tick
-}
-
-func (m stepModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyPressMsg:
-		// Bubbletea puts the terminal in raw mode, so Ctrl-C arrives as
-		// a key event rather than SIGINT. Invoke the reporter's
-		// interrupt-cancel func — this kills any subprocess started
-		// with `exec.CommandContext` against the same context.
-		if msg.String() == "ctrl+c" {
-			m.reporter.interrupt()
-			return m, tea.Quit
-		}
-		return m, nil
-	case stepLineMsg:
-		m.lines = append(m.lines, string(msg))
-		if len(m.lines) > m.maxLines {
-			m.lines = m.lines[len(m.lines)-m.maxLines:]
-		}
-		return m, nil
-	case stepFinalMsg:
-		// Render an empty final frame; the driver prints the real
-		// status line directly to the writer after Quit().
-		m.lines = nil
-		m.label = ""
-		return m, nil
-	default:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
-	}
-}
-
-func (m stepModel) View() tea.View {
-	if m.label == "" && len(m.lines) == 0 {
-		return tea.NewView("")
-	}
-	var b strings.Builder
-	b.WriteString("  ")
-	b.WriteString(m.spinner.View())
-	b.WriteString("  ")
-	b.WriteString(m.label)
-	b.WriteString("\n")
-	for _, line := range m.lines {
-		b.WriteString("      ")
-		b.WriteString(DimStyle.Render(line))
-		b.WriteString("\n")
-	}
-	return tea.NewView(b.String())
+	close(s.stop)
+	<-s.done
 }

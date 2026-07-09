@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -49,6 +50,14 @@ func (r Runner) start(meta Metadata, sudo bool) error {
 	}
 	if err := runCommand(cmd); err != nil {
 		return qemuStartError(meta, err, sudo)
+	}
+	if sudo {
+		// QEMU under sudo writes a root-owned 0600 pidfile; without this
+		// fixup readPID silently returns 0 for the VM's whole lifetime and
+		// stop/delete orphan the root QEMU process.
+		chmod := exec.Command("sudo", "chmod", "0644", meta.PIDFile)
+		chmod.Stdin = r.stdin()
+		_ = chmod.Run()
 	}
 	if err := r.ensureConsoleSocketReady(meta, sudo); err != nil {
 		r.logf("warning: console may be unusable: %v", err)
@@ -134,25 +143,51 @@ func (r Runner) stop(meta Metadata) error {
 		_ = os.Remove(meta.PIDFile)
 		return nil
 	}
-	pid := readPID(meta)
 	if err := writeMonitorCommand(meta, "system_powerdown\n"); err == nil {
-		for range 20 {
-			if !pidRunning(pid) {
-				_ = os.Remove(meta.PIDFile)
-				r.successf("stopped %s", meta.Name)
-				return nil
-			}
-			time.Sleep(time.Second)
+		if r.waitStopped(meta, 20*time.Second) {
+			return nil
 		}
 	}
-	if pid == 0 {
-		return fmt.Errorf("powerdown did not complete and PID file is unreadable; stop sudo-launched QEMU manually")
+	for _, sig := range []syscall.Signal{syscall.SIGTERM, syscall.SIGKILL} {
+		for _, pid := range qemuPIDs(meta) {
+			r.killPID(pid, sig)
+		}
+		if r.waitStopped(meta, 10*time.Second) {
+			return nil
+		}
 	}
-	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil && !errors.Is(err, os.ErrProcessDone) {
-		return err
+	return fmt.Errorf("%s is still running after powerdown/TERM/KILL (pids %v); stop it manually", meta.Name, qemuPIDs(meta))
+}
+
+// waitStopped polls until no QEMU process for this VM remains. Death must
+// be confirmed by process/port evidence — an unreadable pidfile is NOT
+// evidence of death (sudo-launched QEMU writes a root-0600 pidfile), and
+// declaring success early is how VM dirs got deleted under live QEMUs,
+// leaving orphaned processes squatting on the VM's deterministic MAC.
+func (r Runner) waitStopped(meta Metadata, timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	for {
+		if !isRunning(meta) {
+			_ = os.Remove(meta.PIDFile)
+			r.successf("stopped %s", meta.Name)
+			return true
+		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(time.Second)
 	}
-	_ = os.Remove(meta.PIDFile)
-	return nil
+}
+
+func (r Runner) killPID(pid int, sig syscall.Signal) {
+	err := syscall.Kill(pid, sig)
+	if err == nil || errors.Is(err, os.ErrProcessDone) || errors.Is(err, syscall.ESRCH) {
+		return
+	}
+	// EPERM: the QEMU was launched via sudo and runs as root.
+	kill := exec.Command("sudo", "kill", fmt.Sprintf("-%d", int(sig)), strconv.Itoa(pid))
+	kill.Stdin = r.stdin()
+	_ = kill.Run()
 }
 
 func netdevArg(meta Metadata) (string, error) {
@@ -229,10 +264,15 @@ func readSmallFile(path string) string {
 	return string(data)
 }
 
+// runCommand captures subprocess output and surfaces it only on failure:
+// these helpers run underneath the ui progress renderer, and raw writes to
+// the tty corrupt its layout.
 func runCommand(cmd *exec.Cmd) error {
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s: %w\n%s", cmd.Args[0], err, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 func checkCreateCommands() error {
@@ -245,11 +285,40 @@ func checkCreateCommands() error {
 }
 
 func isRunning(meta Metadata) bool {
-	pid := readPID(meta)
-	if pid != 0 {
-		return pidRunning(pid)
+	if len(qemuPIDs(meta)) > 0 {
+		return true
 	}
 	return localTCPPortOpen(meta.MonitorPort) || localTCPPortOpen(meta.QGAPort)
+}
+
+// qemuPIDs returns every live QEMU process belonging to this VM: the
+// pidfile pid when readable, plus a pgrep sweep over the unique
+// `-name <meta.Name>` argument. The sweep is what finds root QEMUs whose
+// 0600 pidfile the operator cannot read, and duplicate instances leaked
+// by earlier stop/delete bugs.
+func qemuPIDs(meta Metadata) []int {
+	seen := map[int]bool{}
+	var pids []int
+	if pid := readPID(meta); pid != 0 && pidRunning(pid) {
+		seen[pid] = true
+		pids = append(pids, pid)
+	}
+	// Pattern deliberately omits the leading dash of `-name` so pgrep does
+	// not parse it as a flag; the boundary group keeps e.g. worker-1 from
+	// matching worker-10.
+	out, err := exec.Command("pgrep", "-f", "name "+regexp.QuoteMeta(meta.Name)+"( |$)").Output()
+	if err != nil {
+		return pids
+	}
+	for _, field := range strings.Fields(string(out)) {
+		pid, err := strconv.Atoi(field)
+		if err != nil || seen[pid] || pid == os.Getpid() {
+			continue
+		}
+		seen[pid] = true
+		pids = append(pids, pid)
+	}
+	return pids
 }
 
 func readPID(meta Metadata) int {

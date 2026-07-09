@@ -62,6 +62,15 @@ func (w *Workflow) Shell(label string, fn func(ctx context.Context, sh Step) err
 	})
 }
 
+// Run executes fn with NO live step rendering of its own. Use it to embed
+// work that drives the reporter directly — e.g. a nested Workflow — where a
+// concurrent spinner would corrupt the terminal (two renderers, one tty).
+func (w *Workflow) Run(label string, fn func(ctx context.Context) error) *StepHandle {
+	return w.add("run "+label, func(ctx context.Context) error {
+		return fn(ctx)
+	})
+}
+
 func (w *Workflow) Task(label string, fn func(ctx context.Context) error) *StepHandle {
 	return w.add("task "+label, func(ctx context.Context) error {
 		step := w.reporter.Step(label)

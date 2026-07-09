@@ -47,12 +47,14 @@ func runBootstrapProvision(parent context.Context, rcx *runContext, c *bootstrap
 
 	state := &bootstrapState{
 		client: &remote.Client{
-			Host:   c.Host,
-			Port:   c.SSHPort,
-			User:   c.SSHUser,
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-			Logger: logf,
+			Host:             c.Host,
+			Port:             c.SSHPort,
+			User:             c.SSHUser,
+			InsecureHostKey:  c.TestVM != "",
+			NoPasswordPrompt: c.noPasswordPrompt,
+			Stdout:           os.Stdout,
+			Stderr:           os.Stderr,
+			Logger:           logf,
 		},
 		testTarget: testTarget,
 		extraObjs:  extraObjs,

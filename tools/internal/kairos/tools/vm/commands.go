@@ -44,11 +44,11 @@ func listIP(meta Metadata) string {
 	if !isRunning(meta) {
 		return "-"
 	}
-	ip, err := firstGuestIPv4(meta)
+	ip, err := bestGuestIPv4(meta, 1)
 	if err != nil {
 		return "-"
 	}
-	return ip
+	return ip.Address
 }
 
 func (r Runner) Create(opts CreateOptions) error {
@@ -159,7 +159,7 @@ func (r Runner) createDisks(meta Metadata, preset Preset, rawXZ string) error {
 		return r.createExtraDisks(meta)
 	}
 	r.logf("creating persistent disk %s (%dM)", meta.PersistentQCOW2, preset.PersistentDisk.SizeMB)
-	if err := runCommand(exec.Command("qemu-img", "create", "-f", "qcow2", meta.PersistentQCOW2, fmt.Sprintf("%dM", preset.PersistentDisk.SizeMB))); err != nil {
+	if err := runCommand(exec.Command("qemu-img", "create", "-q", "-f", "qcow2", meta.PersistentQCOW2, fmt.Sprintf("%dM", preset.PersistentDisk.SizeMB))); err != nil {
 		return err
 	}
 	return r.createExtraDisks(meta)
@@ -168,7 +168,7 @@ func (r Runner) createDisks(meta Metadata, preset Preset, rawXZ string) error {
 func (r Runner) createExtraDisks(meta Metadata) error {
 	for _, disk := range meta.ExtraDisks {
 		r.logf("creating extra disk %s (%dM)", disk.QCOW2, disk.SizeMB)
-		if err := runCommand(exec.Command("qemu-img", "create", "-f", "qcow2", disk.QCOW2, fmt.Sprintf("%dM", disk.SizeMB))); err != nil {
+		if err := runCommand(exec.Command("qemu-img", "create", "-q", "-f", "qcow2", disk.QCOW2, fmt.Sprintf("%dM", disk.SizeMB))); err != nil {
 			return err
 		}
 	}

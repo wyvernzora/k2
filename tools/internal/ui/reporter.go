@@ -12,6 +12,11 @@ type Reporter struct {
 	plain           bool
 	mu              sync.Mutex
 	interruptCancel context.CancelFunc
+	// activeStep is the currently animating step, if any. While its live
+	// block occupies the bottom of the terminal, stray reporter lines must
+	// erase and redraw it around themselves; writing to out directly would
+	// land inside the block.
+	activeStep *tuiStep
 }
 
 // New constructs a Reporter writing to out, typically os.Stderr.
