@@ -34,6 +34,7 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 				"run Provision bootstrap server e2e-k2e2e-server",
 				"run Provision worker e2e-k2e2e-worker-1",
 				"section Steps",
+				"shell Reboot storage and wait for active boot",
 				"shell Prepare node iSCSI initiators",
 				"shell Install zfs-iscsi",
 				"section Checks",

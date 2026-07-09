@@ -34,6 +34,7 @@ type bootstrapCmd struct {
 	Host     string `name:"host" env:"K2_PROVISION_HOST" help:"SSH host for the clean Kairos node."`
 	SSHPort  int    `name:"ssh-port" env:"K2_PROVISION_SSH_PORT" default:"22" help:"SSH port."`
 	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
+	Identity string `name:"identity" env:"K2_PROVISION_IDENTITY" type:"path" help:"Unencrypted SSH private key for key auth (post-hardening re-provision without an agent-loaded key)."`
 	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
 	Yes      bool   `name:"yes" env:"K2_PROVISION_YES" help:"Skip the plan confirmation prompt. Required for non-TTY invocations."`
 
@@ -56,6 +57,7 @@ type commonRemoteFlags struct {
 	Host     string `name:"host" env:"K2_PROVISION_HOST" help:"SSH host for the clean Kairos node."`
 	SSHPort  int    `name:"ssh-port" env:"K2_PROVISION_SSH_PORT" default:"22" help:"SSH port."`
 	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
+	Identity string `name:"identity" env:"K2_PROVISION_IDENTITY" type:"path" help:"Unencrypted SSH private key for key auth (post-hardening re-provision without an agent-loaded key)."`
 	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
 	Yes      bool   `name:"yes" env:"K2_PROVISION_YES" help:"Skip the plan confirmation prompt. Required for non-TTY invocations."`
 

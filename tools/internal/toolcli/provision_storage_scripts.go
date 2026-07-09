@@ -130,19 +130,29 @@ func storagePoolScript(in storagePoolScriptInput) string {
 	fmt.Fprintf(&buf, "key_file=\"$key_dir/$pool.key\"\n")
 	fmt.Fprintf(&buf, "echo 'k2-tools: provisioning ZFS pool and datasets'\n")
 	fmt.Fprintf(&buf, "sudo install -d -o root -g root -m 0700 \"$key_dir\"\n")
-	fmt.Fprintf(&buf, "sudo install -o root -g root -m 0400 \"$remote_dir\"/zfs_pool.key \"$key_file\"\n")
+	// The uploaded key is installed per-branch: for an existing pool it must
+	// first prove it can unlock the pool (zfs load-key -n), otherwise a rerun
+	// whose local credentials were lost would silently replace the only copy
+	// of the real key and the pool would be unopenable after the next reboot.
+	fmt.Fprintf(&buf, "verify_key() { sudo zfs load-key -n -L \"file://$remote_dir/zfs_pool.key\" \"$pool\" >/dev/null 2>&1 || { echo \"escrowed key does not match encrypted pool $pool; refusing to overwrite $key_file (recover the original storage-appliance.json or destroy the pool first)\" >&2; exit 1; }; }\n")
+	fmt.Fprintf(&buf, "install_key() { sudo install -o root -g root -m 0400 \"$remote_dir\"/zfs_pool.key \"$key_file\"; }\n")
 	fmt.Fprintf(&buf, "if sudo zpool list -H -o name \"$pool\" >/dev/null 2>&1; then\n")
 	fmt.Fprintf(&buf, "  health=\"$(sudo zpool list -H -o health \"$pool\")\"\n")
 	fmt.Fprintf(&buf, "  test \"$health\" = ONLINE || { echo \"pool $pool health is $health\" >&2; exit 1; }\n")
+	fmt.Fprintf(&buf, "  verify_key\n")
+	fmt.Fprintf(&buf, "  install_key\n")
 	fmt.Fprintf(&buf, "  echo \"k2-tools: pool $pool already imported ($health)\"\n")
 	fmt.Fprintf(&buf, "elif sudo zpool import \"$pool\" >/dev/null 2>&1; then\n")
 	fmt.Fprintf(&buf, "  echo \"k2-tools: imported existing pool $pool\"\n")
-	fmt.Fprintf(&buf, "  sudo zfs load-key -a || true\n")
+	fmt.Fprintf(&buf, "  verify_key\n")
+	fmt.Fprintf(&buf, "  install_key\n")
+	fmt.Fprintf(&buf, "  if [ \"$(sudo zfs get -H -o value keystatus \"$pool\")\" != available ]; then sudo zfs load-key \"$pool\"; fi\n")
 	fmt.Fprintf(&buf, "else\n")
 	if !in.CreateAllowed {
 		fmt.Fprintf(&buf, "  echo \"pool $pool missing at execution time\" >&2\n")
 		fmt.Fprintf(&buf, "  exit 1\n")
 	} else {
+		fmt.Fprintf(&buf, "  install_key\n")
 		fmt.Fprintf(&buf, "  sudo test -f \"/usr/share/zfs/compatibility.d/$compat\"\n")
 		for _, dev := range storageVDevDevices(in.VDevs) {
 			fmt.Fprintf(&buf, "  sudo test -b %s\n", shellQuote(dev))

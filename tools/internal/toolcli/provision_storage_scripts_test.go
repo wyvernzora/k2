@@ -86,16 +86,20 @@ func TestStoragePoolScriptImportOnlyHasNoCreateOrWipe(t *testing.T) {
 		CreateAllowed: false,
 	})
 	for _, want := range []string{
-		`sudo install -o root -g root -m 0400 "$remote_dir"/zfs_pool.key "$key_file"`,
+		`install_key() { sudo install -o root -g root -m 0400 "$remote_dir"/zfs_pool.key "$key_file"; }`,
 		`sudo zpool import "$pool"`,
-		`sudo zfs load-key -a || true`,
+		// The uploaded key must PROVE it opens an existing pool before it
+		// may replace the installed key file (data-loss guard), and load
+		// failures must never be swallowed.
+		`verify_key`,
+		`sudo zfs load-key -n -L "file://$remote_dir/zfs_pool.key" "$pool"`,
 		`pool $pool missing at execution time`,
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("script missing %q:\n%s", want, got)
 		}
 	}
-	for _, forbidden := range []string{"zpool create", "wipefs"} {
+	for _, forbidden := range []string{"zpool create", "wipefs", "load-key -a || true"} {
 		if strings.Contains(got, forbidden) {
 			t.Fatalf("script contains %q:\n%s", forbidden, got)
 		}

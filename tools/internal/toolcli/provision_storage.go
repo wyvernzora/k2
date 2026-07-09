@@ -133,8 +133,8 @@ func runStorageProvision(parent context.Context, rcx *runContext, c *storageCmd)
 
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
-	reporter.SetInterruptCancel(cancel)
-	defer reporter.SetInterruptCancel(nil)
+	prevCancel := reporter.SetInterruptCancel(cancel)
+	defer reporter.SetInterruptCancel(prevCancel)
 
 	wf := ui.NewWorkflow(reporter)
 	c.buildStorageWorkflow(wf, state)
@@ -162,7 +162,10 @@ func (c *storageCmd) prepare(rcx *runContext) error {
 }
 
 func (c *storageCmd) newStorageState() (*storageState, error) {
-	existing, haveExisting := loadStorageCredentials(c.ClusterName)
+	existing, haveExisting, err := loadStorageCredentials(c.ClusterName)
+	if err != nil {
+		return nil, err
+	}
 	// Re-provisioning (the disaster-recovery drill: reset → provision) must
 	// restore the SAME csi key and CHAP credentials the cluster already
 	// holds, so an existing credentials file is reused unless the operator
@@ -242,23 +245,32 @@ func (c *storageCmd) storageStateFromCredentials(creds storageCredentials) *stor
 	}
 }
 
-func loadStorageCredentials(clusterName string) (storageCredentials, bool) {
+// loadStorageCredentials returns (creds, true, nil) when a valid file
+// exists, (zero, false, nil) when none exists, and a non-nil error when a
+// file EXISTS but cannot be used. The error case must abort, not fall back
+// to regeneration: silently rotating credentials on a corrupt file also
+// rotates the pool wrapping key of an existing encrypted pool.
+func loadStorageCredentials(clusterName string) (storageCredentials, bool, error) {
 	dir, err := clusterCredentialsDir(clusterName)
 	if err != nil {
-		return storageCredentials{}, false
+		return storageCredentials{}, false, err
 	}
-	data, err := os.ReadFile(filepath.Join(dir, "storage-appliance.json"))
+	path := filepath.Join(dir, "storage-appliance.json")
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return storageCredentials{}, false, nil
+	}
 	if err != nil {
-		return storageCredentials{}, false
+		return storageCredentials{}, false, fmt.Errorf("read %s: %w", path, err)
 	}
 	var creds storageCredentials
 	if err := json.Unmarshal(data, &creds); err != nil {
-		return storageCredentials{}, false
+		return storageCredentials{}, false, fmt.Errorf("%s exists but is not valid JSON (%w); refusing to regenerate credentials over it", path, err)
 	}
 	if creds.CSIPublicKey == "" || creds.CHAPUsername == "" || creds.CHAPPassword == "" {
-		return storageCredentials{}, false
+		return storageCredentials{}, false, fmt.Errorf("%s exists but is missing required fields; refusing to regenerate credentials over it", path)
 	}
-	return creds, true
+	return creds, true, nil
 }
 
 func (c *storageCmd) buildStorageWorkflow(wf *ui.Workflow, s *storageState) {
@@ -277,6 +289,11 @@ func (c *storageCmd) buildStorageWorkflow(wf *ui.Workflow, s *storageState) {
 	wf.KeyValuesFn(func() []ui.KV { return []ui.KV{{Key: "Staging dir", Value: s.localDir}} })
 
 	wf.Section("Provision storage")
+	// Credentials (including the pool wrapping key) are escrowed BEFORE the
+	// pool exists: if provisioning dies anywhere after zpool create, the key
+	// that encrypted the pool must already be on disk locally, or a rerun
+	// would generate a fresh key for a pool it can never unlock again.
+	wf.Task("Escrow pool key and credentials", c.stepWriteStorageCredentials(s))
 	wf.Shell("Upload storage bundle to remote", c.stepUploadStorageBundle(s))
 	wf.Shell("Install hostname and users", c.stepRunStorageInstall(s))
 	wf.Shell("Provision ZFS pool and datasets", c.stepRunStoragePool(s))
@@ -341,6 +358,13 @@ func (c *storageCmd) stepStorageResolvePlan(s *storageState) func(context.Contex
 			if err != nil {
 				return err
 			}
+		}
+		// Scenario/CLI invocations pass the same vdevs on every run, but a
+		// reused appliance already has the pool. Ignore them instead of
+		// erroring so re-provisioning stays a plain rerun.
+		if s.inspection.PoolState != storagePoolMissing && len(vdevs) > 0 {
+			logf("pool %s already exists; ignoring --pool-vdev", c.Pool)
+			vdevs = nil
 		}
 		s.vdevs = vdevs
 		s.poolPlan, err = resolveStoragePoolPlan(c.Pool, s.inspection, vdevs)
@@ -463,7 +487,13 @@ func (c *storageCmd) writeStorageCredentials(s *storageState) (string, storageSu
 		return "", storageSummary{}, err
 	}
 	path := filepath.Join(dir, "storage-appliance.json")
-	if err := os.WriteFile(path, append(data, '\n'), 0o600); err != nil {
+	// Atomic replace: a crash mid-write must never leave corrupt JSON — an
+	// unreadable credentials file is what triggers pool-key regeneration.
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, append(data, '\n'), 0o600); err != nil {
+		return "", storageSummary{}, err
+	}
+	if err := os.Rename(tmp, path); err != nil {
 		return "", storageSummary{}, err
 	}
 	return path, creds.summary(path), nil

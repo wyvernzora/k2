@@ -50,7 +50,10 @@ func runWith(cfg Config, run runner.Runner, stdout, stderr io.Writer) error {
 	} else {
 		names := strings.Fields(pools)
 		if len(names) == 0 {
-			notes = append(notes, "no ZFS pools imported")
+			// A storage appliance with zero pools is broken, not idle: a
+			// failed import (or a failed key load) after reboot must not
+			// report healthy just because there is nothing left to check.
+			fail("no ZFS pools imported")
 		}
 		for _, pool := range names {
 			health, err := run.Output("zpool", "list", "-H", "-o", "health", pool)

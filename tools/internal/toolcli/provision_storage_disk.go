@@ -168,9 +168,6 @@ func normalizeStorageDevice(value string, testVM bool) (string, error) {
 }
 
 func resolveStoragePoolPlan(pool string, inspection storageInspection, vdevs []storageVDev) (storagePoolPlan, error) {
-	if inspection.PoolState != storagePoolMissing && len(vdevs) > 0 {
-		return storagePoolPlan{}, fmt.Errorf("pool %s already exists; omit --pool-vdev when re-provisioning", pool)
-	}
 	switch inspection.PoolState {
 	case storagePoolImported:
 		return storagePoolPlan{Pool: pool, Verdict: storagePoolAlreadyImported, Health: inspection.PoolHealth}, nil

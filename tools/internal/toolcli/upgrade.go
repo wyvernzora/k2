@@ -23,6 +23,7 @@ type upgradeCmd struct {
 	Host        string `name:"host" env:"K2_UPGRADE_HOST" required:"" help:"InternalIP / SSH host of the node to upgrade."`
 	SSHPort     int    `name:"ssh-port" env:"K2_UPGRADE_SSH_PORT" default:"22" help:"SSH port."`
 	SSHUser     string `name:"ssh-user" env:"K2_UPGRADE_SSH_USER" default:"kairos" help:"SSH user."`
+	Identity    string `name:"identity" env:"K2_UPGRADE_IDENTITY" type:"path" help:"Unencrypted SSH private key for key auth (hardened nodes reject passwords; without this the client probes the default password first)."`
 
 	Source       string `name:"source" env:"K2_UPGRADE_SOURCE" help:"Target OCI ref (e.g. ghcr.io/wyvernzora/k2-kairos:tag). When omitted, auto-discover the newest published image matching this node's hardware/arch."`
 	RegistryRepo string `name:"registry-repo" env:"K2_UPGRADE_REGISTRY_REPO" help:"Override the registry repository used for auto-discovery. Defaults to ghcr.io/wyvernzora/k2-kairos."`
@@ -41,8 +42,8 @@ type upgradeCmd struct {
 func (c *upgradeCmd) Run(rcx *runContext) error {
 	parent, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	reporter.SetInterruptCancel(cancel)
-	defer reporter.SetInterruptCancel(nil)
+	prevCancel := reporter.SetInterruptCancel(cancel)
+	defer reporter.SetInterruptCancel(prevCancel)
 
 	// ---- inputs + I/O surfaces ------------------------------------------
 
@@ -57,10 +58,11 @@ func (c *upgradeCmd) Run(rcx *runContext) error {
 	}
 
 	client := remote.Client{
-		Host:   c.Host,
-		Port:   c.SSHPort,
-		User:   c.SSHUser,
-		Logger: logf,
+		Host:         c.Host,
+		Port:         c.SSHPort,
+		User:         c.SSHUser,
+		IdentityFile: c.Identity,
+		Logger:       logf,
 	}
 
 	runner := &upgrade.Runner{

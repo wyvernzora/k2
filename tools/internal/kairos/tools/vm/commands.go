@@ -79,7 +79,17 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 	}
 	vmDir := dir(r.RepoRoot, id)
 	if _, err := os.Stat(vmDir); err == nil {
-		return Metadata{}, Preset{}, "", fmt.Errorf("VM directory already exists: %s", vmDir)
+		// A dir without vm.json is debris from a create interrupted during
+		// disk imaging (metadata is written last). No command can list or
+		// delete it, so reclaim it here instead of erroring forever.
+		if _, metaErr := os.Stat(filepath.Join(vmDir, "vm.json")); errors.Is(metaErr, os.ErrNotExist) {
+			r.logf("removing partial VM directory from an interrupted create: %s", vmDir)
+			if err := os.RemoveAll(vmDir); err != nil {
+				return Metadata{}, Preset{}, "", err
+			}
+		} else {
+			return Metadata{}, Preset{}, "", fmt.Errorf("VM directory already exists: %s", vmDir)
+		}
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return Metadata{}, Preset{}, "", err
 	}
@@ -95,23 +105,33 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
-	sshPort, err := resolveOptionalPort(preset.Network.Mode, opts.SSHPort, forwardPortSpec(preset, "ssh", ""))
+	// Ports already recorded in ANY VM's metadata are off-limits even when
+	// currently unbound: a stopped VM must keep exclusive claim to its ports
+	// or a later create silently aliases the two VMs' monitor/QGA identity.
+	taken, err := recordedPorts(r.RepoRoot)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
-	apiPort, err := resolveOptionalPort(preset.Network.Mode, opts.APIPort, forwardPortSpec(preset, "k8s-api", ""))
+	sshPort, err := resolveOptionalPort(preset.Network.Mode, opts.SSHPort, forwardPortSpec(preset, "ssh", ""), taken)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
+	taken[sshPort] = true
+	apiPort, err := resolveOptionalPort(preset.Network.Mode, opts.APIPort, forwardPortSpec(preset, "k8s-api", ""), taken)
+	if err != nil {
+		return Metadata{}, Preset{}, "", err
+	}
+	taken[apiPort] = true
 	extraDisks, err := resolveExtraDisks(preset, opts)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
-	monitorPort, err := findFreePort(24000, 24999)
+	monitorPort, err := findFreePort(24000, 24999, taken)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
-	qgaPort, err := findFreePort(25000, 25999)
+	taken[monitorPort] = true
+	qgaPort, err := findFreePort(25000, 25999, taken)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}

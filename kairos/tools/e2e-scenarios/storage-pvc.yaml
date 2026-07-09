@@ -22,6 +22,11 @@ provision:
   - worker:
       vm: worker-1
 steps:
+  # Reboot the appliance before installing CSI: proves the D26 boot chain
+  # (encrypted pool import -> key load from disk -> zvol_wait -> LIO restore)
+  # rather than relying on the key provisioning left loaded in-kernel.
+  - rebootVM:
+      vm: storage
   - nodePrepISCSI:
       vms:
         - server

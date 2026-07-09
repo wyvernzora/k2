@@ -284,22 +284,25 @@ func checkCreateCommands() error {
 	return nil
 }
 
+// isRunning requires PROCESS evidence: a validated pidfile pid or a pgrep
+// match on the VM's unique QEMU name. Port probes are deliberately not
+// trusted — monitor/QGA ports are recorded in vm.json at create time and a
+// later VM (or any unrelated service) can legitimately own them, which
+// previously made dead VMs look alive and let stop() power down the wrong
+// guest through a hijacked monitor port.
 func isRunning(meta Metadata) bool {
-	if len(qemuPIDs(meta)) > 0 {
-		return true
-	}
-	return localTCPPortOpen(meta.MonitorPort) || localTCPPortOpen(meta.QGAPort)
+	return len(qemuPIDs(meta)) > 0
 }
 
 // qemuPIDs returns every live QEMU process belonging to this VM: the
-// pidfile pid when readable, plus a pgrep sweep over the unique
-// `-name <meta.Name>` argument. The sweep is what finds root QEMUs whose
-// 0600 pidfile the operator cannot read, and duplicate instances leaked
-// by earlier stop/delete bugs.
+// pidfile pid when readable AND verifiably ours, plus a pgrep sweep over
+// the unique `-name <meta.Name>` argument. The sweep is what finds root
+// QEMUs whose 0600 pidfile the operator cannot read, and duplicate
+// instances leaked by earlier stop/delete bugs.
 func qemuPIDs(meta Metadata) []int {
 	seen := map[int]bool{}
 	var pids []int
-	if pid := readPID(meta); pid != 0 && pidRunning(pid) {
+	if pid := readPID(meta); pid != 0 && pidIsThisQEMU(pid, meta) {
 		seen[pid] = true
 		pids = append(pids, pid)
 	}
@@ -319,6 +322,23 @@ func qemuPIDs(meta Metadata) []int {
 		pids = append(pids, pid)
 	}
 	return pids
+}
+
+// pidIsThisQEMU confirms a pidfile pid still belongs to this VM's QEMU.
+// Stale pidfiles survive host crashes and kill -9, and after a reboot the
+// pid can be recycled by an arbitrary (even root-owned) process — blindly
+// trusting it made stop() sudo-kill innocent processes and start() report
+// "already running" for a dead VM.
+func pidIsThisQEMU(pid int, meta Metadata) bool {
+	if !pidRunning(pid) {
+		return false
+	}
+	out, err := exec.Command("ps", "-p", strconv.Itoa(pid), "-o", "command=").Output()
+	if err != nil {
+		return false
+	}
+	command := string(out)
+	return strings.Contains(command, "qemu-system") && strings.Contains(command, "-name "+meta.Name+" ")
 }
 
 func readPID(meta Metadata) int {
