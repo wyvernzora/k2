@@ -987,13 +987,32 @@ func stepE2EStorageMetrics(s *e2eScenarioState, check e2eVMCheck) func(context.C
 		if host == "" {
 			host = target.Host
 		}
-		body, err := e2eGETBody(ctx, "http://"+host+":9110/metrics", 2*time.Minute)
-		if err != nil {
-			return err
-		}
-		for _, metric := range []string{"k2_zfs_pool_health", "k2_zfs_keystatus_available", "k2_storage_healthy"} {
-			if !metricHasValue(body, metric, "1") {
-				return fmt.Errorf("storage metrics missing %s=1", metric)
+		// Poll the assertions, not just reachability: k2_storage_healthy
+		// reflects the status file written by k2-storage-health.timer, whose
+		// first post-boot fire is OnBootSec=2min — a fast run's checks can
+		// legitimately arrive inside that window (seen live: reboot 18:02:44,
+		// checks ~18:05:00, first timer fire 18:05:13).
+		deadline := time.Now().Add(4 * time.Minute)
+		for {
+			body, err := e2eGETBody(ctx, "http://"+host+":9110/metrics", 2*time.Minute)
+			if err != nil {
+				return err
+			}
+			missing := ""
+			for _, metric := range []string{"k2_zfs_pool_health", "k2_zfs_keystatus_available", "k2_storage_healthy"} {
+				if !metricHasValue(body, metric, "1") {
+					missing = metric
+					break
+				}
+			}
+			if missing == "" {
+				break
+			}
+			if time.Now().After(deadline) {
+				return fmt.Errorf("storage metrics missing %s=1", missing)
+			}
+			if err := sleepCtx(ctx, 10*time.Second); err != nil {
+				return err
 			}
 		}
 		nodeBody, err := e2eGETBody(ctx, "http://"+host+":9100/metrics", 2*time.Minute)
