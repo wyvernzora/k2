@@ -33,6 +33,7 @@ func TestE2EShippedScenarioPlans(t *testing.T) {
 				"Steps|helmInstall|Install zfs-iscsi",
 				"Checks|pvcLifecycle|PVC lifecycle",
 				"Checks|zfsConsistency|ZFS consistency",
+				"Checks|storageMetrics|Storage metrics",
 				"Checks|deleteHygiene|Delete hygiene",
 				"Teardown|teardown|Remove e2e resources",
 			},
@@ -98,6 +99,11 @@ func TestE2EScenarioStrictLoadErrors(t *testing.T) {
 			wantErr: "references undeclared vm \"missing\"",
 		},
 		{
+			name:    "bad-storage-metrics-vm-ref",
+			body:    baseScenarioYAML("bad-storage-metrics-vm-ref", "steps: []\nchecks:\n  - storageMetrics:\n      vm: missing\n"),
+			wantErr: "storageMetrics references undeclared vm \"missing\"",
+		},
+		{
 			name:    "duplicate-vm",
 			body:    "name: duplicate-vm\ndescription: duplicate vm test\nvms:\n  - name: server\n    preset: qemu-vmnet\n  - name: server\n    preset: qemu-vmnet\nprovision: []\nsteps: []\nchecks: []\n",
 			wantErr: "duplicate vm name \"server\"",
@@ -111,6 +117,13 @@ func TestE2EScenarioStrictLoadErrors(t *testing.T) {
 				t.Fatalf("error = %v, want substring %q", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestE2EStorageMetricsCheckLabel(t *testing.T) {
+	entry := e2eScenarioCheck{Type: "storageMetrics", StorageMetrics: e2eVMCheck{VM: "storage"}}
+	if got := e2eCheckLabel(entry); got != "Storage metrics" {
+		t.Fatalf("label = %q, want %q", got, "Storage metrics")
 	}
 }
 

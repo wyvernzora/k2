@@ -20,6 +20,8 @@ const (
 	defaultPortal     = "127.0.0.1:3260"
 )
 
+const DefaultStatusFile = defaultStatusFile
+
 var ErrUnhealthy = errors.New("storage unhealthy")
 
 var dialPortal = net.DialTimeout

@@ -1,5 +1,7 @@
 build:
   aptPackages:
+    - prometheus-node-exporter
+    - smartmontools
     - targetcli-fb
     - zfsutils-linux
   postInstall:
@@ -46,6 +48,10 @@ inspect:
       - path: /etc/systemd/system/k2-storage-health.timer
         contains:
           - "OnUnitActiveSec=1h"
+      - path: /etc/systemd/system/k2-metrics.service
+        contains:
+          - "ExecStart=/usr/sbin/k2-node-agent metrics"
+          - "After=network-online.target"
       - path: /etc/issue
         contains:
           - K2 Storage Appliance
@@ -63,6 +69,8 @@ inspect:
       - targetcli
       - targetctl
       - k2-node-agent
+      - prometheus-node-exporter
+      - smartctl
       - zfs
       - zgenhostid
       - zpool

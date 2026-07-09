@@ -44,5 +44,7 @@ checks:
       storageClass: zfs-iscsi
   - zfsConsistency:
       vm: storage
+  - storageMetrics:
+      vm: storage
   - deleteHygiene:
       vm: storage

@@ -32,3 +32,5 @@ stages:
           - zfs.target
           - rtslib-fb-targetctl.service
           - k2-storage-health.timer
+          - k2-metrics.service
+          - prometheus-node-exporter.service

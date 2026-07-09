@@ -1,0 +1,12 @@
+[Unit]
+Description=K2 storage appliance metrics exporter
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/run/cos/recovery_mode
+
+[Service]
+ExecStart=/usr/sbin/k2-node-agent metrics
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
