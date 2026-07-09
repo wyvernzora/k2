@@ -48,8 +48,17 @@ type activationStages struct {
 type activationStage struct {
 	Name     string                    `yaml:"name"`
 	Hostname string                    `yaml:"hostname,omitempty"`
+	Files    []activationFile          `yaml:"files,omitempty"`
 	Commands []string                  `yaml:"commands,omitempty"`
 	Users    map[string]activationUser `yaml:"users,omitempty"`
+}
+
+type activationFile struct {
+	Path        string `yaml:"path"`
+	Content     string `yaml:"content"`
+	Permissions uint32 `yaml:"permissions"`
+	Owner       int    `yaml:"owner"`
+	Group       int    `yaml:"group"`
 }
 
 type activationUser struct {
@@ -236,6 +245,49 @@ func OperatorKeysActivationCloudConfig(name string, user string, keys []string) 
 							Groups:            []string{"admin"},
 							SSHAuthorizedKeys: keys,
 						},
+					},
+				},
+			},
+		},
+	}
+	return mustCloudConfig(out)
+}
+
+// CSIUserActivationCloudConfig declares the csi service user as a boot
+// stage. The user MUST be stage-managed, not useradd'd once at provision
+// time: Kairos /etc is an ephemeral overlay, so an imperative user (and
+// anything in /etc/sudoers.d) vanishes on the first reboot — found live
+// when a rebooted appliance answered democratic-csi with "Invalid user
+// csi" and sshd penalty-boxed the worker for the repeated attempts.
+// The stage also re-chowns the persistent /home/csi so uid drift across
+// recreations can never break sshd StrictModes.
+func CSIUserActivationCloudConfig(csiPublicKey string, sudoers string) []byte {
+	type config struct {
+		Name   string           `yaml:"name"`
+		Stages activationStages `yaml:"stages"`
+	}
+	out := config{
+		Name: "K2 storage csi user",
+		Stages: activationStages{
+			Initramfs: []activationStage{
+				{
+					Name: "CSI user",
+					Users: map[string]activationUser{
+						"csi": {
+							SSHAuthorizedKeys: []string{csiPublicKey},
+						},
+					},
+					Files: []activationFile{
+						{
+							Path:        "/etc/sudoers.d/99-csi",
+							Content:     sudoers,
+							Permissions: 0o440,
+							Owner:       0,
+							Group:       0,
+						},
+					},
+					Commands: []string{
+						"chown -R csi:csi /home/csi || true",
 					},
 				},
 			},
