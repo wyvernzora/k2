@@ -20,6 +20,10 @@ func (c *workerCmd) Run(rcx *runContext) error {
 }
 
 func provisionJoinNode(rcx *runContext, role nodeRole, flags commonJoinFlags, remoteFlags commonRemoteFlags) error {
+	return runJoinProvision(context.Background(), rcx, role, flags, remoteFlags)
+}
+
+func runJoinProvision(parent context.Context, rcx *runContext, role nodeRole, flags commonJoinFlags, remoteFlags commonRemoteFlags) error {
 	testTarget, err := applyProvisionTestVM(rcx.repoRoot, flags.ClusterTarget, &flags.ClusterName, &flags.NodeName, &remoteFlags.Host, &remoteFlags.SSHPort, remoteFlags.TestVM)
 	if err != nil {
 		return err
@@ -38,7 +42,7 @@ func provisionJoinNode(rcx *runContext, role nodeRole, flags commonJoinFlags, re
 		Logger: logf,
 	}
 
-	parent, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
 	reporter.SetInterruptCancel(cancel)
 	defer reporter.SetInterruptCancel(nil)
@@ -151,5 +155,5 @@ func provisionJoinNode(rcx *runContext, role nodeRole, flags commonJoinFlags, re
 		}
 	})
 
-	return wf.Execute(parent)
+	return wf.Execute(ctx)
 }

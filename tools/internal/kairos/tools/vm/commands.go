@@ -88,6 +88,9 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
+	if opts.MemoryMB != 0 {
+		preset.MemoryMB = opts.MemoryMB
+	}
 	rawXZ, err := resolveArtifact(r.RepoRoot, opts.RawXZ, target)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
@@ -97,6 +100,10 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 		return Metadata{}, Preset{}, "", err
 	}
 	apiPort, err := resolveOptionalPort(preset.Network.Mode, opts.APIPort, forwardPortSpec(preset, "k8s-api", ""))
+	if err != nil {
+		return Metadata{}, Preset{}, "", err
+	}
+	extraDisks, err := resolveExtraDisks(preset, opts)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
@@ -138,6 +145,7 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 		ConsoleLog:      filepath.Join(vmDir, "console.log"),
 		ConsoleSocket:   filepath.Join(vmDir, "console.sock"),
 	}
+	meta.ExtraDisks = extraDisksForVM(id, vmDir, extraDisks)
 	return meta, preset, rawXZ, nil
 }
 
@@ -148,10 +156,64 @@ func (r Runner) createDisks(meta Metadata, preset Preset, rawXZ string) error {
 		return err
 	}
 	if !preset.PersistentDisk.Enabled {
-		return nil
+		return r.createExtraDisks(meta)
 	}
 	r.logf("creating persistent disk %s (%dM)", meta.PersistentQCOW2, preset.PersistentDisk.SizeMB)
-	return runCommand(exec.Command("qemu-img", "create", "-f", "qcow2", meta.PersistentQCOW2, fmt.Sprintf("%dM", preset.PersistentDisk.SizeMB)))
+	if err := runCommand(exec.Command("qemu-img", "create", "-f", "qcow2", meta.PersistentQCOW2, fmt.Sprintf("%dM", preset.PersistentDisk.SizeMB))); err != nil {
+		return err
+	}
+	return r.createExtraDisks(meta)
+}
+
+func (r Runner) createExtraDisks(meta Metadata) error {
+	for _, disk := range meta.ExtraDisks {
+		r.logf("creating extra disk %s (%dM)", disk.QCOW2, disk.SizeMB)
+		if err := runCommand(exec.Command("qemu-img", "create", "-f", "qcow2", disk.QCOW2, fmt.Sprintf("%dM", disk.SizeMB))); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func resolveExtraDisks(preset Preset, opts CreateOptions) (ExtraDisks, error) {
+	extra := preset.ExtraDisks
+	if opts.ExtraDisks != 0 {
+		extra.Count = opts.ExtraDisks
+		if opts.ExtraDiskSizeMB != 0 {
+			extra.SizeMB = opts.ExtraDiskSizeMB
+		}
+	} else if opts.ExtraDiskSizeMB != 0 {
+		if extra.Count == 0 {
+			return ExtraDisks{}, fmt.Errorf("extra disk count must be > 0 when extra disk size is set")
+		}
+		extra.SizeMB = opts.ExtraDiskSizeMB
+	}
+	if extra.Count < 0 {
+		return ExtraDisks{}, fmt.Errorf("extra disk count must be >= 0")
+	}
+	if extra.SizeMB < 0 {
+		return ExtraDisks{}, fmt.Errorf("extra disk size must be >= 0")
+	}
+	if extra.Count == 0 {
+		return ExtraDisks{}, nil
+	}
+	if extra.SizeMB == 0 {
+		return ExtraDisks{}, fmt.Errorf("extra disk size must be > 0 when extra disks are requested")
+	}
+	return extra, nil
+}
+
+func extraDisksForVM(id string, vmDir string, extra ExtraDisks) []Disk {
+	disks := make([]Disk, 0, extra.Count)
+	for i := range extra.Count {
+		n := i + 1
+		disks = append(disks, Disk{
+			ID:     fmt.Sprintf("extra-%s-%d", id, n),
+			QCOW2:  filepath.Join(vmDir, fmt.Sprintf("extra-%s-%d.qcow2", id, n)),
+			SizeMB: extra.SizeMB,
+		})
+	}
+	return disks
 }
 
 func (r Runner) printCreateSummary(meta Metadata) {

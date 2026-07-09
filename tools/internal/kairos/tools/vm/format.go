@@ -21,6 +21,7 @@ func infoFields(meta Metadata) []ui.KV {
 		{Key: "vm_dir", Value: meta.VMDir},
 		{Key: "kairos_qcow2", Value: meta.KairosQCOW2},
 		{Key: "persistent_qcow2", Value: meta.PersistentQCOW2},
+		{Key: "extra_disks", Value: formatExtraDisks(meta.ExtraDisks)},
 		{Key: "network_mode", Value: meta.NetworkMode},
 		{Key: "mac_address", Value: macAddress(meta)},
 		{Key: "ssh_port", Value: strconv.Itoa(meta.SSHPort)},
@@ -100,4 +101,15 @@ func formatPID(value int) string {
 		return "unavailable"
 	}
 	return strconv.Itoa(value)
+}
+
+func formatExtraDisks(disks []Disk) string {
+	if len(disks) == 0 {
+		return "-"
+	}
+	parts := make([]string, len(disks))
+	for i, disk := range disks {
+		parts[i] = disk.QCOW2
+	}
+	return strings.Join(parts, ",")
 }

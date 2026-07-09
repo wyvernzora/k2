@@ -17,13 +17,15 @@ type vmCmd struct {
 }
 
 type vmCreateCmd struct {
-	Preset  string `arg:"" optional:"" default:"qemu-user" help:"Preset name."`
-	ID      string `name:"id" help:"VM id. Defaults to a random 8-character id."`
-	RawXZ   string `name:"raw-xz" help:"Raw .raw.xz artifact to convert. Overrides local/cache/S3 lookup." type:"path"`
-	SSHPort string `name:"ssh-port" default:"" help:"Override preset SSH host forward."`
-	APIPort string `name:"api-port" default:"" help:"Override preset Kubernetes API host forward."`
-	Start   bool   `name:"start" help:"Start the VM after creation."`
-	Sudo    bool   `name:"sudo" env:"K2_TOOLS_VM_SUDO_QEMU" help:"Launch QEMU through sudo. Useful for macOS vmnet-shared networking."`
+	Preset          string `arg:"" optional:"" default:"qemu-user" help:"Preset name."`
+	ID              string `name:"id" help:"VM id. Defaults to a random 8-character id."`
+	RawXZ           string `name:"raw-xz" help:"Raw .raw.xz artifact to convert. Overrides local/cache/S3 lookup." type:"path"`
+	SSHPort         string `name:"ssh-port" default:"" help:"Override preset SSH host forward."`
+	APIPort         string `name:"api-port" default:"" help:"Override preset Kubernetes API host forward."`
+	ExtraDisks      int    `name:"extra-disks" default:"0" help:"Number of extra data disks to create and attach after the persistent disk."`
+	ExtraDiskSizeMB int    `name:"extra-disk-mb" default:"0" help:"Size in MB for each extra data disk."`
+	Start           bool   `name:"start" help:"Start the VM after creation."`
+	Sudo            bool   `name:"sudo" env:"K2_TOOLS_VM_SUDO_QEMU" help:"Launch QEMU through sudo. Useful for macOS vmnet-shared networking."`
 }
 
 type vmPresetsCmd struct{}
@@ -67,13 +69,15 @@ func (c *vmListCmd) Run(ctx *runContext) error {
 
 func (c *vmCreateCmd) Run(ctx *runContext) error {
 	return vmRunner(ctx).Create(vm.CreateOptions{
-		Preset:  c.Preset,
-		ID:      c.ID,
-		RawXZ:   c.RawXZ,
-		SSHPort: c.SSHPort,
-		APIPort: c.APIPort,
-		Start:   c.Start,
-		Sudo:    c.Sudo,
+		Preset:          c.Preset,
+		ID:              c.ID,
+		RawXZ:           c.RawXZ,
+		SSHPort:         c.SSHPort,
+		APIPort:         c.APIPort,
+		ExtraDisks:      c.ExtraDisks,
+		ExtraDiskSizeMB: c.ExtraDiskSizeMB,
+		Start:           c.Start,
+		Sudo:            c.Sudo,
 	})
 }
 

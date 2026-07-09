@@ -1,0 +1,16 @@
+name: k8s-wireup
+description: Bootstrap a two-node Kubernetes cluster and verify both nodes are Ready.
+vms:
+  - name: server
+    preset: qemu-vmnet
+  - name: worker-1
+    preset: qemu-vmnet
+provision:
+  - bootstrap:
+      vm: server
+  - worker:
+      vm: worker-1
+steps: []
+checks:
+  - nodesReady:
+      count: 2

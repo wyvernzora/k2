@@ -1,0 +1,43 @@
+name: storage-pvc
+description: Storage appliance plus Kubernetes PVC lifecycle validation.
+vms:
+  - name: storage
+    preset: qemu-vmnet-storage
+    overrides:
+      extraDisks:
+        count: 2
+        sizeMb: 4096
+  - name: server
+    preset: qemu-vmnet
+  - name: worker-1
+    preset: qemu-vmnet
+provision:
+  - storage:
+      vm: storage
+      pool: tank
+      vdevs:
+        - mirror /dev/vdc /dev/vdd
+  - bootstrap:
+      vm: server
+  - worker:
+      vm: worker-1
+steps:
+  - nodePrepISCSI:
+      vms:
+        - server
+        - worker-1
+  - helmInstall:
+      release: zfs-iscsi
+      chart: democratic-csi/democratic-csi
+      repo: https://democratic-csi.github.io/charts/
+      namespace: democratic-csi
+      values: storageDriverValues
+checks:
+  - pvcLifecycle:
+      namespace: e2e-storage
+      size: 1Gi
+      storageClass: zfs-iscsi
+  - zfsConsistency:
+      vm: storage
+  - deleteHygiene:
+      vm: storage
