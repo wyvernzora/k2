@@ -308,6 +308,11 @@ func validateE2EVMRef(vms map[string]bool, name string, owner string) error {
 // is deliberately no separate "plan" model to drift out of sync.
 func buildE2EWorkflow(rcx *runContext, state *e2eScenarioState, opts e2eRunOptions, scenario *e2eScenario) *ui.Workflow {
 	wf := ui.NewWorkflow(reporter)
+	// Sudo first: a password prompt raised mid-run by the QEMU vmnet launch
+	// would be unreadable under live step output. reporter.Sudo also keeps
+	// the credential cache alive (released at workflow end) for the
+	// root-owned QEMUs that stop/teardown must signal much later.
+	wf.Sudo("launch QEMU with vmnet networking").Unless(!sudoQEMU())
 	wf.Section("Preflight")
 	wf.KeyValues(
 		ui.KV{Key: "Scenario", Value: scenario.Name},
@@ -316,7 +321,7 @@ func buildE2EWorkflow(rcx *runContext, state *e2eScenarioState, opts e2eRunOptio
 		ui.KV{Key: "VMs", Value: strings.Join(e2eScenarioVMIDs(state), ", ")},
 	)
 	wf.Shell("Check local artifacts and tools", stepE2EPreflight(rcx, scenario))
-	wf.Task("Generate e2e operator key", stepE2EGenerateOperatorKey(state))
+	wf.Task("Generate e2e operator key", stepE2EGenerateOperatorKey(state, opts.clusterName))
 
 	wf.Section("Create VMs")
 	for _, vm := range scenario.VMs {
@@ -331,7 +336,7 @@ func buildE2EWorkflow(rcx *runContext, state *e2eScenarioState, opts e2eRunOptio
 	wf.Section("Provision")
 	for _, entry := range scenario.Provision {
 		entry := entry
-		wf.Shell(e2eProvisionLabel(entry, state), stepE2EProvision(rcx, state, opts, entry))
+		wf.Run(e2eProvisionLabel(entry, state), stepE2EProvision(rcx, state, opts, entry))
 	}
 
 	wf.Section("Steps")
@@ -348,7 +353,7 @@ func buildE2EWorkflow(rcx *runContext, state *e2eScenarioState, opts e2eRunOptio
 
 	wf.Section("Teardown").Unless(opts.keep)
 	wf.Shell("Remove e2e resources", func(ctx context.Context, sh ui.Step) error {
-		if err := cleanupE2EScenario(rcx, state, opts); err != nil {
+		if err := cleanupE2EScenario(rcx, state, opts, sh); err != nil {
 			return err
 		}
 		state.cleaned = true
@@ -372,7 +377,7 @@ func runE2EScenario(parent context.Context, rcx *runContext, scenario *e2eScenar
 	defer func() {
 		shouldCleanup := !opts.keep && (err == nil || !opts.skipTeardownOnFail)
 		if shouldCleanup && !state.cleaned {
-			if cleanupErr := cleanupE2EScenario(rcx, state, opts); cleanupErr != nil && err == nil {
+			if cleanupErr := cleanupE2EScenario(rcx, state, opts, os.Stderr); cleanupErr != nil && err == nil {
 				err = cleanupErr
 			}
 		}
@@ -480,9 +485,30 @@ func e2eRequiredTools(scenario *e2eScenario) []string {
 	return out
 }
 
-func stepE2EGenerateOperatorKey(s *e2eScenarioState) func(context.Context) error {
+func stepE2EGenerateOperatorKey(s *e2eScenarioState, clusterName string) func(context.Context) error {
 	return func(ctx context.Context) error {
-		priv, pub, _, err := writeE2EKeyPair(s.scratchDir)
+		// The keypair lives with the cluster credentials, not the per-run
+		// scratch dir: reused VMs from a --skip-teardown-on-fail run are
+		// hardened against THIS key, and a fresh key each run would lock
+		// us out of them forever. Teardown removes the credentials dir,
+		// so key lifetime matches VM lifetime.
+		dir, err := clusterCredentialsDir(clusterName)
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return err
+		}
+		priv := filepath.Join(dir, "operator_ed25519")
+		pub := priv + ".pub"
+		if _, err := os.Stat(priv); err == nil {
+			if _, err := os.Stat(pub); err == nil {
+				s.operatorPriv = priv
+				s.operatorPub = pub
+				return nil
+			}
+		}
+		priv, pub, _, err = writeE2EKeyPair(dir)
 		if err != nil {
 			return err
 		}
@@ -495,7 +521,9 @@ func stepE2EGenerateOperatorKey(s *e2eScenarioState) func(context.Context) error
 func stepE2EEnsureVM(rcx *runContext, s *e2eScenarioState, vm e2eScenarioVM) func(context.Context, ui.Step) error {
 	return func(ctx context.Context, sh ui.Step) error {
 		id := s.vmIDs[vm.Name]
-		runner := testvm.Runner{RepoRoot: rcx.repoRoot, Reporter: reporter}
+		// Route subprocess output (xz, qemu-img, qemu launch) through the
+		// step writer: raw writes to the tty shred the progress renderer.
+		runner := testvm.Runner{RepoRoot: rcx.repoRoot, Reporter: reporter, Stdout: sh, Stderr: sh}
 		if e2eVMExists(rcx.repoRoot, id) {
 			if err := runner.Start(testvm.StartOptions{ID: id, Sudo: sudoQEMU()}); err != nil {
 				return err
@@ -527,9 +555,38 @@ func stepE2EWaitVM(rcx *runContext, s *e2eScenarioState, name string) func(conte
 		if err != nil {
 			return err
 		}
-		client := remote.Client{Host: target.Host, Port: target.Port, User: "kairos", Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
+		// IdentityFile covers reused VMs already provisioned+hardened by a
+		// previous run: password auth is disabled there and only the e2e
+		// operator key is authorized.
+		client := remote.Client{Host: target.Host, Port: target.Port, User: "kairos", IdentityFile: s.operatorPriv, InsecureHostKey: true, NoPasswordPrompt: true, Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
 		if err := client.WaitForAuth(5 * time.Minute); err != nil {
 			return err
+		}
+		// Auth alone is not "ready": first boot runs recovery -> auto-reset
+		// -> reboot into the active system, and sshd answers during that
+		// whole cycle. If provisioning's one-shot auth lands mid-reboot it
+		// fails spuriously, so hold here until the guest reports an active
+		// boot, re-probing auth across the reset reboot.
+		deadline := time.Now().Add(10 * time.Minute)
+		for {
+			out, err := client.Capture("if [ -e /run/cos/recovery_mode ] || [ -e /run/cos/autoreset_mode ]; then echo recovery; else echo active; fi")
+			if err == nil && strings.TrimSpace(string(out)) == "active" {
+				break
+			}
+			if time.Now().After(deadline) {
+				if err != nil {
+					return fmt.Errorf("waiting for active boot on %s: %w", id, err)
+				}
+				return fmt.Errorf("%s is still in recovery/autoreset boot after 10m", id)
+			}
+			if err != nil {
+				client.ResetAuth()
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(5 * time.Second):
+			}
 		}
 		s.targets[name] = target
 		sh.Successf("%s reachable at %s:%d (%s)", id, target.Host, target.Port, target.GuestIPv4.Address)
@@ -537,7 +594,7 @@ func stepE2EWaitVM(rcx *runContext, s *e2eScenarioState, name string) func(conte
 	}
 }
 
-func stepE2EProvision(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, entry e2eProvisionEntry) func(context.Context, ui.Step) error {
+func stepE2EProvision(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, entry e2eProvisionEntry) func(context.Context) error {
 	switch entry.Type {
 	case "storage":
 		return stepE2EProvisionStorage(rcx, s, opts, entry.Storage)
@@ -546,12 +603,12 @@ func stepE2EProvision(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, 
 	case "worker":
 		return stepE2EProvisionWorker(rcx, s, opts, entry.Worker.VM)
 	default:
-		return func(context.Context, ui.Step) error { return fmt.Errorf("unknown provision type %q", entry.Type) }
+		return func(context.Context) error { return fmt.Errorf("unknown provision type %q", entry.Type) }
 	}
 }
 
-func stepE2EProvisionStorage(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, provision e2eStorageProvision) func(context.Context, ui.Step) error {
-	return func(ctx context.Context, sh ui.Step) error {
+func stepE2EProvisionStorage(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, provision e2eStorageProvision) func(context.Context) error {
+	return func(ctx context.Context) error {
 		id := s.vmIDs[provision.VM]
 		target := s.targets[provision.VM]
 		cmd := storageCmd{
@@ -565,12 +622,13 @@ func stepE2EProvisionStorage(rcx *runContext, s *e2eScenarioState, opts e2eRunOp
 				IQNBase:           "iqn.2026-07.io.wyvernzora.k2:storage",
 				PoolCompatibility: "openzfs-2.2-linux",
 			},
-			TestVM:   id,
-			Host:     target.Host,
-			SSHPort:  target.Port,
-			SSHUser:  "kairos",
-			Identity: s.operatorPriv,
-			Yes:      true,
+			TestVM:           id,
+			Host:             target.Host,
+			SSHPort:          target.Port,
+			SSHUser:          "kairos",
+			Identity:         s.operatorPriv,
+			Yes:              true,
+			noPasswordPrompt: true,
 		}
 		if _, err := runStorageProvision(ctx, rcx, &cmd); err != nil {
 			return err
@@ -580,13 +638,13 @@ func stepE2EProvisionStorage(rcx *runContext, s *e2eScenarioState, opts e2eRunOp
 			return fmt.Errorf("storage credentials not found after provisioning")
 		}
 		s.storageCreds = creds
-		sh.Successf("storage credentials written for %s", creds.Portal)
+		reporter.Successf("storage credentials written for %s", creds.Portal)
 		return nil
 	}
 }
 
-func stepE2EProvisionBootstrap(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, vmName string) func(context.Context, ui.Step) error {
-	return func(ctx context.Context, sh ui.Step) error {
+func stepE2EProvisionBootstrap(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, vmName string) func(context.Context) error {
+	return func(ctx context.Context) error {
 		id := s.vmIDs[vmName]
 		cmd := bootstrapCmd{
 			commonBootstrapFlags: commonBootstrapFlags{
@@ -595,9 +653,10 @@ func stepE2EProvisionBootstrap(rcx *runContext, s *e2eScenarioState, opts e2eRun
 				NodeName:      id,
 				OperatorFiles: []string{s.operatorPub},
 			},
-			TestVM:  id,
-			SSHUser: "kairos",
-			Yes:     true,
+			TestVM:           id,
+			SSHUser:          "kairos",
+			Yes:              true,
+			noPasswordPrompt: true,
 		}
 		if err := runBootstrapProvision(ctx, rcx, &cmd); err != nil {
 			return err
@@ -607,13 +666,13 @@ func stepE2EProvisionBootstrap(rcx *runContext, s *e2eScenarioState, opts e2eRun
 			return err
 		}
 		s.kubeconfig = kubeconfig
-		sh.Successf("kubeconfig %s", kubeconfig)
+		reporter.Successf("kubeconfig %s", kubeconfig)
 		return nil
 	}
 }
 
-func stepE2EProvisionWorker(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, vmName string) func(context.Context, ui.Step) error {
-	return func(ctx context.Context, sh ui.Step) error {
+func stepE2EProvisionWorker(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, vmName string) func(context.Context) error {
+	return func(ctx context.Context) error {
 		id := s.vmIDs[vmName]
 		err := runJoinProvision(ctx, rcx, nodeRoleWorker,
 			commonJoinFlags{
@@ -623,15 +682,16 @@ func stepE2EProvisionWorker(rcx *runContext, s *e2eScenarioState, opts e2eRunOpt
 				OperatorFiles: []string{s.operatorPub},
 			},
 			commonRemoteFlags{
-				TestVM:  id,
-				SSHUser: "kairos",
-				Yes:     true,
+				TestVM:           id,
+				SSHUser:          "kairos",
+				Yes:              true,
+				noPasswordPrompt: true,
 			},
 		)
 		if err != nil {
 			return err
 		}
-		sh.Successf("worker %s provisioned", id)
+		reporter.Successf("worker %s provisioned", id)
 		return nil
 	}
 }
@@ -651,7 +711,7 @@ func stepE2ENodePrepISCSI(s *e2eScenarioState, step e2eNodePrepISCSIStep) func(c
 	return func(ctx context.Context, sh ui.Step) error {
 		for _, vm := range step.VMs {
 			target := s.targets[vm]
-			client := remote.Client{Host: target.Host, Port: target.Port, User: "kairos", IdentityFile: s.operatorPriv, Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
+			client := remote.Client{Host: target.Host, Port: target.Port, User: "kairos", IdentityFile: s.operatorPriv, InsecureHostKey: true, NoPasswordPrompt: true, Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
 			if err := client.Run(e2eNodeISCSIPrepScript()); err != nil {
 				return fmt.Errorf("prepare iSCSI on %s: %w", s.vmIDs[vm], err)
 			}
@@ -766,13 +826,15 @@ func stepE2EZFSConsistency(s *e2eScenarioState, check e2eVMCheck) func(context.C
 			return fmt.Errorf("PVC %s has no bound PV name", e2ePVCName)
 		}
 		client := remote.Client{
-			Host:         s.storageCreds.SSHHost,
-			Port:         s.storageCreds.SSHPort,
-			User:         s.storageCreds.SSHUser,
-			IdentityFile: s.csiKeyPath,
-			Stdout:       sh,
-			Stderr:       sh,
-			Logger:       shLogf(sh),
+			Host:             s.storageCreds.SSHHost,
+			Port:             s.storageCreds.SSHPort,
+			User:             s.storageCreds.SSHUser,
+			IdentityFile:     s.csiKeyPath,
+			InsecureHostKey:  true,
+			NoPasswordPrompt: true,
+			Stdout:           sh,
+			Stderr:           sh,
+			Logger:           shLogf(sh),
 		}
 		if err := client.Run(e2eStorageConsistencyScript(s.storageCreds, pvName, s.lastPVCSizeBytes)); err != nil {
 			return err
@@ -788,7 +850,7 @@ func stepE2EDeleteHygiene(s *e2eScenarioState, check e2eVMCheck) func(context.Co
 		pvName := strings.TrimSpace(string(pvBytes))
 		_, _ = runKubectl(ctx, s.kubeconfig, sh, sh, nil, "-n", s.lastPVCNamespace, "delete", "pod", e2ePodName, "--ignore-not-found=true", "--wait=true")
 		_, _ = runKubectl(ctx, s.kubeconfig, sh, sh, nil, "-n", s.lastPVCNamespace, "delete", "pvc", e2ePVCName, "--ignore-not-found=true", "--wait=true")
-		client := remote.Client{Host: s.storageCreds.SSHHost, Port: s.storageCreds.SSHPort, User: s.storageCreds.SSHUser, IdentityFile: s.csiKeyPath, Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
+		client := remote.Client{Host: s.storageCreds.SSHHost, Port: s.storageCreds.SSHPort, User: s.storageCreds.SSHUser, IdentityFile: s.csiKeyPath, InsecureHostKey: true, NoPasswordPrompt: true, Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
 		if pvName != "" {
 			if err := client.Run(e2eStorageCleanupPollScript(s.storageCreds, pvName)); err != nil {
 				return err
@@ -798,7 +860,7 @@ func stepE2EDeleteHygiene(s *e2eScenarioState, check e2eVMCheck) func(context.Co
 			if vm == check.VM {
 				continue
 			}
-			node := remote.Client{Host: target.Host, Port: target.Port, User: "kairos", IdentityFile: s.operatorPriv, Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
+			node := remote.Client{Host: target.Host, Port: target.Port, User: "kairos", IdentityFile: s.operatorPriv, InsecureHostKey: true, NoPasswordPrompt: true, Stdout: sh, Stderr: sh, Logger: shLogf(sh)}
 			if err := node.Run(e2eNodeNoISCSISessionScript(s.storageCreds.IQNBase)); err != nil {
 				return fmt.Errorf("node %s still has iSCSI session for %s: %w", s.vmIDs[vm], s.storageCreds.IQNBase, err)
 			}
@@ -877,7 +939,7 @@ func recordedE2ECheck(s *e2eScenarioState, name string, fn func(context.Context,
 	}
 }
 
-func cleanupE2EScenario(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions) error {
+func cleanupE2EScenario(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, logw io.Writer) error {
 	var errs []error
 	if s.kubeconfig != "" {
 		for _, release := range s.helmReleases {
@@ -886,7 +948,7 @@ func cleanupE2EScenario(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions
 			}
 		}
 	}
-	runner := testvm.Runner{RepoRoot: rcx.repoRoot, Reporter: reporter}
+	runner := testvm.Runner{RepoRoot: rcx.repoRoot, Stdout: logw, Stderr: logw}
 	for _, id := range e2eScenarioVMIDs(s) {
 		if !e2eVMExists(rcx.repoRoot, id) {
 			continue

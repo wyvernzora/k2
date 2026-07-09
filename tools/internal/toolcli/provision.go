@@ -36,6 +36,8 @@ type bootstrapCmd struct {
 	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
 	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
 	Yes      bool   `name:"yes" env:"K2_PROVISION_YES" help:"Skip the plan confirmation prompt. Required for non-TTY invocations."`
+
+	noPasswordPrompt bool
 }
 
 type commonJoinFlags struct {
@@ -56,6 +58,8 @@ type commonRemoteFlags struct {
 	SSHUser  string `name:"ssh-user" env:"K2_PROVISION_SSH_USER" default:"kairos" help:"SSH user."`
 	NoReboot bool   `name:"no-reboot" env:"K2_PROVISION_NO_REBOOT" help:"Install files and enable k3s, but do not reboot."`
 	Yes      bool   `name:"yes" env:"K2_PROVISION_YES" help:"Skip the plan confirmation prompt. Required for non-TTY invocations."`
+
+	noPasswordPrompt bool
 }
 
 type serverCmd struct {
@@ -100,6 +104,8 @@ type storageCmd struct {
 	RotateCredentials bool   `name:"rotate-credentials" env:"K2_PROVISION_ROTATE_CREDENTIALS" help:"Generate a new csi key and CHAP credentials instead of reusing the local credentials file."`
 	Yes               bool   `name:"yes" env:"K2_PROVISION_YES" help:"Skip the plan confirmation prompt. Required for non-TTY invocations."`
 	Output            string `name:"output" env:"K2_PROVISION_OUTPUT" default:"text" enum:"text,json" help:"Output format."`
+
+	noPasswordPrompt bool
 }
 
 type renderStorageCmd struct {

@@ -34,12 +34,14 @@ func runJoinProvision(parent context.Context, rcx *runContext, role nodeRole, fl
 	_ = testTarget // currently unused for join nodes; kept for future use
 
 	client := remote.Client{
-		Host:   remoteFlags.Host,
-		Port:   remoteFlags.SSHPort,
-		User:   remoteFlags.SSHUser,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		Logger: logf,
+		Host:             remoteFlags.Host,
+		Port:             remoteFlags.SSHPort,
+		User:             remoteFlags.SSHUser,
+		InsecureHostKey:  remoteFlags.TestVM != "",
+		NoPasswordPrompt: remoteFlags.noPasswordPrompt,
+		Stdout:           os.Stdout,
+		Stderr:           os.Stderr,
+		Logger:           logf,
 	}
 
 	ctx, cancel := context.WithCancel(parent)
@@ -127,7 +129,9 @@ func runJoinProvision(parent context.Context, rcx *runContext, role nodeRole, fl
 	}).Unless(!postInstall)
 	wf.Shell("Verify provisioning", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()
-		return verifyRemoteProvisioning(&client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 5*time.Minute)
+		// 10m, not 5m: a fresh cluster must pull Cilium/kube-vip images before
+		// the API VIP answers, and the joining agent blocks on that VIP.
+		return verifyRemoteProvisioning(&client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 10*time.Minute)
 	}).Unless(!postInstall)
 	wf.Shell("Harden default access", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()

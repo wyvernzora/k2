@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -38,13 +39,24 @@ func (r Runner) stderr() io.Writer {
 	return os.Stderr
 }
 
+// logf/successf prefer an explicit Stdout override: callers embedding the
+// Runner inside a live workflow step pass the step writer so log lines
+// render within the step instead of colliding with the progress renderer.
 func (r Runner) logf(format string, args ...any) {
+	if r.Stdout != nil {
+		fmt.Fprintf(r.Stdout, format+"\n", args...)
+		return
+	}
 	if r.Reporter != nil {
 		r.Reporter.Infof(format, args...)
 	}
 }
 
 func (r Runner) successf(format string, args ...any) {
+	if r.Stdout != nil {
+		fmt.Fprintf(r.Stdout, format+"\n", args...)
+		return
+	}
 	if r.Reporter != nil {
 		r.Reporter.Successf(format, args...)
 	}

@@ -17,6 +17,7 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 		{
 			name: "storage-pvc",
 			want: []string{
+				"sudo launch QEMU with vmnet networking",
 				"section Preflight",
 				"keyvalues",
 				"shell Check local artifacts and tools",
@@ -29,9 +30,9 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 				"shell Wait for VM e2e-k2e2e-server",
 				"shell Wait for VM e2e-k2e2e-worker-1",
 				"section Provision",
-				"shell Provision storage appliance e2e-k2e2e-storage",
-				"shell Provision bootstrap server e2e-k2e2e-server",
-				"shell Provision worker e2e-k2e2e-worker-1",
+				"run Provision storage appliance e2e-k2e2e-storage",
+				"run Provision bootstrap server e2e-k2e2e-server",
+				"run Provision worker e2e-k2e2e-worker-1",
 				"section Steps",
 				"shell Prepare node iSCSI initiators",
 				"shell Install zfs-iscsi",
@@ -46,6 +47,7 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 		{
 			name: "k8s-wireup",
 			want: []string{
+				"sudo launch QEMU with vmnet networking",
 				"section Preflight",
 				"keyvalues",
 				"shell Check local artifacts and tools",
@@ -56,8 +58,8 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 				"shell Wait for VM e2e-k2e2e-server",
 				"shell Wait for VM e2e-k2e2e-worker-1",
 				"section Provision",
-				"shell Provision bootstrap server e2e-k2e2e-server",
-				"shell Provision worker e2e-k2e2e-worker-1",
+				"run Provision bootstrap server e2e-k2e2e-server",
+				"run Provision worker e2e-k2e2e-worker-1",
 				"section Steps",
 				"section Checks",
 				"shell Nodes Ready",

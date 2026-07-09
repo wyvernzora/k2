@@ -43,5 +43,12 @@ func (r *Reporter) note(kind BadgeKind, plainWord, format string, args ...any) {
 		fmt.Fprintf(r.out, "k2-tools: %s %s\n", plainWord, msg)
 		return
 	}
-	fmt.Fprintf(r.out, "  %s  %s\n", RenderBadge(kind), msg)
+	line := fmt.Sprintf("  %s  %s", RenderBadge(kind), msg)
+	if r.activeStep != nil {
+		r.activeStep.eraseLocked()
+		fmt.Fprintln(r.out, line)
+		r.activeStep.drawLocked()
+		return
+	}
+	fmt.Fprintln(r.out, line)
 }

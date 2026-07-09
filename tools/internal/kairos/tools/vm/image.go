@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
@@ -23,10 +24,14 @@ func convertRawXZ(rawXZ string, rawTmp string, qcow2 string) error {
 	if err != nil {
 		return err
 	}
+	var xzErr bytes.Buffer
 	cmd := exec.Command("xz", "-dc", rawXZ)
 	cmd.Stdout = rawFile
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = &xzErr // raw tty writes corrupt the ui progress renderer
 	err = cmd.Run()
+	if err != nil && xzErr.Len() > 0 {
+		err = fmt.Errorf("%w\n%s", err, strings.TrimSpace(xzErr.String()))
+	}
 	closeErr := rawFile.Close()
 	if err != nil {
 		_ = os.Remove(rawTmp)

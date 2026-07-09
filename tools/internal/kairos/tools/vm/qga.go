@@ -42,7 +42,11 @@ func firstGuestIPv4(meta Metadata) (string, error) {
 }
 
 func BestGuestIPv4(meta Metadata) (GuestIPv4, error) {
-	ips, err := guestIPv4Candidates(meta)
+	return bestGuestIPv4(meta, qgaDefaultAttempts)
+}
+
+func bestGuestIPv4(meta Metadata, attempts int) (GuestIPv4, error) {
+	ips, err := guestIPv4Candidates(meta, attempts)
 	if err != nil {
 		return GuestIPv4{}, err
 	}
@@ -68,8 +72,11 @@ func BestGuestIPv4(meta Metadata) (GuestIPv4, error) {
 	return ips[0], nil
 }
 
+// guestIPv4s feeds status/list displays: one QGA attempt only. Burning
+// the full retry backoff (~25s) per VM turns `vm list` into a hang when
+// any guest agent is unresponsive.
 func guestIPv4s(meta Metadata) ([]string, error) {
-	candidates, err := guestIPv4Candidates(meta)
+	candidates, err := guestIPv4Candidates(meta, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -81,12 +88,12 @@ func guestIPv4s(meta Metadata) ([]string, error) {
 	return ips, nil
 }
 
-func guestIPv4Candidates(meta Metadata) ([]GuestIPv4, error) {
+func guestIPv4Candidates(meta Metadata, attempts int) ([]GuestIPv4, error) {
 	if meta.QGAPort == 0 {
 		return nil, fmt.Errorf("qemu guest agent port is not configured")
 	}
 	var interfaces []qgaInterface
-	if err := qgaCommand(meta, "guest-network-get-interfaces", nil, &interfaces); err != nil {
+	if err := qgaCommand(meta, "guest-network-get-interfaces", nil, &interfaces, attempts); err != nil {
 		return nil, err
 	}
 	var ips []GuestIPv4
@@ -109,25 +116,62 @@ func isPhysicalGuestInterface(name string) bool {
 	return strings.HasPrefix(name, "en") || strings.HasPrefix(name, "eth") || strings.HasPrefix(name, "wl")
 }
 
-func qgaCommand(meta Metadata, execute string, arguments map[string]any, out any) error {
+const qgaDefaultAttempts = 8
+
+// qgaCommand retries the whole dial+sync+command exchange: the qemu chardev
+// socket races on rapid reconnects (the previous client may not be detached
+// yet, silently eating the request), and the agent itself can be briefly
+// unresponsive. Every serious QGA client retries. Status views pass
+// attempts=1 to stay snappy.
+func qgaCommand(meta Metadata, execute string, arguments map[string]any, out any, attempts int) error {
+	var err error
+	for attempt := 0; attempt < attempts; attempt++ {
+		if attempt > 0 {
+			// Growing backoff: the chardev wedge after a rapid reconnect can
+			// take several seconds to clear (observed >2s in e2e runs).
+			time.Sleep(time.Duration(attempt) * 750 * time.Millisecond)
+		}
+		if err = qgaCommandOnce(meta, execute, arguments, out); err == nil {
+			return nil
+		}
+	}
+	return err
+}
+
+func qgaCommandOnce(meta Metadata, execute string, arguments map[string]any, out any) error {
 	conn, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(meta.QGAPort)), time.Second)
 	if err != nil {
 		return fmt.Errorf("connect qemu guest agent: %w", err)
 	}
 	defer conn.Close()
-	if err := conn.SetDeadline(time.Now().Add(2 * time.Second)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		return err
 	}
 	decoder := json.NewDecoder(conn)
 	encoder := json.NewEncoder(conn)
+	syncID := time.Now().UnixNano()
 	if err := encoder.Encode(map[string]any{
 		"execute":   "guest-sync",
-		"arguments": map[string]any{"id": time.Now().UnixNano()},
+		"arguments": map[string]any{"id": syncID},
 	}); err != nil {
 		return err
 	}
-	if _, err := readQGAResponse(decoder); err != nil {
-		return err
+	// The guest-agent channel is a stream that outlives TCP connections:
+	// replies a previous client never read are still queued and would be
+	// misattributed to our command. Drain everything (stale returns AND
+	// stale errors) until the response carrying our sync token.
+	for {
+		var response qgaResponse
+		if err := decoder.Decode(&response); err != nil {
+			return fmt.Errorf("guest-sync: %w", err)
+		}
+		if response.Return == nil {
+			continue
+		}
+		var id int64
+		if err := json.Unmarshal(response.Return, &id); err == nil && id == syncID {
+			break
+		}
 	}
 	request := map[string]any{"execute": execute}
 	if arguments != nil {
