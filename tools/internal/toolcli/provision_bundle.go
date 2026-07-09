@@ -1,6 +1,7 @@
 package toolcli
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 
@@ -32,6 +33,7 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	if err := rejectLonghornNodeLabels("bootstrap", flags.Label); err != nil {
 		return bundle{}, err
 	}
+	prodAPI := cfg.Kubernetes.API
 	if flags.testKubeVIP != "" {
 		applyTestKubeVIP(&cfg, flags.testKubeVIP)
 	}
@@ -68,6 +70,15 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	})
 	if err != nil {
 		return bundle{}, err
+	}
+	if flags.testKubeVIP != "" {
+		// The deploy-repo manifests carry the production VIP as a literal
+		// (kube-vip's vip_address). Substitute at render time so the file in
+		// k3s's auto-deploy dir is correct from its first apply. Patching the
+		// live DaemonSet after boot was racy: the deploy controller re-applies
+		// the manifest on its own watcher events and reverted the patch
+		// seconds later, leaving workers dialing a VIP nobody advertised.
+		bootstrapManifests = bytes.ReplaceAll(bootstrapManifests, []byte(prodAPI), []byte(flags.testKubeVIP))
 	}
 	rootArgoApp, err := manifests.RootArgoApp(cfg)
 	if err != nil {

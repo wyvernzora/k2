@@ -110,7 +110,13 @@ func storageInstallScript(nodeName string) string {
 	fmt.Fprintf(&buf, "  echo 'k2-tools: no operator SSH keys supplied'\n")
 	fmt.Fprintf(&buf, "fi\n")
 	fmt.Fprintf(&buf, "echo 'k2-tools: ensuring csi user'\n")
+	// The imperative bits below make the user usable IMMEDIATELY (no reboot
+	// in the provisioning flow); the /oem activation stage is what makes it
+	// survive reboots — useradd writes to the ephemeral /etc overlay, so
+	// without the stage the user (and its sudoers) vanish on first reboot.
+	fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/95-k2-storage-csi.yaml /oem/95-k2-storage-csi.yaml\n")
 	fmt.Fprintf(&buf, "if ! id csi >/dev/null 2>&1; then sudo useradd --create-home --shell /bin/sh csi; fi\n")
+	fmt.Fprintf(&buf, "sudo chown csi:csi /home/csi\n")
 	fmt.Fprintf(&buf, "sudo install -d -o csi -g csi -m 0700 /home/csi/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o csi -g csi -m 0600 \"$remote_dir\"/csi_authorized_keys /home/csi/.ssh/authorized_keys\n")
 	fmt.Fprintf(&buf, "sudo install -m 0440 \"$remote_dir\"/99-csi /etc/sudoers.d/99-csi\n")

@@ -533,7 +533,10 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 	checks := map[string]string{
 		"99-k2-storage-hostname.yaml": "hostname: k2-storage",
 		"99-csi":                      "csi ALL=(ALL) NOPASSWD:ALL",
-		"storage-install.sh":          "hostnamectl set-hostname 'k2-storage'",
+		// Reboot persistence: the csi user must be stage-managed, and the
+		// install script must place the stage in /oem (asserted below).
+		"95-k2-storage-csi.yaml": "/etc/sudoers.d/99-csi",
+		"storage-install.sh":     "hostnamectl set-hostname 'k2-storage'",
 		"storage-pool.sh":             "sudo zpool create -m none",
 		"zfs_pool.key":                string(bundle.PoolKey),
 	}
@@ -545,6 +548,13 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 		if !strings.Contains(string(data), want) {
 			t.Fatalf("%s missing %q:\n%s", file, want, string(data))
 		}
+	}
+	install, err := os.ReadFile(filepath.Join(dir, "storage-install.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(install), `sudo install -m 0644 "$remote_dir"/95-k2-storage-csi.yaml /oem/95-k2-storage-csi.yaml`) {
+		t.Fatalf("install script does not stage the csi user activation into /oem:\n%s", install)
 	}
 	info, err := os.Stat(filepath.Join(dir, "zfs_pool.key"))
 	if err != nil {

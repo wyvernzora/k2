@@ -94,10 +94,12 @@ func (c *bootstrapCmd) buildBootstrapWorkflow(wf *ui.Workflow, rcx *runContext, 
 	wf.Section("Post-install").Unless(!postInstall)
 	wf.Shell("Harvest bootstrap credentials", c.stepHarvest(rcx, s)).
 		Unless(!postInstall)
+	// Safe on test clusters too: the root app carries NO automated sync
+	// policy (pinned by manifests.TestRootArgoAppRendersAppOfApps), so applying it
+	// creates one OutOfSync Application and deploys nothing until a human
+	// syncs it deliberately.
 	wf.Shell("Apply root Argo CD app", c.stepApplyRootArgoApp(s)).
 		Unless(!postInstall)
-	wf.Shell("Patch remote kube-vip", c.stepPatchKubeVIP(s)).
-		Unless(!postInstall || s.testTarget.KubeVIP == "")
 	wf.Shell("Verify provisioning", c.stepVerify(s)).
 		Unless(!postInstall)
 	wf.Shell("Harden default access", c.stepHarden(s)).
@@ -204,13 +206,6 @@ func (c *bootstrapCmd) stepHarvest(rcx *runContext, s *bootstrapState) func(cont
 			clusterName = c.ClusterTarget
 		}
 		return harvestBootstrapCredentials(ctx, s.client, cfg, clusterName)
-	}
-}
-
-func (c *bootstrapCmd) stepPatchKubeVIP(s *bootstrapState) func(context.Context, ui.Step) error {
-	return func(ctx context.Context, sh ui.Step) error {
-		defer s.client.SwapIO(sh)()
-		return patchRemoteKubeVIP(ctx, s.client, s.testTarget.KubeVIP, 3*time.Minute)
 	}
 }
 

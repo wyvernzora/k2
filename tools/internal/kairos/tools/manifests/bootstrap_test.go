@@ -81,6 +81,11 @@ func TestRootArgoAppRendersAppOfApps(t *testing.T) {
 			t.Fatalf("root app manifest missing %q:\n%s", want, manifest)
 		}
 	}
+	// CONTRACT, not style: provisioning applies this Application to TEST
+	// clusters too, relying on it never auto-syncing — without automated
+	// sync it sits OutOfSync and deploys nothing until a human syncs it.
+	// If production ever needs automated sync, it must be opt-in per
+	// cluster and stay off for test-VM bundles.
 	for _, unwanted := range []string{"automated:", "prune:", "selfHeal:"} {
 		if strings.Contains(manifest, unwanted) {
 			t.Fatalf("root app manifest should not include %q:\n%s", unwanted, manifest)

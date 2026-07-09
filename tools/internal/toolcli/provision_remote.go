@@ -209,30 +209,6 @@ func waitForK3sCredentials(ctx context.Context, client *remote.Client, timeout t
 	}
 }
 
-func patchRemoteKubeVIP(ctx context.Context, client *remote.Client, vip string, timeout time.Duration) error {
-	logf("patching kube-vip VIP address for test VM bootstrap to %s", vip)
-	deadline := time.Now().Add(timeout)
-	var lastErr error
-	for {
-		err := client.Run(strings.Join([]string{
-			"sudo kubectl -n kube-vip get daemonset kube-vip >/dev/null",
-			fmt.Sprintf("sudo kubectl -n kube-vip set env daemonset/kube-vip vip_address=%s >/dev/null", vip),
-			"sudo kubectl -n kube-vip rollout status daemonset/kube-vip --timeout=120s >/dev/null",
-		}, " && "))
-		if err == nil {
-			successf("kube-vip VIP patched to %s", vip)
-			return nil
-		}
-		lastErr = err
-		if time.Now().After(deadline) {
-			return fmt.Errorf("timed out patching kube-vip VIP address: %w", lastErr)
-		}
-		if err := sleepCtx(ctx, 5*time.Second); err != nil {
-			return err
-		}
-	}
-}
-
 func applyRootArgoApp(ctx context.Context, client *remote.Client, timeout time.Duration) error {
 	logf("applying root Argo CD app manifest")
 	deadline := time.Now().Add(timeout)

@@ -53,6 +53,7 @@ type storageBundle struct {
 	OperatorActivation []byte
 	CSIPublicKey       []byte
 	CSISudoers         []byte
+	CSIActivation      []byte
 	PoolKey            []byte
 	InstallScript      []byte
 	PoolScript         []byte
@@ -604,14 +605,16 @@ func buildStorageBundle(flags commonStorageFlags, forceWipe bool, vdevs []storag
 		authorizedKeys = render.AuthorizedKeys(operatorKeys)
 		operatorActivation = render.OperatorKeysActivationCloudConfig("K2 storage operator keys", "kairos", operatorKeys)
 	}
+	// Design D7: targetcli requires root; the csi key is treated as a root credential.
+	csiSudoers := "csi ALL=(ALL) NOPASSWD:ALL\n"
 	bundle := storageBundle{
 		Activation:         render.HostnameActivationCloudConfig("K2 storage hostname activation", flags.NodeName),
 		AuthorizedKeys:     authorizedKeys,
 		OperatorActivation: operatorActivation,
 		CSIPublicKey:       []byte(strings.TrimSpace(csiPublicKey) + "\n"),
-		// Design D7: targetcli requires root; the csi key is treated as a root credential.
-		CSISudoers: []byte("csi ALL=(ALL) NOPASSWD:ALL\n"),
-		PoolKey:    rawPoolKey,
+		CSISudoers:         []byte(csiSudoers),
+		CSIActivation:      render.CSIUserActivationCloudConfig(strings.TrimSpace(csiPublicKey), csiSudoers),
+		PoolKey:            rawPoolKey,
 	}
 	bundle.InstallScript = []byte(storageInstallScript(flags.NodeName))
 	bundle.PoolScript = []byte(storagePoolScript(storagePoolScriptInput{
@@ -639,6 +642,7 @@ func writeStorageBundle(dir string, bundle storageBundle) error {
 		"operator_authorized_keys":         bundle.AuthorizedKeys,
 		"csi_authorized_keys":              bundle.CSIPublicKey,
 		"99-csi":                           bundle.CSISudoers,
+		"95-k2-storage-csi.yaml":           bundle.CSIActivation,
 		"zfs_pool.key":                     bundle.PoolKey,
 		"storage-install.sh":               bundle.InstallScript,
 		"storage-pool.sh":                  bundle.PoolScript,
