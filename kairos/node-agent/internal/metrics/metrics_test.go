@@ -12,10 +12,7 @@ import (
 func TestCollectZFSPools(t *testing.T) {
 	c := testCollector(fakeRunner{
 		outputs: map[string]string{
-			"zpool list -Hp -o name,size,alloc,frag,cap,health": strings.Join([]string{
-				"tank\t1000\t250\t12\t25\tONLINE",
-				"bad line",
-			}, "\n"),
+			"zpool list -Hp -o name,size,alloc,frag,cap,health": "tank\t1000\t250\t12\t25\tONLINE\nbad line",
 		},
 	})
 
@@ -55,10 +52,7 @@ func TestCollectZFSKeyStatus(t *testing.T) {
 func TestCollectZFSVolumes(t *testing.T) {
 	c := testCollector(fakeRunner{
 		outputs: map[string]string{
-			"zfs list -Hp -t volume -o name,volsize,used": strings.Join([]string{
-				"tank/vol1\t1073741824\t4096",
-				"broken",
-			}, "\n"),
+			"zfs list -Hp -t volume -o name,volsize,used": "tank/vol1\t1073741824\t4096\nbroken",
 		},
 	})
 

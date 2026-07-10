@@ -316,7 +316,7 @@ func (c *Collector) collectLIO() groupResult {
 	}
 }
 
-func countLIO(root string) (int, int, int, error) {
+func countLIO(root string) (targets, luns, sessions int, err error) {
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -324,7 +324,6 @@ func countLIO(root string) (int, int, int, error) {
 		}
 		return 0, 0, 0, err
 	}
-	targets, luns, sessions := 0, 0, 0
 	for _, entry := range entries {
 		if !entry.IsDir() || !strings.HasPrefix(entry.Name(), "iqn.") {
 			continue

@@ -165,7 +165,7 @@ func skipBlockName(name string) bool {
 }
 
 func FirstPartition(disk string) string {
-	if len(disk) > 0 && disk[len(disk)-1] >= '0' && disk[len(disk)-1] <= '9' {
+	if disk != "" && disk[len(disk)-1] >= '0' && disk[len(disk)-1] <= '9' {
 		return disk + "p1"
 	}
 	return disk + "1"

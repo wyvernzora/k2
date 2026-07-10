@@ -45,46 +45,11 @@ func runWith(cfg Config, run runner.Runner, stdout, stderr io.Writer) error {
 		unhealthy = true
 		notes = append(notes, note)
 	}
-
-	pools, err := run.Output("zpool", "list", "-H", "-o", "name")
-	if err != nil && pools == "" {
-		fail(fmt.Sprintf("zpool list failed: %v", err))
-	} else {
-		names := strings.Fields(pools)
-		if len(names) == 0 {
-			// A storage appliance with zero pools is broken, not idle: a
-			// failed import (or a failed key load) after reboot must not
-			// report healthy just because there is nothing left to check.
-			fail("no ZFS pools imported")
-		}
-		for _, pool := range names {
-			health, err := run.Output("zpool", "list", "-H", "-o", "health", pool)
-			if err != nil {
-				fail(fmt.Sprintf("pool %s health check failed: %v", pool, err))
-				continue
-			}
-			if health != "ONLINE" {
-				fail(fmt.Sprintf("pool %s health %s", pool, health))
-				continue
-			}
-			notes = append(notes, fmt.Sprintf("pool %s ONLINE", pool))
-			keyStatus, err := run.Output("zfs", "get", "-H", "-o", "value", "keystatus", pool)
-			if err != nil {
-				fail(fmt.Sprintf("pool %s keystatus check failed: %v", pool, err))
-				continue
-			}
-			switch strings.TrimSpace(keyStatus) {
-			case "unavailable":
-				fail(fmt.Sprintf("pool %s keys unavailable", pool))
-			case "available":
-				notes = append(notes, fmt.Sprintf("pool %s keys loaded", pool))
-			case "none", "-", "":
-				notes = append(notes, fmt.Sprintf("pool %s unencrypted", pool))
-			default:
-				fail(fmt.Sprintf("pool %s unexpected keystatus %s", pool, strings.TrimSpace(keyStatus)))
-			}
-		}
+	note := func(n string) {
+		notes = append(notes, n)
 	}
+
+	checkZFSPools(run, fail, note)
 
 	if err := run.Run("systemctl", "is-failed", "--quiet", "rtslib-fb-targetctl.service"); err == nil {
 		fail("rtslib-fb-targetctl.service failed: LIO config not restored")
@@ -118,6 +83,48 @@ func runWith(cfg Config, run runner.Runner, stdout, stderr io.Writer) error {
 	}
 	_, _ = fmt.Fprint(out, line)
 	return errOut
+}
+
+func checkZFSPools(run runner.Runner, fail, note func(string)) {
+	pools, err := run.Output("zpool", "list", "-H", "-o", "name")
+	if err != nil && pools == "" {
+		fail(fmt.Sprintf("zpool list failed: %v", err))
+		return
+	}
+	names := strings.Fields(pools)
+	if len(names) == 0 {
+		// A storage appliance with zero pools is broken, not idle: a
+		// failed import (or a failed key load) after reboot must not
+		// report healthy just because there is nothing left to check.
+		fail("no ZFS pools imported")
+	}
+	for _, pool := range names {
+		health, err := run.Output("zpool", "list", "-H", "-o", "health", pool)
+		if err != nil {
+			fail(fmt.Sprintf("pool %s health check failed: %v", pool, err))
+			continue
+		}
+		if health != "ONLINE" {
+			fail(fmt.Sprintf("pool %s health %s", pool, health))
+			continue
+		}
+		note(fmt.Sprintf("pool %s ONLINE", pool))
+		keyStatus, err := run.Output("zfs", "get", "-H", "-o", "value", "keystatus", pool)
+		if err != nil {
+			fail(fmt.Sprintf("pool %s keystatus check failed: %v", pool, err))
+			continue
+		}
+		switch strings.TrimSpace(keyStatus) {
+		case "unavailable":
+			fail(fmt.Sprintf("pool %s keys unavailable", pool))
+		case "available":
+			note(fmt.Sprintf("pool %s keys loaded", pool))
+		case "none", "-", "":
+			note(fmt.Sprintf("pool %s unencrypted", pool))
+		default:
+			fail(fmt.Sprintf("pool %s unexpected keystatus %s", pool, strings.TrimSpace(keyStatus)))
+		}
+	}
 }
 
 func normalize(cfg Config) Config {
