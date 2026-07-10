@@ -127,8 +127,7 @@ func parseStorageVDev(value string, testVM bool) (storageVDev, error) {
 	return storageVDev{Topology: topology, Devices: devices}, nil
 }
 
-func parseStorageVDevShape(fields []string) (string, []string, error) {
-	topology := ""
+func parseStorageVDevShape(fields []string) (topology string, devices []string, err error) {
 	if len(fields) > 0 && isStorageTopology(fields[0]) {
 		topology = fields[0]
 		fields = fields[1:]

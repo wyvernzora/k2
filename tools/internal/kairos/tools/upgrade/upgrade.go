@@ -322,7 +322,7 @@ func (r *Runner) Reboot(ctx context.Context, plan Plan, timeout time.Duration) e
 		return ctx.Err()
 	case <-time.After(10 * time.Second):
 	}
-	if err := r.Remote.WaitForAuth(timeout); err != nil {
+	if err := r.Remote.WaitForAuthCtx(ctx, timeout); err != nil {
 		return fmt.Errorf("wait for SSH after reboot: %w", err)
 	}
 	return nil

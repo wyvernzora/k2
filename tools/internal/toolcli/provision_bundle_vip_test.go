@@ -2,6 +2,7 @@ package toolcli
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -16,6 +17,11 @@ func TestBuildBundleSubstitutesTestKubeVIPInManifests(t *testing.T) {
 	root, err := filepath.Abs("../../..")
 	if err != nil {
 		t.Fatal(err)
+	}
+	// deploy/ is generated output (gitignored), so this test can only run
+	// where the manifests have been rendered — locally, not CI.
+	if _, err := os.Stat(filepath.Join(root, "deploy")); os.IsNotExist(err) {
+		t.Skip("deploy/ manifests not rendered; run the k8s manifest build first")
 	}
 	flags := commonBootstrapFlags{
 		ClusterTarget:    "v3",

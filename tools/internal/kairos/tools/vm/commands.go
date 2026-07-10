@@ -105,33 +105,11 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
-	// Ports already recorded in ANY VM's metadata are off-limits even when
-	// currently unbound: a stopped VM must keep exclusive claim to its ports
-	// or a later create silently aliases the two VMs' monitor/QGA identity.
-	taken, err := recordedPorts(r.RepoRoot)
+	ports, err := resolveCreatePorts(r.RepoRoot, preset, opts)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
-	sshPort, err := resolveOptionalPort(preset.Network.Mode, opts.SSHPort, forwardPortSpec(preset, "ssh", ""), taken)
-	if err != nil {
-		return Metadata{}, Preset{}, "", err
-	}
-	taken[sshPort] = true
-	apiPort, err := resolveOptionalPort(preset.Network.Mode, opts.APIPort, forwardPortSpec(preset, "k8s-api", ""), taken)
-	if err != nil {
-		return Metadata{}, Preset{}, "", err
-	}
-	taken[apiPort] = true
 	extraDisks, err := resolveExtraDisks(preset, opts)
-	if err != nil {
-		return Metadata{}, Preset{}, "", err
-	}
-	monitorPort, err := findFreePort(24000, 24999, taken)
-	if err != nil {
-		return Metadata{}, Preset{}, "", err
-	}
-	taken[monitorPort] = true
-	qgaPort, err := findFreePort(25000, 25999, taken)
 	if err != nil {
 		return Metadata{}, Preset{}, "", err
 	}
@@ -152,10 +130,10 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 		VMDir:           vmDir,
 		KairosQCOW2:     kairosQCOW2,
 		PersistentQCOW2: persistentQCOW2,
-		SSHPort:         sshPort,
-		APIPort:         apiPort,
-		MonitorPort:     monitorPort,
-		QGAPort:         qgaPort,
+		SSHPort:         ports.ssh,
+		APIPort:         ports.api,
+		MonitorPort:     ports.monitor,
+		QGAPort:         ports.qga,
 		NetworkMode:     preset.Network.Mode,
 		MACAddress:      deterministicMACAddress(id),
 		MemoryMB:        preset.MemoryMB,
@@ -167,6 +145,41 @@ func (r Runner) prepareCreate(opts CreateOptions) (Metadata, Preset, string, err
 	}
 	meta.ExtraDisks = extraDisksForVM(id, vmDir, extraDisks)
 	return meta, preset, rawXZ, nil
+}
+
+type createPorts struct {
+	ssh, api, monitor, qga int
+}
+
+// resolveCreatePorts claims the four per-VM ports. Ports already recorded in
+// ANY VM's metadata are off-limits even when currently unbound: a stopped VM
+// must keep exclusive claim to its ports or a later create silently aliases
+// the two VMs' monitor/QGA identity.
+func resolveCreatePorts(repoRoot string, preset Preset, opts CreateOptions) (createPorts, error) {
+	taken, err := recordedPorts(repoRoot)
+	if err != nil {
+		return createPorts{}, err
+	}
+	ssh, err := resolveOptionalPort(preset.Network.Mode, opts.SSHPort, forwardPortSpec(preset, "ssh", ""), taken)
+	if err != nil {
+		return createPorts{}, err
+	}
+	taken[ssh] = true
+	api, err := resolveOptionalPort(preset.Network.Mode, opts.APIPort, forwardPortSpec(preset, "k8s-api", ""), taken)
+	if err != nil {
+		return createPorts{}, err
+	}
+	taken[api] = true
+	monitor, err := findFreePort(24000, 24999, taken)
+	if err != nil {
+		return createPorts{}, err
+	}
+	taken[monitor] = true
+	qga, err := findFreePort(25000, 25999, taken)
+	if err != nil {
+		return createPorts{}, err
+	}
+	return createPorts{ssh: ssh, api: api, monitor: monitor, qga: qga}, nil
 }
 
 func (r Runner) createDisks(meta Metadata, preset Preset, rawXZ string) error {

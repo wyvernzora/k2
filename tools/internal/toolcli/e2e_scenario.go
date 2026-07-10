@@ -269,7 +269,14 @@ func validateE2EScenario(stem string, scenario *e2eScenario) error {
 			return err
 		}
 	}
-	for _, step := range scenario.Steps {
+	if err := validateE2ESteps(vms, scenario.Steps); err != nil {
+		return err
+	}
+	return validateE2EChecks(vms, scenario.Checks)
+}
+
+func validateE2ESteps(vms map[string]bool, steps []e2eScenarioStepEntry) error {
+	for _, step := range steps {
 		switch step.Type {
 		case "nodePrepISCSI":
 			for _, vm := range step.NodePrepISCSI.VMs {
@@ -287,7 +294,11 @@ func validateE2EScenario(stem string, scenario *e2eScenario) error {
 			}
 		}
 	}
-	for _, check := range scenario.Checks {
+	return nil
+}
+
+func validateE2EChecks(vms map[string]bool, checks []e2eScenarioCheck) error {
+	for _, check := range checks {
 		switch check.Type {
 		case "zfsConsistency":
 			if err := validateE2EVMRef(vms, check.ZFSConsistency.VM, check.Type); err != nil {
@@ -366,7 +377,7 @@ func buildE2EWorkflow(rcx *runContext, state *e2eScenarioState, opts e2eRunOptio
 
 	wf.Section("Teardown").Unless(opts.keep)
 	wf.Shell("Remove e2e resources", func(ctx context.Context, sh ui.Step) error {
-		if err := cleanupE2EScenario(rcx, state, opts, sh); err != nil {
+		if err := cleanupE2EScenario(ctx, rcx, state, opts, sh); err != nil {
 			return err
 		}
 		state.cleaned = true
@@ -397,7 +408,9 @@ func runE2EScenario(parent context.Context, rcx *runContext, scenario *e2eScenar
 		}
 		shouldCleanup := !opts.keep && (err == nil || !opts.skipTeardownOnFail)
 		if shouldCleanup && !state.cleaned {
-			if cleanupErr := cleanupE2EScenario(rcx, state, opts, os.Stderr); cleanupErr != nil && err == nil {
+			// WithoutCancel: this is the last-resort teardown after a
+			// Ctrl-C-cancelled run — a dead ctx here would strand VMs.
+			if cleanupErr := cleanupE2EScenario(context.WithoutCancel(parent), rcx, state, opts, os.Stderr); cleanupErr != nil && err == nil {
 				err = cleanupErr
 			}
 		}
@@ -1061,7 +1074,7 @@ func e2eGETBody(ctx context.Context, url string, timeout time.Duration) (string,
 	deadline := time.Now().Add(timeout)
 	var lastErr error
 	for {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 		if err != nil {
 			return "", err
 		}
@@ -1121,7 +1134,7 @@ type e2eNodeList struct {
 	} `json:"items"`
 }
 
-func e2eReadyNodeCount(ctx context.Context, kubeconfig string, out io.Writer) (int, int, error) {
+func e2eReadyNodeCount(ctx context.Context, kubeconfig string, out io.Writer) (readyCount, totalCount int, err error) {
 	data, err := runKubectl(ctx, kubeconfig, nil, out, nil, "get", "nodes", "-o", "json")
 	if err != nil {
 		return 0, 0, err
@@ -1153,11 +1166,11 @@ func recordedE2ECheck(s *e2eScenarioState, name string, fn func(context.Context,
 	}
 }
 
-func cleanupE2EScenario(rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, logw io.Writer) error {
+func cleanupE2EScenario(ctx context.Context, rcx *runContext, s *e2eScenarioState, opts e2eRunOptions, logw io.Writer) error {
 	var errs []error
 	if s.kubeconfig != "" {
 		for _, release := range s.helmReleases {
-			if _, err := runExternal(context.Background(), io.Discard, io.Discard, nil, e2eKubeEnv(s.kubeconfig), "helm", "uninstall", release.name, "-n", release.namespace); err != nil {
+			if _, err := runExternal(ctx, io.Discard, io.Discard, nil, e2eKubeEnv(s.kubeconfig), "helm", "uninstall", release.name, "-n", release.namespace); err != nil {
 				errs = append(errs, err)
 			}
 		}
