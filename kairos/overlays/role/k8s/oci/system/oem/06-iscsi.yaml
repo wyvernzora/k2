@@ -1,0 +1,32 @@
+#cloud-config
+name: "K2 iSCSI initiator"
+
+# Kubernetes CSI initiators need a stable, node-unique IQN. /etc is ephemeral
+# on Kairos, while the open-iscsi package creates initiatorname.iscsi during
+# image build (and therefore gives every clone the same value). Persist the
+# directory, then replace that baked value exactly once on each installed node.
+
+stages:
+  rootfs:
+    - name: "Persist iSCSI initiator state"
+      environment_file: /run/cos/cos-layout.env
+      environment:
+        CUSTOM_BIND_MOUNTS: "/etc/iscsi"
+
+  initramfs:
+    - name: "Initialize K2 iSCSI initiator"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - |
+          marker=/etc/iscsi/.k2-initiator-initialized
+          initiator=/etc/iscsi/initiatorname.iscsi
+          if [ ! -f "$marker" ] || [ ! -s "$initiator" ]; then
+            install -d -m 0755 /etc/iscsi
+            iqn="$(/usr/sbin/iscsi-iname)"
+            umask 022
+            printf "InitiatorName=%s\n" "$iqn" > "$initiator"
+            touch "$marker"
+          fi
+      systemctl:
+        enable:
+          - iscsid.service

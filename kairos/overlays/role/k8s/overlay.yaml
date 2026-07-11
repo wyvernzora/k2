@@ -122,6 +122,25 @@ inspect:
           - op: test
             path: /stages/fs/0/commands/0
             value: /usr/sbin/k2-node-agent setup-persistence --verify-only --mode required --log-prefix kairos-persistent --marker .k2-persistent-ok
+      - path: /system/oem/06-iscsi.yaml
+        contains:
+          - /etc/iscsi/.k2-initiator-initialized
+          - /etc/iscsi/initiatorname.iscsi
+          - /usr/sbin/iscsi-iname
+          - 'printf "InitiatorName=%s\n"'
+        structuredTests:
+          - op: test
+            path: /name
+            value: K2 iSCSI initiator
+          - op: test
+            path: /stages/rootfs/0/environment_file
+            value: /run/cos/cos-layout.env
+          - op: test
+            path: /stages/rootfs/0/environment/CUSTOM_BIND_MOUNTS
+            value: /etc/iscsi
+          - op: test
+            path: /stages/initramfs/0/systemctl/enable/0
+            value: iscsid.service
     absent:
       - /system/oem/30-k2-k3s-provider.yaml
       - /etc/rancher/k3s/config.yaml
@@ -132,6 +151,9 @@ inspect:
       - blkid
       - e2label
       - findmnt
+      - iscsi-iname
+      - iscsiadm
+      - iscsid
       - k2-node-agent
       - lsblk
       - mkfs.ext4

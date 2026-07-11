@@ -27,10 +27,6 @@ steps:
   # rather than relying on the key provisioning left loaded in-kernel.
   - rebootVM:
       vm: storage
-  - nodePrepISCSI:
-      vms:
-        - server
-        - worker-1
   - helmInstall:
       release: zfs-iscsi
       chart: democratic-csi/democratic-csi
