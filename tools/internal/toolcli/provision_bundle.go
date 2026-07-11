@@ -85,12 +85,13 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 		return bundle{}, err
 	}
 	return bundle{
-		ClusterConfig:   clusterConfig,
-		BootstrapConfig: bootstrapConfig,
-		Activation:      render.ActivationCloudConfig(flags.NodeName, operatorKeys),
-		AuthorizedKeys:  render.AuthorizedKeys(operatorKeys),
-		Manifests:       bootstrapManifests,
-		RootArgoApp:     rootArgoApp,
+		ClusterConfig:      clusterConfig,
+		BootstrapConfig:    bootstrapConfig,
+		Activation:         render.ActivationCloudConfig(flags.NodeName, operatorKeys),
+		OperatorActivation: render.OperatorKeysActivationCloudConfig("K2 Kubernetes operator keys", "kairos", operatorKeys),
+		AuthorizedKeys:     render.AuthorizedKeys(operatorKeys),
+		Manifests:          bootstrapManifests,
+		RootArgoApp:        rootArgoApp,
 	}, nil
 }
 
@@ -158,10 +159,11 @@ func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, meta
 	}
 
 	return joinBundle{
-		ClusterConfig:  clusterConfig,
-		JoinConfig:     joinConfig,
-		Activation:     activation,
-		AuthorizedKeys: render.AuthorizedKeys(operatorKeys),
+		ClusterConfig:      clusterConfig,
+		JoinConfig:         joinConfig,
+		Activation:         activation,
+		OperatorActivation: render.OperatorKeysActivationCloudConfig("K2 Kubernetes operator keys", "kairos", operatorKeys),
+		AuthorizedKeys:     render.AuthorizedKeys(operatorKeys),
 	}, nil
 }
 
@@ -169,6 +171,7 @@ func writeBundle(dir string, bundle bundle) error {
 	files := map[string][]byte{
 		"20-k2-cluster.yaml":          bundle.ClusterConfig,
 		"30-k2-bootstrap.yaml":        bundle.BootstrapConfig,
+		"98-k2-operator-keys.yaml":    bundle.OperatorActivation,
 		"99-k2-k3s-bootstrap.yaml":    bundle.Activation,
 		"operator_authorized_keys":    bundle.AuthorizedKeys,
 		"k2-bootstrap.k8s.yaml":       bundle.Manifests,
@@ -188,6 +191,7 @@ func writeBundle(dir string, bundle bundle) error {
 func writeJoinBundle(dir string, role nodeRole, bundle joinBundle) error {
 	files := map[string][]byte{
 		"30-k2-" + string(role) + ".yaml":     bundle.JoinConfig,
+		"98-k2-operator-keys.yaml":            bundle.OperatorActivation,
 		"99-k2-k3s-" + string(role) + ".yaml": bundle.Activation,
 		"operator_authorized_keys":            bundle.AuthorizedKeys,
 	}

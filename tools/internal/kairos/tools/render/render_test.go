@@ -142,6 +142,26 @@ func TestActivationCloudConfigSetsHostnameAndEnablesK3s(t *testing.T) {
 	}
 }
 
+func TestOperatorKeysActivationCloudConfigDeclaresTopLevelAdminUser(t *testing.T) {
+	got := string(OperatorKeysActivationCloudConfig(
+		"K2 Kubernetes operator keys",
+		"kairos",
+		[]string{"ssh-ed25519 AAAAtest operator"},
+	))
+	for _, want := range []string{
+		"users:\n    - name: kairos",
+		"groups:\n        - admin",
+		"ssh_authorized_keys:\n        - ssh-ed25519 AAAAtest operator",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("operator activation missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "stages:") {
+		t.Errorf("operator user should not need a stage:\n%s", got)
+	}
+}
+
 func TestJoinConfigRendersServerJoinWithControlPlaneTaint(t *testing.T) {
 	data, err := JoinConfig(JoinInput{
 		NodeName:     "server-02",

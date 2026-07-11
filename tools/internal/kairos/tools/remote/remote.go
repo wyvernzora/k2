@@ -28,6 +28,7 @@ const (
 	authModeUnknown authMode = iota
 	authModePassword
 	authModeLocalSSH
+	commandOutputLimit = 64 << 10
 )
 
 type Client struct {
@@ -250,7 +251,7 @@ func (c *Client) Run(script string) error {
 	if err := c.EnsureAuth(); err != nil {
 		return err
 	}
-	c.logf("ssh run install script on %s", c.Address())
+	c.logf("ssh run command on %s", c.Address())
 	return c.run(script)
 }
 
@@ -279,7 +280,52 @@ func (e sessionRunError) Error() string { return e.err.Error() }
 func (e sessionRunError) Unwrap() error { return e.err }
 
 func (c *Client) run(script string) error {
-	return c.runWithWriters(script, writer(c.Stdout), writer(c.Stderr))
+	var stdout, stderr tailBuffer
+	err := c.runWithWriters(
+		script,
+		io.MultiWriter(writer(c.Stdout), &stdout),
+		io.MultiWriter(writer(c.Stderr), &stderr),
+	)
+	return commandErrorWithOutput(err, stdout.Bytes(), stderr.Bytes())
+}
+
+type tailBuffer struct {
+	buf bytes.Buffer
+}
+
+func (b *tailBuffer) Write(p []byte) (int, error) {
+	written := len(p)
+	if len(p) >= commandOutputLimit {
+		b.buf.Reset()
+		_, _ = b.buf.Write(p[len(p)-commandOutputLimit:])
+		return written, nil
+	}
+	if overflow := b.buf.Len() + len(p) - commandOutputLimit; overflow > 0 {
+		b.buf.Next(overflow)
+	}
+	_, _ = b.buf.Write(p)
+	return written, nil
+}
+
+func (b *tailBuffer) Bytes() []byte {
+	return b.buf.Bytes()
+}
+
+func commandErrorWithOutput(err error, stdout, stderr []byte) error {
+	if err == nil {
+		return nil
+	}
+	var details strings.Builder
+	if output := strings.TrimSpace(string(stdout)); output != "" {
+		fmt.Fprintf(&details, "\nremote stdout:\n%s", output)
+	}
+	if output := strings.TrimSpace(string(stderr)); output != "" {
+		fmt.Fprintf(&details, "\nremote stderr:\n%s", output)
+	}
+	if details.Len() == 0 {
+		return err
+	}
+	return fmt.Errorf("%w%s", err, details.String())
 }
 
 func (c *Client) runCapture(script string) ([]byte, error) {

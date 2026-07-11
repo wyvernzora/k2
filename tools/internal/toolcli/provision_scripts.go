@@ -25,6 +25,7 @@ func bootstrapVerificationScript(nodeName string) string {
 	fmt.Fprintf(&buf, "verify 'cluster config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n")
 	fmt.Fprintf(&buf, "verify 'bootstrap config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/30-k2-bootstrap.yaml\n")
 	fmt.Fprintf(&buf, "verify 'bootstrap activation installed' sudo test -s /oem/99-k2-k3s-bootstrap.yaml\n")
+	fmt.Fprintf(&buf, "verify 'operator activation installed' sudo test -s /oem/98-k2-operator-keys.yaml\n")
 	fmt.Fprintf(&buf, "verify 'k3s service enabled' systemctl is-enabled --quiet k3s\n")
 	fmt.Fprintf(&buf, "verify 'k3s service active' systemctl is-active --quiet k3s\n")
 	fmt.Fprintf(&buf, "verify 'k3s kubeconfig exists' sudo test -s /etc/rancher/k3s/k3s.yaml\n")
@@ -44,6 +45,7 @@ func joinVerificationScript(nodeName string, role nodeRole) string {
 	activationFile := "99-k2-k3s-" + string(role) + ".yaml"
 	fmt.Fprintf(&buf, "verify '%s join config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/%s\n", role, configFile)
 	fmt.Fprintf(&buf, "verify '%s activation installed' sudo test -s /oem/%s\n", role, activationFile)
+	fmt.Fprintf(&buf, "verify 'operator activation installed' sudo test -s /oem/98-k2-operator-keys.yaml\n")
 	if role == nodeRoleServer {
 		fmt.Fprintf(&buf, "verify 'server invariant config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
 		fmt.Fprintf(&buf, "verify 'cluster config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n")
@@ -133,6 +135,7 @@ func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/30-k2-bootstrap.yaml /etc/rancher/k3s/config.yaml.d/30-k2-bootstrap.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing Kairos k3s activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/99-k2-k3s-bootstrap.yaml /oem/99-k2-k3s-bootstrap.yaml\n", remoteDir)
+	fmt.Fprintf(&buf, "sudo install -m 0644 %q/98-k2-operator-keys.yaml /oem/98-k2-operator-keys.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing bootstrap manifest bundle'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/k2-bootstrap.k8s.yaml /var/lib/rancher/k3s/server/manifests/k2-bootstrap.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "echo 'k2-tools: staging root Argo CD app manifest'\n")
@@ -176,6 +179,7 @@ func joinInstallScript(remoteDir string, nodeName string, role nodeRole, noReboo
 	fmt.Fprintf(&buf, "sudo install -m 0600 %q/%s /etc/rancher/k3s/config.yaml.d/%s\n", remoteDir, configFile, configFile)
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing Kairos k3s activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/%s /oem/%s\n", remoteDir, activationFile, activationFile)
+	fmt.Fprintf(&buf, "sudo install -m 0644 %q/98-k2-operator-keys.yaml /oem/98-k2-operator-keys.yaml\n", remoteDir)
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing operator SSH keys'\n")
 	fmt.Fprintf(&buf, "sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)

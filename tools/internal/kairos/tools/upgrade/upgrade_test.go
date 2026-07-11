@@ -1,52 +1,106 @@
 package upgrade
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/wyvernzora/k2/tools/internal/kairos/tools/kubectl"
 )
 
-func TestParseImageRefHappyPath(t *testing.T) {
-	in := `NAME="Kairos"
-IMAGE_REPO=ghcr.io/wyvernzora/k2-kairos
-IMAGE_LABEL=ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3
-KAIROS_RELEASE=v3.6.0
-`
-	got := parseImageRef(in)
-	want := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3"
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
-}
-
-func TestParseImageRefStripsQuotes(t *testing.T) {
-	in := `IMAGE_REPO="ghcr.io/wyvernzora/k2-kairos"
-IMAGE_LABEL='ubuntu-26.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev0'`
-	got := parseImageRef(in)
-	want := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1-rev0"
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
-}
-
-func TestParseImageRefMissingFieldReturnsEmpty(t *testing.T) {
-	if got := parseImageRef("IMAGE_REPO=foo\n"); got != "" {
-		t.Errorf("expected empty when IMAGE_LABEL missing, got %q", got)
-	}
-	if got := parseImageRef("NAME=Kairos\n"); got != "" {
-		t.Errorf("expected empty when both fields missing, got %q", got)
-	}
-}
-
 func TestTagPrefixFromMetadata(t *testing.T) {
 	meta := NodeImageMetadata{
-		Target:   "ubuntu-26.04-arm64-rpi4cb-k8s",
-		Arch:     "arm64",
-		Hardware: "rpi4cb",
+		Flavor:        "ubuntu-26.04",
+		Role:          "k8s",
+		Arch:          "arm64",
+		Hardware:      "rpi4cb",
+		KairosVersion: "v4.1.2",
 	}
-	if got := tagPrefix(meta); got != "ubuntu-26.04-arm64-rpi4cb-k8s-" {
+	if got := tagPrefix(meta); got != "ubuntu-26.04-v4.1.2-arm64-rpi4cb-k8s-" {
 		t.Errorf("got %q", got)
+	}
+}
+
+func TestImageRefFromMetadata(t *testing.T) {
+	tests := []struct {
+		name string
+		meta NodeImageMetadata
+		want string
+	}{
+		{
+			name: "legacy Ubuntu 24.04 image",
+			meta: NodeImageMetadata{
+				Flavor:            "ubuntu",
+				FlavorRelease:     "24.04",
+				Variant:           "standard",
+				Arch:              "amd64",
+				Hardware:          "qemu",
+				KubernetesDistro:  "k3s",
+				KubernetesVersion: "v1.36.0+k3s1",
+				KairosVersion:     "v4.1.0",
+				ImageRevision:     "rev0",
+			},
+			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-amd64-qemu-k3s-v1.36.0-k3s1-rev0",
+		},
+		{
+			name: "current Ubuntu 26.04 image",
+			meta: NodeImageMetadata{
+				Flavor:            "ubuntu-26.04",
+				Role:              "k8s",
+				Arch:              "amd64",
+				Hardware:          "qemu",
+				KubernetesDistro:  "k3s",
+				KubernetesVersion: "v1.36.2+k3s1",
+				KairosVersion:     "v4.1.2",
+				ImageRevision:     "rev1",
+			},
+			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.2-amd64-qemu-k8s-v1.36.2-k3s1-rev1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := imageRefFromMetadata("ghcr.io/wyvernzora/k2-kairos", tt.meta)
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestImageRefFromMetadataRejectsIncompleteIdentity(t *testing.T) {
+	if got := imageRefFromMetadata("ghcr.io/wyvernzora/k2-kairos", NodeImageMetadata{}); got != "" {
+		t.Errorf("got %q, want empty", got)
+	}
+}
+
+func TestImageRepository(t *testing.T) {
+	tests := []struct {
+		name string
+		ref  string
+		want string
+	}{
+		{name: "tag", ref: "ghcr.io/wyvernzora/k2-kairos:rev1", want: "ghcr.io/wyvernzora/k2-kairos"},
+		{name: "registry port", ref: "registry:5000/k2/image:rev1", want: "registry:5000/k2/image"},
+		{name: "digest", ref: "ghcr.io/wyvernzora/k2-kairos@sha256:abc", want: "ghcr.io/wyvernzora/k2-kairos"},
+		{name: "untagged", ref: "ghcr.io/wyvernzora/k2-kairos", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := imageRepository(tt.ref); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestKairosUpgradeSourceUsesOCIType(t *testing.T) {
+	ref := "ghcr.io/wyvernzora/k2-kairos:rev1"
+	if got, want := kairosUpgradeSource(ref), "oci:"+ref; got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }
 
@@ -171,6 +225,46 @@ func TestImageRefString(t *testing.T) {
 	}
 	if got := (ImageRef{Ref: "foo:bar", Created: time.Now()}).String(); got != "foo:bar" {
 		t.Errorf("got %q, want foo:bar", got)
+	}
+}
+
+func TestBootModeProbeUsesMarkerExistence(t *testing.T) {
+	tests := []struct {
+		name     string
+		active   bool
+		recovery bool
+		want     string
+	}{
+		{name: "active marker content is ignored", active: true, want: "active"},
+		{name: "recovery marker", recovery: true, want: "recovery"},
+		{name: "recovery wins if both markers exist", active: true, recovery: true, want: "recovery"},
+		{name: "missing markers", want: "unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			activePath := filepath.Join(dir, "active_mode")
+			recoveryPath := filepath.Join(dir, "recovery_mode")
+			if tt.active {
+				if err := os.WriteFile(activePath, []byte("1"), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.recovery {
+				if err := os.WriteFile(recoveryPath, nil, 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			out, err := exec.Command("sh", "-c", bootModeProbeScript(activePath, recoveryPath)).Output()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := string(out); got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 

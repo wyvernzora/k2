@@ -117,19 +117,21 @@ type renderStorageCmd struct {
 }
 
 type bundle struct {
-	ClusterConfig   []byte
-	BootstrapConfig []byte
-	Activation      []byte
-	AuthorizedKeys  []byte
-	Manifests       []byte
-	RootArgoApp     []byte
+	ClusterConfig      []byte
+	BootstrapConfig    []byte
+	Activation         []byte
+	OperatorActivation []byte
+	AuthorizedKeys     []byte
+	Manifests          []byte
+	RootArgoApp        []byte
 }
 
 type joinBundle struct {
-	ClusterConfig  []byte
-	JoinConfig     []byte
-	Activation     []byte
-	AuthorizedKeys []byte
+	ClusterConfig      []byte
+	JoinConfig         []byte
+	Activation         []byte
+	OperatorActivation []byte
+	AuthorizedKeys     []byte
 }
 
 type nodeRole string

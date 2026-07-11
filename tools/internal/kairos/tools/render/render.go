@@ -35,22 +35,29 @@ type JoinInput struct {
 }
 
 type ImageMetadata struct {
-	Target   string `yaml:"target"`
-	Arch     string `yaml:"arch"`
-	Hardware string `yaml:"hardware"`
-	Role     string `yaml:"role"`
+	Target            string `yaml:"target"`
+	Flavor            string `yaml:"flavor"`
+	FlavorRelease     string `yaml:"flavorRelease"`
+	Variant           string `yaml:"variant"`
+	Role              string `yaml:"role"`
+	Arch              string `yaml:"arch"`
+	Hardware          string `yaml:"hardware"`
+	KubernetesDistro  string `yaml:"kubernetesDistro"`
+	KubernetesVersion string `yaml:"kubernetesVersion"`
+	KairosVersion     string `yaml:"kairosVersion"`
+	ImageRevision     string `yaml:"imageRevision"`
 }
 
 type activationStages struct {
 	Initramfs []activationStage `yaml:"initramfs,omitempty"`
+	BootAfter []activationStage `yaml:"boot.after,omitempty"`
 }
 
 type activationStage struct {
-	Name     string                    `yaml:"name"`
-	Hostname string                    `yaml:"hostname,omitempty"`
-	Files    []activationFile          `yaml:"files,omitempty"`
-	Commands []string                  `yaml:"commands,omitempty"`
-	Users    map[string]activationUser `yaml:"users,omitempty"`
+	Name     string           `yaml:"name"`
+	Hostname string           `yaml:"hostname,omitempty"`
+	Files    []activationFile `yaml:"files,omitempty"`
+	Commands []string         `yaml:"commands,omitempty"`
 }
 
 type activationFile struct {
@@ -61,7 +68,8 @@ type activationFile struct {
 	Group       int    `yaml:"group"`
 }
 
-type activationUser struct {
+type cloudUser struct {
+	Name              string   `yaml:"name"`
 	Groups            []string `yaml:"groups,omitempty"`
 	SSHAuthorizedKeys []string `yaml:"ssh_authorized_keys,omitempty"`
 }
@@ -219,16 +227,16 @@ func hostsEntryCommand(hostname string) string {
 	return fmt.Sprintf("grep -qxF %q /etc/hosts || echo %q >> /etc/hosts", entry, entry)
 }
 
-// OperatorKeysActivationCloudConfig renders an /oem stage that installs
-// operator SSH keys on every boot, including recovery boots. Keys under
+// OperatorKeysActivationCloudConfig renders a top-level Kairos user declaration
+// that installs operator SSH keys on every boot, including recovery boots. Keys under
 // /home/<user> alone do not survive `kairos-agent reset` (COS_PERSISTENT is
 // wiped) while hardening's removal of the default password DOES survive
-// (it edits /oem) — without this stage a hardened node comes out of reset
+// (it edits /oem) — without this config a hardened node comes out of reset
 // unreachable over SSH.
 func OperatorKeysActivationCloudConfig(name string, user string, keys []string) []byte {
 	type config struct {
-		Name   string           `yaml:"name"`
-		Stages activationStages `yaml:"stages"`
+		Name  string      `yaml:"name"`
+		Users []cloudUser `yaml:"users"`
 	}
 	// A full users: definition (admin group, key-only) rather than bare
 	// authorized_keys: kairos-agent 2.30+/Kairos 3.3+ refuses reset/install
@@ -236,47 +244,43 @@ func OperatorKeysActivationCloudConfig(name string, user string, keys []string) 
 	// disables the stock 90_custom.yaml that used to.
 	out := config{
 		Name: name,
-		Stages: activationStages{
-			Initramfs: []activationStage{
-				{
-					Name: "Operator user and keys",
-					Users: map[string]activationUser{
-						user: {
-							Groups:            []string{"admin"},
-							SSHAuthorizedKeys: keys,
-						},
-					},
-				},
+		Users: []cloudUser{
+			{
+				Name:              user,
+				Groups:            []string{"admin"},
+				SSHAuthorizedKeys: keys,
 			},
 		},
 	}
 	return mustCloudConfig(out)
 }
 
-// CSIUserActivationCloudConfig declares the csi service user as a boot
-// stage. The user MUST be stage-managed, not useradd'd once at provision
+// CSIUserActivationCloudConfig declares the csi service user at top level so
+// Kairos reconciles it on every boot, rather than useradd'ing it once at provision
 // time: Kairos /etc is an ephemeral overlay, so an imperative user (and
 // anything in /etc/sudoers.d) vanishes on the first reboot — found live
 // when a rebooted appliance answered democratic-csi with "Invalid user
-// csi" and sshd penalty-boxed the worker for the repeated attempts.
-// The stage also re-chowns the persistent /home/csi so uid drift across
-// recreations can never break sshd StrictModes.
+// csi" and sshd penalty-boxed the worker for the repeated attempts. A
+// boot.after stage installs sudoers and re-chowns the persistent /home/csi
+// after the top-level user declaration has been applied.
 func CSIUserActivationCloudConfig(csiPublicKey string, sudoers string) []byte {
 	type config struct {
 		Name   string           `yaml:"name"`
+		Users  []cloudUser      `yaml:"users"`
 		Stages activationStages `yaml:"stages"`
 	}
 	out := config{
 		Name: "K2 storage csi user",
+		Users: []cloudUser{
+			{
+				Name:              "csi",
+				SSHAuthorizedKeys: []string{csiPublicKey},
+			},
+		},
 		Stages: activationStages{
-			Initramfs: []activationStage{
+			BootAfter: []activationStage{
 				{
-					Name: "CSI user",
-					Users: map[string]activationUser{
-						"csi": {
-							SSHAuthorizedKeys: []string{csiPublicKey},
-						},
-					},
+					Name: "CSI user support files",
 					Files: []activationFile{
 						{
 							Path:        "/etc/sudoers.d/99-csi",

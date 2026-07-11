@@ -44,17 +44,14 @@ const DefaultRegistryRepo = "ghcr.io/wyvernzora/k2-kairos"
 // tag-search prefix (and surface the current image in the Plan).
 const MetadataPath = "/usr/share/k2/image-build/metadata.yaml"
 
-// ActiveModePath is the Kairos runtime marker that names which COS_*
-// partition is currently booted (active / passive / recovery). Verify
-// reads it after the reboot to confirm we landed on active and not
-// recovery.
+// ActiveModePath is the Kairos runtime marker created when the node boots
+// from the active partition. Its contents are not meaningful.
 const ActiveModePath = "/run/cos/active_mode"
 
-// KairosReleasePath is /etc/kairos-release — the per-boot file that
-// carries the OCI ref the running image was installed from
-// (IMAGE_REPO + IMAGE_LABEL). We grep it to verify the post-reboot
-// active image matches what kairos-agent upgrade was told to install.
-const KairosReleasePath = "/etc/kairos-release"
+// RecoveryModePath is the Kairos runtime marker created when the node boots
+// from the recovery partition. Marker contents are not meaningful; boot mode
+// is determined by which marker file exists.
+const RecoveryModePath = "/run/cos/recovery_mode"
 
 // Defaults for the upgrade timeouts. Picked as the longest
 // reasonable values for a CM4-on-eMMC node (slowest hardware we
@@ -77,10 +74,8 @@ type Plan struct {
 	NodeName       string
 	IsControlPlane bool
 
-	// Current is the image the node is presently running. We read
-	// the ref from /etc/kairos-release IMAGE field. Digest may be
-	// empty if /etc/kairos-release doesn't carry the digest form;
-	// this is informational, not load-bearing.
+	// Current is the image the node is presently running, reconstructed
+	// from K2's on-node metadata using the target repository.
 	Current ImageRef
 
 	// Target is the image the upgrade will install. Always populated;
@@ -111,7 +106,7 @@ type Plan struct {
 // ImageRef is the small shape we carry around for "an OCI image we
 // either know about or are about to install". Created is zero when
 // the source of the ref is something that doesn't have a publish
-// time (e.g. /etc/kairos-release on the node). Digest is best-effort:
+// time (e.g. metadata.yaml on the node). Digest is best-effort:
 // we record it when the registry tells us, empty otherwise.
 type ImageRef struct {
 	Ref     string
@@ -153,24 +148,30 @@ type Runner struct {
 	// MetadataReader is the function used to read /usr/share/k2/.../metadata.yaml
 	// off the node and decode it. Wired to the existing
 	// readRemoteMetadata in main.go so we don't duplicate decode logic.
-	// Returns the prefix-relevant fields we feed into the tag search.
+	// Returns the canonical K2 image identity used by the Plan and verifier.
 	MetadataReader func(*remote.Client) (NodeImageMetadata, error)
 }
 
-// NodeImageMetadata is the slimmed shape the upgrade package needs
-// from the on-node metadata.yaml. Mirrors render.ImageMetadata but
-// kept distinct so this package doesn't import the render package
-// (which carries the bootstrap-only types). The CLI adapter
-// translates between the two.
+// NodeImageMetadata is the K2-owned image identity baked into metadata.yaml.
+// It supports both the legacy Ubuntu 24.04 target layout and the current
+// Ubuntu 26.04 layout so already-installed nodes remain identifiable.
 type NodeImageMetadata struct {
-	Target   string
-	Arch     string
-	Hardware string
+	Target            string
+	Flavor            string
+	FlavorRelease     string
+	Variant           string
+	Role              string
+	Arch              string
+	Hardware          string
+	KubernetesDistro  string
+	KubernetesVersion string
+	KairosVersion     string
+	ImageRevision     string
 }
 
 // Resolve runs every read-only step needed to populate a Plan: SSH
-// metadata read, current-image-ref read, registry discovery (when
-// --source omitted), kubectl node lookup, control-plane quorum
+// metadata read, registry discovery (when --source omitted), kubectl node
+// lookup, control-plane quorum
 // math. Returns a Plan ready to be rendered to the operator.
 //
 // Resolve is purely informational — no node state is modified, no
@@ -205,16 +206,6 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 		return Plan{}, fmt.Errorf("read node metadata: %w", err)
 	}
 
-	// Read /etc/kairos-release for the current image ref.
-	current, err := readCurrentImage(r.Remote)
-	if err != nil {
-		// Not fatal — Resolve still works, just shows "(unknown)" in
-		// the Plan. This happens on older Kairos releases that don't
-		// carry IMAGE_REPO/IMAGE_LABEL in /etc/kairos-release.
-		current = ""
-	}
-	plan.Current = ImageRef{Ref: current}
-
 	// Resolve the target image.
 	if in.Source != "" {
 		// Explicit --source. Hit the registry just for the publish
@@ -243,6 +234,13 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 		plan.Target = ImageRef{Ref: img.Ref, Digest: img.Digest, Created: img.Created}
 		plan.AutoDiscovered = true
 	}
+
+	repo := imageRepository(plan.Target.Ref)
+	current := imageRefFromMetadata(repo, meta)
+	if current == "" {
+		return Plan{}, fmt.Errorf("node image metadata is incomplete; cannot reconstruct current image")
+	}
+	plan.Current = ImageRef{Ref: current}
 
 	// Control-plane quorum check. Worker nodes always pass.
 	if plan.IsControlPlane {
@@ -299,7 +297,7 @@ func (r *Runner) Drain(ctx context.Context, plan Plan, timeout time.Duration) er
 // the node, which writes the new image to COS_ACTIVE. Does NOT
 // reboot — Reboot is the next phase.
 func (r *Runner) UpgradeActive(ctx context.Context, plan Plan) error {
-	script := fmt.Sprintf("sudo kairos-agent upgrade --source %s", shellQuote(plan.Target.Ref))
+	script := fmt.Sprintf("sudo kairos-agent upgrade --source %s", shellQuote(kairosUpgradeSource(plan.Target.Ref)))
 	return r.Remote.Run(script)
 }
 
@@ -333,22 +331,33 @@ func (r *Runner) Reboot(ctx context.Context, plan Plan, timeout time.Duration) e
 // either check fails — the caller leaves the node cordoned and
 // surfaces the error.
 func (r *Runner) VerifyActive(ctx context.Context, plan Plan) error {
-	mode, err := r.Remote.Capture("cat " + shellQuote(ActiveModePath) + " 2>/dev/null || true")
+	mode, err := r.Remote.Capture(bootModeProbeScript(ActiveModePath, RecoveryModePath))
 	if err != nil {
-		return fmt.Errorf("read %s: %w", ActiveModePath, err)
+		return fmt.Errorf("read Kairos boot mode markers: %w", err)
 	}
 	trimmed := strings.TrimSpace(string(mode))
-	if trimmed != "" && trimmed != "active" {
+	if trimmed != "active" {
 		return fmt.Errorf("node booted into %q mode, not active; manual recovery required", trimmed)
 	}
-	current, err := readCurrentImage(r.Remote)
+	meta, err := r.MetadataReader(r.Remote)
 	if err != nil {
-		return fmt.Errorf("read post-reboot image ref: %w", err)
+		return fmt.Errorf("read post-reboot image metadata: %w", err)
+	}
+	current := imageRefFromMetadata(imageRepository(plan.Target.Ref), meta)
+	if current == "" {
+		return fmt.Errorf("post-reboot image metadata is incomplete")
 	}
 	if !imageRefsMatch(current, plan.Target.Ref) {
 		return fmt.Errorf("post-reboot image %q does not match target %q", current, plan.Target.Ref)
 	}
 	return nil
+}
+
+func bootModeProbeScript(activePath, recoveryPath string) string {
+	return fmt.Sprintf(
+		"if test -e %s; then printf recovery; elif test -e %s; then printf active; else printf unknown; fi",
+		shellQuote(recoveryPath), shellQuote(activePath),
+	)
 }
 
 // SmokeCheck confirms the cluster-side post-reboot state: the node
@@ -393,7 +402,7 @@ func (r *Runner) SmokeCheck(ctx context.Context, plan Plan) error {
 // belt-and-suspenders concern that can be re-run later.
 func (r *Runner) UpgradeRecovery(ctx context.Context, plan Plan) error {
 	script := fmt.Sprintf("sudo kairos-agent upgrade --recovery --source %s",
-		shellQuote(plan.Target.Ref))
+		shellQuote(kairosUpgradeSource(plan.Target.Ref)))
 	return r.Remote.Run(script)
 }
 
@@ -420,71 +429,67 @@ func (r *Runner) validate() error {
 	return nil
 }
 
-// tagPrefix constructs the OCI tag-search prefix from the on-node
-// metadata. The Kairos image pipeline names tags as
-// `<target>-<k3sVersion>-rev<N>` (rev increments per content-hash
-// change). We don't have k3sVersion in metadata.yaml today, so the
-// prefix is just `<target>-`; the registry typically only carries
-// one k3s version per target at a time, and any mismatch surfaces
-// to the operator in the Plan as "Target image: <ref>" — they
-// notice if the k3s suffix changed unexpectedly.
-//
-// If metadata.yaml ever grows a `k3sVersion` field, tighten this
-// to include it.
+// tagPrefix constructs the stable target portion of the OCI tag while leaving
+// the Kubernetes version and revision open for registry discovery.
 func tagPrefix(meta NodeImageMetadata) string {
-	return meta.Target + "-"
-}
-
-// readCurrentImage SSH-reads /etc/kairos-release and extracts the
-// IMAGE_REPO + IMAGE_LABEL composite ref. Returns "" + error if the
-// file is missing or doesn't carry IMAGE_REPO; the caller treats
-// this as "unknown current image, just show Target."
-func readCurrentImage(client *remote.Client) (string, error) {
-	data, err := client.Capture("cat " + shellQuote(KairosReleasePath))
-	if err != nil {
-		return "", err
-	}
-	return parseImageRef(string(data)), nil
-}
-
-// parseImageRef extracts the OCI ref from /etc/kairos-release's
-// IMAGE_REPO + IMAGE_LABEL pair. Format:
-//
-//	IMAGE_REPO=ghcr.io/wyvernzora/k2-kairos
-//	IMAGE_LABEL=ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev3
-//
-// Returns "" if either field is missing.
-func parseImageRef(release string) string {
-	var repo, label string
-	for _, line := range strings.Split(release, "\n") {
-		line = strings.TrimSpace(line)
-		if v, ok := strings.CutPrefix(line, "IMAGE_REPO="); ok {
-			repo = trimEnvValue(v)
-		}
-		if v, ok := strings.CutPrefix(line, "IMAGE_LABEL="); ok {
-			label = trimEnvValue(v)
-		}
-	}
-	if repo == "" || label == "" {
+	segments := imageTagBase(meta)
+	if len(segments) == 0 {
 		return ""
 	}
-	return repo + ":" + label
+	return strings.Join(segments, "-") + "-"
 }
 
-func trimEnvValue(v string) string {
-	v = strings.TrimSpace(v)
-	if len(v) >= 2 && (v[0] == '"' && v[len(v)-1] == '"' || v[0] == '\'' && v[len(v)-1] == '\'') {
-		v = v[1 : len(v)-1]
+func imageRefFromMetadata(repo string, meta NodeImageMetadata) string {
+	segments := imageTagBase(meta)
+	if repo == "" || len(segments) == 0 || meta.ImageRevision == "" {
+		return ""
 	}
-	return v
+	if meta.KubernetesDistro != "" {
+		if meta.KubernetesVersion == "" {
+			return ""
+		}
+		segments = append(segments, strings.ReplaceAll(meta.KubernetesVersion, "+", "-"))
+	}
+	segments = append(segments, meta.ImageRevision)
+	return repo + ":" + strings.Join(segments, "-")
+}
+
+func imageTagBase(meta NodeImageMetadata) []string {
+	flavor := meta.Flavor
+	if meta.FlavorRelease != "" {
+		flavor += "-" + meta.FlavorRelease
+	}
+	if meta.Variant != "" {
+		flavor += "-" + meta.Variant
+	}
+	role := meta.Role
+	if role == "" {
+		role = meta.KubernetesDistro
+	}
+	if flavor == "" || meta.KairosVersion == "" || meta.Arch == "" || meta.Hardware == "" || role == "" {
+		return nil
+	}
+	return []string{flavor, meta.KairosVersion, meta.Arch, meta.Hardware, role}
+}
+
+func imageRepository(ref string) string {
+	lastSlash := strings.LastIndex(ref, "/")
+	if at := strings.LastIndex(ref, "@"); at > lastSlash {
+		return ref[:at]
+	}
+	if colon := strings.LastIndex(ref, ":"); colon > lastSlash {
+		return ref[:colon]
+	}
+	return ""
+}
+
+func kairosUpgradeSource(ref string) string {
+	return "oci:" + ref
 }
 
 // imageRefsMatch compares two refs by string equality after
-// trimming whitespace. We do NOT compare by digest here — if the
-// node reports `repo:label` and the operator's target was the same
-// `repo:label`, the upgrade was applied. A digest comparison would
-// be stricter but kairos-agent doesn't always return a digested ref
-// in /etc/kairos-release.
+// trimming whitespace. metadata.yaml records the tag components rather than
+// the registry digest, so post-reboot verification intentionally compares tags.
 func imageRefsMatch(a, b string) bool {
 	return strings.TrimSpace(a) == strings.TrimSpace(b)
 }

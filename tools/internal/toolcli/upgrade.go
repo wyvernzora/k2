@@ -291,8 +291,16 @@ func readUpgradeMetadata(client *remote.Client) (upgrade.NodeImageMetadata, erro
 		return upgrade.NodeImageMetadata{}, err
 	}
 	return upgrade.NodeImageMetadata{
-		Target:   m.Target,
-		Arch:     m.Arch,
-		Hardware: m.Hardware,
+		Target:            m.Target,
+		Flavor:            m.Flavor,
+		FlavorRelease:     m.FlavorRelease,
+		Variant:           m.Variant,
+		Role:              m.Role,
+		Arch:              m.Arch,
+		Hardware:          m.Hardware,
+		KubernetesDistro:  m.KubernetesDistro,
+		KubernetesVersion: m.KubernetesVersion,
+		KairosVersion:     m.KairosVersion,
+		ImageRevision:     m.ImageRevision,
 	}, nil
 }

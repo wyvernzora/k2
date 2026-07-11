@@ -10,7 +10,7 @@ import (
 // CONTRACT: the csi user must be recreated by a boot stage. Kairos /etc is
 // an ephemeral overlay — a provision-time useradd (and /etc/sudoers.d
 // content) vanishes on the first reboot, breaking democratic-csi's SSH.
-func TestCSIUserActivationCloudConfigRecreatesUserEveryBoot(t *testing.T) {
+func TestCSIUserActivationCloudConfigDeclaresUserAndBootSupportFiles(t *testing.T) {
 	got := string(CSIUserActivationCloudConfig("ssh-ed25519 AAAA test", "csi ALL=(ALL) NOPASSWD:ALL\n"))
 	if !strings.HasPrefix(got, "#cloud-config\n") {
 		t.Fatalf("missing #cloud-config header:\n%s", got)
@@ -20,8 +20,8 @@ func TestCSIUserActivationCloudConfigRecreatesUserEveryBoot(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"initramfs:",
-		"csi:",
+		"users:\n    - name: csi",
+		"boot.after:",
 		"ssh-ed25519 AAAA test",
 		"/etc/sudoers.d/99-csi",
 		"csi ALL=(ALL) NOPASSWD:ALL",
