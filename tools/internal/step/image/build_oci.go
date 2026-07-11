@@ -1,0 +1,136 @@
+package image
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
+	"github.com/wyvernzora/k2/tools/internal/image/plan"
+)
+
+type OCIBuilder struct {
+	Context context.Context
+	Stdout  io.Writer
+	Stderr  io.Writer
+	Runner  OCICommandRunner
+}
+
+type OCIOptions struct {
+	Push      bool
+	NoCache   bool
+	CacheFrom string
+	CacheTo   string
+}
+
+type OCICommandRunner interface {
+	Run(ctx context.Context, name string, args []string, stdout io.Writer, stderr io.Writer) error
+}
+
+type OCIExecRunner struct{}
+
+func (OCIExecRunner) Run(ctx context.Context, name string, args []string, stdout io.Writer, stderr io.Writer) error {
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	return cmd.Run()
+}
+
+func (b OCIBuilder) Image(resolved plan.Plan, options OCIOptions) error {
+	if b.Stdout == nil {
+		b.Stdout = io.Discard
+	}
+	if b.Stderr == nil {
+		b.Stderr = io.Discard
+	}
+	if b.Context == nil {
+		b.Context = context.Background()
+	}
+	if b.Runner == nil {
+		b.Runner = OCIExecRunner{}
+	}
+
+	fmt.Fprintf(b.Stdout, "Building %s\n", resolved.Target)
+	fmt.Fprintf(b.Stdout, "  image: %s\n", resolved.Image)
+	fmt.Fprintf(b.Stdout, "  platform: %s\n", resolved.Platform)
+	fmt.Fprintf(b.Stdout, "  kairos model: %s\n", resolved.KairosModel)
+	fmt.Fprintf(b.Stdout, "  hardware: %s\n", resolved.Hardware)
+	fmt.Fprintf(b.Stdout, "  overlays: %s\n", overlaysForLog(resolved.Overlays))
+
+	args := buildArgs(resolved, options)
+	if err := b.Runner.Run(b.Context, "docker", args, b.Stdout, b.Stderr); err != nil {
+		return fmt.Errorf("OCI image build failed for %s: %w", resolved.Target, err)
+	}
+	return nil
+}
+
+func buildArgs(resolved plan.Plan, options OCIOptions) []string {
+	outputMode := "--load"
+	if options.Push {
+		outputMode = "--push"
+	}
+
+	// Kubernetes-free targets must not bake the k3s version pin into the
+	// image metadata, so the version build-arg follows the distro.
+	kubernetesVersion := ""
+	if resolved.KubernetesDistro != "" {
+		kubernetesVersion = resolved.Versions.K3sVersion
+	}
+
+	args := []string{
+		"buildx", "build",
+		"--platform", resolved.Platform,
+		"--file", filepath.Join(resolved.Paths.BuildRoot, "Dockerfile"),
+		"--build-arg", "BASE_IMAGE=" + resolved.Versions.BaseImage,
+		"--build-arg", "KAIROS_INIT_VERSION=" + resolved.Versions.KairosInitVersion,
+		"--build-arg", "MODEL=" + resolved.KairosModel,
+		"--build-arg", "KUBERNETES_DISTRO=" + resolved.KubernetesDistro,
+		"--build-arg", "KUBERNETES_VERSION=" + kubernetesVersion,
+		"--build-arg", "KAIROS_VERSION=" + resolved.Versions.KairosVersion,
+		"--build-arg", "VERSION=" + resolved.Versions.KairosVersion + "-" + resolved.Versions.ImageRevision,
+		"--build-arg", "IMAGE_REVISION=" + resolved.Versions.ImageRevision,
+		"--build-arg", fmt.Sprintf("DISK_STATE_SIZE_MIB=%d", *resolved.ArtifactOptions.Raw.DiskStateSize),
+		"--build-arg", fmt.Sprintf("UPGRADE_SIZE_ALLOWANCE_MIB=%d", *resolved.UpgradeSizeAllowanceMiB),
+		"--build-arg", "TRUSTED_BOOT=false",
+		"--build-arg", "OVERLAYS=" + strings.Join(resolved.Overlays, ","),
+		"--build-arg", "TARGET_NAME=" + resolved.Target,
+		"--build-arg", "FLAVOR=" + resolved.Flavor,
+		"--build-arg", "ROLE=" + resolved.Role,
+		"--build-arg", "ARCH=" + resolved.Arch,
+		"--build-arg", "PLATFORM=" + resolved.Platform,
+		"--build-arg", "HARDWARE=" + resolved.Hardware,
+		"--build-arg", "APT_PACKAGES=" + strings.Join(resolved.AptPackages, " "),
+		"--build-arg", "APT_PURGE_PACKAGES=" + strings.Join(resolved.AptPurge, " "),
+		"--build-arg", "DRACUT_INSTALL_ITEMS=" + strings.Join(resolved.DracutInstallItems, " "),
+		"--build-arg", "POST_INSTALL_ACTIONS=" + strings.Join(resolved.PostInstallActions, " "),
+		"--tag", resolved.Image,
+	}
+	if options.NoCache {
+		args = append(args, "--no-cache")
+	} else {
+		if options.CacheFrom != "" {
+			args = append(args, "--cache-from", options.CacheFrom)
+		}
+		if options.CacheTo != "" {
+			args = append(args, "--cache-to", options.CacheTo)
+		}
+	}
+	args = append(args, outputMode, repoRoot(resolved))
+	return args
+}
+
+func repoRoot(resolved plan.Plan) string {
+	if resolved.Paths.KairosRoot == "" {
+		return "."
+	}
+	return filepath.Dir(resolved.Paths.KairosRoot)
+}
+
+func overlaysForLog(overlays []string) string {
+	if len(overlays) == 0 {
+		return "<none>"
+	}
+	return strings.Join(overlays, ",")
+}

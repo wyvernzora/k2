@@ -66,8 +66,8 @@ jobs:
         shell: bash
         run: |
           cd tools
-          go test ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
-          go vet ./cmd/k2-tools ./internal/buildtool/... ./internal/toolcli ./internal/kairos/imagebuild/... ./internal/kairos/tools/... ./internal/ui
+          go test ./...
+          go vet ./...
           go build -o k2-tools ./cmd/k2-tools
           cd ..
           ./tools/k2-tools image plan --all --format json >/tmp/kairos-image-build-plans.json

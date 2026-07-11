@@ -1,0 +1,129 @@
+package flash
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"os/exec"
+	"strings"
+)
+
+// copyBufferSize is the staging buffer between `xz -dc` stdout and the
+// `sudo dd` stdin. 4 MiB matches dd's bs=4m output block so each
+// io.CopyBuffer cycle ideally hands dd one full block.
+const copyBufferSize = 4 * 1024 * 1024
+
+// ErrXZNotInstalled signals the host doesn't have the `xz` binary on
+// PATH. Surfaced with an install hint by the runner.
+var ErrXZNotInstalled = errors.New("flash: `xz` binary not found on PATH (install via `brew install xz` on macOS, `apt install xz-utils` on Debian/Ubuntu)")
+
+// WriteRawDisk decompresses `compressedPath` via a native `xz -dc`
+// subprocess and streams the resulting bytes into a parallel
+// `sudo dd of=<rawPath> bs=4m` subprocess. `progress` receives each
+// byte that flows through the pipeline; the Reporter.Progress
+// renderer derives bytes/rate/ETA from its own internal counter, so
+// `progress` need only implement io.Writer.
+//
+// Native `xz` is used (rather than a pure-Go decoder) because LZMA2
+// decompression is CPU-bound and the native implementation is roughly
+// 2× faster than pure Go — the bottleneck for a 4 GiB .raw.xz on
+// Apple Silicon.
+//
+// dd's own stdout/stderr is captured to a small buffer for error
+// reporting; we do not surface it during the run because the Progress
+// Kind owns the display and intercalating dd's `status=progress`
+// chatter into that display would clutter the bar.
+func WriteRawDisk(ctx context.Context, progress io.Writer, compressedPath string, totalBytes uint64, rawPath string) error {
+	if _, err := exec.LookPath("xz"); err != nil {
+		return ErrXZNotInstalled
+	}
+
+	xzCmd := exec.CommandContext(ctx, "xz", "-dc", compressedPath)
+	xzStdout, err := xzCmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("flash: xz stdout pipe: %w", err)
+	}
+	var xzStderr bytes.Buffer
+	xzCmd.Stderr = &xzStderr
+
+	ddCmd := exec.CommandContext(ctx, "sudo", "dd", "of="+rawPath, "bs=4m")
+	ddStdin, err := ddCmd.StdinPipe()
+	if err != nil {
+		return fmt.Errorf("flash: dd stdin pipe: %w", err)
+	}
+	var ddStderr bytes.Buffer
+	ddCmd.Stdout = io.Discard
+	ddCmd.Stderr = &ddStderr
+
+	if err := xzCmd.Start(); err != nil {
+		return fmt.Errorf("flash: start xz: %w", err)
+	}
+	if err := ddCmd.Start(); err != nil {
+		_ = xzCmd.Process.Kill()
+		_ = xzCmd.Wait()
+		return fmt.Errorf("flash: start dd: %w", err)
+	}
+
+	// Tee the decompressed bytes to BOTH dd's stdin (the actual disk
+	// write) and the Progress (a pure byte counter). io.MultiWriter
+	// preserves dd's hot path — it only adds a counter increment per
+	// chunk, which is cheap.
+	dst := io.MultiWriter(ddStdin, progress)
+	copyErr := streamWithCancel(ctx, dst, xzStdout)
+
+	// Close dd's stdin so it sees EOF and exits cleanly.
+	_ = ddStdin.Close()
+	xzErr := xzCmd.Wait()
+	ddErr := ddCmd.Wait()
+
+	if copyErr != nil {
+		return fmt.Errorf("flash: stream decompressed image to dd: %w", copyErr)
+	}
+	if xzErr != nil {
+		return fmt.Errorf("flash: xz exited %w (stderr: %s)", xzErr, strings.TrimSpace(xzStderr.String()))
+	}
+	if ddErr != nil {
+		return fmt.Errorf("flash: dd exited %w (stderr: %s)", ddErr, strings.TrimSpace(ddStderr.String()))
+	}
+	return nil
+}
+
+// streamWithCancel is io.CopyBuffer with context cancellation, sized
+// to match `dd bs=4m` so every cycle hands dd close to a full output
+// block.
+func streamWithCancel(ctx context.Context, dst io.Writer, src io.Reader) error {
+	done := make(chan error, 1)
+	buf := make([]byte, copyBufferSize)
+	go func() {
+		_, err := io.CopyBuffer(dst, src, buf)
+		done <- err
+	}()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-done:
+		return err
+	}
+}
+
+// ErrHashMismatch indicates the post-write readback didn't match the
+// manifest's raw.sha256.
+var ErrHashMismatch = errors.New("flash: hash mismatch after write")
+
+// chooseReadBlocks picks a (bs, count) pair such that bs*count
+// exactly equals expectedSize. The build pipeline writes 1-MiB-aligned
+// images, so the 1-MiB branch is the hot path.
+func chooseReadBlocks(size uint64) (block, count uint64, err error) {
+	const mib = uint64(1024 * 1024)
+	const sector = uint64(512)
+	switch {
+	case size%mib == 0:
+		return mib, size / mib, nil
+	case size%sector == 0:
+		return sector, size / sector, nil
+	default:
+		return 0, 0, fmt.Errorf("flash: image size %d is not aligned to 512 B or 1 MiB; verification would over/under-read", size)
+	}
+}

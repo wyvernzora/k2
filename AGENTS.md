@@ -377,5 +377,13 @@ proper section above and remove the inbox duplicate.
   and mount it through `N8N_CUSTOM_EXTENSIONS`.
 - Apps own their exported endpoints, addresses, subnets, ports, and workload
   facts; other apps should import those facts instead of duplicating them.
+- Go toolbox steps live under `tools/internal/step/<bucket>/<step>.go`; composed
+  command workflows live under `tools/internal/workflow/<bucket>/<workflow>.go`.
+- Pure build/image configuration, planning, and parsing support stays under
+  `tools/internal/build/` or `tools/internal/image/`; do not treat every helper
+  called by a workflow as an executable step.
+- Keep one executable step or workflow per Go file. Workflow buckets follow
+  CLI families (`provision`, `e2e`, `upgrade`, `image`, `vm`, `build`); shared
+  clients and domain support do not belong under `step/`.
 - Plex does not use its `/transcode` volume; do not choose it as a storage
   migration pilot.
