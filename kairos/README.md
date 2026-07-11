@@ -13,6 +13,7 @@ live here alongside the Dockerfile, image overlays, and CI helper scripts.
 | `Dockerfile` | Image-build Dockerfile that turns Ubuntu into Kairos role images. |
 | `overlays/` | Optional reviewable OCI/raw overlays plus overlay inspection metadata. |
 | `scripts/` | CI helpers for target selection and artifact publication. |
+| `docs/` | Operator runbooks for common deployed-node maintenance scenarios. |
 | `node-agent/` | Go helper baked into images as `/usr/sbin/k2-node-agent` for early-boot setup and health checks. |
 | `tools/` | Presets and docs for provisioning clean Kairos nodes and managing local QEMU VMs through root `k2-tools`. |
 | `Earthfile` | Compatibility wrappers around root Earthly targets for image validation and artifact generation. |
@@ -52,6 +53,9 @@ Role-specific behavior lives in the role overlay docs:
 
 - [k8s role overlay](overlays/role/k8s/README.md)
 - [storage role overlay](overlays/role/storage/README.md)
+
+Common deployed-node maintenance procedures live in the
+[Kairos runbooks](docs/README.md).
 
 The targets are intentionally cluster-light: they include the OS, k3s, hardware
 defaults, and invariant K2 K3s server config, but do not enable the K3s service
