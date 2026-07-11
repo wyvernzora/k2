@@ -41,8 +41,6 @@ Important flags:
 | Flag | Default | Purpose |
 | --- | --- | --- |
 | `--disk` | `auto` | Target disk path, or `auto` to choose a non-boot disk. |
-| `--mode` | `optional` | `required` fails when no suitable target disk exists; `optional` falls back to the existing persistent partition. |
-| `--old-label` | `COS_PERSIST_OLD` | Label applied to an old persistent partition when persistence moves elsewhere. |
 | `--marker` | `.k2-persistent-ok` | Marker file written below `/usr/local/.state` after successful verification. |
 | `--log-prefix` | `kairos-persistent` | Prefix for stdout, syslog, and kernel log messages. |
 | `--wait-seconds` | `30` | Seconds to wait for expected block devices. |
@@ -51,18 +49,14 @@ Important flags:
 Examples:
 
 ```sh
-# Require a dedicated NVMe disk for persistence.
-k2-node-agent setup-persistence --disk /dev/nvme0n1 --mode required
+# Use a dedicated NVMe disk for required persistence.
+k2-node-agent setup-persistence --disk /dev/nvme0n1
 
 # Require any non-boot second disk for persistence.
-k2-node-agent setup-persistence --disk auto --mode required
-
-# Prefer a second disk, but keep and grow the original persistent partition if
-# no suitable second disk exists.
-k2-node-agent setup-persistence --disk auto --mode optional
+k2-node-agent setup-persistence --disk auto
 
 # Verify the active mount after Kairos has mounted COS_PERSISTENT.
-k2-node-agent setup-persistence --verify-only --mode required
+k2-node-agent setup-persistence --verify-only
 ```
 
 `setup-persistence` uses the Kairos filesystem label contract:
@@ -79,15 +73,11 @@ When preparing a target disk, the helper:
 4. Copies existing persistent data when an original `COS_PERSISTENT` exists.
 5. Labels the target partition `COS_PERSISTENT`.
 6. Relabels old persistent filesystems to `COS_PERSIST_OLD`.
-7. Grows the filesystem to fill the partition.
 
-When no suitable target disk exists and `--mode optional` is used, the helper
-keeps the original persistent partition and grows it in place.
-
-Hardware overlays decide whether this behavior is required or optional:
-
-- [QEMU overlay](../overlays/hardware/qemu/README.md)
-- [Raspberry Pi ComputeBlade overlay](../overlays/hardware/rpi4cb/README.md)
+The dedicated non-boot disk is mandatory. The helper fails boot preparation if
+it cannot find one, and it never resizes an existing partition. New disks are
+created at their final size; legacy boot-disk persistence is supported only as
+a one-time copy source and is relabelled after migration.
 
 ### `storage-health`
 

@@ -11,6 +11,7 @@
   "artifacts": [
     "raw"
   ],
+  "upgradeSizeAllowanceMiB": 1536,
   "overlays": [
     "base",
     "hardware/qemu",

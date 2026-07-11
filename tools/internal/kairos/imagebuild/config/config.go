@@ -25,20 +25,21 @@ type TargetsFile struct {
 }
 
 type Target struct {
-	Enabled            *bool           `yaml:"enabled,omitempty"`
-	Inherits           string          `yaml:"inherits,omitempty"`
-	Flavor             string          `yaml:"flavor,omitempty"`
-	Role               string          `yaml:"role,omitempty"`
-	Arch               string          `yaml:"arch,omitempty"`
-	Hardware           string          `yaml:"hardware,omitempty"`
-	KairosModel        string          `yaml:"kairosModel,omitempty"`
-	Artifacts          []string        `yaml:"artifacts,omitempty"`
-	MaxRawXzMB         *int            `yaml:"maxRawXzMB,omitempty"`
-	Overlays           []string        `yaml:"overlays,omitempty"`
-	ArtifactOptions    ArtifactOptions `yaml:"artifactOptions,omitempty"`
-	Inspect            Inspection      `yaml:"inspect,omitempty"`
-	artifactsSpecified bool
-	overlaysSpecified  bool
+	Enabled                 *bool           `yaml:"enabled,omitempty"`
+	Inherits                string          `yaml:"inherits,omitempty"`
+	Flavor                  string          `yaml:"flavor,omitempty"`
+	Role                    string          `yaml:"role,omitempty"`
+	Arch                    string          `yaml:"arch,omitempty"`
+	Hardware                string          `yaml:"hardware,omitempty"`
+	KairosModel             string          `yaml:"kairosModel,omitempty"`
+	Artifacts               []string        `yaml:"artifacts,omitempty"`
+	MaxRawXzMB              *int            `yaml:"maxRawXzMB,omitempty"`
+	UpgradeSizeAllowanceMiB *int            `yaml:"upgradeSizeAllowanceMiB,omitempty"`
+	Overlays                []string        `yaml:"overlays,omitempty"`
+	ArtifactOptions         ArtifactOptions `yaml:"artifactOptions,omitempty"`
+	Inspect                 Inspection      `yaml:"inspect,omitempty"`
+	artifactsSpecified      bool
+	overlaysSpecified       bool
 }
 
 type ArtifactOptions struct {
@@ -205,18 +206,19 @@ func rejectUnknownTargetKeys(node *yaml.Node) error {
 	}
 
 	allowed := map[string]bool{
-		"enabled":         true,
-		"inherits":        true,
-		"flavor":          true,
-		"role":            true,
-		"arch":            true,
-		"hardware":        true,
-		"kairosModel":     true,
-		"artifacts":       true,
-		"maxRawXzMB":      true,
-		"overlays":        true,
-		"artifactOptions": true,
-		"inspect":         true,
+		"enabled":                 true,
+		"inherits":                true,
+		"flavor":                  true,
+		"role":                    true,
+		"arch":                    true,
+		"hardware":                true,
+		"kairosModel":             true,
+		"artifacts":               true,
+		"maxRawXzMB":              true,
+		"upgradeSizeAllowanceMiB": true,
+		"overlays":                true,
+		"artifactOptions":         true,
+		"inspect":                 true,
 	}
 	for i := 0; i+1 < len(node.Content); i += 2 {
 		key := node.Content[i].Value

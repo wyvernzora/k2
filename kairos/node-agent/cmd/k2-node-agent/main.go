@@ -19,8 +19,6 @@ type cli struct {
 
 type setupPersistenceCommand struct {
 	Disk        string `default:"auto" help:"Target disk path, or auto to choose a non-boot disk."`
-	Mode        string `default:"optional" enum:"optional,required" help:"Whether missing second-disk provisioning is optional or required."`
-	OldLabel    string `name:"old-label" default:"COS_PERSIST_OLD" help:"Label to apply to the original persistent partition."`
 	Marker      string `default:".k2-persistent-ok" help:"Marker file to write under /usr/local/.state."`
 	LogPrefix   string `name:"log-prefix" default:"kairos-persistent" help:"Prefix for stdout, syslog, and kernel log messages."`
 	WaitSeconds int    `name:"wait-seconds" default:"30" help:"Seconds to wait for target block devices."`
@@ -65,14 +63,8 @@ func run(args []string) error {
 }
 
 func (cmd setupPersistenceCommand) Run() error {
-	mode, err := storage.ParseMode(cmd.Mode)
-	if err != nil {
-		return err
-	}
 	return storage.Run(storage.Config{
 		Disk:        cmd.Disk,
-		Required:    mode.Required(),
-		OldLabel:    cmd.OldLabel,
 		Marker:      cmd.Marker,
 		LogPrefix:   cmd.LogPrefix,
 		WaitSeconds: cmd.WaitSeconds,

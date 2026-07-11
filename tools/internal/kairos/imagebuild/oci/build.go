@@ -91,6 +91,8 @@ func buildArgs(resolved plan.Plan, options Options) []string {
 		"--build-arg", "KAIROS_VERSION=" + resolved.Versions.KairosVersion,
 		"--build-arg", "VERSION=" + resolved.Versions.KairosVersion + "-" + resolved.Versions.ImageRevision,
 		"--build-arg", "IMAGE_REVISION=" + resolved.Versions.ImageRevision,
+		"--build-arg", fmt.Sprintf("DISK_STATE_SIZE_MIB=%d", *resolved.ArtifactOptions.Raw.DiskStateSize),
+		"--build-arg", fmt.Sprintf("UPGRADE_SIZE_ALLOWANCE_MIB=%d", *resolved.UpgradeSizeAllowanceMiB),
 		"--build-arg", "TRUSTED_BOOT=false",
 		"--build-arg", "OVERLAYS=" + strings.Join(resolved.Overlays, ","),
 		"--build-arg", "TARGET_NAME=" + resolved.Target,

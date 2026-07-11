@@ -35,17 +35,19 @@ type JoinInput struct {
 }
 
 type ImageMetadata struct {
-	Target            string `yaml:"target"`
-	Flavor            string `yaml:"flavor"`
-	FlavorRelease     string `yaml:"flavorRelease"`
-	Variant           string `yaml:"variant"`
-	Role              string `yaml:"role"`
-	Arch              string `yaml:"arch"`
-	Hardware          string `yaml:"hardware"`
-	KubernetesDistro  string `yaml:"kubernetesDistro"`
-	KubernetesVersion string `yaml:"kubernetesVersion"`
-	KairosVersion     string `yaml:"kairosVersion"`
-	ImageRevision     string `yaml:"imageRevision"`
+	Target                  string `yaml:"target"`
+	Flavor                  string `yaml:"flavor"`
+	FlavorRelease           string `yaml:"flavorRelease"`
+	Variant                 string `yaml:"variant"`
+	Role                    string `yaml:"role"`
+	Arch                    string `yaml:"arch"`
+	Hardware                string `yaml:"hardware"`
+	KubernetesDistro        string `yaml:"kubernetesDistro"`
+	KubernetesVersion       string `yaml:"kubernetesVersion"`
+	KairosVersion           string `yaml:"kairosVersion"`
+	ImageRevision           string `yaml:"imageRevision"`
+	DiskStateSizeMiB        uint64 `yaml:"diskStateSizeMiB"`
+	UpgradeSizeAllowanceMiB uint64 `yaml:"upgradeSizeAllowanceMiB"`
 }
 
 type activationStages struct {

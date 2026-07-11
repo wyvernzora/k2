@@ -21,9 +21,7 @@ build:
     - /usr/sbin/modprobe
     - /usr/sbin/parted
     - /usr/sbin/partprobe
-    - /usr/sbin/resize2fs
     - /usr/sbin/wipefs
-
 inspect:
   oci:
     files:
@@ -118,10 +116,10 @@ inspect:
             value: '[ ! -f "/run/cos/recovery_mode" ]'
           - op: test
             path: /stages/rootfs.before/0/commands/0
-            value: /usr/sbin/k2-node-agent setup-persistence --mode required --disk auto --wait-seconds 90 --log-prefix kairos-persistent --marker .k2-persistent-ok
+            value: /usr/sbin/k2-node-agent setup-persistence --disk auto --wait-seconds 90 --log-prefix kairos-persistent --marker .k2-persistent-ok
           - op: test
             path: /stages/fs/0/commands/0
-            value: /usr/sbin/k2-node-agent setup-persistence --verify-only --mode required --log-prefix kairos-persistent --marker .k2-persistent-ok
+            value: /usr/sbin/k2-node-agent setup-persistence --verify-only --log-prefix kairos-persistent --marker .k2-persistent-ok
       - path: /system/oem/06-iscsi.yaml
         contains:
           - /etc/iscsi/.k2-initiator-initialized
@@ -161,8 +159,20 @@ inspect:
       - parted
       - partprobe
       - readlink
-      - resize2fs
       - tar
       - udevadm
       - umount
       - wipefs
+  raw:
+    partitions:
+      COS_OEM:
+        files:
+          - path: 01_reset.yaml
+            structuredTests:
+              - op: test
+                path: /stages/rootfs.before/0/layout/add_partitions
+                value:
+                  - fsLabel: COS_STATE
+                    size: 8192
+                    pLabel: state
+                    filesystem: ext2

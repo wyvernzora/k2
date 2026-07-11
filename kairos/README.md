@@ -29,7 +29,7 @@ ubuntu-26.04-amd64-qemu-storage
 ubuntu-26.04-arm64-qemu-storage
 ```
 
-All active targets build Ubuntu 24.04 Kairos images pinned by
+All active targets build Ubuntu 26.04 Kairos images pinned by
 `versions.env`; `k8s` targets include k3s, and `storage` targets are
 Kubernetes-free.
 
@@ -85,6 +85,17 @@ That target runs the Go tests and vet checks, builds the OCI image, validates
 OCI expectations, runs AuroraBoot, applies raw partition patches, writes
 checksums and a manifest, validates the raw artifact, then exports the
 compressed image and metadata under `kairos/artifacts/<target>/`.
+
+Raw artifacts use an 8 GiB `COS_STATE` partition. Kubernetes-role artifacts
+do not create a boot-disk `COS_PERSISTENT` partition; they require the
+dedicated persistence disk prepared by `k2-node-agent`. The unused state space
+is sparse and compresses efficiently in the exported `.raw.xz` artifact.
+
+Each target also declares `upgradeSizeAllowanceMiB`. The OCI build fails if
+the completed root filesystem exceeds that allowance, and the value is
+published with the required state size as OCI labels. `k2-tools upgrade` uses
+those labels to require the target state size plus enough free space for the
+incoming image allowance and a 1 GiB safety margin before it cordons a node.
 
 Useful direct CLI commands:
 

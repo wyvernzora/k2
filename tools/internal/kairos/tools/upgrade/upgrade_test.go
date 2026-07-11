@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -200,13 +201,62 @@ func TestPreflightRefusesWhenNoTarget(t *testing.T) {
 
 func TestPreflightAcceptsValidPlan(t *testing.T) {
 	plan := Plan{
-		Current:  ImageRef{Ref: "old"},
-		Target:   ImageRef{Ref: "new"},
-		QuorumOK: true,
+		Current: ImageRef{Ref: "old"},
+		Target: ImageRef{
+			Ref:                       "new",
+			StateSizeBytes:            8 << 30,
+			UpgradeSizeAllowanceBytes: 1536 << 20,
+		},
+		QuorumOK:            true,
+		StateTotalBytes:     8 << 30,
+		StateAvailableBytes: 3 << 30,
+		RequiredFreeBytes:   (1536 << 20) + UpgradeSafetyMarginBytes,
 	}
 	r := &Runner{}
 	if err := r.Preflight(plan); err != nil {
 		t.Errorf("expected accept, got %v", err)
+	}
+}
+
+func TestPreflightRefusesUndersizedStatePartition(t *testing.T) {
+	plan := Plan{
+		Current:         ImageRef{Ref: "old"},
+		Target:          ImageRef{Ref: "new", StateSizeBytes: 8 << 30},
+		QuorumOK:        true,
+		StateTotalBytes: 4 << 30,
+	}
+	err := (&Runner{}).Preflight(plan)
+	if err == nil || !strings.Contains(err.Error(), "too small") {
+		t.Fatalf("error = %v, want state size refusal", err)
+	}
+}
+
+func TestPreflightRefusesInsufficientFreeStateSpace(t *testing.T) {
+	plan := Plan{
+		Current: ImageRef{Ref: "old"},
+		Target: ImageRef{
+			Ref:                       "new",
+			StateSizeBytes:            8 << 30,
+			UpgradeSizeAllowanceBytes: 1536 << 20,
+		},
+		QuorumOK:            true,
+		StateTotalBytes:     8 << 30,
+		StateAvailableBytes: 2 << 30,
+		RequiredFreeBytes:   (1536 << 20) + UpgradeSafetyMarginBytes,
+	}
+	err := (&Runner{}).Preflight(plan)
+	if err == nil || !strings.Contains(err.Error(), "insufficient free space") {
+		t.Fatalf("error = %v, want free space refusal", err)
+	}
+}
+
+func TestParseStateCapacity(t *testing.T) {
+	total, available, err := parseStateCapacity([]byte("8589934592\n6442450944\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if total != 8<<30 || available != 6<<30 {
+		t.Fatalf("total=%d available=%d", total, available)
 	}
 }
 

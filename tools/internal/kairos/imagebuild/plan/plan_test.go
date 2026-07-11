@@ -190,6 +190,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/qemu
@@ -208,6 +209,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/qemu
@@ -226,6 +228,7 @@ targets:
     kairosModel: rpi4
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/rpi4cb
@@ -427,6 +430,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/qemu
@@ -445,6 +449,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/qemu
@@ -463,6 +468,7 @@ targets:
     kairosModel: rpi4
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/rpi4cb
@@ -480,6 +486,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/qemu

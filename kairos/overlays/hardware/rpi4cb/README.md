@@ -2,16 +2,15 @@
 
 Raspberry Pi CM4 ComputeBlade hardware overlay.
 
-This overlay keeps only hardware-specific raw partition changes: enabling the
-CM4 PCIe lane and shrinking the eMMC `COS_PERSISTENT` placeholder. Persistent
-storage setup is role-owned by `role/k8s`.
+This overlay keeps only the hardware-specific raw partition change that enables
+the CM4 PCIe lane. Persistent storage and the boot-disk layout are role-owned by
+`role/k8s`.
 
 ## Files
 
 | Path | Purpose |
 | --- | --- |
 | `raw/COS_GRUB/extraconfig.txt` | Enables CM4 PCIe so NVMe appears. |
-| `raw/COS_OEM/01_reset.yaml.patch` | Sets the eMMC `COS_PERSISTENT` placeholder size to 500 MiB. |
 | `overlay.yaml` | Declares raw artifact inspection expectations. |
 
 Run the checks with:

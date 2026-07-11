@@ -8,6 +8,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/qemu
@@ -26,6 +27,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     # Measured 690.2 on 2026-07-09 (slice 2: virtual kernel + firmware drop).
     maxRawXzMB: 700
     overlays:
@@ -46,6 +48,7 @@ targets:
     kairosModel: rpi4
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/rpi4cb
@@ -66,6 +69,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     overlays:
       - base
       - hardware/qemu
@@ -73,7 +77,7 @@ targets:
     artifactOptions:
       raw:
         diskSize: 16384
-        diskStateSize: 6144
+        diskStateSize: 8192
 
   ubuntu-26.04-arm64-qemu-storage:
     enabled: true
@@ -84,6 +88,7 @@ targets:
     kairosModel: generic
     artifacts:
       - raw
+    upgradeSizeAllowanceMiB: 1536
     # Coarse regression guard: measured 619.6 on 2026-07-11. Routine mutable-
     # base drift is irrelevant; catch only major package/image-size regressions.
     maxRawXzMB: 800
@@ -94,4 +99,4 @@ targets:
     artifactOptions:
       raw:
         diskSize: 16384
-        diskStateSize: 6144
+        diskStateSize: 8192

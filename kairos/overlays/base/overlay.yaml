@@ -17,6 +17,14 @@ build:
 inspect:
   oci:
     files:
+      - path: /usr/share/k2/image-build/metadata.yaml
+        structuredTests:
+          - op: test
+            path: /diskStateSizeMiB
+            value: 8192
+          - op: test
+            path: /upgradeSizeAllowanceMiB
+            value: 1536
       - path: /system/oem/01-k2-rescue-deactivate.yaml
         structuredTests:
           - op: test

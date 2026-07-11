@@ -34,11 +34,20 @@ func (m manager) relabelOtherPersistent(targetDisk string) error {
 		if devDisk == targetDisk {
 			continue
 		}
-		if err := m.labelExt(dev, m.cfg.OldLabel); err != nil {
+		if err := m.labelExt(dev, oldLabel); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func isExtFilesystem(fstype string) bool {
+	switch fstype {
+	case "ext2", "ext3", "ext4":
+		return true
+	default:
+		return false
+	}
 }
 
 func (m manager) labelExt(dev, label string) error {

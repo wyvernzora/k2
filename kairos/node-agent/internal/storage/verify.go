@@ -17,17 +17,18 @@ func (m manager) verify() error {
 		}
 	}
 	m.log.Printf("/usr/local mounted from %s resolved %s", src, resolved)
-	if m.cfg.Required && resolved != "" {
-		srcDisk, err := diskForDev(resolved, m.run)
-		if err != nil {
-			return fmt.Errorf("resolve /usr/local source disk: %w", err)
-		}
-		bootDisk, err := m.bootDisk()
-		if err != nil {
-			m.log.Printf("could not detect boot disk during verify: %v", err)
-		} else if srcDisk == bootDisk {
-			return fmt.Errorf("/usr/local source %q resolved %q is on boot disk %s", src, resolved, bootDisk)
-		}
+	if resolved == "" {
+		return fmt.Errorf("/usr/local is not mounted from required %s storage", persistLabel)
+	}
+	srcDisk, err := diskForDev(resolved, m.run)
+	if err != nil {
+		return fmt.Errorf("resolve /usr/local source disk: %w", err)
+	}
+	bootDisk, err := m.bootDisk()
+	if err != nil {
+		m.log.Printf("could not detect boot disk during verify: %v", err)
+	} else if srcDisk == bootDisk {
+		return fmt.Errorf("/usr/local source %q resolved %q is on boot disk %s", src, resolved, bootDisk)
 	}
 	if err := os.MkdirAll(stateDir, 0o755); err != nil {
 		return err

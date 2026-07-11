@@ -3,6 +3,7 @@ package oci
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -50,7 +51,13 @@ func (f *fakeRegistry) Digest(_ context.Context, ref string) (string, error) {
 }
 
 func cfg(t time.Time) *v1.ConfigFile {
-	return &v1.ConfigFile{Created: v1.Time{Time: t}}
+	return &v1.ConfigFile{
+		Created: v1.Time{Time: t},
+		Config: v1.Config{Labels: map[string]string{
+			stateSizeLabel:            "8192",
+			upgradeSizeAllowanceLabel: "1536",
+		}},
+	}
 }
 
 func TestDiscoverLatestPicksNewestByCreated(t *testing.T) {
@@ -176,5 +183,22 @@ func TestInspectImageReturnsConfigAndDigest(t *testing.T) {
 	}
 	if got.Ref != ref || got.Digest != "sha256:abc" || !got.Created.Equal(now) {
 		t.Errorf("unexpected Image: %+v", got)
+	}
+	if got.StateSizeMiB != 8192 || got.UpgradeSizeAllowanceMiB != 1536 {
+		t.Errorf("unexpected sizing metadata: %+v", got)
+	}
+}
+
+func TestInspectImageRequiresSizingLabels(t *testing.T) {
+	now := time.Date(2026, 5, 22, 10, 0, 0, 0, time.UTC)
+	ref := "ghcr.io/wyvernzora/k2-kairos:legacy"
+	fr := &fakeRegistry{
+		configs: map[string]*v1.ConfigFile{ref: {Created: v1.Time{Time: now}}},
+		digests: map[string]string{ref: "sha256:abc"},
+	}
+
+	_, err := NewWithRegistry(fr).InspectImage(context.Background(), ref)
+	if err == nil || !strings.Contains(err.Error(), stateSizeLabel) {
+		t.Fatalf("error = %v, want missing state size label", err)
 	}
 }

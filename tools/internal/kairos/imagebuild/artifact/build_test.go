@@ -271,13 +271,15 @@ func testPlan(t *testing.T, artifacts []string) plan.Plan {
 
 	diskSize := 16384
 	stateSize := 8192
+	upgradeAllowance := 1536
 	return plan.Plan{
-		Target:       "target",
-		Arch:         "arm64",
-		Artifacts:    artifacts,
-		Image:        "ghcr.io/wyvernzora/k2-kairos:test",
-		ArtifactStem: "test-artifact",
-		ArtifactDir:  artifactDir,
+		Target:                  "target",
+		Arch:                    "arm64",
+		Artifacts:               artifacts,
+		Image:                   "ghcr.io/wyvernzora/k2-kairos:test",
+		ArtifactStem:            "test-artifact",
+		UpgradeSizeAllowanceMiB: &upgradeAllowance,
+		ArtifactDir:             artifactDir,
 		ArtifactOptions: plan.ArtifactOptions{
 			Raw: plan.RawArtifactOptions{
 				DiskStateSize: &stateSize,

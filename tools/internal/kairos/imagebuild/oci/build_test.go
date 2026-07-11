@@ -48,6 +48,8 @@ func TestBuilderImage(t *testing.T) {
 		"--build-arg", "KAIROS_VERSION=v4.1.0",
 		"--build-arg", "VERSION=v4.1.0-rev0",
 		"--build-arg", "IMAGE_REVISION=rev0",
+		"--build-arg", "DISK_STATE_SIZE_MIB=8192",
+		"--build-arg", "UPGRADE_SIZE_ALLOWANCE_MIB=1536",
 		"--build-arg", "TRUSTED_BOOT=false",
 		"--build-arg", "OVERLAYS=base,hardware/rpi4cb,role/k8s",
 		"--build-arg", "TARGET_NAME=ubuntu-26.04-arm64-rpi4cb-k8s",
@@ -201,6 +203,8 @@ func indexOf(values []string, needle string) int {
 }
 
 func testPlan() plan.Plan {
+	stateSize := 8192
+	upgradeAllowance := 1536
 	return plan.Plan{
 		Target:           "ubuntu-26.04-arm64-rpi4cb-k8s",
 		Flavor:           "ubuntu-26.04",
@@ -217,7 +221,9 @@ func testPlan() plan.Plan {
 			"/usr/sbin/k2-node-agent",
 			"/usr/sbin/parted",
 		},
-		Image: "ghcr.io/wyvernzora/k2-kairos:test",
+		UpgradeSizeAllowanceMiB: &upgradeAllowance,
+		ArtifactOptions:         plan.ArtifactOptions{Raw: plan.RawArtifactOptions{DiskStateSize: &stateSize}},
+		Image:                   "ghcr.io/wyvernzora/k2-kairos:test",
 		Versions: config.Versions{
 			KairosVersion:     "v4.1.0",
 			KairosInitVersion: "v0.13.0",

@@ -31,33 +31,8 @@ func TestNormalize(t *testing.T) {
 	if cfg.Disk != "auto" {
 		t.Fatalf("Disk = %q", cfg.Disk)
 	}
-	if cfg.OldLabel != "COS_PERSIST_OLD" {
-		t.Fatalf("OldLabel = %q", cfg.OldLabel)
-	}
 	if cfg.WaitSeconds != 30 {
 		t.Fatalf("WaitSeconds = %d", cfg.WaitSeconds)
-	}
-}
-
-func TestParseMode(t *testing.T) {
-	mode, err := ParseMode("required")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !mode.Required() {
-		t.Fatal("required mode parsed as optional")
-	}
-
-	mode, err = ParseMode("optional")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if mode.Required() {
-		t.Fatal("optional mode parsed as required")
-	}
-
-	if _, err := ParseMode("wat"); err == nil {
-		t.Fatal("expected invalid mode error")
 	}
 }
 
@@ -256,7 +231,7 @@ func TestPrepareTargetDiskLabelsNewPersistentBeforeOld(t *testing.T) {
 			}
 		},
 	}
-	m := manager{cfg: Config{WaitSeconds: 0, OldLabel: "COS_PERSIST_OLD"}, run: run, log: logger{prefix: "test"}}
+	m := manager{cfg: Config{WaitSeconds: 0}, run: run, log: logger{prefix: "test"}}
 
 	if err := m.prepareTargetDisk("/dev/sdb"); err != nil {
 		t.Fatal(err)
@@ -271,7 +246,7 @@ func TestPrepareTargetDiskLabelsNewPersistentBeforeOld(t *testing.T) {
 	}
 }
 
-func TestVerifyRequiredRejectsUsrLocalOnBootDisk(t *testing.T) {
+func TestVerifyRejectsUsrLocalOnBootDisk(t *testing.T) {
 	run := &fakeRunner{
 		outputFunc: func(name string, args ...string) (string, error) {
 			key := name + " " + strings.Join(args, " ")
@@ -293,7 +268,7 @@ func TestVerifyRequiredRejectsUsrLocalOnBootDisk(t *testing.T) {
 			}
 		},
 	}
-	m := manager{cfg: Config{Required: true}, run: run, log: logger{prefix: "test"}}
+	m := manager{cfg: Config{}, run: run, log: logger{prefix: "test"}}
 
 	err := m.verify()
 	if err == nil {
@@ -304,7 +279,7 @@ func TestVerifyRequiredRejectsUsrLocalOnBootDisk(t *testing.T) {
 	}
 }
 
-func TestVerifyRequiredSkipsBootDiskCheckWhenBootDiskUnknown(t *testing.T) {
+func TestVerifySkipsBootDiskCheckWhenBootDiskUnknown(t *testing.T) {
 	oldStateDir := stateDir
 	stateDir = t.TempDir()
 	t.Cleanup(func() { stateDir = oldStateDir })
@@ -324,13 +299,25 @@ func TestVerifyRequiredSkipsBootDiskCheckWhenBootDiskUnknown(t *testing.T) {
 			}
 		},
 	}
-	m := manager{cfg: Config{Required: true, Marker: ".marker"}, run: run, log: logger{prefix: "test"}}
+	m := manager{cfg: Config{Marker: ".marker"}, run: run, log: logger{prefix: "test"}}
 
 	if err := m.verify(); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(stateDir, ".marker")); err != nil {
 		t.Fatalf("marker not written: %v", err)
+	}
+}
+
+func TestVerifyRejectsMissingUsrLocalMount(t *testing.T) {
+	m := manager{cfg: Config{}, run: &fakeRunner{}, log: logger{prefix: "test"}}
+
+	err := m.verify()
+	if err == nil {
+		t.Fatal("expected missing /usr/local mount error")
+	}
+	if !strings.Contains(err.Error(), "is not mounted") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

@@ -36,6 +36,11 @@ ARG APT_PACKAGES=
 ARG APT_PURGE_PACKAGES=
 ARG DRACUT_INSTALL_ITEMS=
 ARG POST_INSTALL_ACTIONS=
+ARG DISK_STATE_SIZE_MIB
+ARG UPGRADE_SIZE_ALLOWANCE_MIB
+
+LABEL io.k2.disk-state-size-mib="${DISK_STATE_SIZE_MIB}" \
+      io.k2.upgrade-size-allowance-mib="${UPGRADE_SIZE_ALLOWANCE_MIB}"
 
 COPY --from=k2-node-agent /out/k2-node-agent /usr/sbin/k2-node-agent
 
@@ -224,6 +229,8 @@ RUN set -eux; \
         printf 'kubernetesVersion: %s\n' "${KUBERNETES_VERSION}"; \
         printf 'kairosVersion: %s\n' "${KAIROS_VERSION}"; \
         printf 'imageRevision: %s\n' "${IMAGE_REVISION}"; \
+        printf 'diskStateSizeMiB: %s\n' "${DISK_STATE_SIZE_MIB}"; \
+        printf 'upgradeSizeAllowanceMiB: %s\n' "${UPGRADE_SIZE_ALLOWANCE_MIB}"; \
     } > /usr/share/k2/image-build/metadata.yaml
 
 # ----------------------------------------------------------------
@@ -275,3 +282,29 @@ RUN set -eux; \
         IFS="${old_ifs}"; \
     fi; \
     rm -rf /k2-overlays
+
+RUN set -eux; \
+    if [ "${ROLE}" = "k8s" ]; then \
+        rootfs_config=/system/oem/00_rootfs.yaml; \
+        awk '\
+            /name: "Grow persistent"/ { \
+                if (previous !~ /if:.*recovery_mode.*live_mode/) exit 2; \
+                previous=""; skipping=1; found++; next \
+            } \
+            skipping { \
+                if ($0 ~ /^  initramfs:/) { skipping=0; print } \
+                next \
+            } \
+            { if (previous != "") print previous; previous=$0 } \
+            END { \
+                if (!skipping && previous != "") print previous; \
+                if (found != 1) exit 3 \
+            }' "${rootfs_config}" > "${rootfs_config}.k2"; \
+        mv "${rootfs_config}.k2" "${rootfs_config}"; \
+        ! grep -Fq 'name: "Grow persistent"' "${rootfs_config}"; \
+    fi; \
+    rootfs_mib="$(du -smx / | awk '{print $1}')"; \
+    if [ "${rootfs_mib}" -gt "${UPGRADE_SIZE_ALLOWANCE_MIB}" ]; then \
+        echo "Rootfs is ${rootfs_mib} MiB, exceeding upgrade allowance ${UPGRADE_SIZE_ALLOWANCE_MIB} MiB" >&2; \
+        exit 1; \
+    fi

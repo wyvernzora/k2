@@ -48,13 +48,3 @@ inspect:
           - path: extraconfig.txt
             contains:
               - dtparam=pciex1
-      COS_OEM:
-        files:
-          - path: 01_reset.yaml
-            structuredTests:
-              - op: test
-                path: /stages/rootfs.before/0/layout/add_partitions/1/fsLabel
-                value: COS_PERSISTENT
-              - op: test
-                path: /stages/rootfs.before/0/layout/add_partitions/1/size
-                value: 500

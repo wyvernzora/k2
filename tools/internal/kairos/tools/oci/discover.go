@@ -15,6 +15,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,10 +29,17 @@ import (
 // upgrade with the tag), and the registry-side creation time used
 // for the "published N days ago" line.
 type Image struct {
-	Ref     string    // e.g. ghcr.io/wyvernzora/k2-kairos:ubuntu-...-rev3
-	Digest  string    // sha256:abc...
-	Created time.Time // OCI image config `created` field
+	Ref                     string
+	Digest                  string
+	Created                 time.Time
+	StateSizeMiB            uint64
+	UpgradeSizeAllowanceMiB uint64
 }
+
+const (
+	stateSizeLabel            = "io.k2.disk-state-size-mib"
+	upgradeSizeAllowanceLabel = "io.k2.upgrade-size-allowance-mib"
+)
 
 // Discoverer is the public surface. Hold one for the duration of an
 // upgrade invocation; safe for concurrent use only insofar as the
@@ -66,11 +74,33 @@ func (d *Discoverer) InspectImage(ctx context.Context, ref string) (Image, error
 	if err != nil {
 		return Image{}, fmt.Errorf("resolve digest for %s: %w", ref, err)
 	}
+	stateSizeMiB, err := positiveLabel(cfg.Config.Labels, stateSizeLabel)
+	if err != nil {
+		return Image{}, fmt.Errorf("inspect %s: %w", ref, err)
+	}
+	upgradeSizeAllowanceMiB, err := positiveLabel(cfg.Config.Labels, upgradeSizeAllowanceLabel)
+	if err != nil {
+		return Image{}, fmt.Errorf("inspect %s: %w", ref, err)
+	}
 	return Image{
-		Ref:     ref,
-		Digest:  digest,
-		Created: cfg.Created.Time,
+		Ref:                     ref,
+		Digest:                  digest,
+		Created:                 cfg.Created.Time,
+		StateSizeMiB:            stateSizeMiB,
+		UpgradeSizeAllowanceMiB: upgradeSizeAllowanceMiB,
 	}, nil
+}
+
+func positiveLabel(labels map[string]string, name string) (uint64, error) {
+	value := strings.TrimSpace(labels[name])
+	if value == "" {
+		return 0, fmt.Errorf("OCI label %s is required", name)
+	}
+	parsed, err := strconv.ParseUint(value, 10, 64)
+	if err != nil || parsed == 0 {
+		return 0, fmt.Errorf("OCI label %s must be a positive integer, got %q", name, value)
+	}
+	return parsed, nil
 }
 
 // DiscoverLatest scans `repo` for tags starting with `prefix`,

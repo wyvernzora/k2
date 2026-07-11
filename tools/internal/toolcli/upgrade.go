@@ -211,6 +211,8 @@ func upgradePlanFields(c *upgradeCmd, plan upgrade.Plan) []ui.KV {
 	pairs = append(pairs,
 		ui.KV{Key: "Current image", Value: plan.Current.String()},
 		ui.KV{Key: "Target image", Value: targetWithAge(plan)},
+		ui.KV{Key: "COS_STATE", Value: fmt.Sprintf("%s total, %s available", humanBytesBinary(plan.StateTotalBytes), humanBytesBinary(plan.StateAvailableBytes))},
+		ui.KV{Key: "Required free", Value: fmt.Sprintf("%s (%s image allowance + %s safety margin)", humanBytesBinary(plan.RequiredFreeBytes), humanBytesBinary(plan.Target.UpgradeSizeAllowanceBytes), humanBytesBinary(upgrade.UpgradeSafetyMarginBytes))},
 	)
 	if plan.AutoDiscovered {
 		repo := c.RegistryRepo
@@ -236,6 +238,11 @@ func targetWithAge(plan upgrade.Plan) string {
 		plan.Target.Created.Format("2006-01-02"),
 		humanAgo(time.Since(plan.Target.Created)),
 	)
+}
+
+func humanBytesBinary(bytes uint64) string {
+	const gib = uint64(1 << 30)
+	return fmt.Sprintf("%.1f GiB", float64(bytes)/float64(gib))
 }
 
 // humanAgo renders a Duration as "3 days ago" / "5 hours ago" /
@@ -291,16 +298,18 @@ func readUpgradeMetadata(client *remote.Client) (upgrade.NodeImageMetadata, erro
 		return upgrade.NodeImageMetadata{}, err
 	}
 	return upgrade.NodeImageMetadata{
-		Target:            m.Target,
-		Flavor:            m.Flavor,
-		FlavorRelease:     m.FlavorRelease,
-		Variant:           m.Variant,
-		Role:              m.Role,
-		Arch:              m.Arch,
-		Hardware:          m.Hardware,
-		KubernetesDistro:  m.KubernetesDistro,
-		KubernetesVersion: m.KubernetesVersion,
-		KairosVersion:     m.KairosVersion,
-		ImageRevision:     m.ImageRevision,
+		Target:                  m.Target,
+		Flavor:                  m.Flavor,
+		FlavorRelease:           m.FlavorRelease,
+		Variant:                 m.Variant,
+		Role:                    m.Role,
+		Arch:                    m.Arch,
+		Hardware:                m.Hardware,
+		KubernetesDistro:        m.KubernetesDistro,
+		KubernetesVersion:       m.KubernetesVersion,
+		KairosVersion:           m.KairosVersion,
+		ImageRevision:           m.ImageRevision,
+		DiskStateSizeMiB:        m.DiskStateSizeMiB,
+		UpgradeSizeAllowanceMiB: m.UpgradeSizeAllowanceMiB,
 	}, nil
 }

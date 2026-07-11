@@ -24,6 +24,7 @@ package upgrade
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,6 +45,8 @@ const DefaultRegistryRepo = "ghcr.io/wyvernzora/k2-kairos"
 // tag-search prefix (and surface the current image in the Plan).
 const MetadataPath = "/usr/share/k2/image-build/metadata.yaml"
 
+const StateMountPath = "/run/initramfs/cos-state"
+
 // ActiveModePath is the Kairos runtime marker created when the node boots
 // from the active partition. Its contents are not meaningful.
 const ActiveModePath = "/run/cos/active_mode"
@@ -57,9 +60,10 @@ const RecoveryModePath = "/run/cos/recovery_mode"
 // reasonable values for a CM4-on-eMMC node (slowest hardware we
 // upgrade). Operators override per-invocation via CLI flags.
 const (
-	DefaultDrainTimeout  = 5 * time.Minute
-	DefaultRebootTimeout = 10 * time.Minute
-	DefaultVerifyTimeout = 3 * time.Minute
+	DefaultDrainTimeout      = 5 * time.Minute
+	DefaultRebootTimeout     = 10 * time.Minute
+	DefaultVerifyTimeout     = 3 * time.Minute
+	UpgradeSafetyMarginBytes = uint64(1 << 30)
 )
 
 // Plan is the resolved set of facts an upgrade is about to act on.
@@ -101,6 +105,10 @@ type Plan struct {
 	// threshold (1 remaining CP). Preflight refuses unless
 	// AllowQuorumLoss was set.
 	QuorumOK bool
+
+	StateTotalBytes     uint64
+	StateAvailableBytes uint64
+	RequiredFreeBytes   uint64
 }
 
 // ImageRef is the small shape we carry around for "an OCI image we
@@ -109,9 +117,11 @@ type Plan struct {
 // time (e.g. metadata.yaml on the node). Digest is best-effort:
 // we record it when the registry tells us, empty otherwise.
 type ImageRef struct {
-	Ref     string
-	Digest  string
-	Created time.Time
+	Ref                       string
+	Digest                    string
+	Created                   time.Time
+	StateSizeBytes            uint64
+	UpgradeSizeAllowanceBytes uint64
 }
 
 // String renders ImageRef as the operator wants to see it in the
@@ -156,17 +166,19 @@ type Runner struct {
 // It supports both the legacy Ubuntu 24.04 target layout and the current
 // Ubuntu 26.04 layout so already-installed nodes remain identifiable.
 type NodeImageMetadata struct {
-	Target            string
-	Flavor            string
-	FlavorRelease     string
-	Variant           string
-	Role              string
-	Arch              string
-	Hardware          string
-	KubernetesDistro  string
-	KubernetesVersion string
-	KairosVersion     string
-	ImageRevision     string
+	Target                  string
+	Flavor                  string
+	FlavorRelease           string
+	Variant                 string
+	Role                    string
+	Arch                    string
+	Hardware                string
+	KubernetesDistro        string
+	KubernetesVersion       string
+	KairosVersion           string
+	ImageRevision           string
+	DiskStateSizeMiB        uint64
+	UpgradeSizeAllowanceMiB uint64
 }
 
 // Resolve runs every read-only step needed to populate a Plan: SSH
@@ -213,13 +225,9 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 		// ago" line.
 		img, err := r.Registry.InspectImage(ctx, in.Source)
 		if err != nil {
-			// We tolerate registry failure for the explicit-source
-			// case: the operator already told us what to install,
-			// the Plan just won't show the age.
-			plan.Target = ImageRef{Ref: in.Source}
-		} else {
-			plan.Target = ImageRef{Ref: img.Ref, Digest: img.Digest, Created: img.Created}
+			return Plan{}, fmt.Errorf("inspect explicit source image: %w", err)
 		}
+		plan.Target = imageRef(img)
 		plan.AutoDiscovered = false
 	} else {
 		repo := in.RegistryRepo
@@ -231,7 +239,7 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 		if err != nil {
 			return Plan{}, fmt.Errorf("auto-discover latest image: %w; pass --source <ref> explicitly", err)
 		}
-		plan.Target = ImageRef{Ref: img.Ref, Digest: img.Digest, Created: img.Created}
+		plan.Target = imageRef(img)
 		plan.AutoDiscovered = true
 	}
 
@@ -241,6 +249,14 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 		return Plan{}, fmt.Errorf("node image metadata is incomplete; cannot reconstruct current image")
 	}
 	plan.Current = ImageRef{Ref: current}
+
+	stateTotal, stateAvailable, err := r.stateCapacity()
+	if err != nil {
+		return Plan{}, fmt.Errorf("inspect %s capacity: %w", StateMountPath, err)
+	}
+	plan.StateTotalBytes = stateTotal
+	plan.StateAvailableBytes = stateAvailable
+	plan.RequiredFreeBytes = plan.Target.UpgradeSizeAllowanceBytes + UpgradeSafetyMarginBytes
 
 	// Control-plane quorum check. Worker nodes always pass.
 	if plan.IsControlPlane {
@@ -270,7 +286,52 @@ func (r *Runner) Preflight(plan Plan) error {
 	if plan.Current.Ref != "" && plan.Current.Ref == plan.Target.Ref {
 		return fmt.Errorf("node already on %s; pass --source explicitly to force re-install", plan.Target.Ref)
 	}
+	if plan.StateTotalBytes < plan.Target.StateSizeBytes {
+		return fmt.Errorf("COS_STATE is too small for target image: have %d MiB, target requires %d MiB",
+			plan.StateTotalBytes>>20, plan.Target.StateSizeBytes>>20)
+	}
+	if plan.StateAvailableBytes < plan.RequiredFreeBytes {
+		return fmt.Errorf("COS_STATE has insufficient free space: have %d MiB, need %d MiB (%d MiB image allowance + %d MiB safety margin)",
+			plan.StateAvailableBytes>>20, plan.RequiredFreeBytes>>20,
+			plan.Target.UpgradeSizeAllowanceBytes>>20, UpgradeSafetyMarginBytes>>20)
+	}
 	return nil
+}
+
+func imageRef(img oci.Image) ImageRef {
+	return ImageRef{
+		Ref:                       img.Ref,
+		Digest:                    img.Digest,
+		Created:                   img.Created,
+		StateSizeBytes:            img.StateSizeMiB << 20,
+		UpgradeSizeAllowanceBytes: img.UpgradeSizeAllowanceMiB << 20,
+	}
+}
+
+func (r *Runner) stateCapacity() (total uint64, available uint64, err error) {
+	probe := "set -eu; source=$(findmnt -n -o SOURCE " + StateMountPath + "); " +
+		"lsblk -bno SIZE \"$source\"; df -B1 --output=avail " + StateMountPath + " | tail -n 1"
+	out, err := r.Remote.Capture(probe)
+	if err != nil {
+		return 0, 0, err
+	}
+	return parseStateCapacity(out)
+}
+
+func parseStateCapacity(out []byte) (total uint64, available uint64, err error) {
+	fields := strings.Fields(string(out))
+	if len(fields) != 2 {
+		return 0, 0, fmt.Errorf("unexpected state capacity output %q", strings.TrimSpace(string(out)))
+	}
+	total, err = strconv.ParseUint(fields[0], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("parse total bytes %q: %w", fields[0], err)
+	}
+	available, err = strconv.ParseUint(fields[1], 10, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("parse available bytes %q: %w", fields[1], err)
+	}
+	return total, available, nil
 }
 
 // Cordon marks the kubernetes node unschedulable.

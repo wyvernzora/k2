@@ -1,0 +1,13 @@
+- op: test
+  path: /stages/rootfs.before/0/layout/add_partitions/0/fsLabel
+  value: COS_STATE
+- op: test
+  path: /stages/rootfs.before/0/layout/add_partitions/0/size
+  value: 8192
+- op: replace
+  path: /stages/rootfs.before/0/layout/add_partitions
+  value:
+    - fsLabel: COS_STATE
+      size: 8192
+      pLabel: state
+      filesystem: ext2

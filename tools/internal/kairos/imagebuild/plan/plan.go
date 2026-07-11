@@ -19,30 +19,31 @@ type Planner struct {
 }
 
 type Plan struct {
-	Target             string          `json:"target" yaml:"target"`
-	Enabled            bool            `json:"enabled" yaml:"enabled"`
-	Flavor             string          `json:"flavor" yaml:"flavor"`
-	Role               string          `json:"role" yaml:"role"`
-	Arch               string          `json:"arch" yaml:"arch"`
-	Platform           string          `json:"platform" yaml:"platform"`
-	Hardware           string          `json:"hardware" yaml:"hardware"`
-	KairosModel        string          `json:"kairosModel" yaml:"kairosModel"`
-	KubernetesDistro   string          `json:"kubernetesDistro" yaml:"kubernetesDistro"`
-	Artifacts          []string        `json:"artifacts" yaml:"artifacts"`
-	MaxRawXzMB         *int            `json:"maxRawXzMB,omitempty" yaml:"maxRawXzMB,omitempty"`
-	Overlays           []string        `json:"overlays" yaml:"overlays"`
-	AptPackages        []string        `json:"aptPackages,omitempty" yaml:"aptPackages,omitempty"`
-	AptPurge           []string        `json:"aptPurge,omitempty" yaml:"aptPurge,omitempty"`
-	DracutInstallItems []string        `json:"dracutInstallItems,omitempty" yaml:"dracutInstallItems,omitempty"`
-	PostInstallActions []string        `json:"postInstallActions,omitempty" yaml:"postInstallActions,omitempty"`
-	RawPatches         []RawPatch      `json:"rawPatches" yaml:"rawPatches"`
-	Inspection         Inspection      `json:"inspection,omitempty" yaml:"inspection,omitempty"`
-	ArtifactOptions    ArtifactOptions `json:"artifactOptions" yaml:"artifactOptions"`
-	Image              string          `json:"image" yaml:"image"`
-	ArtifactStem       string          `json:"artifactStem" yaml:"artifactStem"`
-	ArtifactDir        string          `json:"artifactDir" yaml:"artifactDir"`
-	Versions           config.Versions `json:"versions" yaml:"versions"`
-	Paths              PlanPaths       `json:"paths" yaml:"paths"`
+	Target                  string          `json:"target" yaml:"target"`
+	Enabled                 bool            `json:"enabled" yaml:"enabled"`
+	Flavor                  string          `json:"flavor" yaml:"flavor"`
+	Role                    string          `json:"role" yaml:"role"`
+	Arch                    string          `json:"arch" yaml:"arch"`
+	Platform                string          `json:"platform" yaml:"platform"`
+	Hardware                string          `json:"hardware" yaml:"hardware"`
+	KairosModel             string          `json:"kairosModel" yaml:"kairosModel"`
+	KubernetesDistro        string          `json:"kubernetesDistro" yaml:"kubernetesDistro"`
+	Artifacts               []string        `json:"artifacts" yaml:"artifacts"`
+	MaxRawXzMB              *int            `json:"maxRawXzMB,omitempty" yaml:"maxRawXzMB,omitempty"`
+	UpgradeSizeAllowanceMiB *int            `json:"upgradeSizeAllowanceMiB,omitempty" yaml:"upgradeSizeAllowanceMiB,omitempty"`
+	Overlays                []string        `json:"overlays" yaml:"overlays"`
+	AptPackages             []string        `json:"aptPackages,omitempty" yaml:"aptPackages,omitempty"`
+	AptPurge                []string        `json:"aptPurge,omitempty" yaml:"aptPurge,omitempty"`
+	DracutInstallItems      []string        `json:"dracutInstallItems,omitempty" yaml:"dracutInstallItems,omitempty"`
+	PostInstallActions      []string        `json:"postInstallActions,omitempty" yaml:"postInstallActions,omitempty"`
+	RawPatches              []RawPatch      `json:"rawPatches" yaml:"rawPatches"`
+	Inspection              Inspection      `json:"inspection,omitempty" yaml:"inspection,omitempty"`
+	ArtifactOptions         ArtifactOptions `json:"artifactOptions" yaml:"artifactOptions"`
+	Image                   string          `json:"image" yaml:"image"`
+	ArtifactStem            string          `json:"artifactStem" yaml:"artifactStem"`
+	ArtifactDir             string          `json:"artifactDir" yaml:"artifactDir"`
+	Versions                config.Versions `json:"versions" yaml:"versions"`
+	Paths                   PlanPaths       `json:"paths" yaml:"paths"`
 }
 
 type PlanPaths struct {
@@ -170,28 +171,29 @@ func (p Planner) Build(target string) (Plan, error) {
 	image := p.imageTag(resolved)
 	artifactStem := image[strings.LastIndex(image, ":")+1:]
 	out := Plan{
-		Target:             target,
-		Enabled:            boolValue(resolved.Enabled),
-		Flavor:             resolved.Flavor,
-		Role:               resolved.Role,
-		Arch:               resolved.Arch,
-		Platform:           platform,
-		Hardware:           resolved.Hardware,
-		KairosModel:        resolved.KairosModel,
-		KubernetesDistro:   kubernetesDistro,
-		Artifacts:          append([]string(nil), resolved.Artifacts...),
-		MaxRawXzMB:         resolved.MaxRawXzMB,
-		Overlays:           append([]string(nil), resolved.Overlays...),
-		AptPackages:        build.AptPackages,
-		AptPurge:           build.AptPurge,
-		DracutInstallItems: build.DracutInstallItems,
-		PostInstallActions: build.PostInstall,
-		ArtifactOptions:    convertArtifactOptions(resolved.ArtifactOptions),
-		Image:              image,
-		ArtifactStem:       artifactStem,
-		ArtifactDir:        filepath.Join(p.Paths.ArtifactsDir, target),
-		Versions:           p.Versions,
-		Paths:              p.planPaths(),
+		Target:                  target,
+		Enabled:                 boolValue(resolved.Enabled),
+		Flavor:                  resolved.Flavor,
+		Role:                    resolved.Role,
+		Arch:                    resolved.Arch,
+		Platform:                platform,
+		Hardware:                resolved.Hardware,
+		KairosModel:             resolved.KairosModel,
+		KubernetesDistro:        kubernetesDistro,
+		Artifacts:               append([]string(nil), resolved.Artifacts...),
+		MaxRawXzMB:              resolved.MaxRawXzMB,
+		UpgradeSizeAllowanceMiB: resolved.UpgradeSizeAllowanceMiB,
+		Overlays:                append([]string(nil), resolved.Overlays...),
+		AptPackages:             build.AptPackages,
+		AptPurge:                build.AptPurge,
+		DracutInstallItems:      build.DracutInstallItems,
+		PostInstallActions:      build.PostInstall,
+		ArtifactOptions:         convertArtifactOptions(resolved.ArtifactOptions),
+		Image:                   image,
+		ArtifactStem:            artifactStem,
+		ArtifactDir:             filepath.Join(p.Paths.ArtifactsDir, target),
+		Versions:                p.Versions,
+		Paths:                   p.planPaths(),
 	}
 
 	rawPatches, err := p.rawPatches(resolved.Overlays)
@@ -245,6 +247,9 @@ func (p Planner) resolveTarget(name string, seen map[string]bool) (config.Target
 	}
 	if target.MaxRawXzMB != nil {
 		merged.MaxRawXzMB = target.MaxRawXzMB
+	}
+	if target.UpgradeSizeAllowanceMiB != nil {
+		merged.UpgradeSizeAllowanceMiB = target.UpgradeSizeAllowanceMiB
 	}
 	if target.OverlaysSpecified() {
 		merged.Overlays = dedupe(append(append([]string(nil), parent.Overlays...), target.Overlays...))
@@ -301,6 +306,9 @@ func validateArch(resolved Plan) error {
 }
 
 func validateArtifacts(resolved Plan) error {
+	if resolved.UpgradeSizeAllowanceMiB == nil || *resolved.UpgradeSizeAllowanceMiB <= 0 {
+		return fmt.Errorf("target %q requires a positive upgradeSizeAllowanceMiB", resolved.Target)
+	}
 	for _, artifact := range resolved.Artifacts {
 		if artifact != "raw" && artifact != "iso" {
 			return fmt.Errorf("target %q has unsupported artifact type %q", resolved.Target, artifact)
@@ -318,6 +326,9 @@ func validateArtifacts(resolved Plan) error {
 		if resolved.ArtifactOptions.Raw.DiskSize != nil &&
 			*resolved.ArtifactOptions.Raw.DiskSize <= *resolved.ArtifactOptions.Raw.DiskStateSize {
 			return fmt.Errorf("target %q raw diskSize must be larger than diskStateSize", resolved.Target)
+		}
+		if *resolved.UpgradeSizeAllowanceMiB >= *resolved.ArtifactOptions.Raw.DiskStateSize {
+			return fmt.Errorf("target %q upgradeSizeAllowanceMiB must be smaller than diskStateSize", resolved.Target)
 		}
 	}
 	return nil
