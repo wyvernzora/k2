@@ -377,3 +377,5 @@ proper section above and remove the inbox duplicate.
   and mount it through `N8N_CUSTOM_EXTENSIONS`.
 - Apps own their exported endpoints, addresses, subnets, ports, and workload
   facts; other apps should import those facts instead of duplicating them.
+- Plex does not use its `/transcode` volume; do not choose it as a storage
+  migration pilot.
