@@ -1,13 +1,17 @@
 package oci
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"strings"
 	"testing"
 	"time"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
 )
 
 // fakeRegistry is the in-memory `registry` impl tests use. Each tag
@@ -17,6 +21,7 @@ type fakeRegistry struct {
 	tags    map[string][]string       // repo -> tag list
 	configs map[string]*v1.ConfigFile // ref -> ConfigFile
 	digests map[string]string         // ref -> digest
+	rootFS  map[string]uint64         // ref -> measured rootfs MiB
 	errors  map[string]error          // ref -> InspectImage error
 	listErr error                     // ListTags error
 }
@@ -48,6 +53,16 @@ func (f *fakeRegistry) Digest(_ context.Context, ref string) (string, error) {
 		return "", errors.New("not found")
 	}
 	return d, nil
+}
+
+func (f *fakeRegistry) RootFSSizeMiB(_ context.Context, ref string) (uint64, error) {
+	if err, ok := f.errors[ref]; ok && err != nil {
+		return 0, err
+	}
+	if size, ok := f.rootFS[ref]; ok {
+		return size, nil
+	}
+	return 1504, nil
 }
 
 func cfg(t time.Time) *v1.ConfigFile {
@@ -184,8 +199,71 @@ func TestInspectImageReturnsConfigAndDigest(t *testing.T) {
 	if got.Ref != ref || got.Digest != "sha256:abc" || !got.Created.Equal(now) {
 		t.Errorf("unexpected Image: %+v", got)
 	}
-	if got.StateSizeMiB != 8192 || got.UpgradeSizeAllowanceMiB != 1536 {
+	if got.StateSizeMiB != 8192 || got.UpgradeAllocationMiB != 1504 || got.UpgradeSizeAllowanceMiB != 1536 {
 		t.Errorf("unexpected sizing metadata: %+v", got)
+	}
+}
+
+func TestSingleLinuxImageDescriptorIgnoresProvenanceManifest(t *testing.T) {
+	want := v1.Descriptor{
+		Digest:   v1.Hash{Algorithm: "sha256", Hex: "abc"},
+		Platform: &v1.Platform{OS: "linux", Architecture: "arm64"},
+	}
+	manifest := &v1.IndexManifest{Manifests: []v1.Descriptor{
+		want,
+		{Platform: &v1.Platform{OS: "unknown", Architecture: "unknown"}},
+	}}
+
+	got, err := singleLinuxImageDescriptor("example.invalid/image:tag", manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Digest != want.Digest {
+		t.Fatalf("digest = %s, want %s", got.Digest, want.Digest)
+	}
+}
+
+func TestSingleLinuxImageDescriptorRejectsMultiArchIndex(t *testing.T) {
+	manifest := &v1.IndexManifest{Manifests: []v1.Descriptor{
+		{Platform: &v1.Platform{OS: "linux", Architecture: "amd64"}},
+		{Platform: &v1.Platform{OS: "linux", Architecture: "arm64"}},
+	}}
+
+	if _, err := singleLinuxImageDescriptor("example.invalid/image:tag", manifest); err == nil {
+		t.Fatal("expected multi-architecture index to be rejected")
+	}
+}
+
+func TestReadLayerFile(t *testing.T) {
+	content := []byte("rootfsSizeMiB: 1504\n")
+	var archive bytes.Buffer
+	writer := tar.NewWriter(&archive)
+	if err := writer.WriteHeader(&tar.Header{
+		Name: imageMetadataPath,
+		Mode: 0o644,
+		Size: int64(len(content)),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := writer.Write(content); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	layer, err := tarball.LayerFromOpener(func() (io.ReadCloser, error) {
+		return io.NopCloser(bytes.NewReader(archive.Bytes())), nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, found, err := readLayerFile(layer, imageMetadataPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !found || !bytes.Equal(got, content) {
+		t.Fatalf("found=%v content=%q, want %q", found, got, content)
 	}
 }
 

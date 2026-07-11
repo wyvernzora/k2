@@ -307,4 +307,5 @@ RUN set -eux; \
     if [ "${rootfs_mib}" -gt "${UPGRADE_SIZE_ALLOWANCE_MIB}" ]; then \
         echo "Rootfs is ${rootfs_mib} MiB, exceeding upgrade allowance ${UPGRADE_SIZE_ALLOWANCE_MIB} MiB" >&2; \
         exit 1; \
-    fi
+    fi; \
+    printf 'rootfsSizeMiB: %s\n' "${rootfs_mib}" >> /usr/share/k2/image-build/metadata.yaml

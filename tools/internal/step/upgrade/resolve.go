@@ -45,7 +45,10 @@ const DefaultRegistryRepo = "ghcr.io/wyvernzora/k2-kairos"
 // tag-search prefix (and surface the current image in the Plan).
 const MetadataPath = "/usr/share/k2/image-build/metadata.yaml"
 
-const StateMountPath = "/run/initramfs/cos-state"
+const (
+	StateMountPath     = "/run/initramfs/cos-state"
+	RecoveryDevicePath = "/dev/disk/by-label/COS_RECOVERY"
+)
 
 // ActiveModePath is the Kairos runtime marker created when the node boots
 // from the active partition. Its contents are not meaningful.
@@ -60,10 +63,11 @@ const RecoveryModePath = "/run/cos/recovery_mode"
 // reasonable values for a CM4-on-eMMC node (slowest hardware we
 // upgrade). Operators override per-invocation via CLI flags.
 const (
-	DefaultDrainTimeout      = 5 * time.Minute
-	DefaultRebootTimeout     = 10 * time.Minute
-	DefaultVerifyTimeout     = 3 * time.Minute
-	UpgradeSafetyMarginBytes = uint64(1 << 30)
+	DefaultDrainTimeout       = 5 * time.Minute
+	DefaultRebootTimeout      = 10 * time.Minute
+	DefaultVerifyTimeout      = 3 * time.Minute
+	StateSafetyMarginBytes    = uint64(1 << 30)
+	RecoverySafetyMarginBytes = uint64(200 << 20)
 )
 
 // Plan is the resolved set of facts an upgrade is about to act on.
@@ -106,9 +110,10 @@ type Plan struct {
 	// AllowQuorumLoss was set.
 	QuorumOK bool
 
-	StateTotalBytes     uint64
-	StateAvailableBytes uint64
-	RequiredFreeBytes   uint64
+	StateAvailableBytes       uint64
+	RecoveryAvailableBytes    uint64
+	RequiredStateFreeBytes    uint64
+	RequiredRecoveryFreeBytes uint64
 }
 
 // ImageRef is the small shape we carry around for "an OCI image we
@@ -117,11 +122,10 @@ type Plan struct {
 // time (e.g. metadata.yaml on the node). Digest is best-effort:
 // we record it when the registry tells us, empty otherwise.
 type ImageRef struct {
-	Ref                       string
-	Digest                    string
-	Created                   time.Time
-	StateSizeBytes            uint64
-	UpgradeSizeAllowanceBytes uint64
+	Ref                    string
+	Digest                 string
+	Created                time.Time
+	UpgradeAllocationBytes uint64
 }
 
 // String renders ImageRef as the operator wants to see it in the
@@ -179,6 +183,7 @@ type NodeImageMetadata struct {
 	ImageRevision           string
 	DiskStateSizeMiB        uint64
 	UpgradeSizeAllowanceMiB uint64
+	RootFSSizeMiB           uint64
 }
 
 // Resolve runs every read-only step needed to populate a Plan: SSH
@@ -250,13 +255,14 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 	}
 	plan.Current = ImageRef{Ref: current}
 
-	stateTotal, stateAvailable, err := r.stateCapacity()
+	stateAvailable, recoveryAvailable, err := r.upgradeStorageAvailable()
 	if err != nil {
-		return Plan{}, fmt.Errorf("inspect %s capacity: %w", StateMountPath, err)
+		return Plan{}, fmt.Errorf("inspect upgrade storage available space: %w", err)
 	}
-	plan.StateTotalBytes = stateTotal
 	plan.StateAvailableBytes = stateAvailable
-	plan.RequiredFreeBytes = plan.Target.UpgradeSizeAllowanceBytes + UpgradeSafetyMarginBytes
+	plan.RecoveryAvailableBytes = recoveryAvailable
+	plan.RequiredStateFreeBytes = plan.Target.UpgradeAllocationBytes + StateSafetyMarginBytes
+	plan.RequiredRecoveryFreeBytes = plan.Target.UpgradeAllocationBytes + RecoverySafetyMarginBytes
 
 	// Control-plane quorum check. Worker nodes always pass.
 	if plan.IsControlPlane {
@@ -274,38 +280,58 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 
 func imageRef(img oci.Image) ImageRef {
 	return ImageRef{
-		Ref:                       img.Ref,
-		Digest:                    img.Digest,
-		Created:                   img.Created,
-		StateSizeBytes:            img.StateSizeMiB << 20,
-		UpgradeSizeAllowanceBytes: img.UpgradeSizeAllowanceMiB << 20,
+		Ref:                    img.Ref,
+		Digest:                 img.Digest,
+		Created:                img.Created,
+		UpgradeAllocationBytes: img.UpgradeAllocationMiB << 20,
 	}
 }
 
-func (r *Runner) stateCapacity() (total uint64, available uint64, err error) {
-	probe := "set -eu; source=$(findmnt -n -o SOURCE " + StateMountPath + "); " +
-		"lsblk -bno SIZE \"$source\"; df -B1 --output=avail " + StateMountPath + " | tail -n 1"
-	out, err := r.Remote.Capture(probe)
+func (r *Runner) upgradeStorageAvailable() (state uint64, recovery uint64, err error) {
+	out, err := r.Remote.Capture(upgradeStorageProbeScript())
 	if err != nil {
 		return 0, 0, err
 	}
-	return parseStateCapacity(out)
+	return parseUpgradeStorageAvailable(out)
 }
 
-func parseStateCapacity(out []byte) (total uint64, available uint64, err error) {
+func upgradeStorageProbeScript() string {
+	return `set -eu
+state_available=$(df -B1 --output=avail ` + shellQuote(StateMountPath) + ` | tail -n 1)
+recovery_device=$(readlink -f ` + shellQuote(RecoveryDevicePath) + `)
+recovery_mount=$(findmnt -rn -S "$recovery_device" -o TARGET | head -n 1 || true)
+probe_mount=
+cleanup() {
+  if [ -n "$probe_mount" ]; then
+    sudo umount "$probe_mount" >/dev/null 2>&1 || true
+    rmdir "$probe_mount" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+if [ -z "$recovery_mount" ]; then
+  probe_mount=$(mktemp -d /tmp/k2-recovery-probe.XXXXXX)
+  sudo mount -o ro "$recovery_device" "$probe_mount"
+  recovery_mount=$probe_mount
+fi
+recovery_available=$(df -B1 --output=avail "$recovery_mount" | tail -n 1)
+printf '%s\n%s\n' "$state_available" "$recovery_available"
+`
+}
+
+func parseUpgradeStorageAvailable(out []byte) (state uint64, recovery uint64, err error) {
 	fields := strings.Fields(string(out))
 	if len(fields) != 2 {
-		return 0, 0, fmt.Errorf("unexpected state capacity output %q", strings.TrimSpace(string(out)))
+		return 0, 0, fmt.Errorf("unexpected upgrade storage available-space output %q", strings.TrimSpace(string(out)))
 	}
-	total, err = strconv.ParseUint(fields[0], 10, 64)
+	state, err = strconv.ParseUint(fields[0], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("parse total bytes %q: %w", fields[0], err)
+		return 0, 0, fmt.Errorf("parse COS_STATE available bytes %q: %w", fields[0], err)
 	}
-	available, err = strconv.ParseUint(fields[1], 10, 64)
+	recovery, err = strconv.ParseUint(fields[1], 10, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("parse available bytes %q: %w", fields[1], err)
+		return 0, 0, fmt.Errorf("parse COS_RECOVERY available bytes %q: %w", fields[1], err)
 	}
-	return total, available, nil
+	return state, recovery, nil
 }
 
 func bootModeProbeScript(activePath, recoveryPath string) string {

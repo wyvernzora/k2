@@ -25,5 +25,6 @@ func readUpgradeMetadata(client *remote.Client) (stepupgrade.NodeImageMetadata, 
 		Role: m.Role, Arch: m.Arch, Hardware: m.Hardware, KubernetesDistro: m.KubernetesDistro,
 		KubernetesVersion: m.KubernetesVersion, KairosVersion: m.KairosVersion, ImageRevision: m.ImageRevision,
 		DiskStateSizeMiB: m.DiskStateSizeMiB, UpgradeSizeAllowanceMiB: m.UpgradeSizeAllowanceMiB,
+		RootFSSizeMiB: m.RootFSSizeMiB,
 	}, nil
 }

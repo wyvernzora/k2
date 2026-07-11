@@ -203,14 +203,14 @@ func TestPreflightAcceptsValidPlan(t *testing.T) {
 	plan := Plan{
 		Current: ImageRef{Ref: "old"},
 		Target: ImageRef{
-			Ref:                       "new",
-			StateSizeBytes:            8 << 30,
-			UpgradeSizeAllowanceBytes: 1536 << 20,
+			Ref:                    "new",
+			UpgradeAllocationBytes: 900 << 20,
 		},
-		QuorumOK:            true,
-		StateTotalBytes:     8 << 30,
-		StateAvailableBytes: 3 << 30,
-		RequiredFreeBytes:   (1536 << 20) + UpgradeSafetyMarginBytes,
+		QuorumOK:                  true,
+		StateAvailableBytes:       3 << 30,
+		RecoveryAvailableBytes:    3 << 30,
+		RequiredStateFreeBytes:    (900 << 20) + StateSafetyMarginBytes,
+		RequiredRecoveryFreeBytes: (900 << 20) + RecoverySafetyMarginBytes,
 	}
 	r := &Runner{}
 	if err := r.Preflight(plan); err != nil {
@@ -218,16 +218,21 @@ func TestPreflightAcceptsValidPlan(t *testing.T) {
 	}
 }
 
-func TestPreflightRefusesUndersizedStatePartition(t *testing.T) {
+func TestPreflightAllowsSmallerStateWhenTransitionFits(t *testing.T) {
 	plan := Plan{
-		Current:         ImageRef{Ref: "old"},
-		Target:          ImageRef{Ref: "new", StateSizeBytes: 8 << 30},
-		QuorumOK:        true,
-		StateTotalBytes: 4 << 30,
+		Current: ImageRef{Ref: "old"},
+		Target: ImageRef{
+			Ref:                    "new",
+			UpgradeAllocationBytes: 900 << 20,
+		},
+		QuorumOK:                  true,
+		StateAvailableBytes:       2 << 30,
+		RecoveryAvailableBytes:    2 << 30,
+		RequiredStateFreeBytes:    (900 << 20) + StateSafetyMarginBytes,
+		RequiredRecoveryFreeBytes: (900 << 20) + RecoverySafetyMarginBytes,
 	}
-	err := (&Runner{}).Preflight(plan)
-	if err == nil || !strings.Contains(err.Error(), "too small") {
-		t.Fatalf("error = %v, want state size refusal", err)
+	if err := (&Runner{}).Preflight(plan); err != nil {
+		t.Fatalf("expected accept when transition image fits, got %v", err)
 	}
 }
 
@@ -235,14 +240,14 @@ func TestPreflightRefusesInsufficientFreeStateSpace(t *testing.T) {
 	plan := Plan{
 		Current: ImageRef{Ref: "old"},
 		Target: ImageRef{
-			Ref:                       "new",
-			StateSizeBytes:            8 << 30,
-			UpgradeSizeAllowanceBytes: 1536 << 20,
+			Ref:                    "new",
+			UpgradeAllocationBytes: 900 << 20,
 		},
-		QuorumOK:            true,
-		StateTotalBytes:     8 << 30,
-		StateAvailableBytes: 2 << 30,
-		RequiredFreeBytes:   (1536 << 20) + UpgradeSafetyMarginBytes,
+		QuorumOK:                  true,
+		StateAvailableBytes:       (900 << 20) + StateSafetyMarginBytes - 1,
+		RecoveryAvailableBytes:    3 << 30,
+		RequiredStateFreeBytes:    (900 << 20) + StateSafetyMarginBytes,
+		RequiredRecoveryFreeBytes: (900 << 20) + RecoverySafetyMarginBytes,
 	}
 	err := (&Runner{}).Preflight(plan)
 	if err == nil || !strings.Contains(err.Error(), "insufficient free space") {
@@ -250,13 +255,32 @@ func TestPreflightRefusesInsufficientFreeStateSpace(t *testing.T) {
 	}
 }
 
-func TestParseStateCapacity(t *testing.T) {
-	total, available, err := parseStateCapacity([]byte("8589934592\n6442450944\n"))
+func TestPreflightRefusesInsufficientFreeRecoverySpace(t *testing.T) {
+	plan := Plan{
+		Current: ImageRef{Ref: "old"},
+		Target: ImageRef{
+			Ref:                    "new",
+			UpgradeAllocationBytes: 900 << 20,
+		},
+		QuorumOK:                  true,
+		StateAvailableBytes:       3 << 30,
+		RecoveryAvailableBytes:    (900 << 20) + RecoverySafetyMarginBytes - 1,
+		RequiredStateFreeBytes:    (900 << 20) + StateSafetyMarginBytes,
+		RequiredRecoveryFreeBytes: (900 << 20) + RecoverySafetyMarginBytes,
+	}
+	err := (&Runner{}).Preflight(plan)
+	if err == nil || !strings.Contains(err.Error(), "COS_RECOVERY") {
+		t.Fatalf("error = %v, want recovery free-space refusal", err)
+	}
+}
+
+func TestParseUpgradeStorageAvailable(t *testing.T) {
+	state, recovery, err := parseUpgradeStorageAvailable([]byte("4500910080\n2700000000\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if total != 8<<30 || available != 6<<30 {
-		t.Fatalf("total=%d available=%d", total, available)
+	if state != 4500910080 || recovery != 2700000000 {
+		t.Fatalf("state=%d recovery=%d", state, recovery)
 	}
 }
 

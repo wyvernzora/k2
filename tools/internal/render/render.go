@@ -48,6 +48,7 @@ type ImageMetadata struct {
 	ImageRevision           string `yaml:"imageRevision"`
 	DiskStateSizeMiB        uint64 `yaml:"diskStateSizeMiB"`
 	UpgradeSizeAllowanceMiB uint64 `yaml:"upgradeSizeAllowanceMiB"`
+	RootFSSizeMiB           uint64 `yaml:"rootfsSizeMiB"`
 }
 
 type activationStages struct {

@@ -97,9 +97,20 @@ is sparse and compresses efficiently in the exported `.raw.xz` artifact.
 
 Each target also declares `upgradeSizeAllowanceMiB`. The OCI build fails if
 the completed root filesystem exceeds that allowance, and the value is
-published with the required state size as OCI labels. `k2-tools upgrade` uses
-those labels to require the target state size plus enough free space for the
-incoming image allowance and a 1 GiB safety margin before it cordons a node.
+published with the artifact's state layout as OCI labels. This is a coarse
+build-growth guard, not the upgrade allocation estimate.
+
+The build also measures the completed root filesystem and records
+`rootfsSizeMiB` in the K2 metadata file inside the OCI image. `k2-tools
+upgrade` reads that measured value from the newest image layer; it does not use
+the allowance as the expected allocation. Before cordoning a node, it requires
+the measured rootfs size plus a 1 GiB reporting/filesystem margin in
+`COS_STATE`, and the measured size plus a 200 MiB margin in `COS_RECOVERY`.
+The existing active and passive images are already reflected in available
+state space; Kairos renames them rather than allocating more copies. Recovery
+is upgraded later as a separate operation with its own transition image. The
+artifact's nominal state-partition size is not itself an in-place upgrade
+requirement.
 
 Useful direct CLI commands:
 

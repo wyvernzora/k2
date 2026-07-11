@@ -16,14 +16,15 @@ func (r *Runner) Preflight(plan Plan) error {
 	if plan.Current.Ref != "" && plan.Current.Ref == plan.Target.Ref {
 		return fmt.Errorf("node already on %s; pass --source explicitly to force re-install", plan.Target.Ref)
 	}
-	if plan.StateTotalBytes < plan.Target.StateSizeBytes {
-		return fmt.Errorf("COS_STATE is too small for target image: have %d MiB, target requires %d MiB",
-			plan.StateTotalBytes>>20, plan.Target.StateSizeBytes>>20)
+	if plan.StateAvailableBytes < plan.RequiredStateFreeBytes {
+		return fmt.Errorf("COS_STATE has insufficient free space: have %d MiB, need %d MiB (%d MiB transition image + %d MiB safety margin)",
+			plan.StateAvailableBytes>>20, plan.RequiredStateFreeBytes>>20,
+			plan.Target.UpgradeAllocationBytes>>20, StateSafetyMarginBytes>>20)
 	}
-	if plan.StateAvailableBytes < plan.RequiredFreeBytes {
-		return fmt.Errorf("COS_STATE has insufficient free space: have %d MiB, need %d MiB (%d MiB image allowance + %d MiB safety margin)",
-			plan.StateAvailableBytes>>20, plan.RequiredFreeBytes>>20,
-			plan.Target.UpgradeSizeAllowanceBytes>>20, UpgradeSafetyMarginBytes>>20)
+	if plan.RecoveryAvailableBytes < plan.RequiredRecoveryFreeBytes {
+		return fmt.Errorf("COS_RECOVERY has insufficient free space: have %d MiB, need %d MiB (%d MiB transition image + %d MiB safety margin)",
+			plan.RecoveryAvailableBytes>>20, plan.RequiredRecoveryFreeBytes>>20,
+			plan.Target.UpgradeAllocationBytes>>20, RecoverySafetyMarginBytes>>20)
 	}
 	return nil
 }

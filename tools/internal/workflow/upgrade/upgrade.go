@@ -214,8 +214,10 @@ func upgradePlanFields(c *upgradeCmd, plan upgrade.Plan) []ui.KV {
 	pairs = append(pairs,
 		ui.KV{Key: "Current image", Value: plan.Current.String()},
 		ui.KV{Key: "Target image", Value: targetWithAge(plan)},
-		ui.KV{Key: "COS_STATE", Value: fmt.Sprintf("%s total, %s available", humanBytesBinary(plan.StateTotalBytes), humanBytesBinary(plan.StateAvailableBytes))},
-		ui.KV{Key: "Required free", Value: fmt.Sprintf("%s (%s image allowance + %s safety margin)", humanBytesBinary(plan.RequiredFreeBytes), humanBytesBinary(plan.Target.UpgradeSizeAllowanceBytes), humanBytesBinary(upgrade.UpgradeSafetyMarginBytes))},
+		ui.KV{Key: "COS_STATE available", Value: humanBytesBinary(plan.StateAvailableBytes)},
+		ui.KV{Key: "COS_RECOVERY available", Value: humanBytesBinary(plan.RecoveryAvailableBytes)},
+		ui.KV{Key: "Required state free", Value: fmt.Sprintf("%s (%s allocation + %s margin)", humanBytesBinary(plan.RequiredStateFreeBytes), humanBytesBinary(plan.Target.UpgradeAllocationBytes), humanBytesBinary(upgrade.StateSafetyMarginBytes))},
+		ui.KV{Key: "Required recovery free", Value: fmt.Sprintf("%s (%s allocation + %s margin)", humanBytesBinary(plan.RequiredRecoveryFreeBytes), humanBytesBinary(plan.Target.UpgradeAllocationBytes), humanBytesBinary(upgrade.RecoverySafetyMarginBytes))},
 	)
 	if plan.AutoDiscovered {
 		repo := c.RegistryRepo

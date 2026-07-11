@@ -12,15 +12,20 @@
 package oci
 
 import (
+	"archive/tar"
 	"context"
 	"fmt"
+	"io"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"gopkg.in/yaml.v3"
 )
 
 // Image is the per-tag fact set k2-tools upgrade actually wires into
@@ -33,12 +38,15 @@ type Image struct {
 	Digest                  string
 	Created                 time.Time
 	StateSizeMiB            uint64
+	UpgradeAllocationMiB    uint64
 	UpgradeSizeAllowanceMiB uint64
 }
 
 const (
 	stateSizeLabel            = "io.k2.disk-state-size-mib"
 	upgradeSizeAllowanceLabel = "io.k2.upgrade-size-allowance-mib"
+	imageMetadataPath         = "usr/share/k2/image-build/metadata.yaml"
+	maxImageMetadataBytes     = int64(1 << 20)
 )
 
 // Discoverer is the public surface. Hold one for the duration of an
@@ -78,6 +86,10 @@ func (d *Discoverer) InspectImage(ctx context.Context, ref string) (Image, error
 	if err != nil {
 		return Image{}, fmt.Errorf("inspect %s: %w", ref, err)
 	}
+	upgradeAllocationMiB, err := d.reg.RootFSSizeMiB(ctx, ref)
+	if err != nil {
+		return Image{}, fmt.Errorf("read rootfs size metadata for %s: %w", ref, err)
+	}
 	upgradeSizeAllowanceMiB, err := positiveLabel(cfg.Config.Labels, upgradeSizeAllowanceLabel)
 	if err != nil {
 		return Image{}, fmt.Errorf("inspect %s: %w", ref, err)
@@ -87,6 +99,7 @@ func (d *Discoverer) InspectImage(ctx context.Context, ref string) (Image, error
 		Digest:                  digest,
 		Created:                 cfg.Created.Time,
 		StateSizeMiB:            stateSizeMiB,
+		UpgradeAllocationMiB:    upgradeAllocationMiB,
 		UpgradeSizeAllowanceMiB: upgradeSizeAllowanceMiB,
 	}, nil
 }
@@ -154,13 +167,12 @@ func (d *Discoverer) DiscoverLatest(ctx context.Context, repo, prefix string) (I
 // client library. Production wires it to crane; tests wire it to an
 // in-memory fake. Methods are the minimum subset needed by Discoverer.
 //
-// All methods take a context for cancellation hygiene; crane itself
-// is context-free for these calls, but we honor ctx.Err() before each
-// network round-trip via the wrapper below.
+// All methods take a context for cancellation hygiene.
 type registry interface {
 	ListTags(ctx context.Context, repo string) ([]string, error)
 	Config(ctx context.Context, ref string) (*v1.ConfigFile, error)
 	Digest(ctx context.Context, ref string) (string, error)
+	RootFSSizeMiB(ctx context.Context, ref string) (uint64, error)
 }
 
 // craneRegistry is the production registry impl backed by crane.
@@ -176,10 +188,7 @@ func (craneRegistry) ListTags(ctx context.Context, repo string) ([]string, error
 }
 
 func (craneRegistry) Config(ctx context.Context, ref string) (*v1.ConfigFile, error) {
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	img, err := crane.Pull(ref)
+	img, err := pullSinglePlatformImage(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -191,4 +200,123 @@ func (craneRegistry) Digest(ctx context.Context, ref string) (string, error) {
 		return "", err
 	}
 	return crane.Digest(ref)
+}
+
+func (craneRegistry) RootFSSizeMiB(ctx context.Context, ref string) (uint64, error) {
+	img, err := pullSinglePlatformImage(ctx, ref)
+	if err != nil {
+		return 0, err
+	}
+	metadata, err := readImageFile(img, imageMetadataPath)
+	if err != nil {
+		return 0, err
+	}
+	var sizing struct {
+		RootFSSizeMiB uint64 `yaml:"rootfsSizeMiB"`
+	}
+	if err := yaml.Unmarshal(metadata, &sizing); err != nil {
+		return 0, fmt.Errorf("decode %s: %w", imageMetadataPath, err)
+	}
+	if sizing.RootFSSizeMiB == 0 {
+		return 0, fmt.Errorf("%s requires a positive rootfsSizeMiB", imageMetadataPath)
+	}
+	return sizing.RootFSSizeMiB, nil
+}
+
+// readImageFile searches layers from newest to oldest, so reading K2's final
+// metadata file normally downloads only the small layer that last modified it.
+func readImageFile(img v1.Image, path string) ([]byte, error) {
+	layers, err := img.Layers()
+	if err != nil {
+		return nil, err
+	}
+	for i := len(layers) - 1; i >= 0; i-- {
+		data, found, err := readLayerFile(layers[i], path)
+		if err != nil {
+			return nil, fmt.Errorf("read layer %d: %w", i, err)
+		}
+		if found {
+			return data, nil
+		}
+	}
+	return nil, fmt.Errorf("%s is absent from OCI image", path)
+}
+
+func readLayerFile(layer v1.Layer, path string) (data []byte, found bool, err error) {
+	stream, err := layer.Uncompressed()
+	if err != nil {
+		return nil, false, err
+	}
+	defer stream.Close()
+
+	reader := tar.NewReader(stream)
+	for {
+		header, err := reader.Next()
+		if err == io.EOF {
+			return nil, false, nil
+		}
+		if err != nil {
+			return nil, false, err
+		}
+		name := strings.TrimPrefix(strings.TrimPrefix(header.Name, "./"), "/")
+		if name != path {
+			continue
+		}
+		if !header.FileInfo().Mode().IsRegular() {
+			return nil, false, fmt.Errorf("%s is not a regular file", path)
+		}
+		data, err := io.ReadAll(io.LimitReader(reader, maxImageMetadataBytes+1))
+		if err != nil {
+			return nil, false, err
+		}
+		if int64(len(data)) > maxImageMetadataBytes {
+			return nil, false, fmt.Errorf("%s exceeds %d bytes", path, maxImageMetadataBytes)
+		}
+		return data, true, nil
+	}
+}
+
+// pullSinglePlatformImage resolves architecture-specific K2 tags without
+// applying the operator workstation's default platform. Published tags can be
+// OCI indexes because CI attaches provenance manifests; choosing by the local
+// GOARCH would make an ARM node image uninspectable from an AMD64 workstation.
+func pullSinglePlatformImage(ctx context.Context, ref string) (v1.Image, error) {
+	parsed, err := name.ParseReference(ref)
+	if err != nil {
+		return nil, err
+	}
+	descriptor, err := remote.Get(parsed, remote.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	if !descriptor.MediaType.IsIndex() {
+		return descriptor.Image()
+	}
+
+	index, err := descriptor.ImageIndex()
+	if err != nil {
+		return nil, err
+	}
+	manifest, err := index.IndexManifest()
+	if err != nil {
+		return nil, err
+	}
+	imageDescriptor, err := singleLinuxImageDescriptor(ref, manifest)
+	if err != nil {
+		return nil, err
+	}
+	return index.Image(imageDescriptor.Digest)
+}
+
+func singleLinuxImageDescriptor(ref string, manifest *v1.IndexManifest) (v1.Descriptor, error) {
+	var imageDescriptors []v1.Descriptor
+	for _, candidate := range manifest.Manifests {
+		if candidate.Platform != nil && candidate.Platform.OS == "linux" && candidate.Platform.Architecture != "unknown" {
+			imageDescriptors = append(imageDescriptors, candidate)
+		}
+	}
+	if len(imageDescriptors) != 1 {
+		return v1.Descriptor{}, fmt.Errorf("OCI index %s contains %d Linux image manifests; expected exactly one", ref, len(imageDescriptors))
+	}
+	return imageDescriptors[0], nil
 }
