@@ -108,7 +108,7 @@ spec:
                   name: kura-tvdb
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/wyvernzora/kura/library-manager:v0.6.0
+          image: ghcr.io/wyvernzora/kura/library-manager:v0.6.1
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -279,7 +279,7 @@ spec:
               value: /config
             - name: XDG_DATA_HOME
               value: /data
-          image: ghcr.io/wyvernzora/kura/webui:v0.6.0
+          image: ghcr.io/wyvernzora/kura/webui:v0.6.1
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
