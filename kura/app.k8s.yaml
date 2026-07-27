@@ -57,7 +57,7 @@ metadata:
   labels:
     k2.wyvernzora.io/app: kura
     k2.wyvernzora.io/component: kura
-  name: kura
+  name: kura-library-manager
   namespace: kura
 spec:
   minReadySeconds: 0
@@ -430,6 +430,230 @@ spec:
     - hosts:
         - kura.wyvernzora.io
 ---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: DatabaseClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: release-indexer
+  name: kura
+  namespace: kura
+spec:
+  clusterRef:
+    name: nexus
+    namespace: postgresql
+  databaseName: kura
+  deletionPolicy: Retain
+  schemas:
+    - releases
+---
+apiVersion: cnpg.wyvernzora.io/v1alpha1
+kind: RoleClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: release-indexer
+  name: release-indexer
+  namespace: kura
+spec:
+  databaseClaimRef:
+    name: kura
+  roleName: release_indexer
+  schemas:
+    - access: Owner
+      name: releases
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: release-indexer
+  name: kura-release-indexer-config
+  namespace: kura
+data:
+  release-indexer.toml: |-
+    [database]
+    schema = "releases"
+
+    [server]
+    addr = ":8080"
+    log_level = "info"
+
+    [queue]
+    max_attempts = 3
+
+    [sources.dmhy]
+    enabled = false
+    interval = "5m"
+    timeout = "2m"
+    url = "https://share.dmhy.org"
+    category = "2"
+    max_rps = 0.5
+    cache_ttl = "10m"
+
+    [sources.nyaa]
+    enabled = false
+    interval = "5m"
+    timeout = "2m"
+    url = "https://nyaa.si"
+    query = ""
+    category = "1_4"
+    filter = "0"
+    max_rps = 0.5
+immutable: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: release-indexer
+  name: kura-release-indexer
+  namespace: kura
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: release-indexer
+      app.kubernetes.io/name: kura
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/release-indexer-config: e3f3341dbe8f8a1bdc64880de4293e7dcc27911ba96fdbac925388978ce017a7
+      labels:
+        app.kubernetes.io/component: release-indexer
+        app.kubernetes.io/name: kura
+        cdk8s.io/metadata.addr: release-indexer-deployment-c86db767
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - --config=/etc/kura/release-indexer.toml
+          env:
+            - name: KURA_RELEASES_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: uri
+                  name: release-indexer-credentials
+            - name: TZ
+              value: America/Los_Angeles
+          image: ghcr.io/wyvernzora/kura/release-indexer:v0.6.1
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: release-indexer
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 1000m
+              ephemeral-storage: 1Gi
+              memory: 1024Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /etc/kura/release-indexer.toml
+              name: config
+              readOnly: true
+              subPath: release-indexer.toml
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            name: kura-release-indexer-config
+          name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: release-indexer
+  name: kura-release-indexer
+  namespace: kura
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: release-indexer
+    app.kubernetes.io/name: kura
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: release-indexer
+  name: kura-release-indexer-mcp
+  namespace: kura
+spec:
+  externalIPs: []
+  ports:
+    - name: mcp
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: release-indexer
+    app.kubernetes.io/name: kura
+  type: ClusterIP
+---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -515,7 +739,7 @@ metadata:
     k2.wyvernzora.io/component: network-policy
   name: pomerium-kura-pomerium-to-kura-mcp
 specs:
-  - description: pomerium to kura
+  - description: pomerium to kura-library-manager
     egress:
       - toEndpoints:
           - matchLabels:
@@ -531,7 +755,7 @@ specs:
         app.kubernetes.io/component: proxy
         app.kubernetes.io/name: pomerium
         k8s:io.kubernetes.pod.namespace: pomerium
-  - description: pomerium to kura
+  - description: pomerium to kura-library-manager
     endpointSelector:
       matchLabels:
         app.kubernetes.io/component: library-manager
@@ -574,3 +798,112 @@ specs:
         app.kubernetes.io/component: library-manager
         app.kubernetes.io/name: kura
         k8s:io.kubernetes.pod.namespace: kura
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: kura-release-indexer-source-egress
+specs:
+  - egress:
+      - toFQDNs:
+          - matchName: dmhy.org
+          - matchName: share.dmhy.org
+          - matchName: nyaa.si
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: release-indexer
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: kura-postgresql-release-indexer-to-postgresql
+specs:
+  - description: kura-release-indexer to nexus-postgresql
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              cnpg.io/cluster: nexus
+              k8s:io.kubernetes.pod.namespace: postgresql
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: release-indexer
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+  - description: kura-release-indexer to nexus-postgresql
+    endpointSelector:
+      matchLabels:
+        cnpg.io/cluster: nexus
+        k8s:io.kubernetes.pod.namespace: postgresql
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: release-indexer
+              app.kubernetes.io/name: kura
+              k8s:io.kubernetes.pod.namespace: kura
+        toPorts:
+          - ports:
+              - port: "5432"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: release-indexer-metrics
+  namespace: kura
+spec:
+  namespaceSelector:
+    matchNames:
+      - kura
+  podMetricsEndpoints:
+    - path: /metrics
+      portNumber: 8080
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: release-indexer
+      app.kubernetes.io/name: kura
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: kura-release-indexer-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: release-indexer
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kura
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "8080"
+                protocol: TCP

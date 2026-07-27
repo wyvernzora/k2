@@ -883,7 +883,7 @@ metadata:
     k2.wyvernzora.io/component: network-policy
   name: n8n-kura-n8n-to-kura-mcp
 specs:
-  - description: n8n to kura
+  - description: n8n to kura-library-manager
     egress:
       - toEndpoints:
           - matchLabels:
@@ -899,7 +899,7 @@ specs:
         app.kubernetes.io/component: automation
         app.kubernetes.io/name: n8n
         k8s:io.kubernetes.pod.namespace: n8n
-  - description: n8n to kura
+  - description: n8n to kura-library-manager
     endpointSelector:
       matchLabels:
         app.kubernetes.io/component: library-manager
@@ -924,7 +924,7 @@ metadata:
     k2.wyvernzora.io/component: network-policy
   name: n8n-kura-n8n-to-kura-rest
 specs:
-  - description: n8n to kura
+  - description: n8n to kura-library-manager
     egress:
       - toEndpoints:
           - matchLabels:
@@ -940,7 +940,7 @@ specs:
         app.kubernetes.io/component: automation
         app.kubernetes.io/name: n8n
         k8s:io.kubernetes.pod.namespace: n8n
-  - description: n8n to kura
+  - description: n8n to kura-library-manager
     endpointSelector:
       matchLabels:
         app.kubernetes.io/component: library-manager
