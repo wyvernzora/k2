@@ -43,7 +43,7 @@ export class KuraDeployment extends K2Deployment {
     const config = ConfigMap.fromConfigMapName(scope, `${id}-config`, props.configName);
     const configVolume = Volume.fromConfigMap(scope, `${id}-config-volume`, config, { name: "config" });
     super(scope, id, {
-      metadata: { name: "kura" },
+      metadata: { name: "kura-library-manager" },
       replicas: 1,
       select: false,
       strategy: DeploymentStrategy.recreate(),
