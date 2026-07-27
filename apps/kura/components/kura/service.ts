@@ -7,6 +7,9 @@ import {
   KURA_MCP_PORT,
   KURA_MCP_SERVICE_NAME,
   KURA_SERVICE_NAME,
+  KURA_WEBUI_HTTP_PORT,
+  KURA_WEBUI_LABELS,
+  KURA_WEBUI_SERVICE_NAME,
 } from "../../constants.js";
 
 export class KuraService extends Service {
@@ -27,6 +30,17 @@ export class KuraMcpService extends Service {
       type: ServiceType.CLUSTER_IP,
       selector: Pods.select(scope, "kura-mcp-service-pods", { labels: KURA_LABELS }),
       ports: [{ name: "mcp", port: 80, targetPort: KURA_MCP_PORT }],
+    });
+  }
+}
+
+export class KuraWebuiService extends Service {
+  public constructor(scope: Construct, id: string) {
+    super(scope, id, {
+      metadata: { name: KURA_WEBUI_SERVICE_NAME },
+      type: ServiceType.CLUSTER_IP,
+      selector: Pods.select(scope, "kura-webui-service-pods", { labels: KURA_WEBUI_LABELS }),
+      ports: [{ name: "http", port: 80, targetPort: KURA_WEBUI_HTTP_PORT }],
     });
   }
 }

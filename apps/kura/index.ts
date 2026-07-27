@@ -8,10 +8,9 @@ import {
   type PrivateConnectionTarget,
 } from "../cilium/lib/netpol/index.js";
 
-import { DmhyMcp } from "./components/dmhy-mcp/index.js";
 import { Kura } from "./components/kura/index.js";
 import { NetworkPolicy } from "./components/network-policy.js";
-import { DMHY_MCP_LABELS, DMHY_MCP_PORT, KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "./constants.js";
+import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT, KURA_WEBUI_HTTP_PORT, KURA_WEBUI_LABELS } from "./constants.js";
 
 export * from "./lib/n8n-custom-nodes.js";
 
@@ -33,15 +32,8 @@ export const endpoints = {
     };
   },
 
-  dmhyMcpHttp(): BackendTarget {
-    return { backend: dmhyMcpEndpoint(), ports: [tcp(DMHY_MCP_PORT)] };
-  },
-
-  dmhyMcp(): PrivateConnectionTarget {
-    return {
-      to: dmhyMcpEndpoint(),
-      ports: [tcp(DMHY_MCP_PORT)],
-    };
+  webui(): BackendTarget {
+    return { backend: webuiEndpoint(), ports: [tcp(KURA_WEBUI_HTTP_PORT)] };
   },
 };
 
@@ -49,12 +41,11 @@ function kuraEndpoint(): PolicyEndpoint {
   return endpoint(KURA_NAMESPACE, KURA_LABELS, "kura");
 }
 
-function dmhyMcpEndpoint(): PolicyEndpoint {
-  return endpoint(KURA_NAMESPACE, DMHY_MCP_LABELS, "dmhy-mcp");
+function webuiEndpoint(): PolicyEndpoint {
+  return endpoint(KURA_NAMESPACE, KURA_WEBUI_LABELS, "kura-webui");
 }
 
 export const createAppResources: AppResourceFunc = app => {
   new Kura(app, "kura");
-  new DmhyMcp(app, "dmhy-mcp");
   new NetworkPolicy(app, "network-policy");
 };
