@@ -63,7 +63,7 @@ function nexusClusterSpec(): ClusterSpec {
 
 function volumeStorage(): NonNullable<ClusterSpec["storage"]> {
   return {
-    size: Size.gibibytes(4).asString(),
+    size: Size.gibibytes(8).asString(),
     storageClass: STORAGE_CLASS,
   };
 }
