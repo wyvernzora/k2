@@ -1535,7 +1535,7 @@ spec:
       cpu: 500m
       memory: 1Gi
   storage:
-    size: 4Gi
+    size: 8Gi
     storageClass: longhorn
   topologySpreadConstraints:
     - labelSelector:
@@ -1551,7 +1551,7 @@ spec:
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: ScheduleAnyway
   walStorage:
-    size: 4Gi
+    size: 8Gi
     storageClass: longhorn
 ---
 apiVersion: cilium.io/v2
