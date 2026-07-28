@@ -1,15 +1,10 @@
 import type { Construct } from "constructs";
 
-import { ApexDomain, K2Chart } from "@k2/cdk-lib";
-import { AuthenticatedMcpIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
-
-import { TAKUHAI_MCP_SERVICE_NAME } from "../../constants.js";
+import { K2Chart } from "@k2/cdk-lib";
 
 import { TakuhaiDatabase } from "./database.js";
 import { TakuhaiCrawlerDeployment, TakuhaiDeployment, TakuhaiNyaaCrawlerDeployment } from "./deployment.js";
-import { TakuhaiCrawlerService, TakuhaiMcpService, TakuhaiNyaaCrawlerService, TakuhaiService } from "./service.js";
-
-const TAKUHAI_HOST_PREFIX = "takuhai";
+import { TakuhaiCrawlerService, TakuhaiNyaaCrawlerService, TakuhaiService } from "./service.js";
 
 export class Takuhai extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -23,16 +18,7 @@ export class Takuhai extends K2Chart {
     new TakuhaiCrawlerDeployment(this, "crawler-deployment");
     new TakuhaiNyaaCrawlerDeployment(this, "crawler-nyaa-deployment");
     new TakuhaiService(this, "service");
-    new TakuhaiMcpService(this, "mcp-service");
     new TakuhaiCrawlerService(this, "crawler-service");
     new TakuhaiNyaaCrawlerService(this, "crawler-nyaa-service");
-    new AuthenticatedMcpIngress(this, "mcp-ingress", {
-      host: ApexDomain.of(this).subdomain(TAKUHAI_HOST_PREFIX),
-      path: "/mcp",
-      mcpPath: "/mcp",
-      serviceName: TAKUHAI_MCP_SERVICE_NAME,
-      servicePort: "mcp",
-      policy: authenticatedSourceIpPolicy(),
-    });
   }
 }

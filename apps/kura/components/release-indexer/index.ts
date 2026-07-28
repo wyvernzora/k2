@@ -5,7 +5,7 @@ import { K2Chart } from "@k2/cdk-lib";
 import { ReleaseIndexerConfig } from "./config.js";
 import { ReleaseIndexerDatabase } from "./database.js";
 import { ReleaseIndexerDeployment } from "./deployment.js";
-import { ReleaseIndexerMcpService, ReleaseIndexerService } from "./service.js";
+import { ReleaseIndexerService } from "./service.js";
 
 export class ReleaseIndexer extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -19,6 +19,5 @@ export class ReleaseIndexer extends K2Chart {
       credentialsSecretName: database.credentialsSecretName,
     });
     new ReleaseIndexerService(this, "service");
-    new ReleaseIndexerMcpService(this, "mcp-service");
   }
 }

@@ -6,7 +6,6 @@ import * as kura from "@k2/kura";
 import { NEXUS_CLUSTER_NAME, NEXUS_CLUSTER_NAMESPACE } from "@k2/postgresql";
 import { AllowPomeriumToBackend, workloads as pomeriumWorkloads } from "@k2/pomerium";
 import * as qbittorrent from "@k2/qbittorrent";
-import * as takuhai from "@k2/takuhai";
 
 import { N8N_HTTP_PORT, N8N_LABELS } from "./n8n/labels.js";
 
@@ -23,7 +22,7 @@ export class NetworkPolicy extends K2Chart {
     super(scope, id);
 
     const n8n = endpoint(Namespace.of(this).namespace, N8N_LABELS, "n8n");
-    const kuraRest = kura.endpoints.http();
+    const kuraApi = kura.endpoints.http();
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
     new AllowPomeriumToBackend(this, "pomerium-to-n8n", {
@@ -35,29 +34,10 @@ export class NetworkPolicy extends K2Chart {
       to: endpoint(NEXUS_CLUSTER_NAMESPACE, { "cnpg.io/cluster": NEXUS_CLUSTER_NAME }, "nexus-postgresql"),
       ports: [tcp(POSTGRES_PORT)],
     });
-    new PrivateConnection(this, "n8n-to-takuhai", {
+    new PrivateConnection(this, "n8n-to-kura", {
       from: n8n,
-      to: takuhai.workloads.takuhai(),
-      ports: [tcp(takuhai.TAKUHAI_HTTP_PORT)],
-    });
-    new PrivateConnection(this, "n8n-to-takuhai-crawler-dmhy", {
-      from: n8n,
-      to: takuhai.workloads.crawlerDmhy(),
-      ports: [tcp(takuhai.TAKUHAI_CRAWLER_PORT)],
-    });
-    new PrivateConnection(this, "n8n-to-takuhai-crawler-nyaa", {
-      from: n8n,
-      to: takuhai.workloads.crawlerNyaa(),
-      ports: [tcp(takuhai.TAKUHAI_CRAWLER_PORT)],
-    });
-    new PrivateConnection(this, "n8n-to-kura-mcp", {
-      from: n8n,
-      ...kura.endpoints.mcp(),
-    });
-    new PrivateConnection(this, "n8n-to-kura-rest", {
-      from: n8n,
-      to: kuraRest.backend,
-      ports: kuraRest.ports,
+      to: kuraApi.backend,
+      ports: kuraApi.ports,
     });
     new PrivateConnection(this, "n8n-to-qbit-bridge", {
       from: n8n,

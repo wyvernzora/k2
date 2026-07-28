@@ -17,21 +17,28 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, oci } from "@k2/cdk-lib";
 
-import { KURA_SERVICE_NAME, KURA_WEBUI_HTTP_PORT, KURA_WEBUI_LABELS } from "../../constants.js";
+import {
+  KURA_GATEWAY_HTTP_PORT,
+  KURA_GATEWAY_LABELS,
+  KURA_LIBRARY_MANAGER_HTTP_PORT,
+  KURA_LIBRARY_MANAGER_SERVICE_NAME,
+  KURA_RELEASE_INDEXER_HTTP_PORT,
+  KURA_RELEASE_INDEXER_SERVICE_NAME,
+} from "../../constants.js";
 
-const KURA_WEBUI_IMAGE = oci`ghcr.io/wyvernzora/kura/webui:v0.6.1`;
+const KURA_GATEWAY_IMAGE = oci`ghcr.io/wyvernzora/kura/gateway:v0.7.0`;
 const CADDY_UID = 65532;
 const CADDY_GID = 65532;
 
-export class KuraWebuiDeployment extends K2Deployment {
+export class KuraGatewayDeployment extends K2Deployment {
   public constructor(scope: Construct, id: string) {
     const volumeMounts = caddyVolumeMounts(scope, id);
     super(scope, id, {
-      metadata: { name: "kura-webui" },
+      metadata: { name: "kura-gateway" },
       replicas: 1,
       select: false,
       strategy: DeploymentStrategy.rollingUpdate(),
-      podMetadata: { labels: KURA_WEBUI_LABELS },
+      podMetadata: { labels: KURA_GATEWAY_LABELS },
       automountServiceAccountToken: false,
       enableServiceLinks: false,
       securityContext: {
@@ -39,21 +46,26 @@ export class KuraWebuiDeployment extends K2Deployment {
         fsGroup: CADDY_GID,
       },
       volumes: volumeMounts.map(mount => mount.volume),
-      containers: [webuiContainer(volumeMounts)],
+      containers: [gatewayContainer(volumeMounts)],
     });
-    this.select(LabelSelector.of({ labels: KURA_WEBUI_LABELS }));
+    this.select(LabelSelector.of({ labels: KURA_GATEWAY_LABELS }));
   }
 }
 
-function webuiContainer(volumeMounts: VolumeMount[]): ContainerProps {
-  const probe = Probe.fromHttpGet("/", { port: KURA_WEBUI_HTTP_PORT });
+function gatewayContainer(volumeMounts: VolumeMount[]): ContainerProps {
+  const probe = Probe.fromHttpGet("/healthz", { port: KURA_GATEWAY_HTTP_PORT });
   return {
-    name: "webui",
-    image: KURA_WEBUI_IMAGE,
+    name: "gateway",
+    image: KURA_GATEWAY_IMAGE,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
-    ports: [{ name: "http", number: KURA_WEBUI_HTTP_PORT, protocol: Protocol.TCP }],
+    ports: [{ name: "http", number: KURA_GATEWAY_HTTP_PORT, protocol: Protocol.TCP }],
     envVariables: {
-      KURA_WEBUI_LIBRARY_UPSTREAM: EnvValue.fromValue(`http://${KURA_SERVICE_NAME}:80`),
+      KURA_LIBRARY_UPSTREAM: EnvValue.fromValue(
+        `${KURA_LIBRARY_MANAGER_SERVICE_NAME}:${KURA_LIBRARY_MANAGER_HTTP_PORT}`,
+      ),
+      KURA_RELEASES_UPSTREAM: EnvValue.fromValue(
+        `${KURA_RELEASE_INDEXER_SERVICE_NAME}:${KURA_RELEASE_INDEXER_HTTP_PORT}`,
+      ),
       XDG_CONFIG_HOME: EnvValue.fromValue("/config"),
       XDG_DATA_HOME: EnvValue.fromValue("/data"),
     },
@@ -78,7 +90,6 @@ function webuiContainer(volumeMounts: VolumeMount[]): ContainerProps {
       group: CADDY_GID,
       allowPrivilegeEscalation: false,
       capabilities: {
-        add: [Capability.NET_BIND_SERVICE],
         drop: [Capability.ALL],
       },
       ensureNonRoot: true,

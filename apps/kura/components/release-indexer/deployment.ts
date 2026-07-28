@@ -18,11 +18,15 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, oci } from "@k2/cdk-lib";
 
-import { KURA_RELEASE_INDEXER_HTTP_PORT, KURA_RELEASE_INDEXER_LABELS } from "../../constants.js";
+import {
+  KURA_RELEASE_INDEXER_HTTP_PORT,
+  KURA_RELEASE_INDEXER_LABELS,
+  KURA_RELEASE_INDEXER_METRICS_PORT,
+} from "../../constants.js";
 
 import { RELEASE_INDEXER_CONFIG_KEY } from "./config.js";
 
-const RELEASE_INDEXER_IMAGE = oci`ghcr.io/wyvernzora/kura/release-indexer:v0.6.1`;
+const RELEASE_INDEXER_IMAGE = oci`ghcr.io/wyvernzora/kura/release-indexer:v0.7.0`;
 const APP_UID = 65532;
 const APP_GID = 65532;
 const CONFIG_MOUNT_PATH = "/etc/kura/release-indexer.toml";
@@ -39,7 +43,7 @@ export class ReleaseIndexerDeployment extends K2Deployment {
     const configVolume = Volume.fromConfigMap(scope, `${id}-config-volume`, config, { name: "config" });
     super(scope, id, {
       metadata: { name: "kura-release-indexer" },
-      replicas: 0,
+      replicas: 1,
       select: false,
       strategy: DeploymentStrategy.recreate(),
       podMetadata: {
@@ -74,7 +78,10 @@ function releaseIndexerContainer(configVolume: Volume, credentials: ISecret): Co
     image: RELEASE_INDEXER_IMAGE,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
     args: [`--config=${CONFIG_MOUNT_PATH}`],
-    ports: [{ name: "http", number: KURA_RELEASE_INDEXER_HTTP_PORT, protocol: Protocol.TCP }],
+    ports: [
+      { name: "http", number: KURA_RELEASE_INDEXER_HTTP_PORT, protocol: Protocol.TCP },
+      { name: "metrics", number: KURA_RELEASE_INDEXER_METRICS_PORT, protocol: Protocol.TCP },
+    ],
     envVariables: {
       KURA_RELEASES_DATABASE_URL: credentials.envValue("uri"),
       TZ: EnvValue.fromValue("America/Los_Angeles"),

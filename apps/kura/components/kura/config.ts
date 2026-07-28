@@ -27,8 +27,6 @@ function renderLibraryManagerConfig(): string {
   return dedent`
     [server]
     rest = ":8080"
-    mcp_http = ":8081"
-    mcp_stdio = false
     log_level = "info"
     umask = "0007"
 
@@ -38,8 +36,5 @@ function renderLibraryManagerConfig(): string {
 
     [metadata]
     preferred_languages = ["ja"]
-
-    [auth]
-    disabled = true
   `;
 }

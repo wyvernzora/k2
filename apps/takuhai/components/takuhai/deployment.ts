@@ -37,7 +37,7 @@ export class TakuhaiDeployment extends K2Deployment {
   public constructor(scope: Construct, id: string, props: TakuhaiDeploymentProps) {
     super(scope, id, {
       metadata: { name: "takuhai" },
-      replicas: 1,
+      replicas: 0,
       select: false,
       strategy: DeploymentStrategy.recreate(),
       podMetadata: { labels: TAKUHAI_LABELS },
@@ -58,7 +58,7 @@ export class TakuhaiCrawlerDeployment extends K2Deployment {
   public constructor(scope: Construct, id: string) {
     super(scope, id, {
       metadata: { name: "crawler-dmhy" },
-      replicas: 1,
+      replicas: 0,
       select: false,
       strategy: DeploymentStrategy.recreate(),
       podMetadata: { labels: TAKUHAI_CRAWLER_DMHY_LABELS },
@@ -88,7 +88,7 @@ export class TakuhaiNyaaCrawlerDeployment extends K2Deployment {
   public constructor(scope: Construct, id: string) {
     super(scope, id, {
       metadata: { name: "crawler-nyaa" },
-      replicas: 1,
+      replicas: 0,
       select: false,
       strategy: DeploymentStrategy.recreate(),
       podMetadata: { labels: TAKUHAI_CRAWLER_NYAA_LABELS },

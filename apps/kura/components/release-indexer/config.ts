@@ -30,13 +30,14 @@ function renderReleaseIndexerConfig(): string {
 
     [server]
     addr = ":8080"
+    metrics_addr = ":9090"
     log_level = "info"
 
     [queue]
     max_attempts = 3
 
     [sources.dmhy]
-    enabled = false
+    enabled = true
     interval = "5m"
     timeout = "2m"
     url = "https://share.dmhy.org"
@@ -45,7 +46,7 @@ function renderReleaseIndexerConfig(): string {
     cache_ttl = "10m"
 
     [sources.nyaa]
-    enabled = false
+    enabled = true
     interval = "5m"
     timeout = "2m"
     url = "https://nyaa.si"

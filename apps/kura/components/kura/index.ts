@@ -4,12 +4,12 @@ import { ApexDomain, K2Chart, K2Volume } from "@k2/cdk-lib";
 import { ManagedSecret } from "@k2/external-secrets";
 import { AuthenticatedIngress, AuthenticatedMcpIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
 
-import { KURA_MCP_SERVICE_NAME, KURA_WEBUI_SERVICE_NAME } from "../../constants.js";
+import { KURA_SERVICE_NAME } from "../../constants.js";
 
 import { LibraryManagerConfig } from "./config.js";
 import { KuraDeployment } from "./deployment.js";
-import { KuraMcpService, KuraService, KuraWebuiService } from "./service.js";
-import { KuraWebuiDeployment } from "./webui-deployment.js";
+import { KuraGatewayDeployment } from "./gateway-deployment.js";
+import { KuraService, LibraryManagerService } from "./service.js";
 
 const KURA_HOST_PREFIX = "kura";
 const TVDB_SECRET_NAME = "kura-tvdb";
@@ -34,22 +34,21 @@ export class Kura extends K2Chart {
         anime: K2Volume.mountNfs({ path: "/mnt/data/media/anime" }),
       },
     });
+    new LibraryManagerService(this, "library-manager-service");
+    new KuraGatewayDeployment(this, "gateway-deployment");
     new KuraService(this, "service");
-    new KuraMcpService(this, "mcp-service");
-    new KuraWebuiDeployment(this, "webui-deployment");
-    new KuraWebuiService(this, "webui-service");
     new AuthenticatedIngress(this, "ingress", {
       host,
-      serviceName: KURA_WEBUI_SERVICE_NAME,
+      serviceName: KURA_SERVICE_NAME,
       servicePort: "http",
       policy: authenticatedSourceIpPolicy(),
     });
     new AuthenticatedMcpIngress(this, "mcp-ingress", {
       host,
-      path: "/mcp",
-      mcpPath: "/mcp",
-      serviceName: KURA_MCP_SERVICE_NAME,
-      servicePort: "mcp",
+      path: "/mcp/v1",
+      mcpPath: "/mcp/v1",
+      serviceName: KURA_SERVICE_NAME,
+      servicePort: "http",
       policy: authenticatedSourceIpPolicy(),
     });
   }

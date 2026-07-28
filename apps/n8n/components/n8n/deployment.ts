@@ -19,7 +19,6 @@ import type { Construct } from "constructs";
 import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 import * as kura from "@k2/kura";
 import * as qbittorrent from "@k2/qbittorrent";
-import * as takuhai from "@k2/takuhai";
 
 import { N8N_HTTP_PORT, N8N_LABELS } from "./labels.js";
 
@@ -95,13 +94,6 @@ export class N8NDeployment extends K2Deployment {
 
     this.addInitContainer(proxyAuthHookInitContainer(proxyAuthHookInstallMount));
     this.addInitContainer(acpNodeInitContainer({ volume: customNodesVolume, path: CUSTOM_NODES_MOUNT_PATH }));
-    this.addInitContainer(
-      takuhai.n8nCustomNodesInitContainer({
-        volume: customNodesVolume,
-        path: CUSTOM_NODES_MOUNT_PATH,
-        resources: initResources(),
-      }),
-    );
     this.addInitContainer(
       kura.n8nCustomNodesInitContainer({
         volume: customNodesVolume,

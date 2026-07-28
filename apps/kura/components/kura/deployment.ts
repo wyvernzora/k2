@@ -18,11 +18,11 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { KURA_HTTP_PORT, KURA_LABELS, KURA_MCP_PORT } from "../../constants.js";
+import { KURA_LIBRARY_MANAGER_HTTP_PORT, KURA_LIBRARY_MANAGER_LABELS } from "../../constants.js";
 
 import { LIBRARY_MANAGER_CONFIG_KEY } from "./config.js";
 
-const KURA_IMAGE = oci`ghcr.io/wyvernzora/kura/library-manager:v0.6.1`;
+const KURA_IMAGE = oci`ghcr.io/wyvernzora/kura/library-manager:v0.7.0`;
 const PUID = 3000;
 const PGID = 2001;
 const UMASK = "0007";
@@ -48,7 +48,7 @@ export class KuraDeployment extends K2Deployment {
       select: false,
       strategy: DeploymentStrategy.recreate(),
       podMetadata: {
-        labels: KURA_LABELS,
+        labels: KURA_LIBRARY_MANAGER_LABELS,
         annotations: {
           "checksum/library-manager-config": props.configChecksum,
         },
@@ -61,7 +61,7 @@ export class KuraDeployment extends K2Deployment {
       volumes: [configVolume],
     });
 
-    this.select(LabelSelector.of({ labels: KURA_LABELS }));
+    this.select(LabelSelector.of({ labels: KURA_LIBRARY_MANAGER_LABELS }));
     const volumes = this.attachVolumes(props.volumes);
     const tvdbSecret = Secret.fromSecretName(this, "tvdb-secret", props.tvdbSecretName);
     this.addInitContainer(initContainer(volumes));
@@ -84,16 +84,13 @@ function initContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
 }
 
 function kuraContainer(volumes: K2Mounters<K2Volumes>, configVolume: Volume, tvdbSecret: ISecret): ContainerProps {
-  const probe = Probe.fromHttpGet("/api/v1/health", { port: KURA_HTTP_PORT });
+  const probe = Probe.fromHttpGet("/healthz", { port: KURA_LIBRARY_MANAGER_HTTP_PORT });
   return {
     name: "library-manager",
     image: KURA_IMAGE,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
     args: [`--config=${CONFIG_MOUNT_PATH}`],
-    ports: [
-      { name: "http", number: KURA_HTTP_PORT, protocol: Protocol.TCP },
-      { name: "mcp", number: KURA_MCP_PORT, protocol: Protocol.TCP },
-    ],
+    ports: [{ name: "http", number: KURA_LIBRARY_MANAGER_HTTP_PORT, protocol: Protocol.TCP }],
     envVariables: {
       KURA_HOST_ID: EnvValue.fromValue("k2-kura"),
       KURA_TVDB_KEY: tvdbSecret.envValue("credential"),
