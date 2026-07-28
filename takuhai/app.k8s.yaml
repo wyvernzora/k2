@@ -40,7 +40,7 @@ metadata:
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
-  replicas: 1
+  replicas: 0
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -144,7 +144,7 @@ metadata:
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
-  replicas: 1
+  replicas: 0
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -231,7 +231,7 @@ metadata:
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
-  replicas: 1
+  replicas: 0
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -336,25 +336,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: takuhai
     k2.wyvernzora.io/component: takuhai
-  name: takuhai-mcp
-  namespace: takuhai
-spec:
-  externalIPs: []
-  ports:
-    - name: mcp
-      port: 80
-      targetPort: 8080
-  selector:
-    app.kubernetes.io/component: service
-    app.kubernetes.io/name: takuhai
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    k2.wyvernzora.io/app: takuhai
-    k2.wyvernzora.io/component: takuhai
   name: takuhai-crawler-dmhy
   namespace: takuhai
 spec:
@@ -386,38 +367,6 @@ spec:
     app.kubernetes.io/component: crawler-nyaa
     app.kubernetes.io/name: takuhai
   type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    ingress.pomerium.io/mcp_server: "true"
-    ingress.pomerium.io/mcp_server_path: /mcp
-    ingress.pomerium.io/policy: |
-      - allow:
-          and:
-            - authenticated_user: true
-  labels:
-    k2.wyvernzora.io/app: takuhai
-    k2.wyvernzora.io/component: takuhai
-  name: mcp-ingress
-  namespace: takuhai
-spec:
-  ingressClassName: pomerium
-  rules:
-    - host: takuhai.wyvernzora.io
-      http:
-        paths:
-          - backend:
-              service:
-                name: takuhai-mcp
-                port:
-                  name: mcp
-            path: /mcp
-            pathType: Prefix
-  tls:
-    - hosts:
-        - takuhai.wyvernzora.io
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -454,47 +403,6 @@ spec:
             k8s:io.kubernetes.pod.namespace: takuhai
     - fromEntities:
         - kube-apiserver
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: takuhai
-    k2.wyvernzora.io/component: network-policy
-  name: pomerium-takuhai-pomerium-to-takuhai-mcp
-specs:
-  - description: pomerium to takuhai
-    egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: service
-              app.kubernetes.io/name: takuhai
-              k8s:io.kubernetes.pod.namespace: takuhai
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: proxy
-        app.kubernetes.io/name: pomerium
-        k8s:io.kubernetes.pod.namespace: pomerium
-  - description: pomerium to takuhai
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: service
-        app.kubernetes.io/name: takuhai
-        k8s:io.kubernetes.pod.namespace: takuhai
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: proxy
-              app.kubernetes.io/name: pomerium
-              k8s:io.kubernetes.pod.namespace: pomerium
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
 ---
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy

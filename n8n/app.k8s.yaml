@@ -422,33 +422,9 @@ spec:
             - mountPath: /opt/n8n/custom
               name: n8n-custom-nodes
         - env:
-            - name: TAKUHAI_NODES_TARGET
-              value: /opt/n8n/custom
-          image: ghcr.io/wyvernzora/takuhai/n8n-nodes:dev
-          imagePullPolicy: Always
-          name: install-takuhai-nodes
-          resources:
-            limits:
-              cpu: 100m
-              memory: 64Mi
-            requests:
-              cpu: 10m
-              memory: 16Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: false
-          volumeMounts:
-            - mountPath: /opt/n8n/custom
-              name: n8n-custom-nodes
-        - env:
             - name: KURA_NODES_TARGET
               value: /opt/n8n/custom
-          image: ghcr.io/wyvernzora/kura/n8n-nodes:v0.5.1
+          image: ghcr.io/wyvernzora/kura/n8n-nodes:v0.7.0
           imagePullPolicy: Always
           name: install-kura-nodes
           resources:
@@ -758,177 +734,13 @@ metadata:
   labels:
     k2.wyvernzora.io/app: n8n
     k2.wyvernzora.io/component: network-policy
-  name: n8n-takuhai-n8n-to-takuhai
+  name: n8n-kura-n8n-to-kura
 specs:
-  - description: n8n to takuhai
+  - description: n8n to kura-gateway
     egress:
       - toEndpoints:
           - matchLabels:
-              app.kubernetes.io/component: service
-              app.kubernetes.io/name: takuhai
-              k8s:io.kubernetes.pod.namespace: takuhai
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: automation
-        app.kubernetes.io/name: n8n
-        k8s:io.kubernetes.pod.namespace: n8n
-  - description: n8n to takuhai
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: service
-        app.kubernetes.io/name: takuhai
-        k8s:io.kubernetes.pod.namespace: takuhai
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: automation
-              app.kubernetes.io/name: n8n
-              k8s:io.kubernetes.pod.namespace: n8n
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: n8n
-    k2.wyvernzora.io/component: network-policy
-  name: n8n-takuhai-n8n-to-takuhai-crawler-dmhy
-specs:
-  - description: n8n to crawler-dmhy
-    egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: crawler-dmhy
-              app.kubernetes.io/name: takuhai
-              k8s:io.kubernetes.pod.namespace: takuhai
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: automation
-        app.kubernetes.io/name: n8n
-        k8s:io.kubernetes.pod.namespace: n8n
-  - description: n8n to crawler-dmhy
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: crawler-dmhy
-        app.kubernetes.io/name: takuhai
-        k8s:io.kubernetes.pod.namespace: takuhai
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: automation
-              app.kubernetes.io/name: n8n
-              k8s:io.kubernetes.pod.namespace: n8n
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: n8n
-    k2.wyvernzora.io/component: network-policy
-  name: n8n-takuhai-n8n-to-takuhai-crawler-nyaa
-specs:
-  - description: n8n to crawler-nyaa
-    egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: crawler-nyaa
-              app.kubernetes.io/name: takuhai
-              k8s:io.kubernetes.pod.namespace: takuhai
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: automation
-        app.kubernetes.io/name: n8n
-        k8s:io.kubernetes.pod.namespace: n8n
-  - description: n8n to crawler-nyaa
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: crawler-nyaa
-        app.kubernetes.io/name: takuhai
-        k8s:io.kubernetes.pod.namespace: takuhai
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: automation
-              app.kubernetes.io/name: n8n
-              k8s:io.kubernetes.pod.namespace: n8n
-        toPorts:
-          - ports:
-              - port: "8080"
-                protocol: TCP
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: n8n
-    k2.wyvernzora.io/component: network-policy
-  name: n8n-kura-n8n-to-kura-mcp
-specs:
-  - description: n8n to kura-library-manager
-    egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: library-manager
-              app.kubernetes.io/name: kura
-              k8s:io.kubernetes.pod.namespace: kura
-        toPorts:
-          - ports:
-              - port: "8081"
-                protocol: TCP
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: automation
-        app.kubernetes.io/name: n8n
-        k8s:io.kubernetes.pod.namespace: n8n
-  - description: n8n to kura-library-manager
-    endpointSelector:
-      matchLabels:
-        app.kubernetes.io/component: library-manager
-        app.kubernetes.io/name: kura
-        k8s:io.kubernetes.pod.namespace: kura
-    ingress:
-      - fromEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: automation
-              app.kubernetes.io/name: n8n
-              k8s:io.kubernetes.pod.namespace: n8n
-        toPorts:
-          - ports:
-              - port: "8081"
-                protocol: TCP
----
-apiVersion: cilium.io/v2
-kind: CiliumClusterwideNetworkPolicy
-metadata:
-  labels:
-    k2.wyvernzora.io/app: n8n
-    k2.wyvernzora.io/component: network-policy
-  name: n8n-kura-n8n-to-kura-rest
-specs:
-  - description: n8n to kura-library-manager
-    egress:
-      - toEndpoints:
-          - matchLabels:
-              app.kubernetes.io/component: library-manager
+              app.kubernetes.io/component: gateway
               app.kubernetes.io/name: kura
               k8s:io.kubernetes.pod.namespace: kura
         toPorts:
@@ -940,10 +752,10 @@ specs:
         app.kubernetes.io/component: automation
         app.kubernetes.io/name: n8n
         k8s:io.kubernetes.pod.namespace: n8n
-  - description: n8n to kura-library-manager
+  - description: n8n to kura-gateway
     endpointSelector:
       matchLabels:
-        app.kubernetes.io/component: library-manager
+        app.kubernetes.io/component: gateway
         app.kubernetes.io/name: kura
         k8s:io.kubernetes.pod.namespace: kura
     ingress:
