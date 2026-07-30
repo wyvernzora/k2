@@ -372,6 +372,8 @@ spec:
               name: pvc-n8n-codex-home
             - mountPath: /tmp/codex
               name: codex-tmp
+            - mountPath: /tmp/n8n-acp-sessions
+              name: codex-session-workspaces
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
       hostNetwork: false
@@ -424,7 +426,7 @@ spec:
         - env:
             - name: KURA_NODES_TARGET
               value: /opt/n8n/custom
-          image: ghcr.io/wyvernzora/kura/n8n-nodes:v0.7.0
+          image: ghcr.io/wyvernzora/kura/n8n-nodes:v0.7.1
           imagePullPolicy: Always
           name: install-kura-nodes
           resources:
@@ -508,6 +510,9 @@ spec:
         - emptyDir:
             sizeLimit: 1024Mi
           name: codex-tmp
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: codex-session-workspaces
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

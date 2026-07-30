@@ -35,6 +35,7 @@ data:
   library-manager.toml: |-
     [server]
     rest = ":8080"
+    metrics = ":9090"
     log_level = "info"
     umask = "0007"
 
@@ -68,7 +69,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/library-manager-config: 30058e6577e1b67fa2b2ed8ab7630be8810f9a4ec9101708d550780585a7169c
+        checksum/library-manager-config: 358bc49ade9ea60e01d7af23a67d7cbeada1d68ff3119545d2053fd79e213fbe
       labels:
         app.kubernetes.io/component: library-manager
         app.kubernetes.io/name: kura
@@ -103,7 +104,7 @@ spec:
                   name: kura-tvdb
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/wyvernzora/kura/library-manager:v0.7.0
+          image: ghcr.io/wyvernzora/kura/library-manager:v0.7.1
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -115,6 +116,9 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: metrics
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
@@ -254,7 +258,7 @@ spec:
               value: /config
             - name: XDG_DATA_HOME
               value: /data
-          image: ghcr.io/wyvernzora/kura/gateway:v0.7.0
+          image: ghcr.io/wyvernzora/kura/gateway:v0.7.1
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -266,6 +270,12 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: metrics
+              protocol: TCP
+            - containerPort: 9091
+              name: mcp-metrics
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
@@ -460,21 +470,26 @@ data:
     [sources.dmhy]
     enabled = true
     interval = "5m"
-    timeout = "2m"
+    settle_window = "24h"
+    timeout = "10m"
+    request_timeout = "180s"
     url = "https://share.dmhy.org"
     category = "2"
     max_rps = 0.5
-    cache_ttl = "10m"
+    cache_ttl = "5m"
 
     [sources.nyaa]
     enabled = true
     interval = "5m"
+    settle_window = "24h"
     timeout = "2m"
+    request_timeout = "30s"
     url = "https://nyaa.si"
     query = ""
     category = "1_4"
     filter = "0"
     max_rps = 0.5
+    cache_ttl = "5m"
 immutable: false
 ---
 apiVersion: apps/v1
@@ -499,7 +514,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/release-indexer-config: fe91c3786a3c1bc3809757a54eeb4288dcad8736f30242bdf84354ac7b2028ba
+        checksum/release-indexer-config: 419b443a2c6153d05dadc9b047b19660e0ff1308b53ad5af6655a9a42de2f1ef
       labels:
         app.kubernetes.io/component: release-indexer
         app.kubernetes.io/name: kura
@@ -524,7 +539,7 @@ spec:
                   name: release-indexer-credentials
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/wyvernzora/kura/release-indexer:v0.7.0
+          image: ghcr.io/wyvernzora/kura/release-indexer:v0.7.1
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 6
@@ -858,6 +873,104 @@ specs:
         toPorts:
           - ports:
               - port: "5432"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: gateway-metrics
+  namespace: kura
+spec:
+  namespaceSelector:
+    matchNames:
+      - kura
+  podMetricsEndpoints:
+    - path: /metrics
+      portNumber: 9090
+    - path: /metrics
+      portNumber: 9091
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/name: kura
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: kura-gateway-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kura
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "9090"
+                protocol: TCP
+              - port: "9091"
+                protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: library-manager-metrics
+  namespace: kura
+spec:
+  namespaceSelector:
+    matchNames:
+      - kura
+  podMetricsEndpoints:
+    - path: /metrics
+      portNumber: 9090
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: library-manager
+      app.kubernetes.io/name: kura
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: kura
+    k2.wyvernzora.io/component: network-policy
+  name: kura-library-manager-metrics-ingress
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: library-manager
+        app.kubernetes.io/name: kura
+        k8s:io.kubernetes.pod.namespace: kura
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kura
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: prometheus
+              k8s:io.kubernetes.pod.namespace: prometheus
+              operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
+        toPorts:
+          - ports:
+              - port: "9090"
                 protocol: TCP
 ---
 apiVersion: monitoring.coreos.com/v1
