@@ -5451,7 +5451,7 @@ data:
         orgId: 1
         type: file
         disableDeletion: false
-        allowUiUpdates: false
+        allowUiUpdates: true
         updateIntervalSeconds: 30
         options:
           foldersFromFilesStructure: true
@@ -5474,12 +5474,14 @@ data:
     [analytics]
     check_for_updates = true
     [auth.jwt]
+    allow_assign_grafana_admin = true
     auto_sign_up = true
     cache_ttl = 60m
     email_claim = email
     enabled = true
     header_name = X-Pomerium-Jwt-Assertion
     jwk_set_url = https://grafana.wyvernzora.io/.well-known/pomerium/jwks.json
+    role_attribute_path = email == 'wyvernzora@gmail.com' && 'GrafanaAdmin' || 'Viewer'
     username_claim = email
     [log]
     mode = console
@@ -7122,8 +7124,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: aa0f89ec3a0ed58b888522876142db2c0c013d109f42687635c31d3ed9e8afde
-        checksum/sc-dashboard-provider-config: 81f722b8194d01e4a84ce12a0cbbe9b705b2d9145719c803ac264b4786c64a09
+        checksum/config: f618dff6b79d51afcf543de558a07caa1743689c9681025293cf0e13f54c45ee
+        checksum/sc-dashboard-provider-config: e3aca4961a8923a0814f12363c5e5e10511bb1deb6cd4e0cbe138aeee493354f
         kubectl.kubernetes.io/default-container: grafana
       labels:
         app.kubernetes.io/instance: prometheus
