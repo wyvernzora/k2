@@ -9,6 +9,7 @@ interface PomeriumIngressRouteProps {
   readonly servicePort: number | string;
   readonly name?: string;
   readonly path?: string;
+  readonly preserveHostHeader?: boolean;
   readonly tlsSecretName?: string;
 }
 
@@ -16,7 +17,6 @@ export interface AuthenticatedIngressProps extends PomeriumIngressRouteProps {
   readonly allowWebsockets?: boolean;
   readonly passIdentityHeaders?: boolean;
   readonly policy?: string;
-  readonly preserveHostHeader?: boolean;
 }
 
 export interface AuthenticatedMcpIngressProps extends AuthenticatedIngressProps {
@@ -57,9 +57,7 @@ export class PublicIngress extends k8s.KubeIngress {
     super(scope, id, {
       metadata: {
         name: props.name ?? id,
-        annotations: {
-          "ingress.pomerium.io/allow_public_unauthenticated_access": "true",
-        },
+        annotations: publicIngressAnnotations(props),
       },
       spec: ingressSpec(props),
     });
@@ -133,6 +131,16 @@ function authenticatedMcpIngressAnnotations(props: AuthenticatedMcpIngressProps)
     "ingress.pomerium.io/mcp_server": "true",
     "ingress.pomerium.io/mcp_server_path": props.mcpPath ?? props.path ?? "/",
   };
+}
+
+function publicIngressAnnotations(props: PublicIngressProps): Record<string, string> {
+  const annotations: Record<string, string> = {
+    "ingress.pomerium.io/allow_public_unauthenticated_access": "true",
+  };
+  if (props.preserveHostHeader === true) {
+    annotations["ingress.pomerium.io/preserve_host_header"] = "true";
+  }
+  return annotations;
 }
 
 function servicePort(port: number | string) {

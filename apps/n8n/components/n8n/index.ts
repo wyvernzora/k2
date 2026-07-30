@@ -2,7 +2,7 @@ import { Size } from "cdk8s";
 import type { Construct } from "constructs";
 
 import { ApexDomain, K2Chart, K2Volume } from "@k2/cdk-lib";
-import { AuthenticatedIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
+import { AuthenticatedIngress, PublicIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
 
 import { N8NDatabase } from "./database.js";
 import { N8NDeployment } from "./deployment.js";
@@ -11,6 +11,14 @@ import { N8NSecret } from "./secret.js";
 import { N8NService } from "./service.js";
 
 const N8N_HOST_PREFIX = "n8n";
+// Native MCP clients need unauthenticated discovery and token endpoints. The
+// consent UI remains on /oauth/consent behind the authenticated catch-all route.
+const N8N_MCP_PUBLIC_ROUTES = [
+  ["mcp-server-ingress", "/mcp-server/http"],
+  ["mcp-oauth-ingress", "/mcp-oauth"],
+  ["mcp-authorization-metadata-ingress", "/.well-known/oauth-authorization-server"],
+  ["mcp-resource-metadata-ingress", "/.well-known/oauth-protected-resource/mcp-server/http"],
+] as const;
 
 export class N8N extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -41,5 +49,14 @@ export class N8N extends K2Chart {
       policy: authenticatedSourceIpPolicy(),
       preserveHostHeader: true,
     });
+    for (const [id, path] of N8N_MCP_PUBLIC_ROUTES) {
+      new PublicIngress(this, id, {
+        host,
+        serviceName: N8N_SERVICE_NAME,
+        servicePort: "http",
+        path,
+        preserveHostHeader: true,
+      });
+    }
   }
 }
