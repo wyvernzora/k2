@@ -1,0 +1,29 @@
+#cloud-config
+name: "K2 one-shot legacy boot layout migration"
+
+# Temporary operator-installed bundle. See migrate-legacy-boot-layout.md.
+stages:
+  initramfs:
+    - name: "Migrate legacy K2 boot layout"
+      if: '[ -f /run/cos/recovery_mode ] && [ -s /oem/k2-legacy-boot-layout.request ]'
+      commands:
+        - |
+          rm -f /oem/k2-legacy-boot-layout.success
+          mode="$(cat /oem/k2-legacy-boot-layout.request)"
+          if /oem/k2-legacy-boot-layout.sh --mode "$mode" > /oem/k2-legacy-boot-layout.log 2>&1; then
+            touch /oem/k2-legacy-boot-layout.success
+            cat /oem/k2-legacy-boot-layout.log
+          else
+            status=$?
+            cat /oem/k2-legacy-boot-layout.log
+            exit "$status"
+          fi
+
+  boot.after:
+    - name: "Return to active boot after successful migration"
+      if: '[ -f /run/cos/recovery_mode ] && [ -f /oem/k2-legacy-boot-layout.success ]'
+      commands:
+        - rm -f /oem/k2-legacy-boot-layout.request /oem/k2-legacy-boot-layout.success
+        - kairos-agent bootentry --select active
+        - sync
+        - reboot
