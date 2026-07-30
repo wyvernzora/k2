@@ -32,7 +32,7 @@ type upgradeCmd struct {
 	RegistryRepo string `name:"registry-repo" env:"K2_UPGRADE_REGISTRY_REPO" help:"Override the registry repository used for auto-discovery. Defaults to ghcr.io/wyvernzora/k2-kairos."`
 
 	DrainTimeout    time.Duration `name:"drain-timeout" env:"K2_UPGRADE_DRAIN_TIMEOUT" default:"5m" help:"Cap on kubectl drain duration."`
-	RebootTimeout   time.Duration `name:"reboot-timeout" env:"K2_UPGRADE_REBOOT_TIMEOUT" default:"10m" help:"Cap on post-reboot SSH wait."`
+	RebootTimeout   time.Duration `name:"reboot-timeout" env:"K2_UPGRADE_REBOOT_TIMEOUT" default:"10m" help:"Cap on each post-reboot SSH and Kubernetes readiness wait."`
 	AllowQuorumLoss bool          `name:"allow-quorum-loss" env:"K2_UPGRADE_ALLOW_QUORUM_LOSS" help:"Permit upgrading a CP node when it's the only Ready CP. Single-CP test clusters need this; production CP HA never should."`
 
 	Yes bool `name:"yes" short:"y" env:"K2_UPGRADE_YES" help:"Skip the Plan confirmation prompt. Required for non-TTY invocations."`
@@ -105,6 +105,7 @@ func (c *upgradeCmd) Run(rcx *Runtime) error {
 	if err := runner.Preflight(plan); err != nil {
 		return err
 	}
+	resumePostUpgrade := plan.ActiveImageMatchesTarget()
 
 	wf := ui.NewWorkflow(currentReporter())
 
@@ -112,7 +113,11 @@ func (c *upgradeCmd) Run(rcx *Runtime) error {
 
 	wf.Section("Plan")
 	wf.KeyValues(upgradePlanFields(c, plan)...)
-	wf.Confirm("Proceed with upgrade? [y/N]", "").Unless(c.Yes)
+	confirmPrompt := "Proceed with upgrade? [y/N]"
+	if resumePostUpgrade {
+		confirmPrompt = "Resume post-upgrade workflow? [y/N]"
+	}
+	wf.Confirm(confirmPrompt, "").Unless(c.Yes)
 
 	// ---- upgrade --------------------------------------------------------
 
@@ -125,26 +130,29 @@ func (c *upgradeCmd) Run(rcx *Runtime) error {
 		kc.Stderr = sh
 		defer func() { kc.Stdout = nil; kc.Stderr = nil }()
 		return runner.Cordon(ctx, plan)
-	})
+	}).Unless(resumePostUpgrade)
 
 	wf.Shell("Drain workloads", func(ctx context.Context, sh ui.Step) error {
 		kc.Stdout = sh
 		kc.Stderr = sh
 		defer func() { kc.Stdout = nil; kc.Stderr = nil }()
 		return runner.Drain(ctx, plan, c.DrainTimeout)
-	})
+	}).Unless(resumePostUpgrade)
 
 	wf.Shell("kairos-agent upgrade (active partition)", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()
 		return runner.UpgradeActive(ctx, plan)
-	})
+	}).Unless(resumePostUpgrade)
 
 	wf.Shell("Reboot + wait for SSH", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()
 		return runner.Reboot(ctx, plan, c.RebootTimeout)
-	})
+	}).Unless(resumePostUpgrade)
 
 	wf.Shell("Verify active image", func(ctx context.Context, sh ui.Step) error {
+		if started.IsZero() {
+			started = time.Now()
+		}
 		defer client.SwapIO(sh)()
 		return runner.VerifyActive(ctx, plan)
 	})
@@ -153,7 +161,7 @@ func (c *upgradeCmd) Run(rcx *Runtime) error {
 		kc.Stdout = sh
 		kc.Stderr = sh
 		defer func() { kc.Stdout = nil; kc.Stderr = nil }()
-		return runner.SmokeCheck(ctx, plan)
+		return runner.SmokeCheck(ctx, plan, c.RebootTimeout)
 	})
 
 	wf.Shell("kairos-agent upgrade (recovery partition)", func(ctx context.Context, sh ui.Step) error {
@@ -202,11 +210,19 @@ func (c *upgradeCmd) Run(rcx *Runtime) error {
 // this boring + factual — surprises here are failures to wire intent
 // through, not stylistic choices.
 func upgradePlanFields(c *upgradeCmd, plan upgrade.Plan) []ui.KV {
+	resumePostUpgrade := plan.ActiveImageMatchesTarget()
+	mode := "full upgrade"
+	sequence := "cordon → drain → upgrade active → reboot → verify → upgrade recovery → uncordon"
+	if resumePostUpgrade {
+		mode = "resume post-upgrade"
+		sequence = "verify active → smoke-check → upgrade recovery → uncordon"
+	}
 	pairs := []ui.KV{
 		{Key: "Cluster", Value: plan.ClusterName},
 		{Key: "Host", Value: fmt.Sprintf("%s@%s:%d", plan.SSHUser, plan.Host, plan.SSHPort)},
 		{Key: "Node", Value: plan.NodeName},
 		{Key: "Role", Value: nodeRoleLabel(plan.IsControlPlane)},
+		{Key: "Mode", Value: mode},
 	}
 	if plan.IsControlPlane {
 		pairs = append(pairs, ui.KV{Key: "Quorum", Value: plan.QuorumImpact})
@@ -216,9 +232,13 @@ func upgradePlanFields(c *upgradeCmd, plan upgrade.Plan) []ui.KV {
 		ui.KV{Key: "Target image", Value: targetWithAge(plan)},
 		ui.KV{Key: "COS_STATE available", Value: humanBytesBinary(plan.StateAvailableBytes)},
 		ui.KV{Key: "COS_RECOVERY available", Value: humanBytesBinary(plan.RecoveryAvailableBytes)},
-		ui.KV{Key: "Required state free", Value: fmt.Sprintf("%s (%s allocation + %s margin)", humanBytesBinary(plan.RequiredStateFreeBytes), humanBytesBinary(plan.Target.UpgradeAllocationBytes), humanBytesBinary(upgrade.StateSafetyMarginBytes))},
-		ui.KV{Key: "Required recovery free", Value: fmt.Sprintf("%s (%s allocation + %s margin)", humanBytesBinary(plan.RequiredRecoveryFreeBytes), humanBytesBinary(plan.Target.UpgradeAllocationBytes), humanBytesBinary(upgrade.RecoverySafetyMarginBytes))},
 	)
+	if resumePostUpgrade {
+		pairs = append(pairs, ui.KV{Key: "Required state free", Value: "not required (active image already matches target)"})
+	} else {
+		pairs = append(pairs, ui.KV{Key: "Required state free", Value: fmt.Sprintf("%s (%s allocation + %s margin)", humanBytesBinary(plan.RequiredStateFreeBytes), humanBytesBinary(plan.Target.UpgradeAllocationBytes), humanBytesBinary(upgrade.StateSafetyMarginBytes))})
+	}
+	pairs = append(pairs, ui.KV{Key: "Required recovery free", Value: fmt.Sprintf("%s (%s allocation + %s margin)", humanBytesBinary(plan.RequiredRecoveryFreeBytes), humanBytesBinary(plan.Target.UpgradeAllocationBytes), humanBytesBinary(upgrade.RecoverySafetyMarginBytes))})
 	if plan.AutoDiscovered {
 		repo := c.RegistryRepo
 		if repo == "" {
@@ -229,7 +249,7 @@ func upgradePlanFields(c *upgradeCmd, plan upgrade.Plan) []ui.KV {
 	pairs = append(pairs,
 		ui.KV{Key: "Drain timeout", Value: c.DrainTimeout.String()},
 		ui.KV{Key: "Reboot timeout", Value: c.RebootTimeout.String()},
-		ui.KV{Key: "Sequence", Value: "cordon → drain → upgrade active → reboot → verify → upgrade recovery → uncordon"},
+		ui.KV{Key: "Sequence", Value: sequence},
 	)
 	return pairs
 }

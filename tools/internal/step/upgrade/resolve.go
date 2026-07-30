@@ -116,6 +116,15 @@ type Plan struct {
 	RequiredRecoveryFreeBytes uint64
 }
 
+// ActiveImageMatchesTarget reports whether the active image is already the
+// requested target. A matching image means an earlier workflow may have
+// completed the disruptive half of the upgrade before failing validation or
+// recovery sync. Callers should resume at post-upgrade verification instead
+// of rewriting the active image and rebooting again.
+func (p Plan) ActiveImageMatchesTarget() bool {
+	return p.Current.Ref != "" && imageRefsMatch(p.Current.Ref, p.Target.Ref)
+}
+
 // ImageRef is the small shape we carry around for "an OCI image we
 // either know about or are about to install". Created is zero when
 // the source of the ref is something that doesn't have a publish

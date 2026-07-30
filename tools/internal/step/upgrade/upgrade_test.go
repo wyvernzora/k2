@@ -165,16 +165,56 @@ func TestQuorumImpactIgnoresWorkers(t *testing.T) {
 	}
 }
 
-func TestPreflightRefusesWhenAlreadyOnTarget(t *testing.T) {
+func TestPreflightAllowsResumeWhenAlreadyOnTarget(t *testing.T) {
 	plan := Plan{
-		Current:  ImageRef{Ref: "ghcr.io/x:rev3"},
-		Target:   ImageRef{Ref: "ghcr.io/x:rev3"},
-		QuorumOK: true,
+		Current: ImageRef{Ref: "ghcr.io/x:rev3"},
+		Target: ImageRef{
+			Ref:                    "ghcr.io/x:rev3",
+			UpgradeAllocationBytes: 900 << 20,
+		},
+		QuorumOK:                  true,
+		StateAvailableBytes:       0,
+		RecoveryAvailableBytes:    2 << 30,
+		RequiredStateFreeBytes:    (900 << 20) + StateSafetyMarginBytes,
+		RequiredRecoveryFreeBytes: (900 << 20) + RecoverySafetyMarginBytes,
 	}
-	r := &Runner{}
-	err := r.Preflight(plan)
-	if err == nil {
-		t.Fatal("expected refusal when current == target")
+	if err := (&Runner{}).Preflight(plan); err != nil {
+		t.Fatalf("expected already-upgraded node to resume without state free-space gate, got %v", err)
+	}
+}
+
+func TestPreflightResumeStillRequiresRecoverySpace(t *testing.T) {
+	plan := Plan{
+		Current: ImageRef{Ref: "ghcr.io/x:rev3"},
+		Target: ImageRef{
+			Ref:                    "ghcr.io/x:rev3",
+			UpgradeAllocationBytes: 900 << 20,
+		},
+		QuorumOK:                  true,
+		RecoveryAvailableBytes:    (900 << 20) + RecoverySafetyMarginBytes - 1,
+		RequiredStateFreeBytes:    (900 << 20) + StateSafetyMarginBytes,
+		RequiredRecoveryFreeBytes: (900 << 20) + RecoverySafetyMarginBytes,
+	}
+	err := (&Runner{}).Preflight(plan)
+	if err == nil || !strings.Contains(err.Error(), "COS_RECOVERY") {
+		t.Fatalf("error = %v, want recovery free-space refusal", err)
+	}
+}
+
+func TestPreflightResumeDoesNotRequireQuorumDisruptionApproval(t *testing.T) {
+	plan := Plan{
+		Current: ImageRef{Ref: "ghcr.io/x:rev3"},
+		Target: ImageRef{
+			Ref:                    "ghcr.io/x:rev3",
+			UpgradeAllocationBytes: 900 << 20,
+		},
+		QuorumOK:                  false,
+		QuorumImpact:              "single CP",
+		RecoveryAvailableBytes:    2 << 30,
+		RequiredRecoveryFreeBytes: (900 << 20) + RecoverySafetyMarginBytes,
+	}
+	if err := (&Runner{}).Preflight(plan); err != nil {
+		t.Fatalf("expected post-upgrade resume not to disrupt quorum, got %v", err)
 	}
 }
 
