@@ -383,5 +383,11 @@ function codexAcpHarnessVolumeMounts(scope: Construct, volumes: K2Mounters<K2Vol
       }),
       path: "/tmp/codex",
     },
+    {
+      volume: Volume.fromEmptyDir(scope, "codex-session-workspaces-volume", "codex-session-workspaces", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: "/tmp/n8n-acp-sessions",
+    },
   ];
 }
