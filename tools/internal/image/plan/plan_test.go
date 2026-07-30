@@ -368,6 +368,17 @@ func TestRealRepoHardwareSlimmingMetadata(t *testing.T) {
 	if !slices.Contains(qemuStorage.PostInstallActions, "use-virtual-kernel") {
 		t.Fatalf("qemu storage postInstallActions = %#v, want use-virtual-kernel", qemuStorage.PostInstallActions)
 	}
+	dockerfileBytes, err := os.ReadFile(discovered.DockerfilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dockerfile := string(dockerfileBytes)
+	if !strings.Contains(dockerfile, "for module in zfs iscsi_tcp target_core_mod mpt3sas st sg; do") {
+		t.Fatal("qemu virtual-kernel guard does not require the HBA and tape modules")
+	}
+	if !strings.Contains(dockerfile, `"${modules_dir}/modules.builtin"`) {
+		t.Fatal("qemu virtual-kernel guard does not accept required built-in modules")
+	}
 
 	rpiOverlayPath := filepath.Join(discovered.OverlaysDir, "hardware", "rpi4cb", "overlay.yaml")
 	rpiOverlay, err := config.LoadOverlayMetadata(rpiOverlayPath)

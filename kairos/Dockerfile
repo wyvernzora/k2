@@ -184,11 +184,15 @@ RUN set -eux; \
                     echo "Missing module directory for virtual kernel: ${modules_dir}" >&2; \
                     exit 1; \
                 fi; \
-                for module in zfs iscsi_tcp target_core_mod; do \
-                    if ! find "${modules_dir}" -name "${module}.ko*" -print -quit | grep -q .; then \
-                        echo "Missing required module ${module}.ko* under ${modules_dir}" >&2; \
-                        exit 1; \
+                for module in zfs iscsi_tcp target_core_mod mpt3sas st sg; do \
+                    if find "${modules_dir}" -name "${module}.ko*" -print -quit | grep -q .; then \
+                        continue; \
                     fi; \
+                    if grep -Eq "(^|/)${module}[.]ko$" "${modules_dir}/modules.builtin" 2>/dev/null; then \
+                        continue; \
+                    fi; \
+                    echo "Missing required module ${module} under ${modules_dir}" >&2; \
+                    exit 1; \
                 done; \
                 if [ -d /usr/lib/firmware ]; then \
                     firmware_mb="$(du -sm /usr/lib/firmware | awk '{print $1}')"; \
