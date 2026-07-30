@@ -18,11 +18,15 @@ import type { Construct } from "constructs";
 
 import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib";
 
-import { KURA_LIBRARY_MANAGER_HTTP_PORT, KURA_LIBRARY_MANAGER_LABELS } from "../../constants.js";
+import {
+  KURA_LIBRARY_MANAGER_HTTP_PORT,
+  KURA_LIBRARY_MANAGER_LABELS,
+  KURA_LIBRARY_MANAGER_METRICS_PORT,
+} from "../../constants.js";
 
 import { LIBRARY_MANAGER_CONFIG_KEY } from "./config.js";
 
-const KURA_IMAGE = oci`ghcr.io/wyvernzora/kura/library-manager:v0.7.0`;
+const KURA_IMAGE = oci`ghcr.io/wyvernzora/kura/library-manager:v0.7.2`;
 const PUID = 3000;
 const PGID = 2001;
 const UMASK = "0007";
@@ -90,7 +94,10 @@ function kuraContainer(volumes: K2Mounters<K2Volumes>, configVolume: Volume, tvd
     image: KURA_IMAGE,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
     args: [`--config=${CONFIG_MOUNT_PATH}`],
-    ports: [{ name: "http", number: KURA_LIBRARY_MANAGER_HTTP_PORT, protocol: Protocol.TCP }],
+    ports: [
+      { name: "http", number: KURA_LIBRARY_MANAGER_HTTP_PORT, protocol: Protocol.TCP },
+      { name: "metrics", number: KURA_LIBRARY_MANAGER_METRICS_PORT, protocol: Protocol.TCP },
+    ],
     envVariables: {
       KURA_HOST_ID: EnvValue.fromValue("k2-kura"),
       KURA_TVDB_KEY: tvdbSecret.envValue("credential"),

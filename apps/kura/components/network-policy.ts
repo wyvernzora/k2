@@ -6,7 +6,12 @@ import * as postgresql from "@k2/postgresql";
 import { AllowPomeriumToBackend } from "@k2/pomerium";
 import { PrometheusPodScrape } from "@k2/prometheus";
 
-import { KURA_RELEASE_INDEXER_METRICS_PORT } from "../constants.js";
+import {
+  KURA_GATEWAY_MCP_METRICS_PORT,
+  KURA_GATEWAY_METRICS_PORT,
+  KURA_LIBRARY_MANAGER_METRICS_PORT,
+  KURA_RELEASE_INDEXER_METRICS_PORT,
+} from "../constants.js";
 import { endpoints } from "../index.js";
 
 const DMHY_HOSTS = ["dmhy.org", "share.dmhy.org"];
@@ -47,6 +52,16 @@ export class NetworkPolicy extends K2Chart {
     new PrivateConnection(this, "release-indexer-to-postgresql", {
       from: releaseIndexer.backend,
       ...postgresql.endpoints.nexus(),
+    });
+    new PrometheusPodScrape(this, "gateway-metrics", {
+      target: gateway.backend,
+      ports: [tcp(KURA_GATEWAY_METRICS_PORT), tcp(KURA_GATEWAY_MCP_METRICS_PORT)],
+      path: "/metrics",
+    });
+    new PrometheusPodScrape(this, "library-manager-metrics", {
+      target: libraryManager.backend,
+      ports: [tcp(KURA_LIBRARY_MANAGER_METRICS_PORT)],
+      path: "/metrics",
     });
     new PrometheusPodScrape(this, "release-indexer-metrics", {
       target: releaseIndexer.backend,

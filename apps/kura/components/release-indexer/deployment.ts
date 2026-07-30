@@ -26,7 +26,7 @@ import {
 
 import { RELEASE_INDEXER_CONFIG_KEY } from "./config.js";
 
-const RELEASE_INDEXER_IMAGE = oci`ghcr.io/wyvernzora/kura/release-indexer:v0.7.0`;
+const RELEASE_INDEXER_IMAGE = oci`ghcr.io/wyvernzora/kura/release-indexer:v0.7.2`;
 const APP_UID = 65532;
 const APP_GID = 65532;
 const CONFIG_MOUNT_PATH = "/etc/kura/release-indexer.toml";

@@ -27,6 +27,7 @@ function renderLibraryManagerConfig(): string {
   return dedent`
     [server]
     rest = ":8080"
+    metrics = ":9090"
     log_level = "info"
     umask = "0007"
 

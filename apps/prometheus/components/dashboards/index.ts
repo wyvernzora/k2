@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { ConfigMap } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
@@ -100,7 +102,7 @@ function dashboards(): DashboardSpec[] {
         "ops",
       ),
     ]),
-    releaseIndexerDashboard(),
+    kuraSuiteDashboard(),
     dashboard("k2-dns", "Networking", "K2 / DNS", [
       stat(1, "DNS queries / sec", "sum(rate(blocky_query_total[$__rate_interval]))", 0, 0, "ops"),
       stat(2, "DNS errors / sec", "sum(rate(blocky_error_total[$__rate_interval]))", 6, 0, "ops"),
@@ -271,149 +273,15 @@ function dashboards(): DashboardSpec[] {
   ];
 }
 
-function releaseIndexerDashboard(): DashboardSpec {
-  return dashboard("takuhai-overview", "Applications", "Kura Release Indexer", [
-    stat(1, "Claimable Releases", 'max(takuhai_queue_items{state="claimable"})', 0, 0, "short"),
-    stat(2, "Exhausted Releases", 'max(takuhai_queue_items{state="exhausted"})', 6, 0, "short"),
-    stat(3, "Known Releases", "max(takuhai_catalog_infohashes)", 12, 0, "short"),
-    stat(4, "Matched Refs", "max(takuhai_catalog_refs)", 18, 0, "short"),
-    timeSeries(
-      5,
-      "Submission Rate",
-      [
-        {
-          expr: "sum by (status, result) (rate(takuhai_submit_total[$__rate_interval]))",
-          legendFormat: "{{status}} {{result}}",
-        },
-      ],
-      0,
-      4,
-      "ops",
-    ),
-    timeSeries(6, "Queue State", [{ expr: "max by (state) (takuhai_queue_items)", legendFormat: "{{state}}" }], 0, 12),
-    timeSeries(
-      7,
-      "Submission Confidence Quantiles",
-      [
-        {
-          expr: "histogram_quantile(0.5, sum by (le, status) (rate(takuhai_submit_confidence_bucket[$__rate_interval])))",
-          legendFormat: "p50 {{status}}",
-        },
-        {
-          expr: "histogram_quantile(0.9, sum by (le, status) (rate(takuhai_submit_confidence_bucket[$__rate_interval])))",
-          legendFormat: "p90 {{status}}",
-        },
-      ],
-      0,
-      20,
-    ),
-    timeSeries(
-      8,
-      "Submission Confidence Mean / P99",
-      [
-        {
-          expr: "sum by (status) (rate(takuhai_submit_confidence_sum[$__rate_interval])) / sum by (status) (rate(takuhai_submit_confidence_count[$__rate_interval]))",
-          legendFormat: "mean {{status}}",
-        },
-        {
-          expr: "histogram_quantile(0.99, sum by (le, status) (rate(takuhai_submit_confidence_bucket[$__rate_interval])))",
-          legendFormat: "p99 {{status}}",
-        },
-      ],
-      0,
-      28,
-    ),
-    timeSeries(
-      9,
-      "Ingest Post Rate",
-      [
-        {
-          expr: "sum by (source, result) (rate(takuhai_ingest_posts_total[$__rate_interval]))",
-          legendFormat: "{{source}} {{result}}",
-        },
-      ],
-      0,
-      36,
-      "ops",
-    ),
-    timeSeries(
-      10,
-      "HTTP Latency",
-      [
-        {
-          expr: "histogram_quantile(0.95, sum by (le, path) (rate(takuhai_http_request_duration_seconds_bucket[$__rate_interval])))",
-          legendFormat: "p95 {{path}}",
-        },
-        {
-          expr: "histogram_quantile(0.99, sum by (le, path) (rate(takuhai_http_request_duration_seconds_bucket[$__rate_interval])))",
-          legendFormat: "p99 {{path}}",
-        },
-      ],
-      0,
-      44,
-      "s",
-    ),
-    timeSeries(
-      11,
-      "HTTP Error Rate",
-      [
-        {
-          expr: 'sum by (path, status) (rate(takuhai_http_requests_total{status=~"4..|5.."}[$__rate_interval]))',
-          legendFormat: "{{path}} {{status}}",
-        },
-      ],
-      0,
-      52,
-      "ops",
-    ),
-    timeSeries(
-      12,
-      "Queue Claim Activity",
-      [
-        {
-          expr: "sum by (result) (rate(takuhai_queue_claims_total[$__rate_interval]))",
-          legendFormat: "claims {{result}}",
-        },
-        {
-          expr: "rate(takuhai_queue_claimed_items_total[$__rate_interval])",
-          legendFormat: "claimed items",
-        },
-      ],
-      0,
-      60,
-      "ops",
-    ),
-    timeSeries(
-      13,
-      "Source Crawl Activity",
-      [
-        {
-          expr: "sum by (source, result) (rate(takuhai_source_crawls_total[$__rate_interval]))",
-          legendFormat: "{{source}} {{result}}",
-        },
-        {
-          expr: "sum by (source) (rate(takuhai_source_crawl_posts_total[$__rate_interval]))",
-          legendFormat: "{{source}} posts",
-        },
-      ],
-      0,
-      68,
-      "ops",
-    ),
-    timeSeries(
-      14,
-      "Source Crawl Latency",
-      [
-        {
-          expr: "histogram_quantile(0.95, sum by (le, source) (rate(takuhai_source_crawl_duration_seconds_bucket[$__rate_interval])))",
-          legendFormat: "{{source}} p95",
-        },
-      ],
-      0,
-      76,
-      "s",
-    ),
-  ]);
+function kuraSuiteDashboard(): DashboardSpec {
+  return {
+    uid: "kura-suite-overview",
+    folder: "Applications",
+    definition: JSON.parse(readFileSync(new URL("./kura-suite-overview.json", import.meta.url), "utf8")) as Record<
+      string,
+      unknown
+    >,
+  };
 }
 
 function dashboard(uid: string, folder: string, title: string, panels: Record<string, unknown>[]): DashboardSpec {

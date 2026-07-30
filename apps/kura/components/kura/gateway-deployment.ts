@@ -20,13 +20,15 @@ import { K2Deployment, oci } from "@k2/cdk-lib";
 import {
   KURA_GATEWAY_HTTP_PORT,
   KURA_GATEWAY_LABELS,
+  KURA_GATEWAY_MCP_METRICS_PORT,
+  KURA_GATEWAY_METRICS_PORT,
   KURA_LIBRARY_MANAGER_HTTP_PORT,
   KURA_LIBRARY_MANAGER_SERVICE_NAME,
   KURA_RELEASE_INDEXER_HTTP_PORT,
   KURA_RELEASE_INDEXER_SERVICE_NAME,
 } from "../../constants.js";
 
-const KURA_GATEWAY_IMAGE = oci`ghcr.io/wyvernzora/kura/gateway:v0.7.0`;
+const KURA_GATEWAY_IMAGE = oci`ghcr.io/wyvernzora/kura/gateway:v0.7.2`;
 const CADDY_UID = 65532;
 const CADDY_GID = 65532;
 
@@ -58,7 +60,11 @@ function gatewayContainer(volumeMounts: VolumeMount[]): ContainerProps {
     name: "gateway",
     image: KURA_GATEWAY_IMAGE,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
-    ports: [{ name: "http", number: KURA_GATEWAY_HTTP_PORT, protocol: Protocol.TCP }],
+    ports: [
+      { name: "http", number: KURA_GATEWAY_HTTP_PORT, protocol: Protocol.TCP },
+      { name: "metrics", number: KURA_GATEWAY_METRICS_PORT, protocol: Protocol.TCP },
+      { name: "mcp-metrics", number: KURA_GATEWAY_MCP_METRICS_PORT, protocol: Protocol.TCP },
+    ],
     envVariables: {
       KURA_LIBRARY_UPSTREAM: EnvValue.fromValue(
         `${KURA_LIBRARY_MANAGER_SERVICE_NAME}:${KURA_LIBRARY_MANAGER_HTTP_PORT}`,
