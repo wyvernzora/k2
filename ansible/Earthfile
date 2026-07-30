@@ -8,7 +8,9 @@ image:
     COPY requirements.yml requirements.yml
     RUN ansible-galaxy install -r requirements.yml
 
-    COPY . /ansible
+    COPY entrypoint.sh ./
+    COPY playbooks ./playbooks
+    COPY roles ./roles
 
-    VOLUME [ "/ansible", "/root/.ssh", "/root/.aws" ]
+    VOLUME [ "/ansible/inventory", "/root/.ssh", "/root/.aws" ]
     ENTRYPOINT [ "/ansible/entrypoint.sh" ]

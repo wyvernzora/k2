@@ -1,0 +1,10 @@
+---
+# Copy this file to inventory/hosts.yaml and replace the example values.
+# The inventory directory is ignored by Git and mounted into the image at runtime.
+proxmox:
+  hosts:
+    example:
+      ansible_host: pve.example.com
+      vfio_devices:
+        - "0000:01:00.0 # Storage device"
+        - "0000:02:00.0 # HBA"
