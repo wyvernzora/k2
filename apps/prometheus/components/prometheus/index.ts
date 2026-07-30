@@ -53,6 +53,8 @@ function grafanaValues(grafanaHost: string) {
         username_claim: "email",
         jwk_set_url: `https://${grafanaHost}/.well-known/pomerium/jwks.json`,
         auto_sign_up: true,
+        role_attribute_path: "email == 'wyvernzora@gmail.com' && 'GrafanaAdmin' || 'Viewer'",
+        allow_assign_grafana_admin: true,
         cache_ttl: "60m",
       },
     },
@@ -68,7 +70,7 @@ function grafanaDashboardSidecarValues() {
     },
     folderAnnotation: DASHBOARD_FOLDER_ANNOTATION,
     provider: {
-      allowUiUpdates: false,
+      allowUiUpdates: true,
       foldersFromFilesStructure: true,
     },
   };
