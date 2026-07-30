@@ -617,6 +617,118 @@ spec:
     - hosts:
         - n8n.wyvernzora.io
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/allow_public_unauthenticated_access: "true"
+    ingress.pomerium.io/preserve_host_header: "true"
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: mcp-server-ingress
+  namespace: n8n
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: n8n.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: n8n
+                port:
+                  name: http
+            path: /mcp-server/http
+            pathType: Prefix
+  tls:
+    - hosts:
+        - n8n.wyvernzora.io
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/allow_public_unauthenticated_access: "true"
+    ingress.pomerium.io/preserve_host_header: "true"
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: mcp-oauth-ingress
+  namespace: n8n
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: n8n.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: n8n
+                port:
+                  name: http
+            path: /mcp-oauth
+            pathType: Prefix
+  tls:
+    - hosts:
+        - n8n.wyvernzora.io
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/allow_public_unauthenticated_access: "true"
+    ingress.pomerium.io/preserve_host_header: "true"
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: mcp-authorization-metadata-ingress
+  namespace: n8n
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: n8n.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: n8n
+                port:
+                  name: http
+            path: /.well-known/oauth-authorization-server
+            pathType: Prefix
+  tls:
+    - hosts:
+        - n8n.wyvernzora.io
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/allow_public_unauthenticated_access: "true"
+    ingress.pomerium.io/preserve_host_header: "true"
+  labels:
+    k2.wyvernzora.io/app: n8n
+    k2.wyvernzora.io/component: n8n
+  name: mcp-resource-metadata-ingress
+  namespace: n8n
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: n8n.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: n8n
+                port:
+                  name: http
+            path: /.well-known/oauth-protected-resource/mcp-server/http
+            pathType: Prefix
+  tls:
+    - hosts:
+        - n8n.wyvernzora.io
+---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
