@@ -1527,6 +1527,9 @@ spec:
   enableSuperuserAccess: true
   imageName: ghcr.io/cloudnative-pg/postgresql:17.10-standard-bookworm
   instances: 3
+  postgresql:
+    parameters:
+      max_slot_wal_keep_size: 8GB
   resources:
     limits:
       cpu: "2"
@@ -1551,7 +1554,7 @@ spec:
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: ScheduleAnyway
   walStorage:
-    size: 8Gi
+    size: 16Gi
     storageClass: longhorn
 ---
 apiVersion: cilium.io/v2
