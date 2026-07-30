@@ -52,8 +52,13 @@ function nexusClusterSpec(): ClusterSpec {
     instances: 3,
     imageName: oci`ghcr.io/cloudnative-pg/postgresql:17.10-standard-bookworm`,
     enableSuperuserAccess: true,
-    storage: volumeStorage(),
-    walStorage: volumeStorage(),
+    storage: volumeStorage(8),
+    walStorage: volumeStorage(16),
+    postgresql: {
+      parameters: {
+        max_slot_wal_keep_size: "8GB",
+      },
+    },
     affinity: Scheduling.profile(only(workers())).affinity as NonNullable<ClusterSpec["affinity"]>,
     bootstrap: bootstrap(),
     topologySpreadConstraints: clusterTopologySpread(name),
@@ -61,9 +66,9 @@ function nexusClusterSpec(): ClusterSpec {
   };
 }
 
-function volumeStorage(): NonNullable<ClusterSpec["storage"]> {
+function volumeStorage(sizeGibibytes: number): NonNullable<ClusterSpec["storage"]> {
   return {
-    size: Size.gibibytes(8).asString(),
+    size: Size.gibibytes(sizeGibibytes).asString(),
     storageClass: STORAGE_CLASS,
   };
 }
