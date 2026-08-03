@@ -8,4 +8,4 @@ annotations:
 dependencies:
   - name: k8s-gateway
     repository: https://k8s-gateway.github.io/k8s_gateway
-    version: 3.7.1
+    version: 3.7.2
