@@ -387,3 +387,7 @@ proper section above and remove the inbox duplicate.
   clients and domain support do not belong under `step/`.
 - Plex does not use its `/transcode` volume; do not choose it as a storage
   migration pilot.
+- K2 VM and host names use `k2-<role>-<last 4 hex digits of the LAN NIC MAC>`;
+  use role `st` for storage appliances (for example, `k2-st-a1b2`).
+- Prefer K2's public S3 Kairos artifacts for VM provisioning when available,
+  and verify the published SHA-256 instead of defaulting to a local image build.
