@@ -20,7 +20,7 @@ import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib"
 import { FLOOD_HTTP_PORT, QBITTORRENT_HTTP_PORT, QBITTORRENT_LABELS, QBIT_BRIDGE_PORT } from "../../constants.js";
 
 const QBITTORRENT_IMAGE = oci`lscr.io/linuxserver/qbittorrent:4.6.7`;
-const FLOOD_IMAGE = oci`jesec/flood:4.14.3`;
+const FLOOD_IMAGE = oci`jesec/flood:4.15.0`;
 const QBIT_BRIDGE_IMAGE = oci`ghcr.io/wyvernzora/qbit-bridge:dev`;
 const PUID = 3005;
 const PGID = 2001;
