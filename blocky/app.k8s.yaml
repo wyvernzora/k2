@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.1
+    helm.sh/chart: k8s-gateway-3.7.2
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -20,7 +20,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.1
+    helm.sh/chart: k8s-gateway-3.7.2
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -68,7 +68,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.1
+    helm.sh/chart: k8s-gateway-3.7.2
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -86,6 +86,13 @@ rules:
     resources:
       - services
       - namespaces
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
     verbs:
       - list
       - watch
@@ -113,7 +120,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.1
+    helm.sh/chart: k8s-gateway-3.7.2
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -137,7 +144,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.1
+    helm.sh/chart: k8s-gateway-3.7.2
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -166,7 +173,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
     app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.1
+    helm.sh/chart: k8s-gateway-3.7.2
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -186,7 +193,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: k8s-gateway
         app.kubernetes.io/version: 1.8.0
-        helm.sh/chart: k8s-gateway-3.7.1
+        helm.sh/chart: k8s-gateway-3.7.2
     spec:
       affinity:
         nodeAffinity:
