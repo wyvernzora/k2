@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: csi-nfs-controller-sa
@@ -19,8 +19,8 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: csi-nfs-node-sa
@@ -35,8 +35,8 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: nfs-csi
@@ -59,8 +59,8 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: nfs-external-provisioner-role
@@ -128,8 +128,8 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: nfs-external-resizer-role
@@ -177,8 +177,8 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: nfs-csi-resizer-role
@@ -198,8 +198,8 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: nfs-csi-provisioner-binding
@@ -219,13 +219,14 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: csi-nfs-node
   namespace: nfs-csi
 spec:
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: csi-nfs-node
@@ -236,8 +237,8 @@ spec:
         app.kubernetes.io/instance: csi-driver-nfs
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: csi-driver-nfs
-        app.kubernetes.io/version: 4.13.3
-        helm.sh/chart: csi-driver-nfs-4.13.3
+        app.kubernetes.io/version: 4.13.4
+        helm.sh/chart: csi-driver-nfs-4.13.4
     spec:
       containers:
         - args:
@@ -245,7 +246,7 @@ spec:
             - --probe-timeout=3s
             - --http-endpoint=localhost:29653
             - --v=2
-          image: registry.k8s.io/sig-storage/livenessprobe:v2.17.0
+          image: registry.k8s.io/sig-storage/livenessprobe:v2.19.0
           imagePullPolicy: IfNotPresent
           name: liveness-probe
           resources:
@@ -275,7 +276,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.15.0
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.17.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 2
@@ -319,7 +320,7 @@ spec:
                   fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.3
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
@@ -387,14 +388,15 @@ metadata:
     app.kubernetes.io/instance: csi-driver-nfs
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: csi-driver-nfs
-    app.kubernetes.io/version: 4.13.3
-    helm.sh/chart: csi-driver-nfs-4.13.3
+    app.kubernetes.io/version: 4.13.4
+    helm.sh/chart: csi-driver-nfs-4.13.4
     k2.wyvernzora.io/app: nfs-csi
     k2.wyvernzora.io/component: nfs-csi
   name: csi-nfs-controller
   namespace: nfs-csi
 spec:
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: csi-nfs-controller
@@ -407,8 +409,8 @@ spec:
         app.kubernetes.io/instance: csi-driver-nfs
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: csi-driver-nfs
-        app.kubernetes.io/version: 4.13.3
-        helm.sh/chart: csi-driver-nfs-4.13.3
+        app.kubernetes.io/version: 4.13.4
+        helm.sh/chart: csi-driver-nfs-4.13.4
     spec:
       affinity:
         nodeAffinity:
@@ -428,13 +430,13 @@ spec:
             - --leader-election
             - --leader-election-namespace=nfs-csi
             - --extra-create-metadata=true
-            - --feature-gates=HonorPVReclaimPolicy=true,VolumeAttributesClass=false
+            - --feature-gates=VolumeAttributesClass=false
             - --timeout=1200s
             - --retry-interval-max=30m
           env:
             - name: ADDRESS
               value: /csi/csi.sock
-          image: registry.k8s.io/sig-storage/csi-provisioner:v6.1.0
+          image: registry.k8s.io/sig-storage/csi-provisioner:v6.3.0
           imagePullPolicy: IfNotPresent
           name: csi-provisioner
           resources:
@@ -461,7 +463,7 @@ spec:
           env:
             - name: ADDRESS
               value: /csi/csi.sock
-          image: registry.k8s.io/sig-storage/csi-resizer:v2.0.0
+          image: registry.k8s.io/sig-storage/csi-resizer:v2.2.0
           imagePullPolicy: IfNotPresent
           name: csi-resizer
           resources:
@@ -482,7 +484,7 @@ spec:
             - --probe-timeout=3s
             - --http-endpoint=localhost:29652
             - --v=2
-          image: registry.k8s.io/sig-storage/livenessprobe:v2.17.0
+          image: registry.k8s.io/sig-storage/livenessprobe:v2.19.0
           imagePullPolicy: IfNotPresent
           name: liveness-probe
           resources:
@@ -516,7 +518,7 @@ spec:
                   fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.3
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
