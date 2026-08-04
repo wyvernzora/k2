@@ -1,0 +1,247 @@
+---
+- name: Read PVE roles
+  command: pveum role list --output-format json
+  changed_when: false
+  check_mode: false
+  register: __k2_tls_pve_roles
+
+- name: Select PVE certificate-sync role
+  set_fact:
+    __k2_tls_pve_role: >-
+      {{ (__k2_tls_pve_roles.stdout | from_json)
+         | selectattr('roleid', 'equalto', k2_tls_cert_sync_role)
+         | first
+         | default({}) }}
+
+- name: Create PVE certificate-sync role
+  command:
+    argv:
+      - pveum
+      - role
+      - add
+      - "{{ k2_tls_cert_sync_role }}"
+      - --privs
+      - Sys.Modify
+  when: __k2_tls_pve_role | length == 0
+
+- name: Restrict PVE certificate-sync role privileges
+  command:
+    argv:
+      - pveum
+      - role
+      - modify
+      - "{{ k2_tls_cert_sync_role }}"
+      - --privs
+      - Sys.Modify
+  when:
+    - __k2_tls_pve_role | length > 0
+    - __k2_tls_pve_role.privs != "Sys.Modify"
+
+- name: Read PVE users
+  command: pveum user list --output-format json
+  changed_when: false
+  check_mode: false
+  register: __k2_tls_pve_users
+
+- name: Select PVE certificate-sync user
+  set_fact:
+    __k2_tls_user_exists: >-
+      {{ (__k2_tls_pve_users.stdout | from_json)
+         | selectattr('userid', 'equalto', k2_tls_cert_sync_user)
+         | list
+         | length > 0 }}
+    __k2_tls_full_token_id: >-
+      {{ k2_tls_cert_sync_user }}!{{ k2_tls_cert_sync_token }}
+
+- name: Create PVE certificate-sync user
+  command:
+    argv:
+      - pveum
+      - user
+      - add
+      - "{{ k2_tls_cert_sync_user }}"
+      - --comment
+      - K2 certificate sync
+  when: not __k2_tls_user_exists
+
+- name: Prepare local certificate-sync credential directory
+  file:
+    path: "{{ k2_tls_cert_sync_credentials_dir }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+
+- name: Check for legacy inventory-nested certificate-sync credential
+  stat:
+    path: "{{ k2_tls_cert_sync_legacy_credentials_file }}"
+  delegate_to: localhost
+  register: __k2_tls_legacy_local_credential
+
+- name: Check for locally persisted certificate-sync credential
+  stat:
+    path: "{{ k2_tls_cert_sync_credentials_file }}"
+  delegate_to: localhost
+  register: __k2_tls_local_credential
+
+- name: Migrate legacy inventory-nested certificate-sync credential
+  copy:
+    src: "{{ k2_tls_cert_sync_legacy_credentials_file }}"
+    dest: "{{ k2_tls_cert_sync_credentials_file }}"
+    remote_src: true
+    mode: "0600"
+  delegate_to: localhost
+  no_log: true
+  when:
+    - __k2_tls_legacy_local_credential.stat.exists
+    - not __k2_tls_local_credential.stat.exists
+
+- name: Remove legacy inventory-nested certificate-sync credential
+  file:
+    path: "{{ k2_tls_cert_sync_legacy_credentials_file }}"
+    state: absent
+  delegate_to: localhost
+  no_log: true
+  when: __k2_tls_legacy_local_credential.stat.exists
+
+- name: Refresh locally persisted certificate-sync credential state
+  stat:
+    path: "{{ k2_tls_cert_sync_credentials_file }}"
+  delegate_to: localhost
+  register: __k2_tls_local_credential
+
+- name: Read PVE certificate-sync tokens
+  command: >-
+    pveum user token list {{ k2_tls_cert_sync_user }} --output-format json
+  changed_when: false
+  check_mode: false
+  when: __k2_tls_user_exists or not ansible_check_mode
+  register: __k2_tls_pve_tokens
+
+- name: Select PVE certificate-sync token
+  set_fact:
+    __k2_tls_token_exists: >-
+      {{ (__k2_tls_pve_tokens.stdout | from_json)
+         | selectattr('tokenid', 'equalto', k2_tls_cert_sync_token)
+         | list
+         | length > 0 }}
+  when: __k2_tls_user_exists or not ansible_check_mode
+
+- name: Create and persist PVE certificate-sync token
+  when:
+    - __k2_tls_user_exists or not ansible_check_mode
+    - not __k2_tls_token_exists
+  block:
+    - name: Create privilege-separated PVE certificate-sync token
+      command:
+        argv:
+          - pveum
+          - user
+          - token
+          - add
+          - "{{ k2_tls_cert_sync_user }}"
+          - "{{ k2_tls_cert_sync_token }}"
+          - --privsep
+          - "1"
+          - --comment
+          - K2 certificate sync
+          - --output-format
+          - json
+      register: __k2_tls_created_token
+      no_log: true
+
+    - name: Validate generated PVE certificate-sync token
+      assert:
+        that:
+          - (__k2_tls_created_token.stdout | from_json)['full-tokenid'] == __k2_tls_full_token_id
+          - (__k2_tls_created_token.stdout | from_json).value | length > 0
+        fail_msg: PVE did not return the expected API token credential.
+      no_log: true
+
+    - name: Persist PVE certificate-sync credential locally
+      copy:
+        content: >-
+          {{ {
+               'api-token-id': (__k2_tls_created_token.stdout | from_json)['full-tokenid'],
+               'api-token-secret': (__k2_tls_created_token.stdout | from_json).value
+             } | to_nice_json }}
+        dest: "{{ k2_tls_cert_sync_credentials_file }}"
+        mode: "0600"
+      delegate_to: localhost
+      no_log: true
+  rescue:
+    - name: Remove token whose credential could not be persisted
+      command: >-
+        pveum user token remove {{ k2_tls_cert_sync_user }} {{ k2_tls_cert_sync_token }}
+      no_log: true
+
+    - name: Stop after certificate-sync credential persistence failure
+      fail:
+        msg: >-
+          Failed to persist the new PVE API token locally; the remote token was
+          removed so the play can be retried safely.
+
+- name: Report pre-existing token without a local credential
+  debug:
+    msg: >-
+      PVE token {{ __k2_tls_full_token_id }} already exists, but its secret is
+      not present at {{ k2_tls_cert_sync_credentials_file }} and cannot be
+      recovered. Preserve its existing external credential or rotate the token.
+  when:
+    - __k2_tls_user_exists or not ansible_check_mode
+    - __k2_tls_token_exists
+    - not __k2_tls_local_credential.stat.exists
+
+- name: Protect existing local certificate-sync credential
+  file:
+    path: "{{ k2_tls_cert_sync_credentials_file }}"
+    mode: "0600"
+  delegate_to: localhost
+  when: __k2_tls_local_credential.stat.exists
+
+- name: Read PVE ACLs
+  command: pveum acl list --output-format json
+  changed_when: false
+  check_mode: false
+  register: __k2_tls_pve_acls
+
+- name: Grant certificate-sync user node permission
+  command:
+    argv:
+      - pveum
+      - acl
+      - modify
+      - "/nodes/{{ inventory_hostname }}"
+      - --users
+      - "{{ k2_tls_cert_sync_user }}"
+      - --roles
+      - "{{ k2_tls_cert_sync_role }}"
+  when: >-
+    (__k2_tls_user_exists or not ansible_check_mode) and
+    (__k2_tls_pve_acls.stdout | from_json)
+    | selectattr('path', 'equalto', '/nodes/' + inventory_hostname)
+    | selectattr('type', 'equalto', 'user')
+    | selectattr('ugid', 'equalto', k2_tls_cert_sync_user)
+    | selectattr('roleid', 'equalto', k2_tls_cert_sync_role)
+    | list
+    | length == 0
+
+- name: Grant certificate-sync token node permission
+  command:
+    argv:
+      - pveum
+      - acl
+      - modify
+      - "/nodes/{{ inventory_hostname }}"
+      - --tokens
+      - "{{ __k2_tls_full_token_id }}"
+      - --roles
+      - "{{ k2_tls_cert_sync_role }}"
+  when: >-
+    (__k2_tls_user_exists or not ansible_check_mode) and
+    (__k2_tls_pve_acls.stdout | from_json)
+    | selectattr('path', 'equalto', '/nodes/' + inventory_hostname)
+    | selectattr('type', 'equalto', 'token')
+    | selectattr('ugid', 'equalto', __k2_tls_full_token_id)
+    | selectattr('roleid', 'equalto', k2_tls_cert_sync_role)
+    | list
+    | length == 0

@@ -396,3 +396,8 @@ proper section above and remove the inbox duplicate.
   retry Earthly with elevated access before reporting the container runtime unavailable.
 - Prefer K2's public S3 Kairos artifacts for VM provisioning when available,
   and verify the published SHA-256 instead of defaulting to a local image build.
+- Proxmox host shells use zinit-managed Zsh ergonomics without Homebrew, mise,
+  direnv, or development-tool paths.
+- Proxmox hosts do not need local GPU or HDMI-audio drivers; keep them
+  blacklisted, and leave a new host's `vfio_devices` empty until a concrete
+  passthrough target is selected.

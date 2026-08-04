@@ -1,0 +1,10 @@
+---
+k2_zinit_version: v3.15.0
+
+k2_zsh_users:
+  - name: root
+    group: root
+    home: /root
+  - name: "{{ k2_user_username }}"
+    group: "{{ k2_user_username }}"
+    home: "/home/{{ k2_user_username }}"

@@ -4,9 +4,14 @@
   remote_user: root
   roles:
     - role: pve.nosub
-    - role: pve.ssd
+      tags: [repositories]
+    - role: pve.standalone
+      tags: [standalone]
     - role: k2.user
-    - role: k2.fish
+      tags: [user]
+    - role: k2.zsh
+      tags: [shell]
     - role: k2.tls
+      tags: [tls]
     - role: k2.vfio
-    - role: pve.vip
+      tags: [vfio]

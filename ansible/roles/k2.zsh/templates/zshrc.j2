@@ -1,0 +1,52 @@
+# Managed by Ansible. Put host-local interactive settings in ~/.zshrc.local.
+ZINIT_HOME="${XDG_DATA_HOME}/zinit/zinit.git"
+if [[ -r "${ZINIT_HOME}/zinit.zsh" ]]; then
+    source "${ZINIT_HOME}/zinit.zsh"
+    zinit light zsh-users/zsh-completions
+    zinit light zsh-users/zsh-autosuggestions
+else
+    print -u2 "zinit is missing from ${ZINIT_HOME}; rerun the k2.zsh role"
+fi
+
+autoload -U compinit && compinit -d "${XDG_CACHE_HOME}/zsh/zcompdump-${ZSH_VERSION}"
+if [[ -r "${ZINIT_HOME}/zinit.zsh" ]]; then
+    zinit light Aloxaf/fzf-tab
+fi
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color=auto $realpath'
+
+bindkey '^[[A' history-search-backward
+bindkey '^[[B' history-search-forward
+
+HISTSIZE=5000
+HISTFILE="$HOME/.zsh_history"
+SAVEHIST=$HISTSIZE
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+alias c='clear'
+alias ls='ls --color=auto'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias reload!='source "$HOME/.zshrc"'
+alias path='printf "%s\n" "${path[@]}"'
+
+if (( $+commands[starship] )); then
+    eval "$(starship init zsh)"
+else
+    PROMPT='%F{cyan}%n@%m%f:%F{blue}%~%f %# '
+fi
+eval "$(zoxide init --cmd cd zsh)"
+
+if [[ -r "${ZINIT_HOME}/zinit.zsh" ]]; then
+    zinit light zsh-users/zsh-syntax-highlighting
+fi
+
+[ -r "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"

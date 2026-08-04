@@ -1,0 +1,35 @@
+---
+- name: Remove legacy volatile journald configuration
+  file:
+    path: /etc/systemd/journald.conf.d/in-mem-logs.conf
+    state: absent
+  notify: restart journald
+
+- name: Ensure persistent journal storage exists
+  file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: "2755"
+  notify: restart journald
+
+- name: Restore standard Proxmox HA services
+  service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - pve-ha-lrm
+    - pve-ha-crm
+
+- name: Remove keepalived from standalone hosts
+  apt:
+    name: keepalived
+    state: absent
+    purge: true
+
+- name: Remove legacy keepalived configuration
+  file:
+    path: /etc/keepalived
+    state: absent

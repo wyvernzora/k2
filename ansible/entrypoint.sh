@@ -10,24 +10,15 @@ print_available_playbooks() {
 
 help() {
   echo "
-  Usage: docker run [options] ghcr.io/wyvernzora/k2-ansible <playbook-name>
+  Usage: docker run [options] k2-ansible:local <playbook-name> [ansible-playbook options]
 
   $(print_available_playbooks)
-
-  Environment variables:
-
-    --- AWS Credentials ---
-    AWS_ACCESS_KEY_ID
-    AWS_PRIVATE_ACCESS_KEY
-    AWS_SESSION_TOKEN
-    AWS_PROFILE
-    AWS_REGION
 
   Volumes:
 
     /root/.ssh/           SSH keys to be used for bootstrapping
-    /root/.aws/           AWS credentials file, if any
-    /ansible/inventory/   Inventory files here
+    /ansible/inventory/   Inventory files (read-only is sufficient)
+    /ansible/credentials/ Generated local credentials (read/write)
   "
 }
 
@@ -45,6 +36,7 @@ if [ ! -f "$PLAYBOOK" ]; then
     exit 1
 fi
 
+shift
 export ANSIBLE_ROLES_PATH="$ANSIBLE_ROLES_PATH:/ansible/roles"
 export ANSIBLE_HOST_KEY_CHECKING="False"
-ansible-playbook -i /ansible/inventory "$PLAYBOOK"
+exec ansible-playbook -i /ansible/inventory "$PLAYBOOK" "$@"

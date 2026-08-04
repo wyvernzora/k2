@@ -25,6 +25,10 @@ PCI_DEVICES="
 echo "$PCI_DEVICES" | while IFS= read -r LINE; do
 	DEVICE=$(echo "$LINE" | cut -d '#' -f 1 | xargs)
 	[ -z "$DEVICE" ] && continue
+	if [ ! -e "/sys/bus/pci/devices/$DEVICE" ]; then
+		echo "bind_vfio: configured device $DEVICE is not present"
+		continue
+	fi
 	echo "vfio-pci" > /sys/bus/pci/devices/$DEVICE/driver_override
 	echo "bind_vfio: $DEVICE"
 done

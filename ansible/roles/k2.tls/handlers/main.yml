@@ -1,5 +1,11 @@
-- name: restart and enable nginx service
+---
+- name: validate nginx configuration
+  command: nginx -t
+  changed_when: false
+  listen: restart nginx
+
+- name: restart nginx
   service:
     name: nginx
-    enabled: true
     state: restarted
+  listen: restart nginx

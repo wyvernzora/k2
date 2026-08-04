@@ -1,12 +1,45 @@
 ---
-- name: turn on IOMMU in GRUB parameters
-  grub_cmdline:
-    present:
-      - "intel_iommu=on"
-      - "iommu=pt"
-      - "rd.driver.pre=vfio-pci"
+- name: Validate Proxmox CPU group membership
+  assert:
+    that:
+      - >-
+        ('proxmox_intel' in group_names) != ('proxmox_amd' in group_names)
+    fail_msg: >-
+      Each Proxmox host must belong to exactly one of proxmox_intel or
+      proxmox_amd.
 
-- name: configure vfio modules to load on boot
+- name: Validate configured VFIO PCI addresses
+  assert:
+    that:
+      - item is match('^[0-9A-Fa-f]{4}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}\\.[0-7](\\s+#.*)?$')
+    fail_msg: "Invalid vfio_devices entry: {{ item }}"
+  loop: "{{ vfio_devices }}"
+
+- name: Select CPU-specific IOMMU parameters
+  set_fact:
+    __k2_vfio_cpu_parameters: >-
+      {{ k2_vfio_intel_kernel_parameters if 'proxmox_intel' in group_names else k2_vfio_amd_kernel_parameters }}
+    __k2_vfio_other_cpu_parameters: >-
+      {{ k2_vfio_amd_kernel_parameters if 'proxmox_intel' in group_names else k2_vfio_intel_kernel_parameters }}
+
+- name: Detect Proxmox bootloader mode
+  command: proxmox-boot-tool status
+  changed_when: false
+  check_mode: false
+  register: __k2_proxmox_boot_status
+
+- name: Select kernel command-line backend
+  set_fact:
+    __k2_vfio_bootloader: >-
+      {{ 'proxmox-boot-tool' if 'configured with: uefi' in (__k2_proxmox_boot_status.stdout + __k2_proxmox_boot_status.stderr) else 'grub' }}
+
+- name: Enable IOMMU and early vfio-pci loading
+  pve_kernel_cmdline:
+    bootloader: "{{ __k2_vfio_bootloader }}"
+    present: "{{ k2_vfio_common_kernel_parameters + __k2_vfio_cpu_parameters }}"
+    absent: "{{ __k2_vfio_other_cpu_parameters }}"
+
+- name: Configure VFIO modules to load on boot
   lineinfile:
     path: /etc/modules
     line: "{{ item }}"
@@ -16,7 +49,7 @@
     - vfio_iommu_type1
   notify: update initramfs image
 
-- name: configure vfio modules to be included in initramfs
+- name: Include VFIO modules in initramfs
   lineinfile:
     path: /etc/initramfs-tools/modules
     line: "{{ item }}"
@@ -26,49 +59,43 @@
     - vfio_iommu_type1
   notify: update initramfs image
 
-- name: improve NVidia GPU stability
-  block:
-    - name: make sure that kvm.conf exists
-      file:
-        path: /etc/modprobe.d/kvm.conf
-        state: touch
-        owner: root
-        mode: 0600
-      changed_when: no
-    - name: add parameters to kvm.conf
-      lineinfile:
-        path: /etc/modprobe.d/kvm.conf
-        line: options kvm ignore_msrs=1 report_ignored_msrs=0
+- name: Configure KVM ignored-MSR behavior
+  lineinfile:
+    path: /etc/modprobe.d/kvm.conf
+    regexp: '^options kvm ignore_msrs='
+    line: options kvm ignore_msrs=1 report_ignored_msrs=0
+    state: "{{ 'present' if k2_vfio_ignore_msrs else 'absent' }}"
+    create: true
+    owner: root
+    group: root
+    mode: "0600"
 
-- name: disable GPU drivers in Proxmox host
-  block:
-    - name: make sure that blacklist.conf exists
-      file:
-        path: /etc/modprobe.d/blacklist.conf
-        state: touch
-        owner: root
-        mode: 0600
-      changed_when: no
-    - name: add modules to blacklist.conf
-      lineinfile:
-        path: /etc/modprobe.d/blacklist.conf
-        line: "{{ item }}"
-      loop:
-        - blacklist radeon
-        - blacklist amdgpu
-        - blacklist nouveau
-        - blacklist nvidia
-        - blacklist nvidiafb
-        - blacklist nvidia_drm
-        - blacklist snd_hda_intel
-        - blacklist snd_hda_codec_hdmi
-        - blacklist i915
+- name: Remove legacy GPU blacklist entries
+  lineinfile:
+    path: /etc/modprobe.d/blacklist.conf
+    line: "blacklist {{ item }}"
+    state: absent
+    create: true
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ k2_vfio_blacklist_modules }}"
+  notify: update initramfs image
 
-- name: copy bind_vfio script to initramfs
+- name: Manage host GPU driver blacklist
+  template:
+    src: vfio-blacklist.conf.j2
+    dest: /etc/modprobe.d/k2-vfio-blacklist.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: update initramfs image
+
+- name: Install early VFIO binding script
   template:
     src: files/bind_vfio
     dest: /etc/initramfs-tools/scripts/init-top/bind_vfio
-    mode: 0755
+    mode: "0755"
     owner: root
     group: root
   notify: update initramfs image

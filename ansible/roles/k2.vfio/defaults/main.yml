@@ -1,1 +1,25 @@
+---
 vfio_devices: []
+
+k2_vfio_common_kernel_parameters:
+  - iommu=pt
+  - rd.driver.pre=vfio-pci
+
+k2_vfio_intel_kernel_parameters:
+  - intel_iommu=on
+
+k2_vfio_amd_kernel_parameters:
+  - amd_iommu=on
+
+k2_vfio_blacklist_modules:
+  - radeon
+  - amdgpu
+  - nouveau
+  - nvidia
+  - nvidiafb
+  - nvidia_drm
+  - snd_hda_intel
+  - snd_hda_codec_hdmi
+  - i915
+
+k2_vfio_ignore_msrs: true

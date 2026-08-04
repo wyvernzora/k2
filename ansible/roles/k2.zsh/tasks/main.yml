@@ -1,0 +1,40 @@
+---
+- name: Remove legacy Fish repository
+  apt_repository:
+    repo: >-
+      deb http://download.opensuse.org/repositories/shells:/fish:/release:/3/Debian_{{ ansible_distribution_major_version }}/ /
+    state: absent
+    update_cache: false
+
+- name: Remove legacy Fish repository key
+  file:
+    path: /etc/apt/trusted.gpg.d/shells_fish_release_3.gpg
+    state: absent
+
+- name: Install Zsh and interactive shell tools
+  apt:
+    name:
+      - fzf
+      - git
+      - zoxide
+      - zsh
+    state: present
+
+- name: Install Starship where Debian packages it
+  apt:
+    name: starship
+    state: present
+  when: ansible_distribution_release == "trixie"
+
+- name: Configure Zsh users
+  include_tasks: user.yml
+  loop: "{{ k2_zsh_users }}"
+  loop_control:
+    loop_var: k2_zsh_user
+    label: "{{ k2_zsh_user.name }}"
+
+- name: Remove Fish after migrating login shells
+  apt:
+    name: fish
+    state: absent
+    purge: true
