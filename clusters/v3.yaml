@@ -74,10 +74,8 @@ dns:
       address: 10.10.1.1
     - name: roxy
       address: 10.10.7.1
-    - name: eris
-      address: 10.10.7.2
-    - name: sylphy
-      address: 10.10.7.3
+    - name: shuna
+      address: 10.10.7.4
     - name: pve
       address: 10.10.7.254
     - name: rumi
