@@ -40,8 +40,7 @@ data:
           ttl 60
           10.10.1.1 unifi.wyvernzora.io
           10.10.7.1 roxy.wyvernzora.io
-          10.10.7.2 eris.wyvernzora.io
-          10.10.7.3 sylphy.wyvernzora.io
+          10.10.7.4 shuna.wyvernzora.io
           10.10.7.254 pve.wyvernzora.io
           10.10.8.1 rumi.wyvernzora.io
           10.10.13.1 login.wyvernzora.io
@@ -187,7 +186,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 10a4fc004790ce5f51e3dc5cd6abcb082ca17f14378b5d8bdb71969d5b17ecc7
+        checksum/config: 9d56f5ae033816aa05400b4d82548bb11c20de5360856ad03a3e8612ebcda92d
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
