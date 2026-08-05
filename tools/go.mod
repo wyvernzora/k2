@@ -8,7 +8,7 @@ require (
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/alecthomas/kong v1.16.0
 	github.com/gonvenience/ytbx v1.5.0
-	github.com/google/go-containerregistry v0.21.8
+	github.com/google/go-containerregistry v0.21.9
 	github.com/homeport/dyff v1.12.0
 	github.com/pkg/sftp v1.13.11
 	golang.org/x/crypto v0.54.0
