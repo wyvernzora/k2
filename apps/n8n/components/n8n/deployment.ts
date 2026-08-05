@@ -257,6 +257,7 @@ function opencodeAcpHarnessContainer(volumeMounts: VolumeMount[]): ContainerProp
     envVariables: {
       ACP_HOST: EnvValue.fromValue(OPENCODE_ACP_HOST),
       ACP_PORT: EnvValue.fromValue(String(OPENCODE_ACP_PORT)),
+      NPM_CONFIG_CACHE: EnvValue.fromValue("/tmp/opencode/npm-cache"),
     },
     volumeMounts,
     resources: {
