@@ -2100,11 +2100,12 @@ spec:
         spec:
           affinity:
             nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
                       - key: node-role.kubernetes.io/control-plane
                         operator: DoesNotExist
+                  weight: 100
           automountServiceAccountToken: false
           containers:
             - command:
@@ -2176,6 +2177,12 @@ spec:
           setHostnameAsFQDN: false
           shareProcessNamespace: false
           terminationGracePeriodSeconds: 30
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/control-plane
+              operator: Exists
+            - key: CriticalAddonsOnly
+              operator: Exists
           volumes:
             - configMap:
                 defaultMode: 365
@@ -2518,11 +2525,12 @@ spec:
         spec:
           affinity:
             nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
                       - key: node-role.kubernetes.io/control-plane
                         operator: DoesNotExist
+                  weight: 100
           automountServiceAccountToken: false
           containers:
             - command:
@@ -2596,6 +2604,12 @@ spec:
           setHostnameAsFQDN: false
           shareProcessNamespace: false
           terminationGracePeriodSeconds: 30
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/control-plane
+              operator: Exists
+            - key: CriticalAddonsOnly
+              operator: Exists
           volumes:
             - configMap:
                 defaultMode: 365
