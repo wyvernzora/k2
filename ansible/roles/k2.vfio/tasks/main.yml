@@ -37,7 +37,7 @@
   pve_kernel_cmdline:
     bootloader: "{{ __k2_vfio_bootloader }}"
     present: "{{ k2_vfio_common_kernel_parameters + __k2_vfio_cpu_parameters }}"
-    absent: "{{ __k2_vfio_other_cpu_parameters }}"
+    absent: "{{ __k2_vfio_other_cpu_parameters + k2_vfio_deprecated_kernel_parameters }}"
 
 - name: Configure VFIO modules to load on boot
   lineinfile:
@@ -59,7 +59,7 @@
     - vfio_iommu_type1
   notify: update initramfs image
 
-- name: Configure KVM ignored-MSR behavior
+- name: Manage optional KVM ignored-MSR behavior
   lineinfile:
     path: /etc/modprobe.d/kvm.conf
     regexp: '^options kvm ignore_msrs='
