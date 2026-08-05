@@ -32,7 +32,7 @@ import {
 
 import { forgejoEnv } from "./env.js";
 
-export const FORGEJO_IMAGE = oci`codeberg.org/forgejo/forgejo:15-rootless`;
+export const FORGEJO_IMAGE = oci`codeberg.org/forgejo/forgejo:16-rootless`;
 export const FORGEJO_APPDATA_CLAIM_NAME = "forgejo-appdata";
 
 const CADDY_IMAGE = oci`caddy:2.11.4-alpine`;
