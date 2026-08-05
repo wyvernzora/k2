@@ -296,7 +296,7 @@ spec:
             - name: ACP_PORT
               value: "8080"
             - name: NPM_CONFIG_CACHE
-              value: /tmp/opencode/npm-cache
+              value: /home/opencode/.npm
           image: ghcr.io/wyvernzora/n8n-acp/opencode:dev
           imagePullPolicy: Always
           name: harness-opencode
@@ -327,6 +327,8 @@ spec:
               name: opencode-workspace
             - mountPath: /home/opencode
               name: pvc-n8n-opencode-home
+            - mountPath: /home/opencode/.npm
+              name: opencode-npm-cache
             - mountPath: /tmp/opencode
               name: opencode-tmp
         - env:
@@ -499,6 +501,9 @@ spec:
           persistentVolumeClaim:
             claimName: n8n-opencode-home
             readOnly: false
+        - emptyDir:
+            sizeLimit: 1024Mi
+          name: opencode-npm-cache
         - emptyDir:
             sizeLimit: 1024Mi
           name: opencode-tmp
