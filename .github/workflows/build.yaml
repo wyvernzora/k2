@@ -78,7 +78,15 @@ jobs:
             {
               echo "## 📝 Changes to the k8s manifests"
               echo
-              cat deploy-diff.md
+              diff_bytes="$(wc -c < deploy-diff.md | tr -d ' ')"
+              if [ "$diff_bytes" -le 60000 ]; then
+                cat deploy-diff.md
+              else
+                echo "The full ${diff_bytes}-byte diff is too large for a GitHub comment."
+                echo "Download the deploy-diff artifact from this workflow run to review it."
+                echo
+                sed -n '/^### /p' deploy-diff.md
+              fi
             } > "$body_file"
           else
             echo "## ✅ No manifest changes" > "$body_file"
