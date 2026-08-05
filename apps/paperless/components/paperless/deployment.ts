@@ -21,7 +21,7 @@ import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS, PAPERLESS_MCP_PORT } from "../..
 
 import { PAPERLESS_SETUP_USER } from "./setup.js";
 
-const PAPERLESS_IMAGE = oci`ghcr.io/paperless-ngx/paperless-ngx:2.20.15`;
+const PAPERLESS_IMAGE = oci`ghcr.io/paperless-ngx/paperless-ngx:3.0.5`;
 const PAPERLESS_MCP_IMAGE = oci`ghcr.io/baruchiro/paperless-mcp:latest`;
 const DATA_MOUNT_PATH = "/usr/src/paperless/data";
 const DOCUMENTS_MOUNT_PATH = "/paperless-documents";
@@ -104,6 +104,7 @@ function paperlessContainer(
       PAPERLESS_ADMIN_USER: EnvValue.fromValue(PAPERLESS_SETUP_USER),
       PAPERLESS_ADMIN_PASSWORD: paperlessSecret.envValue("adminPassword"),
       PAPERLESS_DBHOST: credentialsSecret.envValue("host"),
+      PAPERLESS_DBENGINE: EnvValue.fromValue("postgresql"),
       PAPERLESS_DBPORT: credentialsSecret.envValue("port"),
       PAPERLESS_DBNAME: credentialsSecret.envValue("dbname"),
       PAPERLESS_DBUSER: credentialsSecret.envValue("user"),
@@ -116,7 +117,7 @@ function paperlessContainer(
       PAPERLESS_OCR_LANGUAGE: EnvValue.fromValue("eng"),
       PAPERLESS_TASK_WORKERS: EnvValue.fromValue("3"),
       PAPERLESS_THREADS_PER_WORKER: EnvValue.fromValue("1"),
-      PAPERLESS_CONSUMER_POLLING: EnvValue.fromValue("10"),
+      PAPERLESS_CONSUMER_POLLING_INTERVAL: EnvValue.fromValue("10"),
       PAPERLESS_ENABLE_HTTP_REMOTE_USER: EnvValue.fromValue("true"),
       PAPERLESS_ENABLE_HTTP_REMOTE_USER_API: EnvValue.fromValue("true"),
       PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME: EnvValue.fromValue("HTTP_X_POMERIUM_CLAIM_PREFERRED_USERNAME"),
