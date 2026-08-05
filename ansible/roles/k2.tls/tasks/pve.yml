@@ -1,24 +1,58 @@
-- include_tasks: upload.yml
+---
+- name: Install nginx stream proxy
+  apt:
+    name:
+      - libnginx-mod-stream
+      - nginx
+    state: present
 
-- name: setup nginx proxy for Proxmox UI
-  block:
-    - name: install nginx
-      package:
-        name: nginx
-        state: latest
+- name: Create nginx stream configuration directory
+  file:
+    path: /etc/nginx/stream.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
 
-    - name: remove default nginx config
-      file:
-        dest: /etc/nginx/sites-enabled/default
-        state: absent
+- name: Load nginx stream configurations
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^include /etc/nginx/stream\.d/\*\.conf;$'
+    line: include /etc/nginx/stream.d/*.conf;
+    insertbefore: '^http\s*\{'
+  notify: restart nginx
 
-    - name: copy nginx config for proxmox
-      template:
-        src: proxmox.conf
-        dest: /etc/nginx/conf.d/proxmox.conf
+- name: Remove default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
 
-- name: restart and enable nginx service
+- name: Configure HTTP redirect for Proxmox UI
+  template:
+    src: proxmox.conf
+    dest: /etc/nginx/conf.d/proxmox.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart nginx
+
+- name: Configure TLS passthrough for Proxmox UI
+  template:
+    src: proxmox.stream.conf
+    dest: /etc/nginx/stream.d/proxmox.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart nginx
+
+- name: Remove obsolete nginx-managed TLS material
+  file:
+    path: "/etc/nginx/tls/{{ k2_tls_domain }}"
+    state: absent
+
+- name: Enable nginx service
   service:
     name: nginx
     enabled: true
-    state: restarted
+    state: started

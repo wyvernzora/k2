@@ -1,24 +1,21 @@
-<div align="center">
-    <br>
-    <br>
-    <img width="182" src="../../../.github/assets/k2.png">
-    <h1 align="center">k2.vfio</h1>
-</div>
+# k2.vfio
 
-<p align="center">
-<b>Configure VFIO/IOMMU for PCI passthrough to VMs</b>
-</p>
+Configures IOMMU and early per-device VFIO binding on Proxmox VE hosts.
 
-<hr>
-<br>
-<br>
+Hosts must belong to exactly one CPU group:
 
-## What it does
- - Ensures that required kernel parameters are set
- - Blacklists all GPU drivers
- - Sets up some recommended configuration for NVIDIA GPUs
- - Creates an initramfs script to force specified devices into VFIO mode
+- `proxmox_intel` enables `intel_iommu=on`
+- `proxmox_amd` relies on firmware-enabled AMD IOMMU discovery; current kernels
+  reject the legacy `amd_iommu=on` option
 
-## Notes
- - This role does not use the typical vendor-ID-based approach to forcing VFIO driver. Instead, it works on individual PCI devices.
+The role supports both GRUB hosts and ZFS-root UEFI hosts managed by
+`proxmox-boot-tool`. It blacklists local GPU and HDMI-audio drivers, loads VFIO
+modules in initramfs, and renders exact PCI addresses from `vfio_devices` into
+an initramfs binding script. An empty device list enables IOMMU without binding
+any devices. Ignoring unhandled guest MSRs is disabled by default; set
+`k2_vfio_ignore_msrs: true` only for a guest that demonstrably requires it.
 
+A reboot is required after kernel-command-line or initramfs changes. Verify the
+result with `dmesg`, `lspci -Dnnk`, and the generated
+`/etc/initramfs-tools/scripts/init-top/bind_vfio` before assigning devices to a
+VM.

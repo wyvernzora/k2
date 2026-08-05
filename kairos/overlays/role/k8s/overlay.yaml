@@ -31,6 +31,10 @@ inspect:
           - "IPv4:"
           - '\4'
           - '\n'
+      - path: /etc/multipath.conf
+        contains:
+          - 'vendor "IET"'
+          - 'product "VIRTUAL-DISK"'
       - path: /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml
         structuredTests:
           - op: test

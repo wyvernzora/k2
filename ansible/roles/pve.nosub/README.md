@@ -6,7 +6,7 @@
 </div>
 
 <p align="center">
-<b>Stop ProxmoxVE nagging about subscription.</b>
+<b>Use the supported Proxmox VE no-subscription package channel.</b>
 </p>
 
 <hr>
@@ -14,7 +14,10 @@
 <br>
 
 ## What it does
- - Removes all subscription-only APT repos
- - Adds no-subscription versions of the above
- - Removes the subscription modal on login
+ - Supports the deb822 repository layout used by Proxmox VE 8 and 9
+ - Disables the enterprise PVE repository
+ - Removes the unused Ceph repository on these standalone hosts
+ - Configures the official `pve-no-subscription` repository
 
+The subscription notice is intentionally not patched. Its implementation is
+version-sensitive and is not part of package repository management.

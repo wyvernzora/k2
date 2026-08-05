@@ -3,7 +3,7 @@ import { Duration, type Cron } from "cdk8s";
 import { ConcurrencyPolicy, CronJob, type CronJobProps, type IServiceAccount, type JobProps } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
-import { only, Scheduling, workers } from "../scheduling.js";
+import { only, Scheduling, type SchedulingConstraint, workers } from "../scheduling.js";
 
 import {
   prepareScriptedWorkload,
@@ -19,6 +19,7 @@ export type ScriptedCronJobMount = ScriptedWorkloadMount;
 
 export interface ScriptedCronJobProps extends ScriptedWorkloadProps {
   readonly schedule: Cron;
+  readonly scheduling?: SchedulingConstraint[];
   readonly activeDeadline?: CronJobProps["activeDeadline"];
   readonly timeZone?: string;
   readonly concurrencyPolicy?: ConcurrencyPolicy;
@@ -35,14 +36,19 @@ export class ScriptedCronJob extends Construct {
 
     const prepared = prepareScriptedWorkload(this, props, { type: "cronjob" });
     this.serviceAccount = prepared.serviceAccount;
-    new ScriptedKubernetesCronJob(this, "cron-job", scriptedCronJobProps(props, prepared.jobProps));
+    new ScriptedKubernetesCronJob(this, "cron-job", scriptedCronJobProps(props, prepared.jobProps), props.scheduling);
   }
 }
 
 class ScriptedKubernetesCronJob extends CronJob {
-  public constructor(scope: Construct, id: string, props: CronJobProps) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: CronJobProps,
+    scheduling: SchedulingConstraint[] = [only(workers())],
+  ) {
     super(scope, id, props);
-    Scheduling.of(this).apply(only(workers()));
+    Scheduling.of(this).apply(...scheduling);
   }
 }
 

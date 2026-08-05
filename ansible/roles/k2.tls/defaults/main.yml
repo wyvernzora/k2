@@ -1,6 +1,12 @@
 
-# Default domain to grab TLS certificates for
+---
 k2_tls_domain: wyvernzora.io
 
-# Default bucket to grab TLS certificates from
-k2_tls_bucket: io.wyvernzora.certs
+k2_tls_cert_sync_role: K2CertSync
+k2_tls_cert_sync_user: cert-sync@pve
+k2_tls_cert_sync_token: k2-cert-sync
+k2_tls_cert_sync_credentials_dir: "{{ playbook_dir }}/../credentials/proxmox"
+k2_tls_cert_sync_credentials_file: >-
+  {{ k2_tls_cert_sync_credentials_dir }}/{{ inventory_hostname }}.json
+k2_tls_cert_sync_legacy_credentials_file: >-
+  {{ playbook_dir }}/../inventory/cert-sync/proxmox/{{ inventory_hostname }}.json

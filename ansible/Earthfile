@@ -3,14 +3,21 @@ VERSION 0.8
 image:
     FROM willhallonline/ansible:2.18-alpine-3.18
     WORKDIR /ansible
-    RUN pip install --no-cache-dir botocore boto3
 
     COPY requirements.yml requirements.yml
     RUN ansible-galaxy install -r requirements.yml
 
     COPY entrypoint.sh ./
+    COPY hosts.example.yaml ./
     COPY playbooks ./playbooks
     COPY roles ./roles
 
-    VOLUME [ "/ansible/inventory", "/root/.ssh", "/root/.aws" ]
+    ENV ANSIBLE_ROLES_PATH=/ansible/roles
+    VOLUME [ "/ansible/credentials", "/ansible/inventory", "/root/.ssh" ]
     ENTRYPOINT [ "/ansible/entrypoint.sh" ]
+    SAVE IMAGE k2-ansible:local
+
+syntax-check:
+    FROM +image
+    RUN mkdir -p /ansible/inventory && cp hosts.example.yaml /ansible/inventory/hosts.yaml
+    RUN ansible-playbook -i /ansible/inventory --syntax-check playbooks/pve-bootstrap.yml

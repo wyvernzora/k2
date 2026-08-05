@@ -1,0 +1,56 @@
+---
+- name: "[{{ k2_zsh_user.name }}] Create Zsh data directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ k2_zsh_user.name }}"
+    group: "{{ k2_zsh_user.group }}"
+    mode: "0755"
+  loop:
+    - "{{ k2_zsh_user.home }}/.cache/zsh"
+    - "{{ k2_zsh_user.home }}/.config"
+    - "{{ k2_zsh_user.home }}/.local/share/zinit"
+
+- name: "[{{ k2_zsh_user.name }}] Install pinned zinit"
+  git:
+    repo: https://github.com/zdharma-continuum/zinit.git
+    dest: "{{ k2_zsh_user.home }}/.local/share/zinit/zinit.git"
+    version: "{{ k2_zinit_version }}"
+    depth: 1
+    update: true
+  register: __k2_zinit_checkout
+
+- name: "[{{ k2_zsh_user.name }}] Set zinit ownership"
+  file:
+    path: "{{ k2_zsh_user.home }}/.local/share/zinit/zinit.git"
+    state: directory
+    owner: "{{ k2_zsh_user.name }}"
+    group: "{{ k2_zsh_user.group }}"
+    recurse: true
+  when: __k2_zinit_checkout.changed
+
+- name: "[{{ k2_zsh_user.name }}] Install .zshenv"
+  template:
+    src: zshenv.j2
+    dest: "{{ k2_zsh_user.home }}/.zshenv"
+    owner: "{{ k2_zsh_user.name }}"
+    group: "{{ k2_zsh_user.group }}"
+    mode: "0644"
+
+- name: "[{{ k2_zsh_user.name }}] Install .zshrc"
+  template:
+    src: zshrc.j2
+    dest: "{{ k2_zsh_user.home }}/.zshrc"
+    owner: "{{ k2_zsh_user.name }}"
+    group: "{{ k2_zsh_user.group }}"
+    mode: "0644"
+
+- name: "[{{ k2_zsh_user.name }}] Select Zsh as the login shell"
+  user:
+    name: "{{ k2_zsh_user.name }}"
+    shell: /usr/bin/zsh
+
+- name: "[{{ k2_zsh_user.name }}] Remove legacy Fish configuration"
+  file:
+    path: "{{ k2_zsh_user.home }}/.config/fish"
+    state: absent

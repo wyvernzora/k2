@@ -4,7 +4,7 @@ import { Cron } from "cdk8s";
 import { EnvValue, Secret, Volume } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
-import { ScriptedCronJob } from "@k2/cdk-lib";
+import { prefer, ScriptedCronJob, workers } from "@k2/cdk-lib";
 import { ManagedSecret } from "@k2/external-secrets";
 
 import { DEFAULT_CERTIFICATE_SECRET_NAME } from "../../cert-manager/constants.js";
@@ -33,6 +33,7 @@ export class ProxmoxCertSync extends Construct {
     new ScriptedCronJob(this, "cron-job", {
       name: JOB_NAME,
       schedule: Cron.schedule({ minute: "17", hour: "*/6" }),
+      scheduling: [prefer(workers())],
       script: {
         path: SCRIPT_PATH,
         filename: "sync.py",

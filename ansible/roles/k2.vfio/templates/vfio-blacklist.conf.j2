@@ -1,0 +1,4 @@
+# Managed by Ansible: Proxmox hosts do not use local GPU or HDMI audio drivers.
+{% for module in k2_vfio_blacklist_modules %}
+blacklist {{ module }}
+{% endfor %}

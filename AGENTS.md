@@ -387,3 +387,17 @@ proper section above and remove the inbox duplicate.
   clients and domain support do not belong under `step/`.
 - Plex does not use its `/transcode` volume; do not choose it as a storage
   migration pilot.
+- K2 VM and host names use `k2-<role>-<last 4 hex digits of the LAN NIC MAC>`;
+  use role `st` for storage appliances (for example, `k2-st-a1b2`).
+- Physical infrastructure hosts use standalone character names under `wyvernzora.io`;
+  this Proxmox host is `shuna.wyvernzora.io`. Do not apply the `k2-<role>-<MAC>`
+  VM/node naming convention to physical hosts.
+- If Earthly reports that Docker or Podman cannot be detected from the agent sandbox,
+  retry Earthly with elevated access before reporting the container runtime unavailable.
+- Prefer K2's public S3 Kairos artifacts for VM provisioning when available,
+  and verify the published SHA-256 instead of defaulting to a local image build.
+- Proxmox host shells use zinit-managed Zsh ergonomics without Homebrew, mise,
+  direnv, or development-tool paths.
+- Proxmox hosts do not need local GPU or HDMI-audio drivers; keep them
+  blacklisted, and leave a new host's `vfio_devices` empty until a concrete
+  passthrough target is selected.

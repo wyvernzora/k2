@@ -78,7 +78,15 @@ jobs:
             {
               echo "## 📝 Changes to the k8s manifests"
               echo
-              cat deploy-diff.md
+              diff_bytes="$(wc -c < deploy-diff.md | tr -d ' ')"
+              if [ "$diff_bytes" -le 60000 ]; then
+                cat deploy-diff.md
+              else
+                echo "The full ${diff_bytes}-byte diff is too large for a GitHub comment."
+                echo "Download the deploy-diff artifact from this workflow run to review it."
+                echo
+                sed -n '/^### /p' deploy-diff.md
+              fi
             } > "$body_file"
           else
             echo "## ✅ No manifest changes" > "$body_file"
@@ -115,6 +123,10 @@ jobs:
           # Query labels live: the pull_request event payload can race Renovate's label call.
           if gh pr view "$PR_URL" --json labels --jq '.labels[].name' | grep -qx 'risk/high'; then
             echo "risk/high label present (e.g. kairos/k3s: no manifest diff but boots the control plane) — skipping auto-merge"
+            exit 0
+          fi
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/branches/$GITHUB_BASE_REF" --jq '.protected')" != "true" ]; then
+            echo "base branch $GITHUB_BASE_REF is not protected — leaving the PR for guarded triage"
             exit 0
           fi
           gh pr merge "$PR_URL" --auto --squash --delete-branch
