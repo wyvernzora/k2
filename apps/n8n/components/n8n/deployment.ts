@@ -30,6 +30,7 @@ const N8N_PROXY_AUTH_HOOK_IMAGE = oci`ghcr.io/wyvernzora/n8n-proxy-auth-hook:v0.
 const APPDATA_MOUNT_PATH = "/home/node/.n8n";
 const OPENCODE_ACP_HOST = "127.0.0.1";
 const OPENCODE_ACP_PORT = 8080;
+const OPENCODE_NPM_CACHE_PATH = "/home/opencode/.npm";
 const CODEX_ACP_HOST = "127.0.0.1";
 const CODEX_ACP_PORT = 8081;
 const PROXY_AUTH_HOOK_VOLUME_NAME = "proxy-auth-hook";
@@ -257,7 +258,7 @@ function opencodeAcpHarnessContainer(volumeMounts: VolumeMount[]): ContainerProp
     envVariables: {
       ACP_HOST: EnvValue.fromValue(OPENCODE_ACP_HOST),
       ACP_PORT: EnvValue.fromValue(String(OPENCODE_ACP_PORT)),
-      NPM_CONFIG_CACHE: EnvValue.fromValue("/tmp/opencode/npm-cache"),
+      NPM_CONFIG_CACHE: EnvValue.fromValue(OPENCODE_NPM_CACHE_PATH),
     },
     volumeMounts,
     resources: {
@@ -360,6 +361,12 @@ function opencodeAcpHarnessVolumeMounts(scope: Construct, volumes: K2Mounters<K2
       path: "/workspace",
     },
     volumes.opencodeHome("/home/opencode"),
+    {
+      volume: Volume.fromEmptyDir(scope, "opencode-npm-cache-volume", "opencode-npm-cache", {
+        sizeLimit: Size.gibibytes(1),
+      }),
+      path: OPENCODE_NPM_CACHE_PATH,
+    },
     {
       volume: Volume.fromEmptyDir(scope, "opencode-tmp-volume", "opencode-tmp", {
         sizeLimit: Size.gibibytes(1),
