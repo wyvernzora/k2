@@ -221,7 +221,7 @@ spec:
               value: private
             - name: FORGEJO__repository__DEFAULT_PUSH_CREATE_PRIVATE
               value: "true"
-          image: codeberg.org/forgejo/forgejo:15-rootless
+          image: codeberg.org/forgejo/forgejo:16-rootless
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 6
@@ -720,7 +720,7 @@ spec:
                   name: forgejo-oidc
             - name: OIDC_DISCOVERY_URL
               value: http://pocket-id.pocket-id.svc.cluster.local/.well-known/openid-configuration
-          image: codeberg.org/forgejo/forgejo:15-rootless
+          image: codeberg.org/forgejo/forgejo:16-rootless
           imagePullPolicy: IfNotPresent
           name: setup
           resources:
