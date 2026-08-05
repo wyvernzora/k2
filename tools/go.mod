@@ -8,11 +8,11 @@ require (
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/alecthomas/kong v1.15.0
 	github.com/gonvenience/ytbx v1.5.0
-	github.com/google/go-containerregistry v0.21.7
+	github.com/google/go-containerregistry v0.21.8
 	github.com/homeport/dyff v1.12.0
-	github.com/pkg/sftp v1.13.10
-	golang.org/x/crypto v0.53.0
-	golang.org/x/term v0.44.0
+	github.com/pkg/sftp v1.13.11
+	golang.org/x/crypto v0.54.0
+	golang.org/x/term v0.45.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -26,14 +26,14 @@ require (
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/docker/cli v29.5.3+incompatible // indirect
+	github.com/docker/cli v29.6.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/gonvenience/bunt v1.4.3 // indirect
 	github.com/gonvenience/idem v0.0.3 // indirect
 	github.com/gonvenience/neat v1.3.20 // indirect
 	github.com/gonvenience/term v1.0.5 // indirect
 	github.com/gonvenience/text v1.0.10 // indirect
-	github.com/klauspost/compress v1.18.7 // indirect
+	github.com/klauspost/compress v1.19.1 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-ciede2000 v0.0.0-20170301095244-782e8c62fec3 // indirect
@@ -52,7 +52,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 )

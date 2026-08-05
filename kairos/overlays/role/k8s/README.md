@@ -3,10 +3,11 @@
 Kubernetes node role overlay for K2 Kairos images.
 
 It bakes invariant K3s config under `/usr/share/k2/node-provision/k3s/`,
-time-sync service ordering, the unified persistent-storage cloud-config, and
-a persistent node-unique iSCSI initiator identity with `iscsid` enabled. The
-Dockerfile installs `k2-node-agent` plus the disk utilities and initrd contents
-declared in `overlay.yaml`.
+time-sync service ordering, the unified persistent-storage cloud-config, a
+persistent node-unique iSCSI initiator identity with `iscsid` enabled, and a
+multipath blacklist for Longhorn's single-path IET devices. The Dockerfile
+installs `k2-node-agent` plus the disk utilities and initrd contents declared in
+`overlay.yaml`.
 
 Kubernetes nodes require a dedicated non-boot `COS_PERSISTENT` disk. Their raw
 boot artifacts create only `COS_STATE`; the role disables Kairos' generic

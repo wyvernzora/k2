@@ -41,6 +41,12 @@
       "minimumReleaseAge": "7 days"
     },
     {
+      "description": "LinuxServer qBittorrent publishes distro tags such as 20.04.1 beside application versions; accept only single-digit application majors.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["lscr.io/linuxserver/qbittorrent"],
+      "allowedVersions": "/^[0-9]\\.\\d+\\.\\d+$/"
+    },
+    {
       "matchUpdateTypes": ["major"],
       "addLabels": ["major-update"]
     },
