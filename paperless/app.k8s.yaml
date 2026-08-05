@@ -894,6 +894,8 @@ spec:
                 secretKeyRef:
                   key: host
                   name: paperless-credentials
+            - name: PAPERLESS_DBENGINE
+              value: postgresql
             - name: PAPERLESS_DBPORT
               valueFrom:
                 secretKeyRef:
@@ -933,7 +935,7 @@ spec:
               value: "3"
             - name: PAPERLESS_THREADS_PER_WORKER
               value: "1"
-            - name: PAPERLESS_CONSUMER_POLLING
+            - name: PAPERLESS_CONSUMER_POLLING_INTERVAL
               value: "10"
             - name: PAPERLESS_ENABLE_HTTP_REMOTE_USER
               value: "true"
@@ -951,7 +953,7 @@ spec:
               value: "3003"
             - name: USERMAP_GID
               value: "2002"
-          image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
+          image: ghcr.io/paperless-ngx/paperless-ngx:3.0.5
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
