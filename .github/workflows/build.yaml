@@ -117,6 +117,10 @@ jobs:
             echo "risk/high label present (e.g. kairos/k3s: no manifest diff but boots the control plane) — skipping auto-merge"
             exit 0
           fi
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/branches/$GITHUB_BASE_REF" --jq '.protected')" != "true" ]; then
+            echo "base branch $GITHUB_BASE_REF is not protected — leaving the PR for guarded triage"
+            exit 0
+          fi
           gh pr merge "$PR_URL" --auto --squash --delete-branch
 
       - name: 📦 Upload deploy-diff.md
