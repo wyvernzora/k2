@@ -29,18 +29,20 @@ function controllerClusterRole() {
   return {
     metadata: clusterMetadata(POMERIUM_CONTROLLER_NAME),
     rules: [
-      rbacRule(["get", "list", "watch"], ApiResource.SERVICES, ApiResource.ENDPOINTS, ApiResource.SECRETS),
+      rbacRule(["get", "list", "watch"], ApiResource.SERVICES, ApiResource.ENDPOINTS),
+      rbacRule(["delete", "get", "list", "patch", "watch"], ApiResource.SECRETS),
       rbacRule(
         ["get"],
         coreResource("services/status"),
         coreResource("secrets/status"),
         coreResource("endpoints/status"),
       ),
-      rbacRule(["get", "list", "watch"], ApiResource.INGRESSES, ApiResource.INGRESS_CLASSES),
+      rbacRule(["get", "list", "patch", "watch"], ApiResource.INGRESSES, ApiResource.INGRESS_CLASSES),
       rbacRule(["get", "patch", "update"], networkingResource("ingresses/status")),
       rbacRule(["get", "list", "watch"], pomeriumResource("pomerium")),
       rbacRule(["get", "update", "patch"], pomeriumResource("pomerium/status")),
       rbacRule(["create", "patch"], ApiResource.EVENTS),
+      rbacRule(["create", "delete", "get", "list", "patch", "update", "watch"], certManagerResource("certificates")),
     ],
   };
 }
@@ -62,6 +64,10 @@ function coreResource(resourceType: string): ApiResource {
 
 function networkingResource(resourceType: string): ApiResource {
   return ApiResource.custom({ apiGroup: "networking.k8s.io", resourceType });
+}
+
+function certManagerResource(resourceType: string): ApiResource {
+  return ApiResource.custom({ apiGroup: "cert-manager.io", resourceType });
 }
 
 function pomeriumResource(resourceType: string): ApiResource {
