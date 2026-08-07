@@ -59,8 +59,10 @@ rules:
     resources:
       - secrets
     verbs:
+      - delete
       - get
       - list
+      - patch
       - watch
   - apiGroups:
       - ""
@@ -91,6 +93,7 @@ rules:
     verbs:
       - get
       - list
+      - patch
       - watch
   - apiGroups:
       - networking.k8s.io
@@ -100,6 +103,7 @@ rules:
     verbs:
       - get
       - list
+      - patch
       - watch
   - apiGroups:
       - networking.k8s.io
@@ -136,6 +140,19 @@ rules:
     verbs:
       - create
       - patch
+  - apiGroups:
+      - cert-manager.io
+    resourceNames: []
+    resources:
+      - certificates
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
