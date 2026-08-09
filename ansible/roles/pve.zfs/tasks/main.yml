@@ -1,0 +1,26 @@
+---
+- name: Validate ZFS ARC limit
+  assert:
+    that:
+      - pve_zfs_arc_max_bytes is integer
+      - pve_zfs_arc_max_bytes > 0
+    fail_msg: pve_zfs_arc_max_bytes must be a positive integer number of bytes.
+
+- name: Read active ZFS ARC limit
+  command: cat /sys/module/zfs/parameters/zfs_arc_max
+  register: __pve_zfs_active_arc_max
+  changed_when: false
+
+- name: Configure persistent ZFS ARC limit
+  template:
+    src: zfs.conf.j2
+    dest: /etc/modprobe.d/zfs.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: update initramfs
+
+- name: Apply ZFS ARC limit
+  shell: >-
+    echo {{ pve_zfs_arc_max_bytes }} > /sys/module/zfs/parameters/zfs_arc_max
+  when: (__pve_zfs_active_arc_max.stdout | int) != pve_zfs_arc_max_bytes

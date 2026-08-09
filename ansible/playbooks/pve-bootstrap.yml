@@ -5,6 +5,8 @@
   roles:
     - role: pve.nosub
       tags: [repositories]
+    - role: pve.zfs
+      tags: [zfs]
     - role: pve.standalone
       tags: [standalone]
     - role: k2.user
