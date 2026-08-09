@@ -90,7 +90,7 @@ func splitMarkedSections(out string) map[string]string {
 	return sections
 }
 
-func storageInstallScript(nodeName string) string {
+func storageInstallScript(nodeName string, hasNetwork bool) string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "set -eu\n")
 	fmt.Fprintf(&buf, "remote_dir=\"$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)\"\n")
@@ -100,6 +100,10 @@ func storageInstallScript(nodeName string) string {
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing storage hostname activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo mkdir -p /oem /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/99-k2-storage-hostname.yaml /oem/99-k2-storage-hostname.yaml\n")
+	if hasNetwork {
+		fmt.Fprintf(&buf, "echo 'k2-tools: installing static network cloud-config (applies on next boot)'\n")
+		fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/97-k2-network.yaml /oem/97-k2-network.yaml\n")
+	}
 	fmt.Fprintf(&buf, "if [ -s \"$remote_dir\"/operator_authorized_keys ]; then\n")
 	fmt.Fprintf(&buf, "  echo 'k2-tools: installing operator SSH keys'\n")
 	fmt.Fprintf(&buf, "  sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")

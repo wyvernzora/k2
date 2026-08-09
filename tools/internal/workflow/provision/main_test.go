@@ -55,7 +55,7 @@ func TestInstallScriptInstallsBootstrapFilesWithoutLockingDefaultPassword(t *tes
 }
 
 func TestJoinInstallScriptForServerActivatesInvariantConfig(t *testing.T) {
-	got := joinInstallScript("/tmp/k2-tools.test", "v3-server-02", nodeRoleServer, true)
+	got := joinInstallScript("/tmp/k2-tools.test", "v3-server-02", nodeRoleServer, false, true)
 	for _, want := range []string{
 		"sudo cp /usr/share/k2/node-provision/k3s/10-k2-invariant.yaml /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml",
 		"sudo install -m 0644 \"/tmp/k2-tools.test\"/20-k2-cluster.yaml /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml",
@@ -74,7 +74,7 @@ func TestJoinInstallScriptForServerActivatesInvariantConfig(t *testing.T) {
 }
 
 func TestJoinInstallScriptForWorkerUsesAgentService(t *testing.T) {
-	got := joinInstallScript("/tmp/k2-tools.test", "v3-worker-01", nodeRoleWorker, true)
+	got := joinInstallScript("/tmp/k2-tools.test", "v3-worker-01", nodeRoleWorker, false, true)
 	for _, want := range []string{
 		"sudo install -m 0600 \"/tmp/k2-tools.test\"/30-k2-worker.yaml /etc/rancher/k3s/config.yaml.d/30-k2-worker.yaml",
 		"sudo install -m 0644 \"/tmp/k2-tools.test\"/99-k2-k3s-worker.yaml /oem/99-k2-k3s-worker.yaml",
@@ -153,7 +153,7 @@ func TestWriteBundleIncludesRootArgoAppManifest(t *testing.T) {
 }
 
 func TestJoinVerificationScriptChecksRoleSpecificState(t *testing.T) {
-	server := joinVerificationScript("v3-server-02", nodeRoleServer)
+	server := joinVerificationScript("v3-server-02", nodeRoleServer, false)
 	for _, want := range []string{
 		"sudo test -s /etc/rancher/k3s/config.yaml.d/30-k2-server.yaml",
 		"sudo test -s /oem/99-k2-k3s-server.yaml",
@@ -166,7 +166,7 @@ func TestJoinVerificationScriptChecksRoleSpecificState(t *testing.T) {
 		}
 	}
 
-	worker := joinVerificationScript("v3-worker-01", nodeRoleWorker)
+	worker := joinVerificationScript("v3-worker-01", nodeRoleWorker, false)
 	for _, want := range []string{
 		"sudo test -s /etc/rancher/k3s/config.yaml.d/30-k2-worker.yaml",
 		"sudo test -s /oem/99-k2-k3s-worker.yaml",
@@ -391,5 +391,24 @@ func writeTestVMMetadata(t *testing.T, root string, meta testvm.Metadata) {
 	}
 	if err := os.WriteFile(filepath.Join(meta.VMDir, "vm.json"), data, 0o644); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestJoinScriptsIncludeNetworkFilesWhenConfigured(t *testing.T) {
+	install := joinInstallScript("/tmp/k2-tools.test", "v3-worker-01", nodeRoleWorker, true, true)
+	if !strings.Contains(install, "sudo install -m 0644 \"/tmp/k2-tools.test\"/97-k2-network.yaml /oem/97-k2-network.yaml") {
+		t.Fatalf("install script missing network cloud-config install:\n%s", install)
+	}
+	verify := joinVerificationScript("v3-worker-01", nodeRoleWorker, true)
+	for _, want := range []string{
+		"sudo test -s /oem/97-k2-network.yaml",
+		"ls /etc/systemd/network/10-k2-*.network",
+	} {
+		if !strings.Contains(verify, want) {
+			t.Fatalf("verification script missing %q:\n%s", want, verify)
+		}
+	}
+	if strings.Contains(joinInstallScript("/tmp/k2-tools.test", "v3-worker-01", nodeRoleWorker, false, true), "97-k2-network.yaml") {
+		t.Fatal("install script must not reference network config when node has no NICs")
 	}
 }

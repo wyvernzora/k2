@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/wyvernzora/k2/tools/internal/client/remote"
+	"github.com/wyvernzora/k2/tools/internal/nodeconfig"
 	"github.com/wyvernzora/k2/tools/internal/render"
 	"github.com/wyvernzora/k2/tools/internal/ui"
 )
@@ -24,6 +25,16 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 		return fmt.Errorf("missing node name; pass --node-name or --test-vm")
 	}
 	_ = testTarget // currently unused for join nodes; kept for future use
+
+	node, nodeFileFound, err := nodeconfig.Load(rcx.RepoRoot, flags.ClusterTarget, flags.NodeName)
+	if err != nil {
+		return err
+	}
+	if nodeFileFound {
+		logf("loaded node config %s", nodeconfig.Path(rcx.RepoRoot, flags.ClusterTarget, flags.NodeName))
+	} else {
+		logf("no node config at %s; provisioning with DHCP and no labels/taints", nodeconfig.Path(rcx.RepoRoot, flags.ClusterTarget, flags.NodeName))
+	}
 
 	client := remote.Client{
 		Host:             remoteFlags.Host,
@@ -52,7 +63,7 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 	wf := ui.NewWorkflow(currentReporter())
 
 	wf.Section("Plan")
-	wf.KeyValues(joinPlanFields(role, flags, remoteFlags)...)
+	wf.KeyValues(joinPlanFields(role, flags, node, remoteFlags)...)
 	wf.Confirm("Proceed with provisioning? [y/N]", "").Unless(remoteFlags.Yes)
 
 	wf.Section(fmt.Sprintf("Provision %s", role))
@@ -69,7 +80,7 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 	wf.Section("Render bundle")
 	wf.Task("Render join bundle", func(ctx context.Context) error {
 		var err error
-		bundle, err = buildJoinBundle(rcx.RepoRoot, role, flags, metadata)
+		bundle, err = buildJoinBundle(rcx.RepoRoot, role, flags, node, metadata)
 		return err
 	})
 	wf.Task("Stage bundle locally", func(ctx context.Context) error {
@@ -98,13 +109,19 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 	})
 	wf.Shell("Run remote install script", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()
-		if err := client.RunAllowDisconnect(joinInstallScript(remoteDir, flags.NodeName, role, remoteFlags.NoReboot)); err != nil {
+		if err := client.RunAllowDisconnect(joinInstallScript(remoteDir, flags.NodeName, role, len(bundle.Network) > 0, remoteFlags.NoReboot)); err != nil {
 			return err
 		}
 		if remoteFlags.NoReboot {
 			sh.Successf("install complete; reboot skipped")
 		} else {
 			sh.Successf("install complete; node rebooting")
+		}
+		// A node with static NICs comes back on its pinned address; the DHCP
+		// bootstrap address it was installed over may no longer exist.
+		if addr := node.PrimaryAddress(); addr != "" && !remoteFlags.NoReboot && addr != client.Host {
+			client.Host = addr
+			sh.Successf("post-reboot reconnect target switched to %s", addr)
 		}
 		return nil
 	})
@@ -126,7 +143,7 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 		defer client.SwapIO(sh)()
 		// 10m, not 5m: a fresh cluster must pull Cilium/kube-vip images before
 		// the API VIP answers, and the joining agent blocks on that VIP.
-		return verifyRemoteProvisioning(ctx, &client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role), 10*time.Minute)
+		return verifyRemoteProvisioning(ctx, &client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role, len(bundle.Network) > 0), 10*time.Minute)
 	}).Unless(!postInstall)
 	wf.Shell("Harden default access", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()

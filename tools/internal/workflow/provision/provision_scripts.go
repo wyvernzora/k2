@@ -38,7 +38,7 @@ func bootstrapVerificationScript(nodeName string) string {
 	return buf.String()
 }
 
-func joinVerificationScript(nodeName string, role nodeRole) string {
+func joinVerificationScript(nodeName string, role nodeRole, hasNetwork bool) string {
 	var buf bytes.Buffer
 	writeVerificationPrelude(&buf, nodeName)
 	configFile := "30-k2-" + string(role) + ".yaml"
@@ -46,6 +46,10 @@ func joinVerificationScript(nodeName string, role nodeRole) string {
 	fmt.Fprintf(&buf, "verify '%s join config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/%s\n", role, configFile)
 	fmt.Fprintf(&buf, "verify '%s activation installed' sudo test -s /oem/%s\n", role, activationFile)
 	fmt.Fprintf(&buf, "verify 'operator activation installed' sudo test -s /oem/98-k2-operator-keys.yaml\n")
+	if hasNetwork {
+		fmt.Fprintf(&buf, "verify 'network activation installed' sudo test -s /oem/97-k2-network.yaml\n")
+		fmt.Fprintf(&buf, "verify 'static network applied' ls /etc/systemd/network/10-k2-*.network\n")
+	}
 	if role == nodeRoleServer {
 		fmt.Fprintf(&buf, "verify 'server invariant config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml\n")
 		fmt.Fprintf(&buf, "verify 'cluster config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml\n")
@@ -144,7 +148,7 @@ func installScript(remoteDir string, nodeName string, noReboot bool) string {
 	return buf.String()
 }
 
-func joinInstallScript(remoteDir string, nodeName string, role nodeRole, noReboot bool) string {
+func joinInstallScript(remoteDir string, nodeName string, role nodeRole, hasNetwork bool, noReboot bool) string {
 	var buf bytes.Buffer
 	configFile := "30-k2-" + string(role) + ".yaml"
 	activationFile := "99-k2-k3s-" + string(role) + ".yaml"
@@ -172,6 +176,10 @@ func joinInstallScript(remoteDir string, nodeName string, role nodeRole, noReboo
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing Kairos k3s activation cloud-config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/%s /oem/%s\n", remoteDir, activationFile, activationFile)
 	fmt.Fprintf(&buf, "sudo install -m 0644 %q/98-k2-operator-keys.yaml /oem/98-k2-operator-keys.yaml\n", remoteDir)
+	if hasNetwork {
+		fmt.Fprintf(&buf, "echo 'k2-tools: installing static network cloud-config'\n")
+		fmt.Fprintf(&buf, "sudo install -m 0644 %q/97-k2-network.yaml /oem/97-k2-network.yaml\n", remoteDir)
+	}
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing operator SSH keys'\n")
 	fmt.Fprintf(&buf, "sudo install -d -o kairos -g kairos -m 0700 /home/kairos/.ssh\n")
 	fmt.Fprintf(&buf, "sudo install -o kairos -g kairos -m 0600 %q/operator_authorized_keys /home/kairos/.ssh/authorized_keys\n", remoteDir)

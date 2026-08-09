@@ -1,5 +1,7 @@
 package provision
 
+import "github.com/wyvernzora/k2/tools/internal/nodeconfig"
+
 func provisionRegistration() Registration {
 	return Registration{Name: "provision", Help: "Provision Kairos-backed K3s nodes.", Order: 10, Command: &provisionCmd{}}
 }
@@ -48,11 +50,9 @@ type bootstrapCmd struct {
 type commonJoinFlags struct {
 	ClusterTarget string   `name:"cluster-target" env:"K2_PROVISION_CLUSTER_TARGET" required:"" help:"Cluster config/deploy target, such as v3."`
 	ClusterName   string   `name:"cluster-name" env:"K2_PROVISION_CLUSTER_NAME" help:"Local cluster instance name. Defaults to cluster-target."`
-	NodeName      string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" help:"Kubernetes node name. Defaults to --test-vm when provided."`
+	NodeName      string   `name:"node-name" env:"K2_PROVISION_NODE_NAME" help:"Kubernetes node name. Defaults to --test-vm when provided. Resolves clusters/<target>/nodes/<name>.toml for labels, taints, and static NICs."`
 	OperatorKey   []string `name:"operator-key" env:"K2_PROVISION_OPERATOR_KEY" help:"Literal ssh-ed25519 operator public key. Repeatable."`
 	OperatorFiles []string `name:"operator-key-file" env:"K2_PROVISION_OPERATOR_KEY_FILE" help:"File containing literal operator public keys. Repeatable." type:"path"`
-	Label         []string `name:"label" env:"K2_PROVISION_LABEL" help:"Additional K3s node-label value. Repeatable."`
-	Taint         []string `name:"taint" env:"K2_PROVISION_TAINT" help:"Additional K3s node-taint value. Repeatable."`
 	ServerURL     string   `name:"server-url" env:"K2_PROVISION_SERVER_URL" help:"K3s API URL for joining. Defaults to ~/.kube/k2/<cluster-name>/server-url, then the API VIP from clusters/<target>.yaml."`
 }
 
@@ -112,6 +112,7 @@ type storageCmd struct {
 	Output            string `name:"output" env:"K2_PROVISION_OUTPUT" default:"text" enum:"text,json" help:"Output format."`
 
 	noPasswordPrompt bool
+	node             nodeconfig.Config
 }
 
 type renderStorageCmd struct {
@@ -136,6 +137,7 @@ type joinBundle struct {
 	Activation         []byte
 	OperatorActivation []byte
 	AuthorizedKeys     []byte
+	Network            []byte // nil when the node file declares no NICs
 }
 
 type nodeRole string

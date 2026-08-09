@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/wyvernzora/k2/tools/internal/nodeconfig"
 )
 
 const testOperatorKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFakeFakeFakeFakeFakeFakeFakeFakeFakeFakeFake operator"
@@ -522,7 +524,7 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 		Pool:              "tank",
 		PoolCompatibility: "openzfs-2.2-linux",
 		OperatorKey:       []string{testOperatorKey},
-	}, false, []storageVDev{{Topology: "mirror", Devices: []string{"/dev/disk/by-id/ata-a", "/dev/disk/by-id/ata-b"}}}, pub, poolKey)
+	}, nodeconfig.Config{}, false, []storageVDev{{Topology: "mirror", Devices: []string{"/dev/disk/by-id/ata-a", "/dev/disk/by-id/ata-b"}}}, pub, poolKey)
 	if err != nil {
 		t.Fatal(err)
 	}

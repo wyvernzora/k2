@@ -1,10 +1,18 @@
 package provision
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/wyvernzora/k2/tools/internal/nodeconfig"
+)
 
 func (c *renderStorageCmd) Run(ctx *Runtime) error {
 	if c.ClusterName == "" {
 		c.ClusterName = c.ClusterTarget
+	}
+	node, _, err := nodeconfig.Load(ctx.RepoRoot, c.ClusterTarget, c.NodeName)
+	if err != nil {
+		return err
 	}
 	vdevs, err := parseStorageVDevs(c.PoolVDev, false)
 	if err != nil {
@@ -21,7 +29,7 @@ func (c *renderStorageCmd) Run(ctx *Runtime) error {
 	if err != nil {
 		return err
 	}
-	bundle, err := buildStorageBundle(c.commonStorageFlags, false, vdevs, csiPublicKey, poolKey)
+	bundle, err := buildStorageBundle(c.commonStorageFlags, node, false, vdevs, csiPublicKey, poolKey)
 	if err != nil {
 		return err
 	}

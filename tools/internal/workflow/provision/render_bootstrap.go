@@ -8,6 +8,7 @@ import (
 	"github.com/wyvernzora/k2/tools/internal/clusterconfig"
 	"github.com/wyvernzora/k2/tools/internal/keys"
 	"github.com/wyvernzora/k2/tools/internal/manifests"
+	"github.com/wyvernzora/k2/tools/internal/nodeconfig"
 	"github.com/wyvernzora/k2/tools/internal/render"
 )
 
@@ -95,7 +96,7 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	}, nil
 }
 
-func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, metadata render.ImageMetadata) (joinBundle, error) {
+func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, node nodeconfig.Config, metadata render.ImageMetadata) (joinBundle, error) {
 	logf("loading cluster config clusters/%s.yaml", flags.ClusterTarget)
 	cfg, err := clusterconfig.Load(repoRoot, flags.ClusterTarget)
 	if err != nil {
@@ -127,7 +128,7 @@ func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, meta
 	}
 
 	logf("rendering k3s %s join config", role)
-	nodeLabels, err := nodeLabelsForRole(role, flags.Label)
+	nodeLabels, err := nodeLabelsForRole(role, node.Labels)
 	if err != nil {
 		return joinBundle{}, err
 	}
@@ -136,7 +137,7 @@ func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, meta
 		ServerURL:     serverURL,
 		Token:         token,
 		Labels:        nodeLabels,
-		Taints:        flags.Taint,
+		Taints:        node.Taints,
 		ImageMetadata: metadata,
 		ControlPlane:  role == nodeRoleServer,
 	})
@@ -158,12 +159,19 @@ func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, meta
 		activation = render.ServerActivationCloudConfig(flags.NodeName, operatorKeys)
 	}
 
+	var network []byte
+	if len(node.NICs) > 0 {
+		logf("rendering static network config for %d NIC(s)", len(node.NICs))
+		network = render.NetworkActivationCloudConfig(node.NICs)
+	}
+
 	return joinBundle{
 		ClusterConfig:      clusterConfig,
 		JoinConfig:         joinConfig,
 		Activation:         activation,
 		OperatorActivation: render.OperatorKeysActivationCloudConfig("K2 Kubernetes operator keys", "kairos", operatorKeys),
 		AuthorizedKeys:     render.AuthorizedKeys(operatorKeys),
+		Network:            network,
 	}, nil
 }
 
@@ -197,6 +205,9 @@ func writeJoinBundle(dir string, role nodeRole, bundle joinBundle) error {
 	}
 	if role == nodeRoleServer {
 		files["20-k2-cluster.yaml"] = bundle.ClusterConfig
+	}
+	if len(bundle.Network) > 0 {
+		files["97-k2-network.yaml"] = bundle.Network
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err

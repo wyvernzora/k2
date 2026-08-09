@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/wyvernzora/k2/tools/internal/manifests"
+	"github.com/wyvernzora/k2/tools/internal/nodeconfig"
 	"github.com/wyvernzora/k2/tools/internal/ui"
 )
 
@@ -60,7 +61,7 @@ func bootstrapPlanFields(c *bootstrapCmd, testTarget testVMProvisionTarget) []ui
 	return pairs
 }
 
-func joinPlanFields(role nodeRole, flags commonJoinFlags, remoteFlags commonRemoteFlags) []ui.KV {
+func joinPlanFields(role nodeRole, flags commonJoinFlags, node nodeconfig.Config, remoteFlags commonRemoteFlags) []ui.KV {
 	pairs := []ui.KV{
 		{Key: "Role", Value: string(role)},
 		{Key: "Cluster target", Value: flags.ClusterTarget},
@@ -68,8 +69,9 @@ func joinPlanFields(role nodeRole, flags commonJoinFlags, remoteFlags commonRemo
 		{Key: "Node name", Value: flags.NodeName},
 		{Key: "SSH", Value: fmt.Sprintf("%s@%s:%d", remoteFlags.SSHUser, remoteFlags.Host, remoteFlags.SSHPort)},
 		{Key: "Operator keys", Value: keysSummary(flags.OperatorKey, flags.OperatorFiles)},
-		{Key: "Labels", Value: joinOrNone(flags.Label)},
-		{Key: "Taints", Value: joinOrNone(flags.Taint)},
+		{Key: "Labels", Value: joinOrNone(node.Labels)},
+		{Key: "Taints", Value: joinOrNone(node.Taints)},
+		{Key: "Static NICs", Value: joinOrNone(nicSummaries(node.NICs))},
 		{Key: "Server URL", Value: hostOrFromCluster(flags.ServerURL)},
 		{Key: "Reboot after install", Value: yesNo(!remoteFlags.NoReboot)},
 	}
@@ -130,4 +132,19 @@ func yesNo(b bool) string {
 		return "yes"
 	}
 	return "no"
+}
+
+func nicSummaries(nics []nodeconfig.NIC) []string {
+	out := make([]string, len(nics))
+	for i, nic := range nics {
+		s := nic.Iface + " " + nic.Address
+		if nic.Gateway != "" {
+			s += " gw " + nic.Gateway
+		}
+		if nic.MTU != 0 {
+			s += fmt.Sprintf(" mtu %d", nic.MTU)
+		}
+		out[i] = s
+	}
+	return out
 }

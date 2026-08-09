@@ -22,6 +22,7 @@ import (
 
 	"github.com/wyvernzora/k2/tools/internal/client/remote"
 	"github.com/wyvernzora/k2/tools/internal/keys"
+	"github.com/wyvernzora/k2/tools/internal/nodeconfig"
 	"github.com/wyvernzora/k2/tools/internal/render"
 	"github.com/wyvernzora/k2/tools/internal/ui"
 )
@@ -57,6 +58,7 @@ type storageBundle struct {
 	PoolKey            []byte
 	InstallScript      []byte
 	PoolScript         []byte
+	Network            []byte // nil when the node file declares no NICs
 }
 
 type storageCredentials struct {
@@ -155,10 +157,24 @@ func (c *storageCmd) prepare(rcx *Runtime) error {
 	if c.NodeName == "" {
 		c.NodeName = "k2-storage"
 	}
-	if c.Portal == "" {
-		c.Portal = c.Host + ":3260"
+	node, nodeFileFound, err := nodeconfig.Load(rcx.RepoRoot, c.ClusterTarget, c.NodeName)
+	if err != nil {
+		return err
 	}
-	_, err := parseStorageVDevs(c.PoolVDev, c.TestVM != "")
+	if nodeFileFound {
+		logf("loaded node config %s", nodeconfig.Path(rcx.RepoRoot, c.ClusterTarget, c.NodeName))
+	}
+	c.node = node
+	if c.Portal == "" {
+		// A static appliance advertises its pinned primary address; the
+		// bootstrap --host address is not guaranteed to exist after reboot.
+		if addr := node.PrimaryAddress(); addr != "" {
+			c.Portal = addr + ":3260"
+		} else {
+			c.Portal = c.Host + ":3260"
+		}
+	}
+	_, err = parseStorageVDevs(c.PoolVDev, c.TestVM != "")
 	return err
 }
 
@@ -376,7 +392,7 @@ func (c *storageCmd) stepStorageResolvePlan(s *storageState) func(context.Contex
 func (c *storageCmd) stepRenderStorageBundle(s *storageState) func(context.Context) error {
 	return func(ctx context.Context) error {
 		var err error
-		s.bundle, err = buildStorageBundle(c.commonStorageFlags, c.ForceWipe, s.vdevs, s.csiPublicKey, s.poolKey)
+		s.bundle, err = buildStorageBundle(c.commonStorageFlags, c.node, c.ForceWipe, s.vdevs, s.csiPublicKey, s.poolKey)
 		return err
 	}
 }
@@ -560,7 +576,7 @@ func (c *storageCmd) snapshotsParent() string {
 	return c.Pool + "/csi/" + c.ClusterName + "-snapshots"
 }
 
-func buildStorageBundle(flags commonStorageFlags, forceWipe bool, vdevs []storageVDev, csiPublicKey, poolKey string) (storageBundle, error) {
+func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceWipe bool, vdevs []storageVDev, csiPublicKey, poolKey string) (storageBundle, error) {
 	operatorKeys, err := loadOptionalOperatorKeys(flags.OperatorKey, flags.OperatorFiles)
 	if err != nil {
 		return storageBundle{}, err
@@ -586,7 +602,14 @@ func buildStorageBundle(flags commonStorageFlags, forceWipe bool, vdevs []storag
 		CSIActivation:      render.CSIUserActivationCloudConfig(strings.TrimSpace(csiPublicKey), csiSudoers),
 		PoolKey:            rawPoolKey,
 	}
-	bundle.InstallScript = []byte(storageInstallScript(flags.NodeName))
+	if len(node.NICs) > 0 {
+		// Stage-only: the static addresses apply on the appliance's next
+		// boot. Applying them live would drop the SSH session mid-provision;
+		// the flow already requires a reboot before the appliance serves
+		// (D26 boot-chain verification).
+		bundle.Network = render.NetworkActivationCloudConfig(node.NICs)
+	}
+	bundle.InstallScript = []byte(storageInstallScript(flags.NodeName, len(node.NICs) > 0))
 	bundle.PoolScript = []byte(storagePoolScript(storagePoolScriptInput{
 		Pool:          flags.Pool,
 		ClusterName:   flags.ClusterName,
@@ -616,6 +639,7 @@ func writeStorageBundle(dir string, bundle storageBundle) error {
 		"zfs_pool.key":                     bundle.PoolKey,
 		"storage-install.sh":               bundle.InstallScript,
 		"storage-pool.sh":                  bundle.PoolScript,
+		"97-k2-network.yaml":               bundle.Network,
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err

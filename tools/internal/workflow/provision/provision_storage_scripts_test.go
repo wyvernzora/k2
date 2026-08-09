@@ -135,7 +135,7 @@ func TestStoragePoolScriptInstallsKeyBeforePoolCommandsAndCreatesEncryptedPool(t
 }
 
 func TestStorageInstallScriptQuotesHostsEntry(t *testing.T) {
-	got := storageInstallScript("node name")
+	got := storageInstallScript("node name", false)
 	if !strings.Contains(got, "grep -qxF '127.0.1.1 node name'") ||
 		!strings.Contains(got, "echo '127.0.1.1 node name'") {
 		t.Fatalf("script missing quoted hosts entry:\n%s", got)

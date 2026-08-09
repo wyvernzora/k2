@@ -1,0 +1,17 @@
+# Durable identity for worker k2-qm-2ce3. Loaded by k2-tools provision via
+# --node-name; nodes without a file provision with DHCP.
+
+# LAN leg: pinned in-guest; 10.10.9.x sits below the VLAN10 DHCP pool
+# floor (10.10.100.1), so no reservation conflict.
+[[nic]]
+iface = "ens18"
+address = "10.10.9.187/16"
+gateway = "10.10.1.1"
+dns = ["10.10.10.10", "1.1.1.1"]
+
+# Storage fabric leg (vmbr1): no gateway/DNS by design — unrouted bridge.
+# Inert until the VM gets its second NIC in PVE. MTU deliberately unset;
+# set to 9000 in lockstep with the bridge when the 100G DAC is enslaved.
+[[nic]]
+iface = "ens19"
+address = "172.16.9.187/16"
