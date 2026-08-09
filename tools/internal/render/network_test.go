@@ -31,7 +31,11 @@ func TestNetworkActivationCloudConfig(t *testing.T) {
 		}
 	}
 	// The fabric NIC must not inherit gateway/DNS from the LAN NIC.
-	fabric := got[strings.Index(got, "Name=ens19"):]
+	idx := strings.Index(got, "Name=ens19")
+	if idx < 0 {
+		t.Fatal("fabric nic unit missing")
+	}
+	fabric := got[idx:]
 	for _, forbidden := range []string{"Gateway=", "DNS="} {
 		if strings.Contains(fabric, forbidden) {
 			t.Errorf("fabric nic unit must not contain %q:\n%s", forbidden, fabric)

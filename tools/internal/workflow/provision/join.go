@@ -16,6 +16,19 @@ func provisionJoinNode(rcx *Runtime, role nodeRole, flags commonJoinFlags, remot
 	return runJoinProvision(context.Background(), rcx, role, flags, remoteFlags)
 }
 
+func loadJoinNodeConfig(repoRoot string, flags commonJoinFlags) (nodeconfig.Config, error) {
+	node, found, err := nodeconfig.Load(repoRoot, flags.ClusterTarget, flags.NodeName)
+	if err != nil {
+		return nodeconfig.Config{}, err
+	}
+	if found {
+		logf("loaded node config %s", nodeconfig.Path(repoRoot, flags.ClusterTarget, flags.NodeName))
+	} else {
+		logf("no node config at %s; provisioning with DHCP and no labels/taints", nodeconfig.Path(repoRoot, flags.ClusterTarget, flags.NodeName))
+	}
+	return node, nil
+}
+
 func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags commonJoinFlags, remoteFlags commonRemoteFlags) error {
 	testTarget, err := applyProvisionTestVM(rcx.RepoRoot, flags.ClusterTarget, &flags.ClusterName, &flags.NodeName, &remoteFlags.Host, &remoteFlags.SSHPort, remoteFlags.TestVM)
 	if err != nil {
@@ -26,14 +39,9 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 	}
 	_ = testTarget // currently unused for join nodes; kept for future use
 
-	node, nodeFileFound, err := nodeconfig.Load(rcx.RepoRoot, flags.ClusterTarget, flags.NodeName)
+	node, err := loadJoinNodeConfig(rcx.RepoRoot, flags)
 	if err != nil {
 		return err
-	}
-	if nodeFileFound {
-		logf("loaded node config %s", nodeconfig.Path(rcx.RepoRoot, flags.ClusterTarget, flags.NodeName))
-	} else {
-		logf("no node config at %s; provisioning with DHCP and no labels/taints", nodeconfig.Path(rcx.RepoRoot, flags.ClusterTarget, flags.NodeName))
 	}
 
 	client := remote.Client{
