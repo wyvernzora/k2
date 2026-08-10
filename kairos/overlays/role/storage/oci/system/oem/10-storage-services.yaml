@@ -33,4 +33,6 @@ stages:
           - rtslib-fb-targetctl.service
           - k2-storage-health.timer
           - k2-metrics.timer
+          - k2-snapshot-hourly.timer
+          - k2-snapshot-daily.timer
           - prometheus-node-exporter.service

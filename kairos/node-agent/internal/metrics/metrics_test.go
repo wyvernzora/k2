@@ -299,3 +299,39 @@ func TestParseRatioAlwaysTreatsInputAsPercent(t *testing.T) {
 		t.Fatal("parseRatio accepted non-numeric input")
 	}
 }
+
+func TestCollectZFSSnapshots(t *testing.T) {
+	c := testCollector(fakeRunner{
+		outputs: map[string]string{
+			"zfs list -Hp -t snapshot -o name,creation": "tank/csi/k2@k2-hourly-20260809T170000Z\t1754758800\n" +
+				"tank/csi/k2/pvc-abc@k2-hourly-20260809T170000Z\t1754758800\n" +
+				"tank/csi/k2@k2-hourly-20260809T180000Z\t1754762400\n" +
+				"tank/csi/k2@k2-daily-20260809T000000Z\t1754697600\n" +
+				"tank/csi/k2@migrate\t1754000000",
+		},
+	})
+
+	got := c.collectZFSSnapshots()
+	if !got.success {
+		t.Fatal("success = false, want true")
+	}
+	// Recursive child rows share the suffix: 2 distinct hourly points, not 3.
+	assertSample(t, got.samples, c.snapshotCount, []string{"k2-hourly"}, 2)
+	assertSample(t, got.samples, c.snapshotLast, []string{"k2-hourly"}, 1754762400)
+	assertSample(t, got.samples, c.snapshotCount, []string{"k2-daily"}, 1)
+	assertSample(t, got.samples, c.snapshotLast, []string{"k2-daily"}, 1754697600)
+	assertNoSample(t, got.samples, c.snapshotCount, []string{"migrate"})
+}
+
+func TestCollectZFSSnapshotsMalformedLine(t *testing.T) {
+	c := testCollector(fakeRunner{
+		outputs: map[string]string{
+			"zfs list -Hp -t snapshot -o name,creation": "tank@k2-hourly-20260809T180000Z\t1754762400\nnot-a-snapshot-line",
+		},
+	})
+	got := c.collectZFSSnapshots()
+	if got.success {
+		t.Fatal("success = true, want false for malformed line")
+	}
+	assertSample(t, got.samples, c.snapshotCount, []string{"k2-hourly"}, 1)
+}

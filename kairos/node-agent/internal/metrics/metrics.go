@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -65,6 +66,8 @@ type Collector struct {
 	smartPowerHours  *desc
 	storageHealthy   *desc
 	storageLastRun   *desc
+	snapshotLast     *desc
+	snapshotCount    *desc
 }
 
 type groupResult struct {
@@ -113,6 +116,8 @@ func NewCollector(cfg Config, run runner.Runner) *Collector {
 		smartPowerHours:  &desc{"k2_smart_power_on_hours", "SMART power-on hours.", "device"},
 		storageHealthy:   &desc{"k2_storage_healthy", "K2 storage health status.", ""},
 		storageLastRun:   &desc{"k2_storage_health_last_run_timestamp_seconds", "Unix timestamp of the last storage health status write.", ""},
+		snapshotLast:     &desc{"k2_zfs_last_snapshot_timestamp_seconds", "Unix creation time of the newest cadence snapshot per prefix.", "prefix"},
+		snapshotCount:    &desc{"k2_zfs_snapshot_count", "Distinct cadence snapshot points retained per prefix.", "prefix"},
 	}
 }
 
@@ -126,6 +131,7 @@ func (c *Collector) Render() string {
 		{"zfs_pools", c.collectZFSPools},
 		{"zfs_keystatus", c.collectZFSKeyStatus},
 		{"zfs_volumes", c.collectZFSVolumes},
+		{"zfs_snapshots", c.collectZFSSnapshots},
 		{"lio", c.collectLIO},
 		{"smart", c.collectSMART},
 		{"storage_health", c.collectStorageHealth},
@@ -540,4 +546,68 @@ func firstWord(s string) string {
 		return ""
 	}
 	return fields[0]
+}
+
+// cadenceSnapshotPattern matches the k2-node-agent snapshot naming scheme
+// (<prefix>-<UTC stamp>); manual and migration snapshots never match, so
+// they don't pollute the cadence gauges.
+var cadenceSnapshotPattern = regexp.MustCompile(`^(.+)-(\d{8}T\d{6}Z)$`)
+
+// collectZFSSnapshots aggregates cadence snapshots by prefix. A recursive
+// snapshot stamps the same @name onto every child dataset, so distinct
+// snapshot suffixes — not raw rows — are what count as retention points.
+func (c *Collector) collectZFSSnapshots() groupResult {
+	out, err := c.run.Output("zfs", "list", "-Hp", "-t", "snapshot", "-o", "name,creation")
+	if err != nil {
+		c.debugf("zfs snapshot list failed: %v", err)
+		return groupResult{success: false}
+	}
+	type agg struct {
+		suffixes map[string]bool
+		last     float64
+	}
+	byPrefix := map[string]*agg{}
+	result := groupResult{success: true}
+	for _, line := range lines(out) {
+		fields := strings.Fields(line)
+		if len(fields) != 2 {
+			result.success = false
+			continue
+		}
+		_, snap, found := strings.Cut(fields[0], "@")
+		if !found {
+			result.success = false
+			continue
+		}
+		match := cadenceSnapshotPattern.FindStringSubmatch(snap)
+		if match == nil {
+			continue
+		}
+		creation, ok := parseFloat(fields[1])
+		if !ok {
+			result.success = false
+			continue
+		}
+		prefix := match[1]
+		a := byPrefix[prefix]
+		if a == nil {
+			a = &agg{suffixes: map[string]bool{}}
+			byPrefix[prefix] = a
+		}
+		a.suffixes[match[2]] = true
+		a.last = max(a.last, creation)
+	}
+	prefixes := make([]string, 0, len(byPrefix))
+	for prefix := range byPrefix {
+		prefixes = append(prefixes, prefix)
+	}
+	sort.Strings(prefixes)
+	for _, prefix := range prefixes {
+		a := byPrefix[prefix]
+		result.samples = append(result.samples,
+			sample{desc: c.snapshotLast, value: a.last, labels: []string{prefix}},
+			sample{desc: c.snapshotCount, value: float64(len(a.suffixes)), labels: []string{prefix}},
+		)
+	}
+	return result
 }

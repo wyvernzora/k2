@@ -1,0 +1,12 @@
+[Unit]
+Description=K2 daily ZFS cadence snapshot with retention
+ConditionPathExists=!/run/cos/recovery_mode
+After=zfs.target zfs-volume-wait.service
+Requires=zfs.target
+
+[Service]
+Type=oneshot
+Environment=K2_SNAPSHOT_DATASET=tank/csi/k2
+Environment=K2_SNAPSHOT_DAILY_KEEP=30
+EnvironmentFile=-/oem/k2-snapshot.env
+ExecStart=/usr/sbin/k2-node-agent snapshot --dataset ${K2_SNAPSHOT_DATASET} --prefix k2-daily --keep ${K2_SNAPSHOT_DAILY_KEEP}

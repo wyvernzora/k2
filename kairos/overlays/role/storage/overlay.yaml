@@ -55,6 +55,20 @@ inspect:
       - path: /etc/systemd/system/k2-metrics.timer
         contains:
           - "OnBootSec=1min"
+      - path: /etc/systemd/system/k2-snapshot-hourly.service
+        contains:
+          - "EnvironmentFile=-/oem/k2-snapshot.env"
+          - "--prefix k2-hourly --keep ${K2_SNAPSHOT_HOURLY_KEEP}"
+      - path: /etc/systemd/system/k2-snapshot-hourly.timer
+        contains:
+          - "OnCalendar=hourly"
+          - "Persistent=true"
+      - path: /etc/systemd/system/k2-snapshot-daily.service
+        contains:
+          - "--prefix k2-daily --keep ${K2_SNAPSHOT_DAILY_KEEP}"
+      - path: /etc/systemd/system/k2-snapshot-daily.timer
+        contains:
+          - "OnCalendar=daily"
       - path: /etc/issue
         contains:
           - K2 Storage Appliance

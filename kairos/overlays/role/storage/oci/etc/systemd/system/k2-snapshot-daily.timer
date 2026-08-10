@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily K2 ZFS cadence snapshot
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

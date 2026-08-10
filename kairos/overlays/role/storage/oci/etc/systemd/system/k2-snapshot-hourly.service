@@ -1,0 +1,14 @@
+[Unit]
+Description=K2 hourly ZFS cadence snapshot with retention
+ConditionPathExists=!/run/cos/recovery_mode
+After=zfs.target zfs-volume-wait.service
+Requires=zfs.target
+
+[Service]
+Type=oneshot
+# Defaults match a fresh appliance; /oem/k2-snapshot.env (rendered by
+# k2-tools provision storage) overrides dataset and retention.
+Environment=K2_SNAPSHOT_DATASET=tank/csi/k2
+Environment=K2_SNAPSHOT_HOURLY_KEEP=48
+EnvironmentFile=-/oem/k2-snapshot.env
+ExecStart=/usr/sbin/k2-node-agent snapshot --dataset ${K2_SNAPSHOT_DATASET} --prefix k2-hourly --keep ${K2_SNAPSHOT_HOURLY_KEEP}

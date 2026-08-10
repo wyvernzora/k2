@@ -8,6 +8,8 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/health"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/metrics"
+	"github.com/wyvernzora/k2/kairos/node-agent/internal/runner"
+	"github.com/wyvernzora/k2/kairos/node-agent/internal/snapshot"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/storage"
 )
 
@@ -15,6 +17,7 @@ type cli struct {
 	SetupPersistence setupPersistenceCommand `cmd:"" name:"setup-persistence" help:"Prepare or verify Kairos persistent storage."`
 	StorageHealth    storageHealthCommand    `cmd:"" name:"storage-health" help:"Report ZFS and iSCSI storage health."`
 	Metrics          metricsCommand          `cmd:"" name:"metrics" help:"Expose K2 storage appliance Prometheus metrics."`
+	Snapshot         snapshotCommand         `cmd:"" name:"snapshot" help:"Create a recursive ZFS snapshot and prune the cadence's retention window."`
 }
 
 type setupPersistenceCommand struct {
@@ -33,6 +36,12 @@ type storageHealthCommand struct {
 
 type metricsCommand struct {
 	TextfileDir string `default:"/var/lib/prometheus/node-exporter" env:"K2_NODE_AGENT_METRICS_TEXTFILE_DIR" help:"node_exporter textfile collector directory to write k2.prom into."`
+}
+
+type snapshotCommand struct {
+	Dataset string `env:"K2_SNAPSHOT_DATASET" required:"" help:"Dataset to snapshot recursively."`
+	Prefix  string `env:"K2_SNAPSHOT_PREFIX" required:"" help:"Snapshot name prefix; retention only considers this cadence's snapshots."`
+	Keep    int    `env:"K2_SNAPSHOT_KEEP" required:"" help:"Number of snapshots to retain for this prefix."`
 }
 
 func main() {
@@ -85,4 +94,13 @@ func (cmd metricsCommand) Run() error {
 		TextfileDir: cmd.TextfileDir,
 		Debug:       os.Stderr,
 	})
+}
+
+func (cmd snapshotCommand) Run() error {
+	return snapshot.Run(snapshot.Config{
+		Dataset: cmd.Dataset,
+		Prefix:  cmd.Prefix,
+		Keep:    cmd.Keep,
+		Log:     os.Stdout,
+	}, runner.OSRunner{})
 }
