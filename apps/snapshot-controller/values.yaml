@@ -1,0 +1,6 @@
+# Used by k2-tools build crd-manifest when rendering this wrapper chart for
+# CRD extraction (VolumeSnapshot / VolumeSnapshotContent / VolumeSnapshotClass
+# and the volume-group-snapshot family ship as packaged chart CRDs). The
+# deployed release is rendered from the dependency directly in
+# components/snapshot-controller.
+snapshot-controller: {}

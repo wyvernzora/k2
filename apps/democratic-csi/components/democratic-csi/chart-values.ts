@@ -19,7 +19,17 @@ export function democraticCsiValues() {
       name: CSI_DRIVER_NAME,
     },
     storageClasses: [],
-    volumeSnapshotClasses: [],
+    volumeSnapshotClasses: [
+      {
+        name: "k2-iscsi",
+        deletionPolicy: "Delete",
+        parameters: {
+          // Local ZFS snapshots on the appliance (instant, copy-on-write);
+          // detached-snapshot datasets stay reserved for future use.
+          detachedSnapshots: "false",
+        },
+      },
+    ],
     driver: {
       existingConfigSecret: DRIVER_CONFIG_SECRET_NAME,
       // The rendered config lives in the secret; the chart still reads the
