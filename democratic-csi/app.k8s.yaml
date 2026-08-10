@@ -921,6 +921,23 @@ spec:
   attachRequired: true
   podInfoOnMount: true
 ---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  labels:
+    app.kubernetes.io/instance: democratic-csi
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: democratic-csi
+    helm.sh/chart: democratic-csi-0.15.1
+    k2.wyvernzora.io/app: democratic-csi
+    k2.wyvernzora.io/component: democratic-csi
+  name: k2-iscsi
+  namespace: democratic-csi
+deletionPolicy: Delete
+driver: org.democratic-csi.iscsi
+parameters:
+  detachedSnapshots: "false"
+---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:

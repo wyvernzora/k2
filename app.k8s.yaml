@@ -513,6 +513,29 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: snapshot-controller
+  namespace: argocd
+spec:
+  destination:
+    namespace: snapshot-controller
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: snapshot-controller
+    repoURL: https://github.com/wyvernzora/k2.git
+    targetRevision: deploy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: tailscale
   namespace: argocd
 spec:
