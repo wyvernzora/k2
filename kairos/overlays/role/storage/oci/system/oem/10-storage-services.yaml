@@ -21,6 +21,25 @@ stages:
         CUSTOM_BIND_MOUNTS: "/etc/rtslib-fb-target /etc/zfs"
 
   initramfs:
+    # zgenhostid bakes a RANDOM hostid into each image build, so the value
+    # differs between image revisions — not just A/B slots. A pool imported
+    # under the old hostid then reads as "last accessed by another system"
+    # after any upgrade and refuses to auto-import (recovered only by
+    # `zpool import -f`). Pin the first hostid this machine ever used on
+    # COS_PERSISTENT and restore it before zfs-import-scan runs, so the
+    # pool's stored hostid keeps matching for the life of the appliance.
+    - name: "Pin ZFS hostid across image revisions"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      commands:
+        - |
+          set -eu
+          persisted=/usr/local/.state/hostid
+          if [ -s "$persisted" ]; then
+            cp "$persisted" /etc/hostid
+          elif [ -s /etc/hostid ]; then
+            install -d -m 0755 /usr/local/.state
+            cp /etc/hostid "$persisted"
+          fi
     - name: "Enable K2 storage services"
       if: '[ ! -f "/run/cos/recovery_mode" ]'
       systemctl:

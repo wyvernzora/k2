@@ -24,15 +24,18 @@ inspect:
             value: /etc/rtslib-fb-target /etc/zfs
           - op: test
             path: /stages/initramfs/0/name
+            value: Pin ZFS hostid across image revisions
+          - op: test
+            path: /stages/initramfs/1/name
             value: Enable K2 storage services
           - op: test
-            path: /stages/initramfs/0/systemctl/enable/0
+            path: /stages/initramfs/1/systemctl/enable/0
             value: zfs-import-scan.service
           - op: test
-            path: /stages/initramfs/0/systemctl/enable/1
+            path: /stages/initramfs/1/systemctl/enable/1
             value: k2-zfs-load-key.service
           - op: test
-            path: /stages/initramfs/0/systemctl/enable/5
+            path: /stages/initramfs/1/systemctl/enable/5
             value: rtslib-fb-targetctl.service
       - path: /etc/systemd/system/k2-zfs-load-key.service
         contains:
