@@ -44,12 +44,44 @@ type Image struct {
 	// the OCI revision label. It is the image's content identity: an image
 	// cannot carry its own digest, and this survives a flashed raw install.
 	SourceCommit string
+	// Components is the version set baked into the image, read from labels
+	// so callers can diff "what would change" without pulling anything.
+	Components Components
+}
+
+// Components is the human-meaningful content of an image: what the tag used
+// to spell out, now carried where it can be read from the registry and shown
+// at the moment an upgrade is confirmed.
+type Components struct {
+	BaseImage         string
+	KairosVersion     string
+	KubernetesVersion string
+}
+
+func (c Components) String() string {
+	parts := make([]string, 0, 3)
+	for _, kv := range [][2]string{
+		{"base", c.BaseImage},
+		{"kairos", c.KairosVersion},
+		{"k8s", c.KubernetesVersion},
+	} {
+		if kv[1] != "" {
+			parts = append(parts, kv[0]+" "+kv[1])
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return strings.Join(parts, ", ")
 }
 
 const (
 	stateSizeLabel            = "io.k2.disk-state-size-mib"
 	upgradeSizeAllowanceLabel = "io.k2.upgrade-size-allowance-mib"
 	sourceCommitLabel         = "org.opencontainers.image.revision"
+	baseImageLabel            = "io.k2.base-image"
+	kairosVersionLabel        = "io.k2.kairos-version"
+	kubernetesVersionLabel    = "io.k2.kubernetes-version"
 	imageMetadataPath         = "usr/share/k2/image-build/metadata.yaml"
 	maxImageMetadataBytes     = int64(1 << 20)
 )
@@ -100,9 +132,14 @@ func (d *Discoverer) InspectImage(ctx context.Context, ref string) (Image, error
 		return Image{}, fmt.Errorf("inspect %s: %w", ref, err)
 	}
 	return Image{
-		Ref:                     ref,
-		Digest:                  digest,
-		SourceCommit:            cfg.Config.Labels[sourceCommitLabel],
+		Ref:          ref,
+		Digest:       digest,
+		SourceCommit: cfg.Config.Labels[sourceCommitLabel],
+		Components: Components{
+			BaseImage:         cfg.Config.Labels[baseImageLabel],
+			KairosVersion:     cfg.Config.Labels[kairosVersionLabel],
+			KubernetesVersion: cfg.Config.Labels[kubernetesVersionLabel],
+		},
 		Created:                 cfg.Created.Time,
 		StateSizeMiB:            stateSizeMiB,
 		UpgradeAllocationMiB:    upgradeAllocationMiB,

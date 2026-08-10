@@ -114,7 +114,8 @@
       "diskSize": 8192
     }
   },
-  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1",
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-amd64-qemu-k8s",
+  "descriptiveImage": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1",
   "artifactStem": "ubuntu-26.04-v4.1.0-amd64-qemu-k8s-v1.36.0-k3s1",
   "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-26.04-amd64-qemu-k8s",
   "versions": {

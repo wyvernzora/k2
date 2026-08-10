@@ -39,8 +39,22 @@ ARG POST_INSTALL_ACTIONS=
 ARG DISK_STATE_SIZE_MIB
 ARG UPGRADE_SIZE_ALLOWANCE_MIB
 
+# Global ARGs (declared above the first FROM) are not visible inside a build
+# stage; re-declare the two the labels need or they bake as empty strings.
+ARG BASE_IMAGE
+ARG KAIROS_INIT_VERSION
+
+# Component versions ride as labels so the registry can answer "what is in
+# this image?" without a pull: the upgrade plan reads them to show the
+# operator a base/kairos/k3s delta before confirming, which is what tags
+# used to encode less precisely and less visibly.
 LABEL io.k2.disk-state-size-mib="${DISK_STATE_SIZE_MIB}" \
       io.k2.upgrade-size-allowance-mib="${UPGRADE_SIZE_ALLOWANCE_MIB}" \
+      io.k2.base-image="${BASE_IMAGE}" \
+      io.k2.kairos-version="${KAIROS_VERSION}" \
+      io.k2.kairos-init-version="${KAIROS_INIT_VERSION}" \
+      io.k2.kubernetes-distro="${KUBERNETES_DISTRO}" \
+      io.k2.kubernetes-version="${KUBERNETES_VERSION}" \
       org.opencontainers.image.revision="${SOURCE_COMMIT}"
 
 COPY --from=k2-node-agent /out/k2-node-agent /usr/sbin/k2-node-agent

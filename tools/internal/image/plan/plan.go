@@ -40,6 +40,7 @@ type Plan struct {
 	Inspection              Inspection      `json:"inspection,omitempty" yaml:"inspection,omitempty"`
 	ArtifactOptions         ArtifactOptions `json:"artifactOptions" yaml:"artifactOptions"`
 	Image                   string          `json:"image" yaml:"image"`
+	DescriptiveImage        string          `json:"descriptiveImage" yaml:"descriptiveImage"`
 	ArtifactStem            string          `json:"artifactStem" yaml:"artifactStem"`
 	ArtifactDir             string          `json:"artifactDir" yaml:"artifactDir"`
 	Versions                config.Versions `json:"versions" yaml:"versions"`
@@ -169,7 +170,11 @@ func (p Planner) Build(target string) (Plan, error) {
 	}
 	build := mergeOverlayBuild(metadata)
 	image := p.imageTag(resolved)
-	artifactStem := image[strings.LastIndex(image, ":")+1:]
+	descriptive := p.DescriptiveTag(resolved)
+	// The artifact stem stays version-qualified: a .raw.xz on disk or in S3
+	// has no labels to consult, so its filename is the only thing that says
+	// what is inside it.
+	artifactStem := descriptive[strings.LastIndex(descriptive, ":")+1:]
 	out := Plan{
 		Target:                  target,
 		Enabled:                 boolValue(resolved.Enabled),
@@ -190,6 +195,7 @@ func (p Planner) Build(target string) (Plan, error) {
 		PostInstallActions:      build.PostInstall,
 		ArtifactOptions:         convertArtifactOptions(resolved.ArtifactOptions),
 		Image:                   image,
+		DescriptiveImage:        descriptive,
 		ArtifactStem:            artifactStem,
 		ArtifactDir:             filepath.Join(p.Paths.ArtifactsDir, target),
 		Versions:                p.Versions,
@@ -422,16 +428,37 @@ func (p Planner) inspection(targetName string, resolved config.Target, metadata 
 // so there is no revision counter to maintain and no way for two builds to
 // disagree about which one a tag means.
 func (p Planner) imageTag(target config.Target) string {
-	segments := []string{
-		target.Flavor,
-		p.Versions.KairosVersion,
-		target.Arch,
-		target.Hardware,
-		target.Role,
+	return p.Versions.RegistryImage + ":" + strings.Join(tagSegments(target), "-")
+}
+
+// tagSegments names the deployment SLOT a node occupies: flavor family, arch,
+// hardware, role. Base and Kairos versions deliberately do NOT appear — they
+// are image content (carried in labels and metadata.yaml, shown as a diff when
+// an upgrade is confirmed). Encoding them here made the biggest upgrades
+// undiscoverable: a node reconstructs its tag from its own metadata, so a base
+// or Kairos bump left every node searching for the version it already ran.
+func tagSegments(target config.Target) []string {
+	return []string{flavorFamily(target.Flavor), target.Arch, target.Hardware, target.Role}
+}
+
+// flavorFamily trims the release off a flavor ("ubuntu-26.04" -> "ubuntu"):
+// which distro a node runs is slot identity, which release is content.
+func flavorFamily(flavor string) string {
+	family, _, found := strings.Cut(flavor, "-")
+	if !found || family == "" {
+		return flavor
 	}
+	return family
+}
+
+// DescriptiveTag is the version-qualified tag published ALONGSIDE the floating
+// one: same manifest, extra name. It is what a human browses and what pins a
+// node to an older base during a staged migration; nothing in the upgrade path
+// resolves it.
+func (p Planner) DescriptiveTag(target config.Target) string {
+	segments := []string{target.Flavor, p.Versions.KairosVersion, target.Arch, target.Hardware, target.Role}
 	if target.Role == "k8s" {
-		k3sTag := strings.ReplaceAll(p.Versions.K3sVersion, "+", "-")
-		segments = append(segments, k3sTag)
+		segments = append(segments, strings.ReplaceAll(p.Versions.K3sVersion, "+", "-"))
 	}
 	return p.Versions.RegistryImage + ":" + strings.Join(segments, "-")
 }

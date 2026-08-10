@@ -160,7 +160,8 @@
       "diskStateSize": 8192
     }
   },
-  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1",
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-arm64-rpi4cb-k8s",
+  "descriptiveImage": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1",
   "artifactStem": "ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1",
   "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-26.04-arm64-rpi4cb-k8s",
   "versions": {

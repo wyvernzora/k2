@@ -107,6 +107,12 @@ func buildArgs(resolved plan.Plan, options OCIOptions) []string {
 		"--build-arg", "POST_INSTALL_ACTIONS=" + strings.Join(resolved.PostInstallActions, " "),
 		"--tag", resolved.Image,
 	}
+	// Same manifest, second name: the floating tag drives upgrades, the
+	// version-qualified one is what a human browses and what pins a node to
+	// an older base during a staged migration.
+	if resolved.DescriptiveImage != "" && resolved.DescriptiveImage != resolved.Image {
+		args = append(args, "--tag", resolved.DescriptiveImage)
+	}
 	if options.NoCache {
 		args = append(args, "--no-cache")
 	} else {
