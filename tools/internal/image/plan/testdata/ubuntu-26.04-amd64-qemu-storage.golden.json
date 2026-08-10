@@ -88,8 +88,8 @@
       "diskSize": 16384
     }
   },
-  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0",
-  "artifactStem": "ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0",
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-storage",
+  "artifactStem": "ubuntu-26.04-v4.1.0-amd64-qemu-storage",
   "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-26.04-amd64-qemu-storage",
   "versions": {
     "kairosVersion": "v4.1.0",
@@ -97,7 +97,6 @@
     "aurorabootVersion": "v0.19.4",
     "baseImage": "ubuntu:24.04",
     "k3sVersion": "v1.36.0+k3s1",
-    "imageRevision": "rev0",
     "registryImage": "ghcr.io/wyvernzora/k2-kairos"
   },
   "paths": {

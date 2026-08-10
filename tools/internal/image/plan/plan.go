@@ -416,12 +416,11 @@ func (p Planner) inspection(targetName string, resolved config.Target, metadata 
 	return acc.build(), nil
 }
 
-// imageTag derives the published tag from the single global K2_IMAGE_REVISION.
-// There is deliberately no per-target revision override: the image build's
-// common inputs (node-agent, tools, Dockerfile, targets/versions) are shared by
-// every target, so any change to them rebuilds and re-pushes all targets
-// anyway. Pinning one role to a different revision would leave the other
-// targets re-pushing their existing tag with different content.
+// imageTag names a TARGET, not a build: the tag floats, always pointing at the
+// newest image for that flavor/arch/hardware/role. Build identity lives in the
+// digest (what upgrades pin) and the baked source commit (what a node reports),
+// so there is no revision counter to maintain and no way for two builds to
+// disagree about which one a tag means.
 func (p Planner) imageTag(target config.Target) string {
 	segments := []string{
 		target.Flavor,
@@ -434,7 +433,6 @@ func (p Planner) imageTag(target config.Target) string {
 		k3sTag := strings.ReplaceAll(p.Versions.K3sVersion, "+", "-")
 		segments = append(segments, k3sTag)
 	}
-	segments = append(segments, p.Versions.ImageRevision)
 	return p.Versions.RegistryImage + ":" + strings.Join(segments, "-")
 }
 

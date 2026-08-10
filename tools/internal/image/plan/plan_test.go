@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -72,11 +73,11 @@ func TestImageTagAndArtifactStemMatchShellContract(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0"
+	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1"
 	if got.Image != wantImage {
 		t.Fatalf("image = %q, want %q", got.Image, wantImage)
 	}
-	wantStem := "ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0"
+	wantStem := "ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1"
 	if got.ArtifactStem != wantStem {
 		t.Fatalf("artifact stem = %q, want %q", got.ArtifactStem, wantStem)
 	}
@@ -93,11 +94,11 @@ func TestImageTagOmitsKubernetesSegmentsForStorageTarget(t *testing.T) {
 	if got.KubernetesDistro != "" {
 		t.Fatalf("kubernetesDistro = %q, want empty", got.KubernetesDistro)
 	}
-	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0"
+	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-storage"
 	if got.Image != wantImage {
 		t.Fatalf("image = %q, want %q", got.Image, wantImage)
 	}
-	wantStem := "ubuntu-26.04-v4.1.0-amd64-qemu-storage-rev0"
+	wantStem := "ubuntu-26.04-v4.1.0-amd64-qemu-storage"
 	if got.ArtifactStem != wantStem {
 		t.Fatalf("artifact stem = %q, want %q", got.ArtifactStem, wantStem)
 	}
@@ -427,7 +428,6 @@ KAIROS_INIT_VERSION=v0.13.0
 AURORABOOT_VERSION=v0.19.4
 BASE_IMAGE=ubuntu:24.04
 K3S_VERSION=v1.36.0+k3s1
-K2_IMAGE_REVISION=rev0
 REGISTRY_IMAGE=ghcr.io/wyvernzora/k2-kairos
 `)+"\n")
 	mustWrite(t, filepath.Join(kairosRoot, "targets.yaml"), strings.TrimSpace(`
@@ -727,7 +727,7 @@ var rpiFirmwarePurgePackages = []string{
 // inputs (node-agent, tools, Dockerfile) rebuild all targets together, so a
 // per-target revision pin would make some target re-push an existing tag with
 // different content.
-func TestAllTargetsUseGlobalImageRevision(t *testing.T) {
+func TestImageTagsCarryNoRevision(t *testing.T) {
 	kairosRoot := filepath.Clean(filepath.Join("..", "..", "..", "..", "..", "kairos"))
 	discovered, err := paths.Discover(kairosRoot, paths.Overrides{})
 	if err != nil {
@@ -748,12 +748,15 @@ func TestAllTargetsUseGlobalImageRevision(t *testing.T) {
 	if len(plans) == 0 {
 		t.Fatal("no enabled targets")
 	}
+	// Tags float: they name a TARGET, never a build. Any -revN suffix would
+	// reintroduce the hand-maintained counter that digests replaced.
+	revSuffix := regexp.MustCompile(`-rev\d+$`)
 	for _, p := range plans {
-		if !strings.HasSuffix(p.Image, "-"+versions.ImageRevision) {
-			t.Errorf("%s image = %q, want global revision suffix -%s", p.Target, p.Image, versions.ImageRevision)
+		if revSuffix.MatchString(p.Image) {
+			t.Errorf("%s image = %q, want no revision suffix", p.Target, p.Image)
 		}
-		if p.Versions.ImageRevision != versions.ImageRevision {
-			t.Errorf("%s plan versions revision = %q, want %q", p.Target, p.Versions.ImageRevision, versions.ImageRevision)
+		if !strings.HasSuffix(p.Image, p.Role) && !strings.Contains(p.Image, "-"+p.Role+"-") {
+			t.Errorf("%s image = %q, want the role in the tag", p.Target, p.Image)
 		}
 	}
 }

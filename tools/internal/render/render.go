@@ -45,7 +45,7 @@ type ImageMetadata struct {
 	KubernetesDistro        string `yaml:"kubernetesDistro"`
 	KubernetesVersion       string `yaml:"kubernetesVersion"`
 	KairosVersion           string `yaml:"kairosVersion"`
-	ImageRevision           string `yaml:"imageRevision"`
+	SourceCommit            string `yaml:"sourceCommit"`
 	DiskStateSizeMiB        uint64 `yaml:"diskStateSizeMiB"`
 	UpgradeSizeAllowanceMiB uint64 `yaml:"upgradeSizeAllowanceMiB"`
 	RootFSSizeMiB           uint64 `yaml:"rootfsSizeMiB"`

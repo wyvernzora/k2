@@ -160,8 +160,8 @@
       "diskStateSize": 8192
     }
   },
-  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0",
-  "artifactStem": "ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1-rev0",
+  "image": "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1",
+  "artifactStem": "ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1",
   "artifactDir": "$FIXTURE/kairos/artifacts/ubuntu-26.04-arm64-rpi4cb-k8s",
   "versions": {
     "kairosVersion": "v4.1.0",
@@ -169,7 +169,6 @@
     "aurorabootVersion": "v0.19.4",
     "baseImage": "ubuntu:24.04",
     "k3sVersion": "v1.36.0+k3s1",
-    "imageRevision": "rev0",
     "registryImage": "ghcr.io/wyvernzora/k2-kairos"
   },
   "paths": {

@@ -31,7 +31,7 @@ ARG ROLE
 ARG ARCH
 ARG PLATFORM
 ARG HARDWARE
-ARG IMAGE_REVISION
+ARG SOURCE_COMMIT
 ARG APT_PACKAGES=
 ARG APT_PURGE_PACKAGES=
 ARG DRACUT_INSTALL_ITEMS=
@@ -40,7 +40,8 @@ ARG DISK_STATE_SIZE_MIB
 ARG UPGRADE_SIZE_ALLOWANCE_MIB
 
 LABEL io.k2.disk-state-size-mib="${DISK_STATE_SIZE_MIB}" \
-      io.k2.upgrade-size-allowance-mib="${UPGRADE_SIZE_ALLOWANCE_MIB}"
+      io.k2.upgrade-size-allowance-mib="${UPGRADE_SIZE_ALLOWANCE_MIB}" \
+      org.opencontainers.image.revision="${SOURCE_COMMIT}"
 
 COPY --from=k2-node-agent /out/k2-node-agent /usr/sbin/k2-node-agent
 
@@ -232,7 +233,7 @@ RUN set -eux; \
         printf 'kubernetesDistro: %s\n' "${KUBERNETES_DISTRO}"; \
         printf 'kubernetesVersion: %s\n' "${KUBERNETES_VERSION}"; \
         printf 'kairosVersion: %s\n' "${KAIROS_VERSION}"; \
-        printf 'imageRevision: %s\n' "${IMAGE_REVISION}"; \
+        printf 'sourceCommit: %s\n' "${SOURCE_COMMIT}"; \
         printf 'diskStateSizeMiB: %s\n' "${DISK_STATE_SIZE_MIB}"; \
         printf 'upgradeSizeAllowanceMiB: %s\n' "${UPGRADE_SIZE_ALLOWANCE_MIB}"; \
     } > /usr/share/k2/image-build/metadata.yaml

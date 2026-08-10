@@ -11,6 +11,6 @@ import (
 // belt-and-suspenders concern that can be re-run later.
 func (r *Runner) UpgradeRecovery(ctx context.Context, plan Plan) error {
 	script := fmt.Sprintf("sudo kairos-agent upgrade --recovery --source %s",
-		shellQuote(kairosUpgradeSource(plan.Target.Ref)))
+		shellQuote(kairosUpgradeSource(plan.Target)))
 	return r.Remote.Run(script)
 }
