@@ -83,10 +83,43 @@ diff-manifests:
 #
 lint:
     ARG TAG="latest"
+    BUILD +go-lint
     FROM --pass-args +npm-install
     COPY ./tools+k2-tools-cli/k2-tools /usr/local/bin/k2-tools
     COPY . .
     RUN k2-tools build lint
+
+#
+# +go-lint: gofmt / vet / golangci-lint over every Go module.
+#
+# Mirrors the per-module checks in .github/workflows/go.yaml so the local loop
+# fails where CI would. Kept out of the Node-based +lint image because these
+# need the Go toolchain; +lint BUILDs it so `earthly +lint` covers both stacks.
+#
+go-lint:
+    FROM golang:1.26-bookworm
+    # Keep in sync with the golangci-lint-action version in go.yaml.
+    ARG GOLANGCI_LINT_VERSION=v2.12.2
+    RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+        go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+    WORKDIR /src
+    COPY .golangci.yml ./
+    COPY tools/go.mod tools/go.sum ./tools/
+    COPY kairos/node-agent/go.mod kairos/node-agent/go.sum ./kairos/node-agent/
+    RUN --mount=type=cache,target=/go/pkg/mod cd tools && go mod download
+    RUN --mount=type=cache,target=/go/pkg/mod cd kairos/node-agent && go mod download
+    COPY tools ./tools
+    COPY kairos/node-agent ./kairos/node-agent
+    FOR module IN tools kairos/node-agent
+        RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+            cd /src/$module && \
+            drift="$(gofmt -l .)" && \
+            if [ -n "$drift" ]; then echo "gofmt drift in $module:" >&2; echo "$drift" >&2; exit 1; fi
+        RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+            cd /src/$module && go vet ./...
+        RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+            cd /src/$module && golangci-lint run --config=/src/.golangci.yml ./...
+    END
 
 npm-install:
     ARG TAG="latest"
