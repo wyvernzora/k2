@@ -135,9 +135,55 @@ func TestStoragePoolScriptInstallsKeyBeforePoolCommandsAndCreatesEncryptedPool(t
 }
 
 func TestStorageInstallScriptQuotesHostsEntry(t *testing.T) {
-	got := storageInstallScript("node name", false)
+	got := storageInstallScript("node name", false, false)
 	if !strings.Contains(got, "grep -qxF '127.0.1.1 node name'") ||
 		!strings.Contains(got, "echo '127.0.1.1 node name'") {
 		t.Fatalf("script missing quoted hosts entry:\n%s", got)
+	}
+}
+
+func TestStorageInstallScriptBackupUserAndSnapshotEnv(t *testing.T) {
+	withBackup := storageInstallScript("k2-storage", false, true)
+	for _, want := range []string{
+		"sudo install -m 0644 \"$remote_dir\"/k2-snapshot.env /oem/k2-snapshot.env",
+		"sudo install -m 0644 \"$remote_dir\"/94-k2-storage-backup.yaml /oem/94-k2-storage-backup.yaml",
+		"sudo useradd --create-home --shell /bin/sh backup",
+		"sudo install -o backup -g backup -m 0600 \"$remote_dir\"/backup_authorized_keys /home/backup/.ssh/authorized_keys",
+		"sudo install -m 0440 \"$remote_dir\"/98-backup /etc/sudoers.d/98-backup",
+	} {
+		if !strings.Contains(withBackup, want) {
+			t.Fatalf("backup install script missing %q:\n%s", want, withBackup)
+		}
+	}
+	without := storageInstallScript("k2-storage", false, false)
+	if strings.Contains(without, "backup") {
+		t.Fatal("install script must not reference backup user when no keys supplied")
+	}
+	if !strings.Contains(without, "k2-snapshot.env") {
+		t.Fatal("snapshot env must install regardless of backup keys")
+	}
+}
+
+func TestSnapshotEnvRendersRetention(t *testing.T) {
+	got := snapshotEnv(commonStorageFlags{
+		ClusterTarget:  "v3",
+		ClusterName:    "k2",
+		Pool:           "tank",
+		SnapshotHourly: 12,
+		SnapshotDaily:  7,
+	})
+	want := "K2_SNAPSHOT_DATASET=tank/csi/k2\nK2_SNAPSHOT_HOURLY_KEEP=12\nK2_SNAPSHOT_DAILY_KEEP=7\n"
+	if got != want {
+		t.Fatalf("snapshotEnv = %q, want %q", got, want)
+	}
+}
+
+// Programmatic callers (RunStorage/StorageInputs) never set the retention
+// fields; k2-node-agent rejects keep < 1, so the render must not emit 0.
+func TestSnapshotEnvDefaultsUnsetRetention(t *testing.T) {
+	got := snapshotEnv(commonStorageFlags{ClusterTarget: "v3", ClusterName: "k2", Pool: "tank"})
+	want := "K2_SNAPSHOT_DATASET=tank/csi/k2\nK2_SNAPSHOT_HOURLY_KEEP=48\nK2_SNAPSHOT_DAILY_KEEP=30\n"
+	if got != want {
+		t.Fatalf("snapshotEnv = %q, want %q", got, want)
 	}
 }

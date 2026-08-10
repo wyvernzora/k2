@@ -2,6 +2,9 @@ package provision
 
 import "context"
 
+// StorageInputs is the programmatic (non-kong) entry point. Fields it omits
+// take the same defaults the CLI flags carry — snapshot retention included,
+// via snapshotKeep.
 type StorageInputs struct {
 	ClusterTarget     string
 	ClusterName       string

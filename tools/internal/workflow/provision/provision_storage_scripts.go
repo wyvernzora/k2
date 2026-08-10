@@ -90,7 +90,7 @@ func splitMarkedSections(out string) map[string]string {
 	return sections
 }
 
-func storageInstallScript(nodeName string, hasNetwork bool) string {
+func storageInstallScript(nodeName string, hasNetwork bool, hasBackup bool) string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "set -eu\n")
 	fmt.Fprintf(&buf, "remote_dir=\"$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)\"\n")
@@ -126,6 +126,21 @@ func storageInstallScript(nodeName string, hasNetwork bool) string {
 	fmt.Fprintf(&buf, "sudo install -m 0440 \"$remote_dir\"/99-csi /etc/sudoers.d/99-csi\n")
 	fmt.Fprintf(&buf, "sudo touch /home/csi/.hushlogin\n")
 	fmt.Fprintf(&buf, "sudo chown csi:csi /home/csi/.hushlogin\n")
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing snapshot cadence config'\n")
+	fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/k2-snapshot.env /oem/k2-snapshot.env\n")
+	if hasBackup {
+		// Same imperative-now + /oem-stage-later split as the csi user:
+		// usable immediately, survives the ephemeral /etc overlay via 94-*.yaml.
+		fmt.Fprintf(&buf, "echo 'k2-tools: ensuring backup user'\n")
+		fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/94-k2-storage-backup.yaml /oem/94-k2-storage-backup.yaml\n")
+		fmt.Fprintf(&buf, "if ! id backup >/dev/null 2>&1; then sudo useradd --create-home --shell /bin/sh backup; fi\n")
+		fmt.Fprintf(&buf, "sudo chown backup:backup /home/backup\n")
+		fmt.Fprintf(&buf, "sudo install -d -o backup -g backup -m 0700 /home/backup/.ssh\n")
+		fmt.Fprintf(&buf, "sudo install -o backup -g backup -m 0600 \"$remote_dir\"/backup_authorized_keys /home/backup/.ssh/authorized_keys\n")
+		fmt.Fprintf(&buf, "sudo install -m 0440 \"$remote_dir\"/98-backup /etc/sudoers.d/98-backup\n")
+		fmt.Fprintf(&buf, "sudo touch /home/backup/.hushlogin\n")
+		fmt.Fprintf(&buf, "sudo chown backup:backup /home/backup/.hushlogin\n")
+	}
 	return buf.String()
 }
 

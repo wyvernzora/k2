@@ -55,6 +55,10 @@ type storageBundle struct {
 	CSIPublicKey       []byte
 	CSISudoers         []byte
 	CSIActivation      []byte
+	BackupKeys         []byte // nil when no backup keys are supplied
+	BackupSudoers      []byte
+	BackupActivation   []byte
+	SnapshotEnv        []byte
 	PoolKey            []byte
 	InstallScript      []byte
 	PoolScript         []byte
@@ -591,6 +595,10 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 		authorizedKeys = render.AuthorizedKeys(operatorKeys)
 		operatorActivation = render.OperatorKeysActivationCloudConfig("K2 storage operator keys", "kairos", operatorKeys)
 	}
+	backupKeys, err := loadOptionalOperatorKeys(flags.BackupKey, flags.BackupKeyFiles)
+	if err != nil {
+		return storageBundle{}, err
+	}
 	// Design D7: targetcli requires root; the csi key is treated as a root credential.
 	csiSudoers := "csi ALL=(ALL) NOPASSWD:ALL\n"
 	bundle := storageBundle{
@@ -600,7 +608,13 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 		CSIPublicKey:       []byte(strings.TrimSpace(csiPublicKey) + "\n"),
 		CSISudoers:         []byte(csiSudoers),
 		CSIActivation:      render.CSIUserActivationCloudConfig(strings.TrimSpace(csiPublicKey), csiSudoers),
+		SnapshotEnv:        []byte(snapshotEnv(flags)),
 		PoolKey:            rawPoolKey,
+	}
+	if len(backupKeys) > 0 {
+		bundle.BackupKeys = render.AuthorizedKeys(backupKeys)
+		bundle.BackupSudoers = []byte(backupSudoers)
+		bundle.BackupActivation = render.BackupUserActivationCloudConfig(backupKeys, backupSudoers)
 	}
 	if len(node.NICs) > 0 {
 		// Stage-only: the static addresses apply on the appliance's next
@@ -609,7 +623,7 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 		// (D26 boot-chain verification).
 		bundle.Network = render.NetworkActivationCloudConfig(node.NICs)
 	}
-	bundle.InstallScript = []byte(storageInstallScript(flags.NodeName, len(node.NICs) > 0))
+	bundle.InstallScript = []byte(storageInstallScript(flags.NodeName, len(node.NICs) > 0, len(backupKeys) > 0))
 	bundle.PoolScript = []byte(storagePoolScript(storagePoolScriptInput{
 		Pool:          flags.Pool,
 		ClusterName:   flags.ClusterName,
@@ -619,6 +633,38 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 		CreateAllowed: len(vdevs) > 0,
 	}))
 	return bundle, nil
+}
+
+// backupSudoers scopes the NAS pull identity to read-side zfs subcommands;
+// source-side pruning belongs to the appliance's own snapshot timers.
+const backupSudoers = "backup ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *, /usr/sbin/zfs list *, /usr/sbin/zfs get *, /usr/sbin/zfs hold *, /usr/sbin/zfs release *\n"
+
+// Cadence retention defaults, mirrored by the --snapshot-*-keep kong tags and
+// by the storage overlay's unit Environment= fallbacks.
+const (
+	defaultSnapshotHourlyKeep = 48
+	defaultSnapshotDailyKeep  = 30
+)
+
+func snapshotEnv(flags commonStorageFlags) string {
+	dataset := flags.Pool + "/csi/" + clusterNameOrFallback(flags.ClusterName, flags.ClusterTarget)
+	return fmt.Sprintf(
+		"K2_SNAPSHOT_DATASET=%s\nK2_SNAPSHOT_HOURLY_KEEP=%d\nK2_SNAPSHOT_DAILY_KEEP=%d\n",
+		dataset,
+		snapshotKeep(flags.SnapshotHourly, defaultSnapshotHourlyKeep),
+		snapshotKeep(flags.SnapshotDaily, defaultSnapshotDailyKeep),
+	)
+}
+
+// snapshotKeep substitutes the default for a non-positive retention: kong fills
+// the flags in, but programmatic callers (StorageInputs) leave the fields at
+// their zero value, and k2-node-agent rejects keep < 1 — a rendered 0 would
+// fail every timer tick instead of snapshotting.
+func snapshotKeep(keep, fallback int) int {
+	if keep < 1 {
+		return fallback
+	}
+	return keep
 }
 
 func loadOptionalOperatorKeys(literal []string, files []string) ([]string, error) {
@@ -640,6 +686,10 @@ func writeStorageBundle(dir string, bundle storageBundle) error {
 		"storage-install.sh":               bundle.InstallScript,
 		"storage-pool.sh":                  bundle.PoolScript,
 		"97-k2-network.yaml":               bundle.Network,
+		"backup_authorized_keys":           bundle.BackupKeys,
+		"98-backup":                        bundle.BackupSudoers,
+		"94-k2-storage-backup.yaml":        bundle.BackupActivation,
+		"k2-snapshot.env":                  bundle.SnapshotEnv,
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err

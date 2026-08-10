@@ -95,6 +95,10 @@ type commonStorageFlags struct {
 	OperatorFiles     []string `name:"operator-key-file" env:"K2_PROVISION_OPERATOR_KEY_FILE" help:"File containing literal operator public keys. Repeatable." type:"path"`
 	IQNBase           string   `name:"iqn-base" env:"K2_PROVISION_IQN_BASE" default:"iqn.2026-07.io.wyvernzora.k2:storage" help:"Base iSCSI IQN advertised to democratic-csi."`
 	PoolCompatibility string   `name:"pool-compatibility" env:"K2_PROVISION_POOL_COMPATIBILITY" default:"openzfs-2.2-linux" help:"ZFS compatibility.d pin required on the appliance before pool creation."`
+	BackupKey         []string `name:"backup-key" env:"K2_PROVISION_BACKUP_KEY" help:"Literal public key for the NAS pull-replication backup user. Repeatable."`
+	BackupKeyFiles    []string `name:"backup-key-file" env:"K2_PROVISION_BACKUP_KEY_FILE" help:"File containing public keys for the backup user. Repeatable." type:"path"`
+	SnapshotHourly    int      `name:"snapshot-hourly-keep" env:"K2_PROVISION_SNAPSHOT_HOURLY_KEEP" default:"48" help:"Hourly cadence snapshots to retain on the appliance."`
+	SnapshotDaily     int      `name:"snapshot-daily-keep" env:"K2_PROVISION_SNAPSHOT_DAILY_KEEP" default:"30" help:"Daily cadence snapshots to retain on the appliance."`
 }
 
 type storageCmd struct {

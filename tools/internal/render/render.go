@@ -303,6 +303,49 @@ func CSIUserActivationCloudConfig(csiPublicKey string, sudoers string) []byte {
 	return mustCloudConfig(out)
 }
 
+// BackupUserActivationCloudConfig declares the NAS pull-replication identity.
+// The NAS generates the keypair and only the public key reaches the
+// appliance (reverse of the csi flow, whose private key must live in the
+// cluster). Sudoers is scoped to read-side zfs subcommands: the appliance's
+// own snapshot timers do all pruning, so the pull identity never needs
+// destroy rights.
+func BackupUserActivationCloudConfig(backupPublicKeys []string, sudoers string) []byte {
+	type config struct {
+		Name   string           `yaml:"name"`
+		Users  []cloudUser      `yaml:"users"`
+		Stages activationStages `yaml:"stages"`
+	}
+	out := config{
+		Name: "K2 storage backup user",
+		Users: []cloudUser{
+			{
+				Name:              "backup",
+				SSHAuthorizedKeys: backupPublicKeys,
+			},
+		},
+		Stages: activationStages{
+			BootAfter: []activationStage{
+				{
+					Name: "Backup user support files",
+					Files: []activationFile{
+						{
+							Path:        "/etc/sudoers.d/98-backup",
+							Content:     sudoers,
+							Permissions: 0o440,
+							Owner:       0,
+							Group:       0,
+						},
+					},
+					Commands: []string{
+						"chown -R backup:backup /home/backup || true",
+					},
+				},
+			},
+		},
+	}
+	return mustCloudConfig(out)
+}
+
 func mustCloudConfig(value any) []byte {
 	data, err := yaml.Marshal(value)
 	if err != nil {
