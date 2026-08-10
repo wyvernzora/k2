@@ -111,7 +111,8 @@ learnings. Global rules apply unless this file explicitly overrides them.
 
 ```sh
 earthly +crd-constructs      # generate app CRD TypeScript bindings
-earthly +lint                # regenerate CRD bindings in-container, typecheck, lint
+earthly +lint                # CRD bindings, TS typecheck + ESLint, and +go-lint
+earthly +go-lint             # gofmt/vet/golangci-lint per Go module (mirrors CI)
 earthly +k8s-manifests       # synthesize deploy/ from a clean generated tree
 earthly +diff-manifests      # compare fresh deploy/ against remote deploy
 ```
