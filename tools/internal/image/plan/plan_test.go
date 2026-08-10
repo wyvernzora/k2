@@ -73,9 +73,14 @@ func TestImageTagAndArtifactStemMatchShellContract(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1"
+	// Floating tag names the slot; the descriptive tag carries the versions.
+	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-arm64-rpi4cb-k8s"
 	if got.Image != wantImage {
 		t.Fatalf("image = %q, want %q", got.Image, wantImage)
+	}
+	wantDescriptive := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1"
+	if got.DescriptiveImage != wantDescriptive {
+		t.Fatalf("descriptive image = %q, want %q", got.DescriptiveImage, wantDescriptive)
 	}
 	wantStem := "ubuntu-26.04-v4.1.0-arm64-rpi4cb-k8s-v1.36.0-k3s1"
 	if got.ArtifactStem != wantStem {
@@ -94,9 +99,13 @@ func TestImageTagOmitsKubernetesSegmentsForStorageTarget(t *testing.T) {
 	if got.KubernetesDistro != "" {
 		t.Fatalf("kubernetesDistro = %q, want empty", got.KubernetesDistro)
 	}
-	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.0-amd64-qemu-storage"
+	wantImage := "ghcr.io/wyvernzora/k2-kairos:ubuntu-amd64-qemu-storage"
 	if got.Image != wantImage {
 		t.Fatalf("image = %q, want %q", got.Image, wantImage)
+	}
+	// Storage images carry no Kubernetes segment in either tag.
+	if strings.Contains(got.DescriptiveImage, "k3s") {
+		t.Fatalf("descriptive image = %q, want no kubernetes segment", got.DescriptiveImage)
 	}
 	wantStem := "ubuntu-26.04-v4.1.0-amd64-qemu-storage"
 	if got.ArtifactStem != wantStem {
@@ -758,5 +767,27 @@ func TestImageTagsCarryNoRevision(t *testing.T) {
 		if !strings.HasSuffix(p.Image, p.Role) && !strings.Contains(p.Image, "-"+p.Role+"-") {
 			t.Errorf("%s image = %q, want the role in the tag", p.Target, p.Image)
 		}
+	}
+}
+
+func TestSlotTagIsStableAcrossVersionBumps(t *testing.T) {
+	planner, _ := newFixturePlanner(t)
+	before, err := planner.Build("ubuntu-26.04-amd64-qemu-storage")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A base + Kairos bump is exactly the case that used to make a node's
+	// own tag un-discoverable: it searched for the version it already ran.
+	bumped := planner
+	bumped.Versions.KairosVersion = "v9.9.9"
+	after, err := bumped.Build("ubuntu-26.04-amd64-qemu-storage")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if before.Image != after.Image {
+		t.Errorf("slot tag moved across a version bump: %q -> %q", before.Image, after.Image)
+	}
+	if before.DescriptiveImage == after.DescriptiveImage {
+		t.Errorf("descriptive tag must track versions, stayed %q", before.DescriptiveImage)
 	}
 }

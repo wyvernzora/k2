@@ -95,6 +95,11 @@ type Plan struct {
 	CurrentSourceCommit string
 	TargetSourceCommit  string
 
+	// ComponentDelta names the base/Kairos/k3s versions that would change,
+	// empty when nothing does. Tags no longer spell versions out, so this is
+	// where an operator sees that they are about to jump a distro release.
+	ComponentDelta string
+
 	// Target is the image the upgrade will install. Always populated;
 	// when the operator passes --source, it equals that ref; when
 	// auto-discovered, it's the newest registry tag matching the
@@ -161,6 +166,7 @@ type ImageRef struct {
 	Ref                    string
 	Digest                 string
 	SourceCommit           string
+	Components             oci.Components
 	Created                time.Time
 	UpgradeAllocationBytes uint64
 }
@@ -296,6 +302,7 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 	plan.Current = ImageRef{Ref: current, Digest: meta.AppliedDigest}
 	plan.CurrentSourceCommit = meta.SourceCommit
 	plan.TargetSourceCommit = plan.Target.SourceCommit
+	plan.ComponentDelta = componentDelta(meta, plan.Target.Components)
 
 	stateAvailable, recoveryAvailable, err := r.upgradeStorageAvailable()
 	if err != nil {
@@ -325,6 +332,7 @@ func imageRef(img oci.Image) ImageRef {
 		Ref:                    img.Ref,
 		Digest:                 img.Digest,
 		SourceCommit:           img.SourceCommit,
+		Components:             img.Components,
 		Created:                img.Created,
 		UpgradeAllocationBytes: img.UpgradeAllocationMiB << 20,
 	}
@@ -445,6 +453,21 @@ func imageTagBase(meta NodeImageMetadata) []string {
 		return nil
 	}
 	return []string{flavor, meta.KairosVersion, meta.Arch, meta.Hardware, role}
+}
+
+// componentDelta renders "base ubuntu:26.04 -> ubuntu:28.04" style lines for
+// whatever actually differs between the node and the target image.
+func componentDelta(meta NodeImageMetadata, target oci.Components) string {
+	var changes []string
+	for _, c := range []struct{ name, from, to string }{
+		{"kairos", meta.KairosVersion, target.KairosVersion},
+		{"kubernetes", meta.KubernetesVersion, target.KubernetesVersion},
+	} {
+		if c.to != "" && c.from != "" && c.from != c.to {
+			changes = append(changes, fmt.Sprintf("%s %s → %s", c.name, c.from, c.to))
+		}
+	}
+	return strings.Join(changes, ", ")
 }
 
 func imageRepository(ref string) string {
