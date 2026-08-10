@@ -1,0 +1,10 @@
+# Used by k2-tools build crd-manifest when rendering this wrapper chart for
+# CRD extraction (the chart ships no CRDs, but the bare render must still
+# pass its required-value checks). The deployed release is rendered from the
+# dependency directly in components/democratic-csi with full values.
+democratic-csi:
+  csiDriver:
+    name: org.democratic-csi.iscsi
+  driver:
+    config:
+      driver: zfs-generic-iscsi
