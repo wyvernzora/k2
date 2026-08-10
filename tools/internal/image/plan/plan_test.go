@@ -722,3 +722,38 @@ var rpiFirmwarePurgePackages = []string{
 	"linux-firmware-realtek",
 	"linux-firmware-snapdragon",
 }
+
+// Every target shares the one global image revision: the image build's common
+// inputs (node-agent, tools, Dockerfile) rebuild all targets together, so a
+// per-target revision pin would make some target re-push an existing tag with
+// different content.
+func TestAllTargetsUseGlobalImageRevision(t *testing.T) {
+	kairosRoot := filepath.Clean(filepath.Join("..", "..", "..", "..", "..", "kairos"))
+	discovered, err := paths.Discover(kairosRoot, paths.Overrides{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	targets, err := config.LoadTargets(discovered.TargetsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	versions, err := config.LoadVersions(discovered.VersionsFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plans, err := plan.New(targets, versions, discovered).BuildAllEnabled()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plans) == 0 {
+		t.Fatal("no enabled targets")
+	}
+	for _, p := range plans {
+		if !strings.HasSuffix(p.Image, "-"+versions.ImageRevision) {
+			t.Errorf("%s image = %q, want global revision suffix -%s", p.Target, p.Image, versions.ImageRevision)
+		}
+		if p.Versions.ImageRevision != versions.ImageRevision {
+			t.Errorf("%s plan versions revision = %q, want %q", p.Target, p.Versions.ImageRevision, versions.ImageRevision)
+		}
+	}
+}
