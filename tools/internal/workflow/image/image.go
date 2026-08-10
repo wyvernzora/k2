@@ -1,7 +1,10 @@
 package image
 
 import (
+	"bytes"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/wyvernzora/k2/tools/internal/image/config"
 	"github.com/wyvernzora/k2/tools/internal/image/paths"
@@ -123,6 +126,28 @@ func loadImagePlanner(globals imageGlobals) (plan.Planner, error) {
 	if err != nil {
 		return plan.Planner{}, err
 	}
+	// Content identity is the source commit, resolved at build time: an image
+	// cannot bake its own digest, and this is the one stamp that survives both
+	// the registry-upgrade path and a flashed raw install. Empty outside a git
+	// checkout (the image still builds; it just reports an unknown source).
+	versions.SourceCommit = sourceCommit(discovered.KairosRoot)
 
 	return plan.New(targets, versions, discovered), nil
+}
+
+// sourceCommit reports HEAD for the repo containing the kairos build inputs,
+// suffixed with "-dirty" when TRACKED files differ from HEAD, so a local build
+// is never mistaken for a published one. Untracked files are ignored on
+// purpose: CI compiles k2-tools into the worktree before building images, and
+// counting that would mark every published image dirty.
+func sourceCommit(dir string) string {
+	rev, err := exec.Command("git", "-C", dir, "rev-parse", "HEAD").Output()
+	if err != nil {
+		return ""
+	}
+	commit := strings.TrimSpace(string(rev))
+	if status, err := exec.Command("git", "-C", dir, "status", "--porcelain", "--untracked-files=no").Output(); err == nil && len(bytes.TrimSpace(status)) > 0 {
+		commit += "-dirty"
+	}
+	return commit
 }

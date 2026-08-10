@@ -83,8 +83,17 @@ type Plan struct {
 	IsControlPlane bool
 
 	// Current is the image the node is presently running, reconstructed
-	// from K2's on-node metadata using the target repository.
+	// from K2's on-node metadata using the target repository. Its Ref is a
+	// floating tag; Digest is populated only when the node recorded one at
+	// its last k2-driven upgrade.
 	Current ImageRef
+
+	// CurrentSourceCommit / TargetSourceCommit are the build-time content
+	// stamps: the node's comes from metadata.yaml, the target's from the
+	// image's OCI revision label. They answer "same build?" when no applied
+	// digest was recorded (a freshly flashed node).
+	CurrentSourceCommit string
+	TargetSourceCommit  string
 
 	// Target is the image the upgrade will install. Always populated;
 	// when the operator passes --source, it equals that ref; when
@@ -121,9 +130,27 @@ type Plan struct {
 // completed the disruptive half of the upgrade before failing validation or
 // recovery sync. Callers should resume at post-upgrade verification instead
 // of rewriting the active image and rebooting again.
+// ActiveImageMatchesTarget answers "is this node already running the image the
+// tag points at right now?". Tags float, so identity comes from content: the
+// digest the node last had applied when we know it, else the source commit
+// baked at build time (the only stamp a flashed-raw install carries).
 func (p Plan) ActiveImageMatchesTarget() bool {
-	return p.Current.Ref != "" && imageRefsMatch(p.Current.Ref, p.Target.Ref)
+	if p.Current.Digest != "" && p.Target.Digest != "" {
+		return imageRefsMatch(p.Current.Digest, p.Target.Digest)
+	}
+	if p.CurrentSourceCommit != "" && p.TargetSourceCommit != "" {
+		return imageRefsMatch(p.CurrentSourceCommit, p.TargetSourceCommit)
+	}
+	return false
 }
+
+const (
+	appliedDigestDir = "/usr/local/.state"
+	// AppliedDigestPath lives on COS_PERSISTENT so it survives A/B upgrades
+	// and reboots (but not a reset, which is correct: a reset node's identity
+	// falls back to the baked source commit).
+	AppliedDigestPath = appliedDigestDir + "/k2-image-digest"
+)
 
 // ImageRef is the small shape we carry around for "an OCI image we
 // either know about or are about to install". Created is zero when
@@ -133,6 +160,7 @@ func (p Plan) ActiveImageMatchesTarget() bool {
 type ImageRef struct {
 	Ref                    string
 	Digest                 string
+	SourceCommit           string
 	Created                time.Time
 	UpgradeAllocationBytes uint64
 }
@@ -179,17 +207,20 @@ type Runner struct {
 // It supports both the legacy Ubuntu 24.04 target layout and the current
 // Ubuntu 26.04 layout so already-installed nodes remain identifiable.
 type NodeImageMetadata struct {
-	Target                  string
-	Flavor                  string
-	FlavorRelease           string
-	Variant                 string
-	Role                    string
-	Arch                    string
-	Hardware                string
-	KubernetesDistro        string
-	KubernetesVersion       string
-	KairosVersion           string
-	ImageRevision           string
+	Target            string
+	Flavor            string
+	FlavorRelease     string
+	Variant           string
+	Role              string
+	Arch              string
+	Hardware          string
+	KubernetesDistro  string
+	KubernetesVersion string
+	KairosVersion     string
+	SourceCommit      string
+	// AppliedDigest is the digest k2-tools recorded on the node when it last
+	// drove an upgrade; empty on nodes installed from a raw artifact.
+	AppliedDigest           string
 	DiskStateSizeMiB        uint64
 	UpgradeSizeAllowanceMiB uint64
 	RootFSSizeMiB           uint64
@@ -262,7 +293,9 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 	if current == "" {
 		return Plan{}, fmt.Errorf("node image metadata is incomplete; cannot reconstruct current image")
 	}
-	plan.Current = ImageRef{Ref: current}
+	plan.Current = ImageRef{Ref: current, Digest: meta.AppliedDigest}
+	plan.CurrentSourceCommit = meta.SourceCommit
+	plan.TargetSourceCommit = plan.Target.SourceCommit
 
 	stateAvailable, recoveryAvailable, err := r.upgradeStorageAvailable()
 	if err != nil {
@@ -291,6 +324,7 @@ func imageRef(img oci.Image) ImageRef {
 	return ImageRef{
 		Ref:                    img.Ref,
 		Digest:                 img.Digest,
+		SourceCommit:           img.SourceCommit,
 		Created:                img.Created,
 		UpgradeAllocationBytes: img.UpgradeAllocationMiB << 20,
 	}
@@ -378,9 +412,12 @@ func tagPrefix(meta NodeImageMetadata) string {
 	return strings.Join(segments, "-") + "-"
 }
 
+// imageRefFromMetadata rebuilds the FLOATING tag this node was built from.
+// The tag carries no revision, so it names a target rather than a build —
+// which build the node runs is answered by digest/commit, not by this ref.
 func imageRefFromMetadata(repo string, meta NodeImageMetadata) string {
 	segments := imageTagBase(meta)
-	if repo == "" || len(segments) == 0 || meta.ImageRevision == "" {
+	if repo == "" || len(segments) == 0 {
 		return ""
 	}
 	if meta.KubernetesDistro != "" {
@@ -389,7 +426,6 @@ func imageRefFromMetadata(repo string, meta NodeImageMetadata) string {
 		}
 		segments = append(segments, strings.ReplaceAll(meta.KubernetesVersion, "+", "-"))
 	}
-	segments = append(segments, meta.ImageRevision)
 	return repo + ":" + strings.Join(segments, "-")
 }
 
@@ -422,8 +458,16 @@ func imageRepository(ref string) string {
 	return ""
 }
 
-func kairosUpgradeSource(ref string) string {
-	return "oci:" + ref
+// kairosUpgradeSource pins the digest when the registry gave us one, so the
+// upgrade installs exactly the manifest the plan showed even if the floating
+// tag moves mid-run. kairos-agent resolves repo@sha256:... natively.
+func kairosUpgradeSource(target ImageRef) string {
+	if target.Digest != "" {
+		if repo := imageRepository(target.Ref); repo != "" {
+			return "oci:" + repo + "@" + target.Digest
+		}
+	}
+	return "oci:" + target.Ref
 }
 
 // imageRefsMatch compares two refs by string equality after

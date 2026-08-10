@@ -16,7 +16,7 @@ type Versions struct {
 	AuroraBootVersion string `json:"aurorabootVersion" yaml:"aurorabootVersion"`
 	BaseImage         string `json:"baseImage" yaml:"baseImage"`
 	K3sVersion        string `json:"k3sVersion" yaml:"k3sVersion"`
-	ImageRevision     string `json:"imageRevision" yaml:"imageRevision"`
+	SourceCommit      string `json:"sourceCommit,omitempty" yaml:"sourceCommit,omitempty"`
 	RegistryImage     string `json:"registryImage" yaml:"registryImage"`
 }
 
@@ -159,7 +159,6 @@ func LoadVersions(path string) (Versions, error) {
 		AuroraBootVersion: values["AURORABOOT_VERSION"],
 		BaseImage:         values["BASE_IMAGE"],
 		K3sVersion:        values["K3S_VERSION"],
-		ImageRevision:     values["K2_IMAGE_REVISION"],
 		RegistryImage:     values["REGISTRY_IMAGE"],
 	}
 	if versions.KairosVersion == "" ||
@@ -167,7 +166,6 @@ func LoadVersions(path string) (Versions, error) {
 		versions.AuroraBootVersion == "" ||
 		versions.BaseImage == "" ||
 		versions.K3sVersion == "" ||
-		versions.ImageRevision == "" ||
 		versions.RegistryImage == "" {
 		return Versions{}, fmt.Errorf("%s is missing one or more required version pins", path)
 	}

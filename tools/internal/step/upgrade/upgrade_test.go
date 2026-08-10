@@ -41,9 +41,8 @@ func TestImageRefFromMetadata(t *testing.T) {
 				KubernetesDistro:  "k3s",
 				KubernetesVersion: "v1.36.0+k3s1",
 				KairosVersion:     "v4.1.0",
-				ImageRevision:     "rev0",
 			},
-			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-amd64-qemu-k3s-v1.36.0-k3s1-rev0",
+			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-amd64-qemu-k3s-v1.36.0-k3s1",
 		},
 		{
 			name: "current Ubuntu 26.04 image",
@@ -55,9 +54,8 @@ func TestImageRefFromMetadata(t *testing.T) {
 				KubernetesDistro:  "k3s",
 				KubernetesVersion: "v1.36.2+k3s1",
 				KairosVersion:     "v4.1.2",
-				ImageRevision:     "rev1",
 			},
-			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.2-amd64-qemu-k8s-v1.36.2-k3s1-rev1",
+			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.2-amd64-qemu-k8s-v1.36.2-k3s1",
 		},
 	}
 
@@ -98,10 +96,43 @@ func TestImageRepository(t *testing.T) {
 	}
 }
 
-func TestKairosUpgradeSourceUsesOCIType(t *testing.T) {
-	ref := "ghcr.io/wyvernzora/k2-kairos:rev1"
-	if got, want := kairosUpgradeSource(ref), "oci:"+ref; got != want {
+func TestKairosUpgradeSourcePinsDigestWhenKnown(t *testing.T) {
+	tag := "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.2-amd64-qemu-storage"
+	digest := "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+	// A floating tag can move between plan and apply; the digest cannot.
+	got := kairosUpgradeSource(ImageRef{Ref: tag, Digest: digest})
+	if want := "oci:ghcr.io/wyvernzora/k2-kairos@" + digest; got != want {
 		t.Errorf("got %q, want %q", got, want)
+	}
+	// Without a digest (registry unreachable, explicit --source), fall back
+	// to the ref as given rather than refusing to upgrade.
+	if got, want := kairosUpgradeSource(ImageRef{Ref: tag}), "oci:"+tag; got != want {
+		t.Errorf("fallback got %q, want %q", got, want)
+	}
+}
+
+func TestActiveImageMatchesTargetPrefersDigest(t *testing.T) {
+	same := "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+	other := "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+	// Same floating tag, different hash => the node wants the newer build.
+	stale := Plan{Current: ImageRef{Ref: "repo:tag", Digest: same}, Target: ImageRef{Ref: "repo:tag", Digest: other}}
+	if stale.ActiveImageMatchesTarget() {
+		t.Error("differing digests must not count as current")
+	}
+	current := Plan{Current: ImageRef{Ref: "repo:tag", Digest: same}, Target: ImageRef{Ref: "repo:tag", Digest: same}}
+	if !current.ActiveImageMatchesTarget() {
+		t.Error("identical digests must count as current")
+	}
+	// Freshly flashed node: no applied digest, so identity falls back to the
+	// commit baked at build time.
+	flashed := Plan{
+		Current:             ImageRef{Ref: "repo:tag"},
+		Target:              ImageRef{Ref: "repo:tag", Digest: other},
+		CurrentSourceCommit: "abc123",
+		TargetSourceCommit:  "abc123",
+	}
+	if !flashed.ActiveImageMatchesTarget() {
+		t.Error("matching source commits must count as current when no digest was recorded")
 	}
 }
 
@@ -167,9 +198,10 @@ func TestQuorumImpactIgnoresWorkers(t *testing.T) {
 
 func TestPreflightAllowsResumeWhenAlreadyOnTarget(t *testing.T) {
 	plan := Plan{
-		Current: ImageRef{Ref: "ghcr.io/x:rev3"},
+		Current: ImageRef{Ref: "ghcr.io/x:tag", Digest: "sha256:aa"},
 		Target: ImageRef{
-			Ref:                    "ghcr.io/x:rev3",
+			Ref:                    "ghcr.io/x:tag",
+			Digest:                 "sha256:aa",
 			UpgradeAllocationBytes: 900 << 20,
 		},
 		QuorumOK:                  true,
@@ -185,9 +217,10 @@ func TestPreflightAllowsResumeWhenAlreadyOnTarget(t *testing.T) {
 
 func TestPreflightResumeStillRequiresRecoverySpace(t *testing.T) {
 	plan := Plan{
-		Current: ImageRef{Ref: "ghcr.io/x:rev3"},
+		Current: ImageRef{Ref: "ghcr.io/x:tag", Digest: "sha256:aa"},
 		Target: ImageRef{
-			Ref:                    "ghcr.io/x:rev3",
+			Ref:                    "ghcr.io/x:tag",
+			Digest:                 "sha256:aa",
 			UpgradeAllocationBytes: 900 << 20,
 		},
 		QuorumOK:                  true,
@@ -203,9 +236,10 @@ func TestPreflightResumeStillRequiresRecoverySpace(t *testing.T) {
 
 func TestPreflightResumeDoesNotRequireQuorumDisruptionApproval(t *testing.T) {
 	plan := Plan{
-		Current: ImageRef{Ref: "ghcr.io/x:rev3"},
+		Current: ImageRef{Ref: "ghcr.io/x:tag", Digest: "sha256:aa"},
 		Target: ImageRef{
-			Ref:                    "ghcr.io/x:rev3",
+			Ref:                    "ghcr.io/x:tag",
+			Digest:                 "sha256:aa",
 			UpgradeAllocationBytes: 900 << 20,
 		},
 		QuorumOK:                  false,

@@ -40,11 +40,16 @@ type Image struct {
 	StateSizeMiB            uint64
 	UpgradeAllocationMiB    uint64
 	UpgradeSizeAllowanceMiB uint64
+	// SourceCommit is the git commit the image was built from, read from
+	// the OCI revision label. It is the image's content identity: an image
+	// cannot carry its own digest, and this survives a flashed raw install.
+	SourceCommit string
 }
 
 const (
 	stateSizeLabel            = "io.k2.disk-state-size-mib"
 	upgradeSizeAllowanceLabel = "io.k2.upgrade-size-allowance-mib"
+	sourceCommitLabel         = "org.opencontainers.image.revision"
 	imageMetadataPath         = "usr/share/k2/image-build/metadata.yaml"
 	maxImageMetadataBytes     = int64(1 << 20)
 )
@@ -97,6 +102,7 @@ func (d *Discoverer) InspectImage(ctx context.Context, ref string) (Image, error
 	return Image{
 		Ref:                     ref,
 		Digest:                  digest,
+		SourceCommit:            cfg.Config.Labels[sourceCommitLabel],
 		Created:                 cfg.Created.Time,
 		StateSizeMiB:            stateSizeMiB,
 		UpgradeAllocationMiB:    upgradeAllocationMiB,
