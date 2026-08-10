@@ -125,12 +125,7 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 		} else {
 			sh.Successf("install complete; node rebooting")
 		}
-		// A node with static NICs comes back on its pinned address; the DHCP
-		// bootstrap address it was installed over may no longer exist.
-		if addr := node.PrimaryAddress(); addr != "" && !remoteFlags.NoReboot && addr != client.Host {
-			client.Host = addr
-			sh.Successf("post-reboot reconnect target switched to %s", addr)
-		}
+		updateJoinReconnectTarget(&client, sh, node, remoteFlags.NoReboot)
 		return nil
 	})
 
@@ -180,4 +175,18 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 	})
 
 	return wf.Execute(ctx)
+}
+
+func updateJoinReconnectTarget(client *remote.Client, sh ui.Step, node nodeconfig.Config, noReboot bool) {
+	if noReboot {
+		return
+	}
+	addr := node.PrimaryAddress()
+	if addr == "" || addr == client.Host {
+		return
+	}
+	// A node with static NICs comes back on its pinned address; the DHCP
+	// bootstrap address it was installed over may no longer exist.
+	client.Host = addr
+	sh.Successf("post-reboot reconnect target switched to %s", addr)
 }

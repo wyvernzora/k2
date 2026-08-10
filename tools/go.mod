@@ -7,7 +7,7 @@ require (
 	charm.land/bubbletea/v2 v2.0.8
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/BurntSushi/toml v1.6.0
-	github.com/alecthomas/kong v1.16.0
+	github.com/alecthomas/kong v1.16.1
 	github.com/gonvenience/ytbx v1.5.0
 	github.com/google/go-containerregistry v0.21.9
 	github.com/homeport/dyff v1.12.0
