@@ -6,7 +6,7 @@ import { AuthenticatedIngress, AuthenticatedMcpIngress, authenticatedSourceIpPol
 
 import { KURA_SERVICE_NAME } from "../../constants.js";
 
-import { LibraryManagerConfig } from "./config.js";
+import { GatewayConfig, LibraryManagerConfig } from "./config.js";
 import { KuraDeployment } from "./deployment.js";
 import { KuraGatewayDeployment } from "./gateway-deployment.js";
 import { KuraService, LibraryManagerService } from "./service.js";
@@ -26,6 +26,7 @@ export class Kura extends K2Chart {
       fields: { credential: "credential" },
     });
     const config = new LibraryManagerConfig(this, "library-manager-config");
+    const gatewayConfig = new GatewayConfig(this, "gateway-config");
     new KuraDeployment(this, "deployment", {
       configChecksum: config.checksum,
       configName: config.name,
@@ -35,7 +36,10 @@ export class Kura extends K2Chart {
       },
     });
     new LibraryManagerService(this, "library-manager-service");
-    new KuraGatewayDeployment(this, "gateway-deployment");
+    new KuraGatewayDeployment(this, "gateway-deployment", {
+      configChecksum: gatewayConfig.checksum,
+      configName: gatewayConfig.name,
+    });
     new KuraService(this, "service");
     new AuthenticatedIngress(this, "ingress", {
       host,
