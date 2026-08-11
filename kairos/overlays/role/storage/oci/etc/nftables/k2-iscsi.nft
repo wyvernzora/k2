@@ -1,0 +1,52 @@
+#!/usr/sbin/nft -f
+
+# Keep the iSCSI portal on the storage fabric only.
+#
+# LIO binds its portal to the wildcard address ([::0]:3260) and democratic-csi
+# creates targets with that default, so without this the appliance answers
+# iSCSI on the LAN leg as well. Filtering here rather than binding the portal
+# to 172.16.9.250 is deliberate: a bound portal serves exactly one address,
+# which would have to be re-bound (or a second portal added) to ever carry
+# iSCSI over a WireGuard tunnel. A filter keeps the wildcard bind and decides
+# reachability by destination, so reaching the portal over a new transport is a
+# routing decision rather than a re-provisioned target.
+#
+# Matching on destination NETWORK, not interface name, so the rule does not
+# depend on ens18/ens19 enumeration order and holds for any storage node.
+#
+# Everything other than 3260 is untouched (policy accept): this is a port
+# guard, not a host firewall. The fabric itself is intentionally open.
+
+table inet k2_storage
+delete table inet k2_storage
+
+table inet k2_storage {
+  # Destinations allowed to reach the iSCSI portal.
+  #
+  # The planned WireGuard case — control-plane blades, which have no fabric
+  # NIC, reaching the portal over a tunnel from the LAN side — needs NO
+  # change here, provided the tunnel carries the fabric address itself.
+  # democratic-csi advertises ONE cluster-wide targetPortal
+  # (172.16.9.250:3260) with no per-node override, so every initiator has to
+  # arrive at that address anyway; a decrypted packet is then accepted on its
+  # destination no matter which interface delivered it. Giving the appliance
+  # a second, tunnel-side address would need an element here — and would have
+  # no way to be advertised to the initiators.
+  set iscsi_portal_dst {
+    type ipv4_addr
+    flags interval
+    elements = { 172.16.0.0/16 }
+  }
+
+  chain input {
+    type filter hook input priority filter; policy accept;
+
+    tcp dport 3260 iif lo accept
+    tcp dport 3260 ip daddr @iscsi_portal_dst accept
+
+    # Reached only by 3260 traffic aimed elsewhere (the LAN leg, or any IPv6
+    # address — there is no IPv6 fabric). Dropped rather than rejected so a
+    # LAN scan learns nothing about the portal's existence.
+    tcp dport 3260 drop
+  }
+}

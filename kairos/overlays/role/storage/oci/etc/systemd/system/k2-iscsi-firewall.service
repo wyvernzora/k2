@@ -1,0 +1,16 @@
+[Unit]
+Description=Restrict the iSCSI portal to the storage fabric
+# Ordered ahead of the target service so the portal is never reachable on the
+# LAN leg, not even for the window between LIO starting and rules loading.
+# The ruleset matches on address, not interface, so it needs no network wait.
+Before=rtslib-fb-targetctl.service
+ConditionPathExists=!/run/cos/recovery_mode
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nftables/k2-iscsi.nft
+ExecStop=/usr/sbin/nft delete table inet k2_storage
+
+[Install]
+WantedBy=multi-user.target
