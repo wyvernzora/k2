@@ -7037,6 +7037,148 @@ spec:
         - expr: label_replace(k2_zfs_volume_used_bytes{job="storage-appliance"}, "volumename", "$1", "volume", ".*/(pvc-[^/]+)$") * on (volumename) group_left(namespace, persistentvolumeclaim) max by (volumename, namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_info{volumename!=""})
           record: k2_zfs_volume_pvc_used_bytes
 ---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: storage-appliance-alerts
+  namespace: prometheus
+spec:
+  groups:
+    - name: k2.storage.appliance
+      rules:
+        - alert: StorageApplianceDown
+          annotations:
+            description: Prometheus cannot reach k2-st-0e12:9100. iSCSI may still be serving — this is a monitoring-path alarm, not proof of data-path failure.
+            summary: Storage appliance is not scrapeable
+          expr: up{job="storage-appliance",instance="k2-st-0e12"} == 0
+          for: 5m
+          labels:
+            k2_component: storage-appliance
+            severity: critical
+        - alert: StorageApplianceMetricsAbsent
+          annotations:
+            description: The scrape target itself is gone, not merely down — the ScrapeConfig may have been removed or relabelled.
+            summary: Storage appliance target has disappeared
+          expr: absent(up{job="storage-appliance",instance="k2-st-0e12"})
+          for: 15m
+          labels:
+            k2_component: storage-appliance
+            severity: critical
+        - alert: StoragePoolNotOnline
+          annotations:
+            description: A vdev is degraded or faulted. Every PVC on this appliance is affected.
+            summary: ZFS pool {{ $labels.pool }} is not ONLINE
+          expr: k2_zfs_pool_health{job="storage-appliance",instance="k2-st-0e12"} != 1
+          for: 5m
+          labels:
+            k2_component: storage-appliance
+            severity: critical
+        - alert: StoragePoolKeyUnavailable
+          annotations:
+            description: The pool is imported but locked, so no zvol can be served. Usually means the boot key-load stage failed.
+            summary: ZFS encryption key not loaded for {{ $labels.dataset }}
+          expr: k2_zfs_keystatus_available{job="storage-appliance",instance="k2-st-0e12"} != 1
+          for: 5m
+          labels:
+            k2_component: storage-appliance
+            severity: critical
+        - alert: StoragePoolNearFull
+          annotations:
+            description: ZFS performance degrades well before 100%; expand or reclaim before it becomes urgent.
+            summary: ZFS pool {{ $labels.pool }} is over 80% full
+          expr: k2_zfs_pool_capacity_ratio{job="storage-appliance",instance="k2-st-0e12"} > 0.8
+          for: 30m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageCollectorFailing
+          annotations:
+            description: The metrics this collector owns are stale or missing; treat panels fed by it as unknown, not healthy.
+            summary: Storage collector {{ $labels.collector }} is failing
+          expr: k2_collector_success{job="storage-appliance",instance="k2-st-0e12"} == 0
+          for: 15m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageHealthCheckStale
+          annotations:
+            description: k2-storage-health.timer appears stopped; appliance health is unobserved.
+            summary: Storage health check has not run for over 2 hours
+          expr: time() - k2_storage_health_last_run_timestamp_seconds{job="storage-appliance",instance="k2-st-0e12"} > 7200
+          for: 0m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageSnapshotStale
+          annotations:
+            description: The appliance snapshot timer has stopped or is failing; recent writes are unprotected.
+            summary: No {{ $labels.prefix }} snapshot for over 3 hours
+          expr: time() - k2_zfs_last_snapshot_timestamp_seconds{job="storage-appliance",instance="k2-st-0e12"} > 10800
+          for: 0m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageSnapshotSeriesAbsent
+          annotations:
+            description: Not a stale snapshot — NO cadence snapshot exists. The timers may never have run on this appliance.
+            summary: No snapshot cadence series at all
+          expr: absent(k2_zfs_last_snapshot_timestamp_seconds{job="storage-appliance",instance="k2-st-0e12"})
+          for: 30m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageDeviceMediaErrors
+          annotations:
+            description: Media errors are cumulative and never decrease; investigate before the mirror loses redundancy.
+            summary: SMART media errors on {{ $labels.device }}
+          expr: k2_smart_media_errors{job="storage-appliance",instance="k2-st-0e12"} > 0
+          for: 5m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageDeviceWearHigh
+          annotations:
+            description: Plan replacement; replace one mirror member at a time and let it resilver fully.
+            summary: NVMe wear on {{ $labels.device }} above 80%
+          expr: k2_smart_percentage_used{job="storage-appliance",instance="k2-st-0e12"} > 80
+          for: 1h
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageImageCheckFailing
+          annotations:
+            description: The node cannot reach the registry, so k2_node_image_upgrade_available is unknown — not zero.
+            summary: Image upgrade check is failing
+          expr: k2_node_image_check_success{job="storage-appliance",instance="k2-st-0e12"} == 0
+          for: 3h
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageImageCheckStale
+          annotations:
+            description: k2-image-check.timer appears stopped; image currency is unobserved.
+            summary: Image upgrade check has not run for over 3 hours
+          expr: time() - k2_node_image_check_timestamp_seconds{job="storage-appliance",instance="k2-st-0e12"} > 10800
+          for: 0m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+    - name: k2.storage.appliance.rollup
+      rules:
+        - alert: StorageApplianceDegraded
+          annotations:
+            description: Aggregate for k2-st-0e12. Individual causes are the firing ALERTS with k2_component=storage-appliance; this exists so notification routing has one target that does not change as leaf alerts are added.
+            summary: Storage appliance has {{ $value }} active alert(s)
+          expr: count(ALERTS{k2_component="storage-appliance",alertstate="firing"}) > 0
+          for: 0m
+          labels:
+            k2_component: storage-appliance
+            k2_rollup: "true"
+            severity: warning
+---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
