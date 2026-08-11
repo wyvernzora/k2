@@ -1,6 +1,7 @@
 import { Size } from "cdk8s";
 import {
   Capability,
+  ConfigMap,
   Cpu,
   DeploymentStrategy,
   EnvValue,
@@ -29,32 +30,47 @@ import {
 } from "../../constants.js";
 import { KURA_IMAGES } from "../../images.js";
 
+import { GATEWAY_CONFIG_KEY } from "./config.js";
+
 const CADDY_UID = 65532;
 const CADDY_GID = 65532;
+const CONFIG_MOUNT_PATH = "/etc/kura/gateway.toml";
+
+export interface KuraGatewayDeploymentProps {
+  readonly configChecksum: string;
+  readonly configName: string;
+}
 
 export class KuraGatewayDeployment extends K2Deployment {
-  public constructor(scope: Construct, id: string) {
+  public constructor(scope: Construct, id: string, props: KuraGatewayDeploymentProps) {
     const volumeMounts = caddyVolumeMounts(scope, id);
+    const config = ConfigMap.fromConfigMapName(scope, `${id}-gateway-config`, props.configName);
+    const configVolume = Volume.fromConfigMap(scope, `${id}-config-volume`, config, { name: "config" });
     super(scope, id, {
       metadata: { name: "kura-gateway" },
       replicas: 1,
       select: false,
       strategy: DeploymentStrategy.rollingUpdate(),
-      podMetadata: { labels: KURA_GATEWAY_LABELS },
+      podMetadata: {
+        labels: KURA_GATEWAY_LABELS,
+        annotations: {
+          "checksum/gateway-config": props.configChecksum,
+        },
+      },
       automountServiceAccountToken: false,
       enableServiceLinks: false,
       securityContext: {
         ensureNonRoot: true,
         fsGroup: CADDY_GID,
       },
-      volumes: volumeMounts.map(mount => mount.volume),
-      containers: [gatewayContainer(volumeMounts)],
+      volumes: [configVolume, ...volumeMounts.map(mount => mount.volume)],
+      containers: [gatewayContainer(volumeMounts, configVolume)],
     });
     this.select(LabelSelector.of({ labels: KURA_GATEWAY_LABELS }));
   }
 }
 
-function gatewayContainer(volumeMounts: VolumeMount[]): ContainerProps {
+function gatewayContainer(volumeMounts: VolumeMount[], configVolume: Volume): ContainerProps {
   const probe = Probe.fromHttpGet("/healthz", { port: KURA_GATEWAY_HTTP_PORT });
   return {
     name: "gateway",
@@ -75,7 +91,7 @@ function gatewayContainer(volumeMounts: VolumeMount[]): ContainerProps {
       XDG_CONFIG_HOME: EnvValue.fromValue("/config"),
       XDG_DATA_HOME: EnvValue.fromValue("/data"),
     },
-    volumeMounts,
+    volumeMounts: [...volumeMounts, configMount(configVolume)],
     liveness: probe,
     readiness: probe,
     resources: {
@@ -104,6 +120,15 @@ function gatewayContainer(volumeMounts: VolumeMount[]): ContainerProps {
         type: SeccompProfileType.RUNTIME_DEFAULT,
       },
     },
+  };
+}
+
+function configMount(configVolume: Volume): VolumeMount {
+  return {
+    volume: configVolume,
+    path: CONFIG_MOUNT_PATH,
+    subPath: GATEWAY_CONFIG_KEY,
+    readOnly: true,
   };
 }
 

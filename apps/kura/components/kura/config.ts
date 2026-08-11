@@ -5,8 +5,25 @@ import type { Construct } from "constructs";
 import dedent from "dedent-js";
 
 export const LIBRARY_MANAGER_CONFIG_KEY = "library-manager.toml";
+export const GATEWAY_CONFIG_KEY = "gateway.toml";
 
 const CONFIG_MAP_NAME = "kura-library-manager-config";
+const GATEWAY_CONFIG_MAP_NAME = "kura-gateway-config";
+
+export class GatewayConfig extends ConfigMap {
+  public readonly checksum: string;
+
+  public constructor(scope: Construct, id: string) {
+    const config = renderGatewayConfig();
+    super(scope, id, {
+      metadata: { name: GATEWAY_CONFIG_MAP_NAME },
+      data: {
+        [GATEWAY_CONFIG_KEY]: config,
+      },
+    });
+    this.checksum = createHash("sha256").update(config).digest("hex");
+  }
+}
 
 export class LibraryManagerConfig extends ConfigMap {
   public readonly checksum: string;
@@ -37,5 +54,12 @@ function renderLibraryManagerConfig(): string {
 
     [metadata]
     preferred_languages = ["ja"]
+  `;
+}
+
+function renderGatewayConfig(): string {
+  return dedent`
+    [mcp]
+    session_timeout = "2h"
   `;
 }
