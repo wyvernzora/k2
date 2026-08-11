@@ -373,9 +373,6 @@ either tighten the stable rule above or append one concrete one-line rule here
 before ending the session. During grooming, promote durable rules into the
 proper section above and remove the inbox duplicate.
 
-- Takuhai deployment includes three runtime artifacts: service, crawler-dmhy, and
-  `takuhai/n8n-nodes`; keep the n8n init-container factory in `@k2/takuhai`
-  and mount it through `N8N_CUSTOM_EXTENSIONS`.
 - Apps own their exported endpoints, addresses, subnets, ports, and workload
   facts; other apps should import those facts instead of duplicating them.
 - Go toolbox steps live under `tools/internal/step/<bucket>/<step>.go`; composed
