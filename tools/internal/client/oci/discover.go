@@ -1,8 +1,6 @@
-// Package oci wraps go-containerregistry to discover the newest
-// pushed image of a Kairos OCI build target. The k2-tools upgrade
-// subcommand uses it to auto-resolve "the latest image for this
-// node's hardware/arch combo" without the operator having to type
-// the full ghcr.io tag.
+// Package oci wraps go-containerregistry for registry metadata used by K2
+// tooling. The upgrade command discovers Kairos images, and build checks read
+// source revision labels from pinned application images.
 //
 // The package isolates the registry-client dependency to one
 // internal package so tests anywhere else in the tree don't pull
@@ -147,6 +145,16 @@ func (d *Discoverer) InspectImage(ctx context.Context, ref string) (Image, error
 	}, nil
 }
 
+// SourceRevision returns the common OCI source revision label across every
+// Linux image manifest referenced by ref.
+func (d *Discoverer) SourceRevision(ctx context.Context, ref string) (string, error) {
+	revision, err := d.reg.SourceRevision(ctx, ref)
+	if err != nil {
+		return "", fmt.Errorf("read OCI source revision for %s: %w", ref, err)
+	}
+	return revision, nil
+}
+
 func positiveLabel(labels map[string]string, name string) (uint64, error) {
 	value := strings.TrimSpace(labels[name])
 	if value == "" {
@@ -216,11 +224,11 @@ type registry interface {
 	Config(ctx context.Context, ref string) (*v1.ConfigFile, error)
 	Digest(ctx context.Context, ref string) (string, error)
 	RootFSSizeMiB(ctx context.Context, ref string) (uint64, error)
+	SourceRevision(ctx context.Context, ref string) (string, error)
 }
 
 // craneRegistry is the production registry impl backed by crane.
-// All methods are anonymous-public-read against ghcr.io (which is what
-// our k2-kairos images live behind); no auth is configured.
+// All methods are anonymous public reads; no registry auth is configured.
 type craneRegistry struct{}
 
 func (craneRegistry) ListTags(ctx context.Context, repo string) ([]string, error) {
@@ -264,6 +272,69 @@ func (craneRegistry) RootFSSizeMiB(ctx context.Context, ref string) (uint64, err
 		return 0, fmt.Errorf("%s requires a positive rootfsSizeMiB", imageMetadataPath)
 	}
 	return sizing.RootFSSizeMiB, nil
+}
+
+func (craneRegistry) SourceRevision(ctx context.Context, ref string) (string, error) {
+	parsed, err := name.ParseReference(ref)
+	if err != nil {
+		return "", err
+	}
+	descriptor, err := remote.Get(parsed, remote.WithContext(ctx))
+	if err != nil {
+		return "", err
+	}
+	if !descriptor.MediaType.IsIndex() {
+		img, err := descriptor.Image()
+		if err != nil {
+			return "", err
+		}
+		cfg, err := img.ConfigFile()
+		if err != nil {
+			return "", err
+		}
+		return commonSourceRevision(ref, []*v1.ConfigFile{cfg})
+	}
+
+	index, err := descriptor.ImageIndex()
+	if err != nil {
+		return "", err
+	}
+	manifest, err := index.IndexManifest()
+	if err != nil {
+		return "", err
+	}
+	imageDescriptors := linuxImageDescriptors(manifest)
+	if len(imageDescriptors) == 0 {
+		return "", fmt.Errorf("OCI index %s contains no Linux image manifests", ref)
+	}
+	configs := make([]*v1.ConfigFile, 0, len(imageDescriptors))
+	for _, imageDescriptor := range imageDescriptors {
+		img, err := index.Image(imageDescriptor.Digest)
+		if err != nil {
+			return "", err
+		}
+		cfg, err := img.ConfigFile()
+		if err != nil {
+			return "", err
+		}
+		configs = append(configs, cfg)
+	}
+	return commonSourceRevision(ref, configs)
+}
+
+func commonSourceRevision(ref string, configs []*v1.ConfigFile) (string, error) {
+	revision := ""
+	for _, cfg := range configs {
+		candidate := strings.TrimSpace(cfg.Config.Labels[sourceCommitLabel])
+		if candidate == "" {
+			return "", fmt.Errorf("OCI label %s is required on %s", sourceCommitLabel, ref)
+		}
+		if revision != "" && candidate != revision {
+			return "", fmt.Errorf("OCI index %s has mixed %s labels %s and %s", ref, sourceCommitLabel, revision, candidate)
+		}
+		revision = candidate
+	}
+	return revision, nil
 }
 
 // readImageFile searches layers from newest to oldest, so reading K2's final
@@ -352,14 +423,19 @@ func pullSinglePlatformImage(ctx context.Context, ref string) (v1.Image, error) 
 }
 
 func singleLinuxImageDescriptor(ref string, manifest *v1.IndexManifest) (v1.Descriptor, error) {
+	imageDescriptors := linuxImageDescriptors(manifest)
+	if len(imageDescriptors) != 1 {
+		return v1.Descriptor{}, fmt.Errorf("OCI index %s contains %d Linux image manifests; expected exactly one", ref, len(imageDescriptors))
+	}
+	return imageDescriptors[0], nil
+}
+
+func linuxImageDescriptors(manifest *v1.IndexManifest) []v1.Descriptor {
 	var imageDescriptors []v1.Descriptor
 	for _, candidate := range manifest.Manifests {
 		if candidate.Platform != nil && candidate.Platform.OS == "linux" && candidate.Platform.Architecture != "unknown" {
 			imageDescriptors = append(imageDescriptors, candidate)
 		}
 	}
-	if len(imageDescriptors) != 1 {
-		return v1.Descriptor{}, fmt.Errorf("OCI index %s contains %d Linux image manifests; expected exactly one", ref, len(imageDescriptors))
-	}
-	return imageDescriptors[0], nil
+	return imageDescriptors
 }

@@ -5,11 +5,12 @@ func buildRegistration() Registration {
 }
 
 type buildCmd struct {
-	CRDConstructs buildCRDConstructsCmd `cmd:"" name:"crd-constructs" help:"Generate TypeScript CRD bindings for all app-owned CRD manifests."`
-	CRDManifest   buildCRDManifestCmd   `cmd:"" name:"crd-manifest" help:"Extract CRDs from one app's Helm chart dependencies."`
-	Manifests     buildManifestsCmd     `cmd:"" help:"Synthesize deploy/ manifests."`
-	DiffManifests buildDiffManifestsCmd `cmd:"" name:"diff-manifests" help:"Diff deploy/ against the remote deploy branch."`
-	Lint          buildLintCmd          `cmd:"" help:"Run CRD generation, typecheck, eslint-rule tests, and eslint."`
+	CRDConstructs  buildCRDConstructsCmd  `cmd:"" name:"crd-constructs" help:"Generate TypeScript CRD bindings for all app-owned CRD manifests."`
+	CRDManifest    buildCRDManifestCmd    `cmd:"" name:"crd-manifest" help:"Extract CRDs from one app's Helm chart dependencies."`
+	KuraImageSuite buildKuraImageSuiteCmd `cmd:"" name:"kura-image-suite" help:"Verify that all Kura image pins share one source revision."`
+	Manifests      buildManifestsCmd      `cmd:"" help:"Synthesize deploy/ manifests."`
+	DiffManifests  buildDiffManifestsCmd  `cmd:"" name:"diff-manifests" help:"Diff deploy/ against the remote deploy branch."`
+	Lint           buildLintCmd           `cmd:"" help:"Run CRD generation, typecheck, eslint-rule tests, and eslint."`
 }
 
 type buildCRDConstructsCmd struct {
@@ -20,6 +21,8 @@ type buildCRDConstructsCmd struct {
 type buildCRDManifestCmd struct {
 	AppRoot string `arg:"" help:"App directory, such as apps/longhorn." type:"path"`
 }
+
+type buildKuraImageSuiteCmd struct{}
 
 type buildManifestsCmd struct{}
 

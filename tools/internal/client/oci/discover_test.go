@@ -26,6 +26,17 @@ type fakeRegistry struct {
 	listErr error                     // ListTags error
 }
 
+func (f *fakeRegistry) SourceRevision(_ context.Context, ref string) (string, error) {
+	if err, ok := f.errors[ref]; ok && err != nil {
+		return "", err
+	}
+	cfg, ok := f.configs[ref]
+	if !ok {
+		return "", errors.New("not found")
+	}
+	return commonSourceRevision(ref, []*v1.ConfigFile{cfg})
+}
+
 func (f *fakeRegistry) ListTags(_ context.Context, repo string) ([]string, error) {
 	if f.listErr != nil {
 		return nil, f.listErr
@@ -201,6 +212,43 @@ func TestInspectImageReturnsConfigAndDigest(t *testing.T) {
 	}
 	if got.StateSizeMiB != 8192 || got.UpgradeAllocationMiB != 1504 || got.UpgradeSizeAllowanceMiB != 1536 {
 		t.Errorf("unexpected sizing metadata: %+v", got)
+	}
+}
+
+func TestCommonSourceRevisionAcceptsMatchingPlatforms(t *testing.T) {
+	configs := []*v1.ConfigFile{
+		{Config: v1.Config{Labels: map[string]string{sourceCommitLabel: "abc123"}}},
+		{Config: v1.Config{Labels: map[string]string{sourceCommitLabel: "abc123"}}},
+	}
+
+	got, err := commonSourceRevision("example.invalid/image:main@sha256:abc", configs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "abc123" {
+		t.Fatalf("revision = %q, want abc123", got)
+	}
+}
+
+func TestCommonSourceRevisionRejectsMixedPlatforms(t *testing.T) {
+	configs := []*v1.ConfigFile{
+		{Config: v1.Config{Labels: map[string]string{sourceCommitLabel: "abc123"}}},
+		{Config: v1.Config{Labels: map[string]string{sourceCommitLabel: "def456"}}},
+	}
+
+	_, err := commonSourceRevision("example.invalid/image:main@sha256:abc", configs)
+	if err == nil || !strings.Contains(err.Error(), "mixed") {
+		t.Fatalf("error = %v, want mixed revisions", err)
+	}
+}
+
+func TestCommonSourceRevisionRequiresLabel(t *testing.T) {
+	_, err := commonSourceRevision(
+		"example.invalid/image:main@sha256:abc",
+		[]*v1.ConfigFile{{Config: v1.Config{Labels: map[string]string{}}}},
+	)
+	if err == nil || !strings.Contains(err.Error(), sourceCommitLabel) {
+		t.Fatalf("error = %v, want missing revision label", err)
 	}
 }
 

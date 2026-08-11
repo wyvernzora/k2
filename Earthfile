@@ -55,6 +55,16 @@ crd-constructs-base:
     SAVE ARTIFACT $APP_ROOT/crds/*.ts AS LOCAL $APP_ROOT/crds/
 
 #
+# +kura-image-suite: Verifies that the four digest-pinned Kura images were
+# published from one source revision before Renovate or a manual bump can merge.
+#
+kura-image-suite:
+    FROM ./build+image
+    COPY ./tools+k2-tools-cli/k2-tools /usr/local/bin/k2-tools
+    COPY apps/kura/images.ts apps/kura/images.ts
+    RUN k2-tools --repo-root /app build kura-image-suite
+
+#
 # +app-manifests: Generates k8s deployment manifests
 #
 k8s-manifests:

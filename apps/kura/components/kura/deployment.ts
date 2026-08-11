@@ -23,10 +23,10 @@ import {
   KURA_LIBRARY_MANAGER_LABELS,
   KURA_LIBRARY_MANAGER_METRICS_PORT,
 } from "../../constants.js";
+import { KURA_IMAGES } from "../../images.js";
 
 import { LIBRARY_MANAGER_CONFIG_KEY } from "./config.js";
 
-const KURA_IMAGE = oci`ghcr.io/wyvernzora/kura/library-manager:v0.7.2`;
 const PUID = 3000;
 const PGID = 2001;
 const UMASK = "0007";
@@ -91,7 +91,7 @@ function kuraContainer(volumes: K2Mounters<K2Volumes>, configVolume: Volume, tvd
   const probe = Probe.fromHttpGet("/healthz", { port: KURA_LIBRARY_MANAGER_HTTP_PORT });
   return {
     name: "library-manager",
-    image: KURA_IMAGE,
+    image: KURA_IMAGES.libraryManager,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
     args: [`--config=${CONFIG_MOUNT_PATH}`],
     ports: [

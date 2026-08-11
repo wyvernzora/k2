@@ -15,7 +15,7 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, oci } from "@k2/cdk-lib";
+import { K2Deployment } from "@k2/cdk-lib";
 
 import {
   KURA_GATEWAY_HTTP_PORT,
@@ -27,8 +27,8 @@ import {
   KURA_RELEASE_INDEXER_HTTP_PORT,
   KURA_RELEASE_INDEXER_SERVICE_NAME,
 } from "../../constants.js";
+import { KURA_IMAGES } from "../../images.js";
 
-const KURA_GATEWAY_IMAGE = oci`ghcr.io/wyvernzora/kura/gateway:v0.7.2`;
 const CADDY_UID = 65532;
 const CADDY_GID = 65532;
 
@@ -58,7 +58,7 @@ function gatewayContainer(volumeMounts: VolumeMount[]): ContainerProps {
   const probe = Probe.fromHttpGet("/healthz", { port: KURA_GATEWAY_HTTP_PORT });
   return {
     name: "gateway",
-    image: KURA_GATEWAY_IMAGE,
+    image: KURA_IMAGES.gateway,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
     ports: [
       { name: "http", number: KURA_GATEWAY_HTTP_PORT, protocol: Protocol.TCP },
