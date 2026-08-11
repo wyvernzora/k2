@@ -9,6 +9,8 @@ import {
   PrometheusRuleSpecGroupsRulesExpr as RuleExpr,
 } from "../../crds/monitoring.coreos.com.js";
 
+import { StorageAlerts } from "./storage-alerts.js";
+
 export const DASHBOARD_FOLDER_ANNOTATION = "k8s-sidecar-target-directory";
 export const DASHBOARD_ROOT = "/tmp/dashboards";
 
@@ -41,6 +43,7 @@ export class GrafanaDashboards extends Construct {
     }
 
     new PrometheusRule(this, "storage-zvol-pvc-recording-rules", storageZvolPvcRecordingRules());
+    new StorageAlerts(this, "storage-appliance-alerts");
   }
 }
 
