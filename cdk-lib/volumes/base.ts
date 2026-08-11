@@ -37,6 +37,13 @@ export interface K2ProvisionedNfsProps {
   readonly readOnly?: boolean;
 }
 
+export interface K2IscsiProps {
+  readonly name?: string;
+  readonly size: Size;
+  readonly storageClass?: string;
+  readonly accessModes?: PersistentVolumeAccessMode[];
+}
+
 export interface K2ReplicatedProps {
   readonly name?: string;
   readonly size: Size;
@@ -59,6 +66,7 @@ export abstract class K2Volume {
   declare public static mountNfs: (props: K2NfsProps) => K2Volume;
   declare public static provisionNfs: (props: K2ProvisionedNfsProps) => K2Volume;
   declare public static replicated: (props: K2ReplicatedProps) => K2Volume;
+  declare public static iscsi: (props: K2IscsiProps) => K2Volume;
 }
 
 export class SimpleMaterializedVolume implements MaterializedVolume {
