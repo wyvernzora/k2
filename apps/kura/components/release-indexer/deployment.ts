@@ -16,17 +16,17 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Deployment, oci } from "@k2/cdk-lib";
+import { K2Deployment } from "@k2/cdk-lib";
 
 import {
   KURA_RELEASE_INDEXER_HTTP_PORT,
   KURA_RELEASE_INDEXER_LABELS,
   KURA_RELEASE_INDEXER_METRICS_PORT,
 } from "../../constants.js";
+import { KURA_IMAGES } from "../../images.js";
 
 import { RELEASE_INDEXER_CONFIG_KEY } from "./config.js";
 
-const RELEASE_INDEXER_IMAGE = oci`ghcr.io/wyvernzora/kura/release-indexer:v0.7.2`;
 const APP_UID = 65532;
 const APP_GID = 65532;
 const CONFIG_MOUNT_PATH = "/etc/kura/release-indexer.toml";
@@ -75,7 +75,7 @@ function releaseIndexerContainer(configVolume: Volume, credentials: ISecret): Co
   });
   return {
     name: "release-indexer",
-    image: RELEASE_INDEXER_IMAGE,
+    image: KURA_IMAGES.releaseIndexer,
     imagePullPolicy: ImagePullPolicy.ALWAYS,
     args: [`--config=${CONFIG_MOUNT_PATH}`],
     ports: [

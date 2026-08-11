@@ -37,6 +37,9 @@ jobs:
         with:
           version: v0.8.14
 
+      - name: 🔒 Check Kura image suite
+        run: earthly +kura-image-suite
+
       - name: ⚙️ Run manifest build & diff
         run: |
           earthly +lint

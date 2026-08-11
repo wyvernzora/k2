@@ -160,6 +160,23 @@
       "automerge": true
     },
     {
+      "description": "Keep the four digest-pinned Kura main images on one published source revision.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ghcr.io/wyvernzora/kura/library-manager",
+        "ghcr.io/wyvernzora/kura/gateway",
+        "ghcr.io/wyvernzora/kura/release-indexer",
+        "ghcr.io/wyvernzora/kura/n8n-nodes"
+      ],
+      "matchCurrentValue": "main",
+      "matchUpdateTypes": ["digest"],
+      "groupName": "Kura main image suite",
+      "groupSlug": "kura-main-image-suite",
+      "minimumGroupSize": 4,
+      "automergeType": "pr",
+      "automerge": true
+    },
+    {
       "matchDatasources": ["docker"],
       "matchPackageNames": [
         "ghcr.io/wyvernzora/dmhy-mcp",
@@ -222,7 +239,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": ["/\\.ts$/"],
-      "matchStrings": ["oci`(?<depName>[^`]+):(?<currentValue>[^`]+)`"],
+      "matchStrings": ["oci`(?<depName>[^`:@]+(?:/[^`:@]+)*):(?<currentValue>[^`@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?`"],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
     },
