@@ -4112,6 +4112,1724 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Storage
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-storage-appliance
+  namespace: prometheus
+data:
+  k2-storage-appliance.json: |-
+    {
+      "uid": "k2-storage-appliance",
+      "title": "K2 / Storage Appliance",
+      "description": "At-a-glance storage appliance, zvol PVC, and K2 node image status.",
+      "tags": [
+        "k2",
+        "storage"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "1m",
+      "graphTooltip": 1,
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "zvol",
+            "label": "zvol",
+            "description": "ZFS dataset backing a PVC. Empty when no k2-iscsi PVCs exist.",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "query": "label_values(k2_zfs_volume_size_bytes, volume)",
+            "refresh": 1,
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "sort": 1,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "row",
+          "id": 1,
+          "title": "Overall",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "id": 2,
+          "title": "Pool ONLINE",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 0,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bool",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_zfs_pool_health{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{pool}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 3,
+          "title": "Pool key available",
+          "description": "0 means the encrypted pool is locked and storage cannot work.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 4,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bool",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_zfs_keystatus_available{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{dataset}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 4,
+          "title": "Storage healthy",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 8,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bool",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_storage_healthy{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 5,
+          "title": "Storage health age",
+          "description": "The health job runs hourly; red means its last result is more than two hours old.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 12,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 5400
+                  },
+                  {
+                    "color": "red",
+                    "value": 7200
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "area",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "time() - k2_storage_health_last_run_timestamp_seconds{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "id": 6,
+          "title": "Pool capacity",
+          "description": "Allocated bytes divided by pool size bytes.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 16,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.75
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.9
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_zfs_pool_alloc_bytes{job=\"storage-appliance\",instance=\"k2-st-0e12\"} / k2_zfs_pool_size_bytes{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{pool}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "id": 7,
+          "title": "Pool fragmentation",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 4,
+            "x": 20,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.5
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.8
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "orientation": "auto",
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_zfs_pool_fragmentation_ratio{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{pool}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "id": 8,
+          "title": "iSCSI",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 6
+          },
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "id": 9,
+          "title": "LIO targets",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 0,
+            "y": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "area",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_lio_targets{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 10,
+          "title": "LIO LUNs",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 6,
+            "y": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "value",
+            "graphMode": "area",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_lio_luns{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 11,
+          "title": "LIO node ACLs",
+          "description": "Node ACL directories configured across all target TPGs. democratic-csi runs with cache_dynamic_acls, so an ACL persists after its initiator disconnects and survives reboot -- this is not a live session count.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 12,
+            "y": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_lio_sessions{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 12,
+          "title": "LIO target count matches saveconfig",
+          "description": "Compares only the NUMBER of live targets in configfs against the number in saveconfig.json -- target identities, TPGs, LUNs and ACLs are not compared, so same-count drift still reads 1. 0 also means saveconfig.json is missing or unparseable; this panel is not proof that the live LIO configuration is fully persisted.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 18,
+            "y": 7
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bool",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_lio_saveconfig_in_sync{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "id": 13,
+          "title": "Backups",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 12
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "id": 14,
+          "title": "Snapshot freshness",
+          "description": "Age of the newest retained cadence snapshot for each prefix.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 13
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "h",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "(time() - k2_zfs_last_snapshot_timestamp_seconds{job=\"storage-appliance\",instance=\"k2-st-0e12\"}) / 3600",
+              "legendFormat": "{{prefix}}",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 15,
+          "title": "Missing cadence snapshot series",
+          "description": "1 means that cadence has never produced a visible snapshot metric; absence is not treated as healthy.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 12,
+            "y": 13
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bool",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "name",
+            "justifyMode": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "absent(k2_zfs_last_snapshot_timestamp_seconds{job=\"storage-appliance\",instance=\"k2-st-0e12\",prefix=\"k2-hourly\"}) or on() vector(0)",
+              "legendFormat": "k2-hourly",
+              "instant": true
+            },
+            {
+              "refId": "B",
+              "editorMode": "code",
+              "expr": "absent(k2_zfs_last_snapshot_timestamp_seconds{job=\"storage-appliance\",instance=\"k2-st-0e12\",prefix=\"k2-daily\"}) or on() vector(0)",
+              "legendFormat": "k2-daily",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "bargauge",
+          "id": 16,
+          "title": "Retained snapshots",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 13
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "text",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_zfs_snapshot_count{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{prefix}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "id": 17,
+          "title": "Devices",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 21
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "id": 18,
+          "title": "Temperature",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 22
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 50
+                  },
+                  {
+                    "color": "red",
+                    "value": 65
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_smart_temperature_celsius{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{device}}",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "bargauge",
+          "id": 19,
+          "title": "NVMe wear",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 6,
+            "y": 22
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 70
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "text",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_smart_percentage_used{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{device}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "bargauge",
+          "id": 20,
+          "title": "Media errors",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 12,
+            "y": 22
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "text",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_smart_media_errors{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{device}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "bargauge",
+          "id": 21,
+          "title": "Power-on hours",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 22
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "h",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "text",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_smart_power_on_hours{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{device}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "id": 22,
+          "title": "Collectors and history",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 30
+          },
+          "panels": []
+        },
+        {
+          "type": "bargauge",
+          "id": 23,
+          "title": "Collector success",
+          "description": "A failed collector stays visible even when the metrics it owns disappear.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 31
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bool",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "showUnfilled": true,
+            "valueMode": "text",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_collector_success{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{collector}}",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "id": 24,
+          "title": "Pool capacity over time",
+          "description": "Collector ratio is already 0-1; this query does not divide it again.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 31
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_zfs_pool_capacity_ratio{job=\"storage-appliance\",instance=\"k2-st-0e12\"}",
+              "legendFormat": "{{pool}}",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "id": 25,
+          "title": "Zvol PVCs",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 39
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "id": 26,
+          "title": "Selected PVC size and used",
+          "description": "No data means no matching k2-iscsi PVC exists. Legends use namespace/PVC names from the recording-rule join.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 40
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "noValue": "No zvol PVCs",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "showLegend": true,
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "k2_zfs_volume_pvc_size_bytes{volume=~\"${zvol:regex}\"}",
+              "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} size",
+              "range": true
+            },
+            {
+              "refId": "B",
+              "editorMode": "code",
+              "expr": "k2_zfs_volume_pvc_used_bytes{volume=~\"${zvol:regex}\"}",
+              "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} used",
+              "range": true
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "id": 27,
+          "title": "All zvol PVCs",
+          "description": "Sorted by used bytes. No data means no zvol-backed PVCs exist.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 40
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "filterable": true
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": "^(size|used)$"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [
+              {
+                "displayName": "used",
+                "desc": true
+              }
+            ],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "k2_zfs_volume_pvc_size_bytes"
+            },
+            {
+              "refId": "B",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "k2_zfs_volume_pvc_used_bytes"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "instance": true,
+                  "job": true,
+                  "volume": true,
+                  "volumename": true
+                },
+                "indexByName": {
+                  "namespace": 0,
+                  "persistentvolumeclaim": 1,
+                  "Value #A": 2,
+                  "Value #B": 3
+                },
+                "renameByName": {
+                  "namespace": "namespace",
+                  "persistentvolumeclaim": "PVC",
+                  "Value #A": "size",
+                  "Value #B": "used"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "id": 28,
+          "title": "Fleet",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 50
+          },
+          "panels": []
+        },
+        {
+          "type": "table",
+          "id": 29,
+          "title": "K2 node builds",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 51
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "filterable": true
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [
+              {
+                "displayName": "node",
+                "desc": false
+              }
+            ],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "max by (instance, flavor, flavor_version, kairos_version, kairos_agent_version, kubernetes_version, role, source_commit) (k2_node_build_info)"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Value": true
+                },
+                "indexByName": {
+                  "instance": 0,
+                  "role": 1,
+                  "flavor": 2,
+                  "flavor_version": 3,
+                  "kairos_version": 4,
+                  "kairos_agent_version": 5,
+                  "kubernetes_version": 6,
+                  "source_commit": 7
+                },
+                "renameByName": {
+                  "instance": "node",
+                  "role": "role",
+                  "flavor": "flavor",
+                  "flavor_version": "flavor version",
+                  "kairos_version": "Kairos",
+                  "kairos_agent_version": "Kairos agent",
+                  "kubernetes_version": "Kubernetes",
+                  "source_commit": "source commit"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "id": 30,
+          "title": "K2 node image checks",
+          "description": "Upgrade state is shown beside check success and age; a missing upgrade value after a failed check is not treated as up to date.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 61
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "filterable": true
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "upgrade available"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bool"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "yellow",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "check succeeded"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bool"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "red",
+                          "value": null
+                        },
+                        {
+                          "color": "green",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "check age"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "s"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "yellow",
+                          "value": 5400
+                        },
+                        {
+                          "color": "red",
+                          "value": 7200
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [
+              {
+                "displayName": "node",
+                "desc": false
+              }
+            ],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "max by (instance) (k2_node_image_upgrade_available)"
+            },
+            {
+              "refId": "B",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "max by (instance) (k2_node_image_check_success)"
+            },
+            {
+              "refId": "C",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "time() - max by (instance) (k2_node_image_check_timestamp_seconds)"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "indexByName": {
+                  "instance": 0,
+                  "Value #A": 1,
+                  "Value #B": 2,
+                  "Value #C": 3
+                },
+                "renameByName": {
+                  "instance": "node",
+                  "Value #A": "upgrade available",
+                  "Value #B": "check succeeded",
+                  "Value #C": "check age"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
     k8s-sidecar-target-directory: /tmp/dashboards/Networking
   labels:
     grafana_dashboard: "1"
@@ -5301,6 +7019,40 @@ data:
       ]
     }
 immutable: false
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: storage-zvol-pvc
+  namespace: prometheus
+spec:
+  groups:
+    - name: k2.storage.zvol-pvc
+      rules:
+        - expr: label_replace(k2_zfs_volume_size_bytes{job="storage-appliance"}, "volumename", "$1", "volume", ".*/(pvc-[^/]+)$") * on (volumename) group_left(namespace, persistentvolumeclaim) max by (volumename, namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_info{volumename!=""})
+          record: k2_zfs_volume_pvc_size_bytes
+        - expr: label_replace(k2_zfs_volume_used_bytes{job="storage-appliance"}, "volumename", "$1", "volume", ".*/(pvc-[^/]+)$") * on (volumename) group_left(namespace, persistentvolumeclaim) max by (volumename, namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_info{volumename!=""})
+          record: k2_zfs_volume_pvc_used_bytes
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  labels:
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: storage-appliance
+  namespace: prometheus
+spec:
+  jobName: storage-appliance
+  staticConfigs:
+    - labels:
+        instance: k2-st-0e12
+        role: storage
+      targets:
+        - 10.10.9.250:9100
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -7050,6 +8802,7 @@ spec:
             - --web.listen-address=[$(HOST_IP)]:9100
             - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
+            - --collector.textfile.directory=/var/lib/prometheus/node-exporter
           env:
             - name: HOST_IP
               value: 0.0.0.0
@@ -7093,6 +8846,9 @@ spec:
               mountPropagation: HostToContainer
               name: root
               readOnly: true
+            - mountPath: /var/lib/prometheus/node-exporter
+              name: textfile
+              readOnly: true
       hostIPC: false
       hostNetwork: true
       hostPID: true
@@ -7117,6 +8873,10 @@ spec:
         - hostPath:
             path: /
           name: root
+        - hostPath:
+            path: /var/lib/prometheus/node-exporter
+            type: DirectoryOrCreate
+          name: textfile
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -7699,9 +9459,7 @@ spec:
   ruleNamespaceSelector: {}
   ruleSelector: {}
   scrapeConfigNamespaceSelector: {}
-  scrapeConfigSelector:
-    matchLabels:
-      release: prometheus
+  scrapeConfigSelector: {}
   securityContext:
     fsGroup: 2000
     runAsGroup: 2000
@@ -12198,3 +13956,45 @@ specs:
           - ports:
               - port: "3000"
                 protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: network-policy
+  name: prometheus-prometheus-egress
+specs:
+  - egress:
+      - toEntities:
+          - cluster
+      - toEntities:
+          - host
+      - toEntities:
+          - remote-node
+      - toEntities:
+          - kube-apiserver
+      - toEndpoints:
+          - matchLabels:
+              k8s-app: kube-dns
+              k8s:io.kubernetes.pod.namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+            rules:
+              dns:
+                - matchPattern: "*"
+      - toCIDR:
+          - 10.10.9.250/32
+        toPorts:
+          - ports:
+              - port: "9100"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: prometheus
+        k8s:io.kubernetes.pod.namespace: prometheus
+        operator.prometheus.io/name: prometheus-kube-prometheus-prometheus
