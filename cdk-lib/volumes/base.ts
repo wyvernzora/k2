@@ -44,6 +44,19 @@ export interface K2IscsiProps {
   readonly accessModes?: PersistentVolumeAccessMode[];
 }
 
+/**
+ * Copy `from` into `to` once, then run the workload on `to`. The source is
+ * mounted read-only and never deleted — reclaiming it is a deliberate step
+ * after the destination has soaked.
+ */
+export interface K2MigrateProps {
+  readonly from: K2Volume;
+  readonly to: K2Volume;
+  readonly image?: string;
+  readonly initContainerName?: string;
+  readonly markerFile?: string;
+}
+
 export interface K2ReplicatedProps {
   readonly name?: string;
   readonly size: Size;
@@ -67,6 +80,7 @@ export abstract class K2Volume {
   declare public static provisionNfs: (props: K2ProvisionedNfsProps) => K2Volume;
   declare public static replicated: (props: K2ReplicatedProps) => K2Volume;
   declare public static iscsi: (props: K2IscsiProps) => K2Volume;
+  declare public static migrate: (props: K2MigrateProps) => K2Volume;
 }
 
 export class SimpleMaterializedVolume implements MaterializedVolume {
