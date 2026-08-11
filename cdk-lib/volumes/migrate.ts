@@ -21,6 +21,10 @@ import { K2Volume, type K2MigrateProps, type MaterializedVolume } from "./base.j
  * - The SOURCE IS NEVER DELETED and never written. Reclaiming it is a
  *   deliberate operator step after the destination has soaked, because the
  *   only cheap undo during a migration is "point back at the source".
+ * - `from` still EMITS a PVC, so for a live app it must declare the existing
+ *   claim exactly as it stands today — apply adopts a match, but storage
+ *   class, size and access modes are immutable, so a PVC that was expanded
+ *   past its declared size fails to apply rather than migrating.
  *
  * Not wired into any app yet — this is the seam for the Longhorn migration.
  */
