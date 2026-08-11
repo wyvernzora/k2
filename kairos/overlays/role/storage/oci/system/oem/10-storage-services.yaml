@@ -49,6 +49,7 @@ stages:
           - zfs-mount.service
           - zfs-volume-wait.service
           - zfs.target
+          - k2-iscsi-firewall.service
           - rtslib-fb-targetctl.service
           - k2-storage-health.timer
           - k2-metrics.timer

@@ -1,5 +1,6 @@
 build:
   aptPackages:
+    - nftables
     - prometheus-node-exporter
     - smartmontools
     - targetcli-fb
@@ -34,28 +35,45 @@ inspect:
           - op: test
             path: /stages/initramfs/1/systemctl/enable/1
             value: k2-zfs-load-key.service
+          # The firewall must stay ahead of the target service in this list so
+          # the portal guard is enabled alongside what it guards.
           - op: test
             path: /stages/initramfs/1/systemctl/enable/5
+            value: k2-iscsi-firewall.service
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/6
             value: rtslib-fb-targetctl.service
           - op: test
-            path: /stages/initramfs/1/systemctl/enable/7
+            path: /stages/initramfs/1/systemctl/enable/8
             value: k2-metrics.timer
           - op: test
-            path: /stages/initramfs/1/systemctl/enable/8
+            path: /stages/initramfs/1/systemctl/enable/9
             value: k2-image-check.timer
           - op: test
-            path: /stages/initramfs/1/systemctl/enable/9
+            path: /stages/initramfs/1/systemctl/enable/10
             value: k2-snapshot-hourly.timer
           - op: test
-            path: /stages/initramfs/1/systemctl/enable/10
+            path: /stages/initramfs/1/systemctl/enable/11
             value: k2-snapshot-daily.timer
           - op: test
-            path: /stages/initramfs/1/systemctl/enable/11
+            path: /stages/initramfs/1/systemctl/enable/12
             value: prometheus-node-exporter.service
       - path: /etc/systemd/system/k2-zfs-load-key.service
         contains:
           - "ExecStart=/usr/sbin/zfs load-key -a"
           - "Before=zfs-volume-wait.service zfs-mount.service"
+      - path: /etc/systemd/system/k2-iscsi-firewall.service
+        contains:
+          - "Before=rtslib-fb-targetctl.service"
+          - "ExecStart=/usr/sbin/nft -f /etc/nftables/k2-iscsi.nft"
+      # The guard itself: 3260 reachable on the fabric, dropped everywhere
+      # else. Asserted literally because a silently-empty ruleset would leave
+      # the portal open on the LAN leg and nothing else would notice.
+      - path: /etc/nftables/k2-iscsi.nft
+        contains:
+          - "elements = { 172.16.0.0/16 }"
+          - "tcp dport 3260 ip daddr @iscsi_portal_dst accept"
+          - "tcp dport 3260 drop"
       - path: /etc/systemd/system/rtslib-fb-targetctl.service.d/10-k2-after-zfs.conf
         contains:
           - "After=zfs.target zfs-volume-wait.service"
@@ -110,6 +128,7 @@ inspect:
       - /system/oem/05-persistent-storage.yaml
       - /usr/share/k2/node-provision
     commands:
+      - nft
       - sshd
       - targetcli
       - targetctl
