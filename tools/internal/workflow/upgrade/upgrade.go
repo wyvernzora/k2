@@ -157,6 +157,14 @@ func (c *upgradeCmd) Run(rcx *Runtime) error {
 		return runner.VerifyActive(ctx, plan)
 	})
 
+	// Only after the verify above does the node's recorded identity change:
+	// a rolled-back or unverified node must keep the marker of the image it
+	// still runs.
+	wf.Shell("Record applied image digest", func(ctx context.Context, sh ui.Step) error {
+		defer client.SwapIO(sh)()
+		return runner.RecordAppliedDigest(ctx, plan)
+	})
+
 	wf.Shell("Smoke-check node + pods", func(ctx context.Context, sh ui.Step) error {
 		kc.Stdout = sh
 		kc.Stderr = sh

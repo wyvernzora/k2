@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodic K2 storage appliance metrics textfile refresh
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target

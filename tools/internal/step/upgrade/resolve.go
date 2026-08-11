@@ -285,8 +285,16 @@ func (r *Runner) Resolve(ctx context.Context, in Inputs) (Plan, error) {
 		if repo == "" {
 			repo = DefaultRegistryRepo
 		}
-		prefix := tagPrefix(meta)
-		img, err := r.Registry.DiscoverLatest(ctx, repo, prefix)
+		// Resolve the node's floating slot tag, not a version-qualified
+		// prefix: the slot tag is where every new build lands, so it is the
+		// only ref that still points at the newest image across a base or
+		// Kairos bump — exactly the upgrade the node's k2-image-check timer
+		// raises k2_node_image_upgrade_available for.
+		tag := slotTag(meta)
+		if tag == "" {
+			return Plan{}, fmt.Errorf("node image metadata cannot reconstruct the floating slot tag; pass --source <ref> explicitly")
+		}
+		img, err := r.Registry.DiscoverLatest(ctx, repo, tag)
 		if err != nil {
 			return Plan{}, fmt.Errorf("auto-discover latest image: %w; pass --source <ref> explicitly", err)
 		}
@@ -410,49 +418,49 @@ func (r *Runner) validate() error {
 	return nil
 }
 
-// tagPrefix constructs the stable target portion of the OCI tag while leaving
-// the Kubernetes version and revision open for registry discovery.
-func tagPrefix(meta NodeImageMetadata) string {
-	segments := imageTagBase(meta)
-	if len(segments) == 0 {
-		return ""
-	}
-	return strings.Join(segments, "-") + "-"
-}
-
-// imageRefFromMetadata rebuilds the FLOATING tag this node was built from.
-// The tag carries no revision, so it names a target rather than a build —
-// which build the node runs is answered by digest/commit, not by this ref.
-func imageRefFromMetadata(repo string, meta NodeImageMetadata) string {
-	segments := imageTagBase(meta)
-	if repo == "" || len(segments) == 0 {
-		return ""
-	}
-	if meta.KubernetesDistro != "" {
-		if meta.KubernetesVersion == "" {
-			return ""
-		}
-		segments = append(segments, strings.ReplaceAll(meta.KubernetesVersion, "+", "-"))
-	}
-	return repo + ":" + strings.Join(segments, "-")
-}
-
-func imageTagBase(meta NodeImageMetadata) []string {
-	flavor := meta.Flavor
-	if meta.FlavorRelease != "" {
-		flavor += "-" + meta.FlavorRelease
-	}
-	if meta.Variant != "" {
-		flavor += "-" + meta.Variant
-	}
+// slotTag rebuilds the FLOATING tag naming the deployment slot this node
+// occupies: <flavor-family>-<arch>-<hardware>-<role>. Base, Kairos and
+// Kubernetes versions deliberately do NOT appear — encoding them here is what
+// made the biggest upgrades undiscoverable, because a node rebuilds its own tag
+// from its own metadata and so searched for the version it already ran. Which
+// build a node runs is answered by digest/commit, never by this tag.
+//
+// Keep aligned with tagSegments in tools/internal/image/plan/plan.go (which
+// publishes the tag) and slotTag in
+// kairos/node-agent/internal/imagecheck/imagecheck.go (which watches it).
+func slotTag(meta NodeImageMetadata) string {
 	role := meta.Role
 	if role == "" {
 		role = meta.KubernetesDistro
 	}
-	if flavor == "" || meta.KairosVersion == "" || meta.Arch == "" || meta.Hardware == "" || role == "" {
-		return nil
+	segments := []string{flavorFamily(meta.Flavor), meta.Arch, meta.Hardware, role}
+	for _, segment := range segments {
+		if segment == "" {
+			return ""
+		}
 	}
-	return []string{flavor, meta.KairosVersion, meta.Arch, meta.Hardware, role}
+	return strings.Join(segments, "-")
+}
+
+// flavorFamily trims the release off a flavor ("ubuntu-26.04" -> "ubuntu"):
+// which distro a node runs is slot identity, which release is content. Mirrors
+// the helper of the same name in tools/internal/image/plan/plan.go; legacy
+// metadata carries the release in its own field, which the slot tag drops too.
+func flavorFamily(flavor string) string {
+	family, _, found := strings.Cut(flavor, "-")
+	if !found || family == "" {
+		return flavor
+	}
+	return family
+}
+
+// imageRefFromMetadata names the repo-qualified slot tag this node occupies.
+func imageRefFromMetadata(repo string, meta NodeImageMetadata) string {
+	tag := slotTag(meta)
+	if repo == "" || tag == "" {
+		return ""
+	}
+	return repo + ":" + tag
 }
 
 // componentDelta renders "base ubuntu:26.04 -> ubuntu:28.04" style lines for

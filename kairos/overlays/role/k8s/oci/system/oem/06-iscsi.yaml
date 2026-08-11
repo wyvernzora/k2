@@ -30,3 +30,9 @@ stages:
       systemctl:
         enable:
           - iscsid.service
+    - name: "Enable K2 node metrics timers"
+      if: '[ ! -f "/run/cos/recovery_mode" ]'
+      systemctl:
+        enable:
+          - k2-metrics.timer
+          - k2-image-check.timer

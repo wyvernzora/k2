@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/health"
+	"github.com/wyvernzora/k2/kairos/node-agent/internal/imagecheck"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/metrics"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/runner"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/snapshot"
@@ -17,6 +18,7 @@ type cli struct {
 	SetupPersistence setupPersistenceCommand `cmd:"" name:"setup-persistence" help:"Prepare or verify Kairos persistent storage."`
 	StorageHealth    storageHealthCommand    `cmd:"" name:"storage-health" help:"Report ZFS and iSCSI storage health."`
 	Metrics          metricsCommand          `cmd:"" name:"metrics" help:"Expose K2 storage appliance Prometheus metrics."`
+	ImageCheck       imageCheckCommand       `cmd:"" name:"image-check" help:"Check the K2 node's floating image tag for an upgrade."`
 	Snapshot         snapshotCommand         `cmd:"" name:"snapshot" help:"Create a recursive ZFS snapshot and prune the cadence's retention window."`
 }
 
@@ -36,6 +38,10 @@ type storageHealthCommand struct {
 
 type metricsCommand struct {
 	TextfileDir string `default:"/var/lib/prometheus/node-exporter" env:"K2_NODE_AGENT_METRICS_TEXTFILE_DIR" help:"node_exporter textfile collector directory to write k2.prom into."`
+}
+
+type imageCheckCommand struct {
+	TextfileDir string `default:"/var/lib/prometheus/node-exporter" env:"K2_NODE_AGENT_METRICS_TEXTFILE_DIR" help:"node_exporter textfile collector directory to write k2-image.prom into."`
 }
 
 type snapshotCommand struct {
@@ -93,6 +99,13 @@ func (cmd metricsCommand) Run() error {
 	return metrics.Run(metrics.Config{
 		TextfileDir: cmd.TextfileDir,
 		Debug:       os.Stderr,
+	})
+}
+
+func (cmd imageCheckCommand) Run() error {
+	return imagecheck.Run(imagecheck.Config{
+		TextfileDir: cmd.TextfileDir,
+		Log:         os.Stdout,
 	})
 }
 
