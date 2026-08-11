@@ -3,6 +3,12 @@ import { readFileSync } from "node:fs";
 import { ConfigMap } from "cdk8s-plus-32";
 import { Construct } from "constructs";
 
+import {
+  PrometheusRule,
+  type PrometheusRuleProps,
+  PrometheusRuleSpecGroupsRulesExpr as RuleExpr,
+} from "../../crds/monitoring.coreos.com.js";
+
 export const DASHBOARD_FOLDER_ANNOTATION = "k8s-sidecar-target-directory";
 export const DASHBOARD_ROOT = "/tmp/dashboards";
 
@@ -33,6 +39,8 @@ export class GrafanaDashboards extends Construct {
         },
       });
     }
+
+    new PrometheusRule(this, "storage-zvol-pvc-recording-rules", storageZvolPvcRecordingRules());
   }
 }
 
@@ -103,6 +111,7 @@ function dashboards(): DashboardSpec[] {
       ),
     ]),
     kuraSuiteDashboard(),
+    storageApplianceDashboard(),
     dashboard("k2-dns", "Networking", "K2 / DNS", [
       stat(1, "DNS queries / sec", "sum(rate(blocky_query_total[$__rate_interval]))", 0, 0, "ops"),
       stat(2, "DNS errors / sec", "sum(rate(blocky_error_total[$__rate_interval]))", 6, 0, "ops"),
@@ -281,6 +290,43 @@ function kuraSuiteDashboard(): DashboardSpec {
       string,
       unknown
     >,
+  };
+}
+
+function storageApplianceDashboard(): DashboardSpec {
+  return {
+    uid: "k2-storage-appliance",
+    folder: "Storage",
+    definition: JSON.parse(readFileSync(new URL("./storage-appliance.json", import.meta.url), "utf8")) as Record<
+      string,
+      unknown
+    >,
+  };
+}
+
+function storageZvolPvcRecordingRules(): PrometheusRuleProps {
+  return {
+    metadata: { name: "storage-zvol-pvc" },
+    spec: { groups: [storageZvolPvcRecordingGroup()] },
+  };
+}
+
+function storageZvolPvcRecordingGroup() {
+  return {
+    name: "k2.storage.zvol-pvc",
+    rules: [
+      storageZvolPvcRecordingRule("k2_zfs_volume_size_bytes", "k2_zfs_volume_pvc_size_bytes"),
+      storageZvolPvcRecordingRule("k2_zfs_volume_used_bytes", "k2_zfs_volume_pvc_used_bytes"),
+    ],
+  };
+}
+
+function storageZvolPvcRecordingRule(source: string, record: string) {
+  return {
+    record,
+    expr: RuleExpr.fromString(
+      `label_replace(${source}{job="storage-appliance"}, "volumename", "$1", "volume", ".*/(pvc-[^/]+)$") * on (volumename) group_left(namespace, persistentvolumeclaim) max by (volumename, namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_info{volumename!=""})`,
+    ),
   };
 }
 

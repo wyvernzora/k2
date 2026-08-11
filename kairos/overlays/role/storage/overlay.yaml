@@ -37,6 +37,21 @@ inspect:
           - op: test
             path: /stages/initramfs/1/systemctl/enable/5
             value: rtslib-fb-targetctl.service
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/7
+            value: k2-metrics.timer
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/8
+            value: k2-image-check.timer
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/9
+            value: k2-snapshot-hourly.timer
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/10
+            value: k2-snapshot-daily.timer
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/11
+            value: prometheus-node-exporter.service
       - path: /etc/systemd/system/k2-zfs-load-key.service
         contains:
           - "ExecStart=/usr/sbin/zfs load-key -a"
@@ -58,6 +73,16 @@ inspect:
       - path: /etc/systemd/system/k2-metrics.timer
         contains:
           - "OnBootSec=1min"
+      - path: /etc/systemd/system/k2-image-check.service
+        contains:
+          - "ConditionPathExists=!/run/cos/recovery_mode"
+          - "Type=oneshot"
+          - "ExecStart=/usr/sbin/k2-node-agent image-check"
+      - path: /etc/systemd/system/k2-image-check.timer
+        contains:
+          - "OnCalendar=hourly"
+          - "Persistent=true"
+          - "RandomizedDelaySec=10min"
       - path: /etc/systemd/system/k2-snapshot-hourly.service
         contains:
           - "EnvironmentFile=-/oem/k2-snapshot.env"

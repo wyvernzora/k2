@@ -437,6 +437,11 @@ func (p Planner) imageTag(target config.Target) string {
 // an upgrade is confirmed). Encoding them here made the biggest upgrades
 // undiscoverable: a node reconstructs its tag from its own metadata, so a base
 // or Kairos bump left every node searching for the version it already ran.
+// Keep this aligned with the two readers that rebuild the same tag from a
+// node's own metadata: slotTag in kairos/node-agent/internal/imagecheck (the
+// upgrade-available signal) and slotTag in tools/internal/step/upgrade (the
+// upgrade that acts on it). They must resolve the same tag or the signal points
+// at a build the tool cannot find.
 func tagSegments(target config.Target) []string {
 	return []string{flavorFamily(target.Flavor), target.Arch, target.Hardware, target.Role}
 }

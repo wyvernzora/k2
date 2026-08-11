@@ -143,6 +143,32 @@ inspect:
           - op: test
             path: /stages/initramfs/0/systemctl/enable/0
             value: iscsid.service
+          - op: test
+            path: /stages/initramfs/1/name
+            value: Enable K2 node metrics timers
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/0
+            value: k2-metrics.timer
+          - op: test
+            path: /stages/initramfs/1/systemctl/enable/1
+            value: k2-image-check.timer
+      - path: /etc/systemd/system/k2-metrics.service
+        contains:
+          - "Type=oneshot"
+          - "ExecStart=/usr/sbin/k2-node-agent metrics"
+      - path: /etc/systemd/system/k2-metrics.timer
+        contains:
+          - "OnBootSec=1min"
+      - path: /etc/systemd/system/k2-image-check.service
+        contains:
+          - "ConditionPathExists=!/run/cos/recovery_mode"
+          - "Type=oneshot"
+          - "ExecStart=/usr/sbin/k2-node-agent image-check"
+      - path: /etc/systemd/system/k2-image-check.timer
+        contains:
+          - "OnCalendar=hourly"
+          - "Persistent=true"
+          - "RandomizedDelaySec=10min"
     absent:
       - /system/oem/30-k2-k3s-provider.yaml
       - /etc/rancher/k3s/config.yaml

@@ -105,6 +105,21 @@ func TestCollectLIOUnparseableSaveConfigIsOutOfSync(t *testing.T) {
 	assertSample(t, got.samples, c.lioSaveInSync, nil, 0)
 }
 
+// An absent saveconfig.json restores nothing at boot, so it must not read as a
+// clean bill of health — least of all when configfs is unreadable too and the
+// live target count is 0 for want of any evidence.
+func TestCollectLIOMissingSaveConfigIsOutOfSync(t *testing.T) {
+	c := testCollector(fakeRunner{})
+	c.cfg.ConfigFSRoot = t.TempDir()
+	c.cfg.SaveConfig = filepath.Join(t.TempDir(), "missing.json")
+
+	got := c.collectLIO()
+	if !got.success {
+		t.Fatal("success = false, want true")
+	}
+	assertSample(t, got.samples, c.lioSaveInSync, nil, 0)
+}
+
 func TestCollectSMART(t *testing.T) {
 	c := testCollector(fakeRunner{
 		outputs: map[string]string{
@@ -165,6 +180,209 @@ func TestCollectStorageHealth(t *testing.T) {
 	}
 }
 
+func TestCollectNodeBuild(t *testing.T) {
+	metadataFile := filepath.Join(t.TempDir(), "metadata.yaml")
+	metadata := strings.Join([]string{
+		"target: ubuntu-26.04-amd64-qemu-k8s",
+		" flavor : ubuntu-26.04 ",
+		"kairosVersion: v4.1.2",
+		"kubernetesDistro: k3s",
+		"kubernetesVersion: v1.32.6+k3s1",
+		"role: k8s",
+		"arch: amd64",
+		"hardware: qemu",
+		"sourceCommit: ea9b80decdbbb5df69ec02fb1c702f61082ea8e8",
+		"",
+	}, "\n")
+	if err := os.WriteFile(metadataFile, []byte(metadata), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c := NewCollector(Config{MetadataFile: metadataFile, Debug: io.Discard}, fakeRunner{
+		outputs: map[string]string{
+			"kairos-agent --version": "kairos-agent version v2.30.2",
+		},
+	})
+
+	got := c.collectNodeBuild()
+	if !got.success {
+		t.Fatal("success = false, want true")
+	}
+	labels := []string{
+		"ubuntu-26.04-amd64-qemu-k8s",
+		"ubuntu",
+		"26.04",
+		"v4.1.2",
+		"v2.30.2",
+		"k3s",
+		"v1.32.6+k3s1",
+		"k8s",
+		"amd64",
+		"qemu",
+		"ea9b80decdbbb5df69ec02fb1c702f61082ea8e8",
+	}
+	assertSample(t, got.samples, c.nodeBuildInfo, labels, 1)
+
+	wantLine := `k2_node_build_info{target="ubuntu-26.04-amd64-qemu-k8s",flavor="ubuntu",flavor_version="26.04",kairos_version="v4.1.2",kairos_agent_version="v2.30.2",kubernetes_distro="k3s",kubernetes_version="v1.32.6+k3s1",role="k8s",arch="amd64",hardware="qemu",source_commit="ea9b80decdbbb5df69ec02fb1c702f61082ea8e8"} 1`
+	if rendered := c.Render(); !strings.Contains(rendered, wantLine+"\n") {
+		t.Fatalf("rendered exposition missing %q:\n%s", wantLine, rendered)
+	} else if !strings.Contains(rendered, `k2_collector_success{collector="node_build"} 1`) {
+		t.Fatalf("rendered exposition missing successful node_build collector:\n%s", rendered)
+	}
+}
+
+func TestCollectNodeBuildStorageWithoutKubernetes(t *testing.T) {
+	metadataFile := filepath.Join(t.TempDir(), "metadata.yaml")
+	metadata := "target: ubuntu-26.04-amd64-qemu-storage\n" +
+		"flavor: ubuntu-26.04\n" +
+		"kairosVersion: v4.1.2\n" +
+		"kubernetesDistro:   \n" +
+		"kubernetesVersion:\n" +
+		"role: storage\n" +
+		"arch: amd64\n" +
+		"hardware: qemu\n" +
+		"sourceCommit: ea9b80de\n"
+	if err := os.WriteFile(metadataFile, []byte(metadata), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c := NewCollector(Config{MetadataFile: metadataFile, Debug: io.Discard}, fakeRunner{
+		outputs: map[string]string{
+			"kairos-agent --version": "kairos-agent version v2.30.2",
+		},
+	})
+
+	got := c.collectNodeBuild()
+	if !got.success {
+		t.Fatal("success = false, want true")
+	}
+	assertSample(t, got.samples, c.nodeBuildInfo, []string{
+		"ubuntu-26.04-amd64-qemu-storage", "ubuntu", "26.04", "v4.1.2", "v2.30.2", "", "", "storage", "amd64", "qemu", "ea9b80de",
+	}, 1)
+}
+
+func TestCollectNodeBuildWithoutKairosAgent(t *testing.T) {
+	metadataFile := filepath.Join(t.TempDir(), "metadata.yaml")
+	metadata := "target: ubuntu-26.04-amd64-qemu-storage\n" +
+		"flavor: ubuntu-26.04\n" +
+		"role: storage\n" +
+		"arch: amd64\n" +
+		"hardware: qemu\n"
+	if err := os.WriteFile(metadataFile, []byte(metadata), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c := NewCollector(Config{MetadataFile: metadataFile, Debug: io.Discard}, fakeRunner{
+		outErrs: map[string]error{
+			"kairos-agent --version": errors.New("kairos-agent not found"),
+		},
+	})
+
+	got := c.collectNodeBuild()
+	if !got.success {
+		t.Fatal("success = false, want true")
+	}
+	assertSample(t, got.samples, c.nodeBuildInfo, []string{
+		"ubuntu-26.04-amd64-qemu-storage", "ubuntu", "26.04", "", "", "", "", "storage", "amd64", "qemu", "",
+	}, 1)
+}
+
+func TestCollectNodeBuildMissingOrUnreadableMetadata(t *testing.T) {
+	tests := map[string]string{
+		"missing":    filepath.Join(t.TempDir(), "missing.yaml"),
+		"unreadable": t.TempDir(),
+	}
+	for name, metadataFile := range tests {
+		t.Run(name, func(t *testing.T) {
+			c := NewCollector(Config{MetadataFile: metadataFile, Debug: io.Discard}, fakeRunner{})
+
+			got := c.collectNodeBuild()
+			if got.success {
+				t.Fatal("success = true, want false")
+			}
+			assertNoSample(t, got.samples, c.nodeBuildInfo, nil)
+
+			rendered := c.Render()
+			if strings.Contains(rendered, "k2_node_build_info") {
+				t.Fatalf("rendered exposition contains build_info sample:\n%s", rendered)
+			}
+			if !strings.Contains(rendered, `k2_collector_success{collector="node_build"} 0`) {
+				t.Fatalf("rendered exposition missing failed node_build collector:\n%s", rendered)
+			}
+		})
+	}
+}
+
+func TestCollectNodeBuildWithoutTarget(t *testing.T) {
+	metadataFile := filepath.Join(t.TempDir(), "metadata.yaml")
+	if err := os.WriteFile(metadataFile, []byte("flavor: ubuntu-26.04\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c := NewCollector(Config{MetadataFile: metadataFile, Debug: io.Discard}, fakeRunner{})
+
+	got := c.collectNodeBuild()
+	if got.success {
+		t.Fatal("success = true, want false")
+	}
+	assertNoSample(t, got.samples, c.nodeBuildInfo, nil)
+}
+
+func TestRenderStorageRoleIncludesStorageCollectors(t *testing.T) {
+	metadataFile := testRoleMetadata(t, "storage")
+	c := NewCollector(Config{
+		ConfigFSRoot: t.TempDir(),
+		MetadataFile: metadataFile,
+		Debug:        io.Discard,
+	}, fakeRunner{outputs: map[string]string{
+		"smartctl --scan -j": `{"devices":[]}`,
+	}})
+
+	rendered := c.Render()
+	for _, collector := range []string{
+		"node_build",
+		"zfs_pools",
+		"zfs_keystatus",
+		"zfs_volumes",
+		"zfs_snapshots",
+		"lio",
+		"smart",
+		"storage_health",
+	} {
+		want := `k2_collector_success{collector="` + collector + `"} 1`
+		if !strings.Contains(rendered, want) {
+			t.Fatalf("rendered exposition missing %q:\n%s", want, rendered)
+		}
+	}
+}
+
+func TestRenderK8sRoleSkipsStorageCollectors(t *testing.T) {
+	c := NewCollector(Config{
+		MetadataFile: testRoleMetadata(t, "k8s"),
+		Debug:        io.Discard,
+	}, fakeRunner{})
+
+	rendered := c.Render()
+	if !strings.Contains(rendered, "k2_node_build_info{") || !strings.Contains(rendered, `role="k8s"`) {
+		t.Fatalf("rendered exposition missing k8s node build info:\n%s", rendered)
+	}
+	for _, collector := range []string{
+		"zfs_pools",
+		"zfs_keystatus",
+		"zfs_volumes",
+		"zfs_snapshots",
+		"lio",
+		"smart",
+		"storage_health",
+	} {
+		unexpected := `k2_collector_success{collector="` + collector + `"}`
+		if strings.Contains(rendered, unexpected) {
+			t.Fatalf("rendered exposition contains skipped collector %q:\n%s", collector, rendered)
+		}
+	}
+	for _, prefix := range []string{"k2_zfs_", "k2_lio_", "k2_smart_", "k2_storage_"} {
+		if strings.Contains(rendered, prefix) {
+			t.Fatalf("rendered exposition contains storage-only metric prefix %q:\n%s", prefix, rendered)
+		}
+	}
+}
+
 func TestRenderAndTextfileWrite(t *testing.T) {
 	status := filepath.Join(t.TempDir(), "status")
 	if err := os.WriteFile(status, []byte("healthy: ok\n"), 0o644); err != nil {
@@ -175,7 +393,12 @@ func TestRenderAndTextfileWrite(t *testing.T) {
 	if err := os.WriteFile(saveConfig, []byte(`{"targets":[]}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	c := NewCollector(Config{ConfigFSRoot: configRoot, SaveConfig: saveConfig, StatusFile: status}, fakeRunner{
+	c := NewCollector(Config{
+		ConfigFSRoot: configRoot,
+		SaveConfig:   saveConfig,
+		StatusFile:   status,
+		MetadataFile: testRoleMetadata(t, "storage"),
+	}, fakeRunner{
 		outputs: map[string]string{
 			"zpool list -Hp -o name,size,alloc,frag,cap,health":         "tank\t1000\t250\t0\t25\tONLINE",
 			"zpool list -Hp -o name":                                    "tank",
@@ -222,8 +445,87 @@ func TestRenderAndTextfileWrite(t *testing.T) {
 	}
 }
 
+func TestRenderExpositionMultipleLabels(t *testing.T) {
+	buildInfo := &desc{
+		name:   "k2_node_build_info",
+		help:   "K2 node image build information.",
+		labels: []string{"flavor", "flavor_version"},
+	}
+	want := "# HELP k2_node_build_info K2 node image build information.\n" +
+		"# TYPE k2_node_build_info gauge\n" +
+		"k2_node_build_info{flavor=\"ubuntu\",flavor_version=\"26.04\"} 1\n"
+
+	got := renderExposition([]sample{{
+		desc:   buildInfo,
+		value:  1,
+		labels: []string{"ubuntu", "26.04"},
+	}})
+	if got != want {
+		t.Fatalf("renderExposition() = %q, want %q", got, want)
+	}
+}
+
+func TestRenderExpositionPreservesSingleAndUnlabeledFamilies(t *testing.T) {
+	poolHealth := &desc{
+		name:   "k2_zfs_pool_health",
+		help:   "ZFS pool health, 1 when ONLINE.",
+		labels: []string{"pool"},
+	}
+	storageHealthy := &desc{
+		name: "k2_storage_healthy",
+		help: "K2 storage health status.",
+	}
+	want := "# HELP k2_storage_healthy K2 storage health status.\n" +
+		"# TYPE k2_storage_healthy gauge\n" +
+		"k2_storage_healthy 1\n" +
+		"# HELP k2_zfs_pool_health ZFS pool health, 1 when ONLINE.\n" +
+		"# TYPE k2_zfs_pool_health gauge\n" +
+		"k2_zfs_pool_health{pool=\"tank\"} 1\n"
+
+	got := renderExposition([]sample{
+		{desc: poolHealth, value: 1, labels: []string{"tank"}},
+		{desc: storageHealthy, value: 1},
+	})
+	if got != want {
+		t.Fatalf("renderExposition() = %q, want %q", got, want)
+	}
+}
+
+func TestRenderExpositionSkipsMismatchedLabels(t *testing.T) {
+	buildInfo := &desc{
+		name:   "k2_node_build_info",
+		help:   "K2 node image build information.",
+		labels: []string{"flavor", "flavor_version"},
+	}
+	want := "# HELP k2_node_build_info K2 node image build information.\n" +
+		"# TYPE k2_node_build_info gauge\n"
+
+	got := renderExposition([]sample{{
+		desc:   buildInfo,
+		value:  1,
+		labels: []string{"ubuntu"},
+	}})
+	if got != want {
+		t.Fatalf("renderExposition() = %q, want %q", got, want)
+	}
+}
+
 func testCollector(run fakeRunner) *Collector {
 	return NewCollector(Config{Debug: io.Discard}, run)
+}
+
+func testRoleMetadata(t *testing.T, role string) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "metadata.yaml")
+	data := "target: ubuntu-26.04-amd64-qemu-" + role + "\n" +
+		"flavor: ubuntu-26.04\n" +
+		"role: " + role + "\n" +
+		"arch: amd64\n" +
+		"hardware: qemu\n"
+	if err := os.WriteFile(path, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return path
 }
 
 func mustMkdir(t *testing.T, path string) {

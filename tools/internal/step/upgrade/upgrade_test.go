@@ -11,7 +11,11 @@ import (
 	"github.com/wyvernzora/k2/tools/internal/client/kubectl"
 )
 
-func TestTagPrefixFromMetadata(t *testing.T) {
+// The published tag is built by tagSegments in tools/internal/image/plan and
+// watched by slotTag in kairos/node-agent/internal/imagecheck; all three live in
+// different packages (two of them in different modules) and cannot share code.
+// These exact strings are the tripwire that catches them drifting apart.
+func TestSlotTagFromMetadata(t *testing.T) {
 	meta := NodeImageMetadata{
 		Flavor:        "ubuntu-26.04",
 		Role:          "k8s",
@@ -19,8 +23,16 @@ func TestTagPrefixFromMetadata(t *testing.T) {
 		Hardware:      "rpi4cb",
 		KairosVersion: "v4.1.2",
 	}
-	if got := tagPrefix(meta); got != "ubuntu-26.04-v4.1.2-arm64-rpi4cb-k8s-" {
-		t.Errorf("got %q", got)
+	// No base/Kairos/Kubernetes version: a bump must not move the node's slot,
+	// or the newest image becomes the one image the tool cannot discover.
+	if got := slotTag(meta); got != "ubuntu-arm64-rpi4cb-k8s" {
+		t.Errorf("got %q, want %q", got, "ubuntu-arm64-rpi4cb-k8s")
+	}
+	bumped := meta
+	bumped.Flavor = "ubuntu-28.04"
+	bumped.KairosVersion = "v5.0.0"
+	if got := slotTag(bumped); got != slotTag(meta) {
+		t.Errorf("base/Kairos bump changed the slot tag: %q != %q", got, slotTag(meta))
 	}
 }
 
@@ -42,7 +54,7 @@ func TestImageRefFromMetadata(t *testing.T) {
 				KubernetesVersion: "v1.36.0+k3s1",
 				KairosVersion:     "v4.1.0",
 			},
-			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-24.04-standard-v4.1.0-amd64-qemu-k3s-v1.36.0-k3s1",
+			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-amd64-qemu-k3s",
 		},
 		{
 			name: "current Ubuntu 26.04 image",
@@ -55,7 +67,18 @@ func TestImageRefFromMetadata(t *testing.T) {
 				KubernetesVersion: "v1.36.2+k3s1",
 				KairosVersion:     "v4.1.2",
 			},
-			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-26.04-v4.1.2-amd64-qemu-k8s-v1.36.2-k3s1",
+			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-amd64-qemu-k8s",
+		},
+		{
+			name: "storage appliance",
+			meta: NodeImageMetadata{
+				Flavor:        "ubuntu-26.04",
+				Role:          "storage",
+				Arch:          "amd64",
+				Hardware:      "qemu",
+				KairosVersion: "v4.1.2",
+			},
+			want: "ghcr.io/wyvernzora/k2-kairos:ubuntu-amd64-qemu-storage",
 		},
 	}
 
@@ -108,6 +131,27 @@ func TestKairosUpgradeSourcePinsDigestWhenKnown(t *testing.T) {
 	// to the ref as given rather than refusing to upgrade.
 	if got, want := kairosUpgradeSource(ImageRef{Ref: tag}), "oci:"+tag; got != want {
 		t.Errorf("fallback got %q, want %q", got, want)
+	}
+}
+
+// The marker must be gone before the image is written, not after: between
+// `kairos-agent upgrade` and the post-verify RecordAppliedDigest it can only
+// name the previous image, and ActiveImageMatchesTarget stops at the digest
+// without consulting the source commit. A stale marker there costs a re-run its
+// resume path (and its quorum exemption) on a node already on the target.
+func TestUpgradeActiveScriptClearsMarkerBeforeWritingImage(t *testing.T) {
+	plan := Plan{Target: ImageRef{Ref: "ghcr.io/wyvernzora/k2-kairos:ubuntu-amd64-qemu-storage"}}
+	got := upgradeActiveScript(plan)
+	rm := strings.Index(got, "rm -f")
+	upgrade := strings.Index(got, "kairos-agent upgrade")
+	if rm < 0 || upgrade < 0 {
+		t.Fatalf("script missing a required command: %q", got)
+	}
+	if rm > upgrade {
+		t.Errorf("marker removal must precede the upgrade: %q", got)
+	}
+	if !strings.Contains(got, AppliedDigestPath) {
+		t.Errorf("script does not remove %s: %q", AppliedDigestPath, got)
 	}
 }
 

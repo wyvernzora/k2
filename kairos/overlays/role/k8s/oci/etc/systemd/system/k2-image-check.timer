@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodic K2 node image upgrade availability check
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

@@ -3,6 +3,7 @@ import type { Construct } from "constructs";
 import { ApexDomain, HelmCharts, K2Chart } from "@k2/cdk-lib";
 import { AuthenticatedIngress, authenticatedSourceIpPolicy } from "@k2/pomerium";
 
+import { ScrapeConfig, type ScrapeConfigProps } from "../../crds/monitoring.coreos.com.js";
 import { DASHBOARD_FOLDER_ANNOTATION, DASHBOARD_ROOT, GrafanaDashboards } from "../dashboards/index.js";
 
 import { GRAFANA_ADMIN_SECRET_NAME, GrafanaAdminSecret } from "./admin-secret.js";
@@ -18,6 +19,7 @@ export class Prometheus extends K2Chart {
 
     new GrafanaAdminSecret(this, "grafana-admin-secret");
     new GrafanaDashboards(this, "grafana-dashboards");
+    new ScrapeConfig(this, "storage-appliance-scrape", storageApplianceScrapeConfig());
     HelmCharts.of(this).asChart(this, "prometheus", "kube-prometheus-stack", prometheusValues(grafanaHost));
     new AuthenticatedIngress(this, "grafana-ingress", {
       host: grafanaHost,
@@ -34,7 +36,30 @@ function prometheusValues(grafanaHost: string) {
     crds: { enabled: false },
     grafana: grafanaValues(grafanaHost),
     prometheus: { prometheusSpec: prometheusSpec() },
+    "prometheus-node-exporter": {
+      extraArgs: nodeExporterExtraArgs(),
+      extraHostVolumeMounts: [
+        {
+          name: "textfile",
+          hostPath: "/var/lib/prometheus/node-exporter",
+          mountPath: "/var/lib/prometheus/node-exporter",
+          type: "DirectoryOrCreate",
+          readOnly: true,
+        },
+      ],
+    },
   };
+}
+
+// Helm replaces lists instead of merging them, so the chart's own filesystem
+// excludes have to be repeated here or every kubelet/containerd/overlay mount
+// gets node_filesystem_* series (and NodeFilesystem* alerts) on all 7 nodes.
+function nodeExporterExtraArgs() {
+  return [
+    "--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)",
+    "--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$",
+    "--collector.textfile.directory=/var/lib/prometheus/node-exporter",
+  ];
 }
 
 function grafanaValues(grafanaHost: string) {
@@ -92,7 +117,30 @@ function prometheusSpec() {
     probeSelectorNilUsesHelmValues: false,
     probeSelector: {},
     probeNamespaceSelector: {},
+    scrapeConfigSelectorNilUsesHelmValues: false,
+    scrapeConfigSelector: {},
+    scrapeConfigNamespaceSelector: {},
     storageSpec: prometheusStorageSpec(),
+  };
+}
+
+function storageApplianceScrapeConfig(): ScrapeConfigProps {
+  return {
+    metadata: { name: "storage-appliance" },
+    spec: {
+      jobName: "storage-appliance",
+      staticConfigs: [storageApplianceTarget()],
+    },
+  };
+}
+
+// The appliance lives outside the cluster, so it is a static target rather
+// than a discovered one. Labelled by node name so dashboards never match on
+// the raw address.
+function storageApplianceTarget() {
+  return {
+    labels: { instance: "k2-st-0e12", role: "storage" },
+    targets: ["10.10.9.250:9100"],
   };
 }
 

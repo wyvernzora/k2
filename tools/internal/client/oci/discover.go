@@ -170,10 +170,12 @@ func positiveLabel(labels map[string]string, name string) (uint64, error) {
 // DiscoverLatest scans `repo` for tags starting with `prefix`,
 // inspects each one's image config for its created timestamp, and
 // returns the one published most recently. The prefix exists because
-// our published-image tag scheme is
-// `<target>-<k3sVersion>-rev<N>`, and an operator on rpi4cb does
-// NOT want to match a worker's qemu image as "latest." Callers are
-// expected to build the prefix from the running node's metadata.
+// tags name a deployment SLOT
+// (`<flavor-family>-<arch>-<hardware>-<role>`), and an operator on
+// rpi4cb does NOT want to match a worker's qemu image as "latest."
+// Callers are expected to build the prefix from the running node's
+// metadata; passing the slot tag itself resolves that one floating
+// tag, which is where every new build for the slot lands.
 //
 // Returns an error if no tags match the prefix; the caller should
 // surface this as "no published images matched" rather than falling

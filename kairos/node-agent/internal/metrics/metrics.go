@@ -11,8 +11,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/wyvernzora/k2/kairos/node-agent/internal/buildmetadata"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/health"
 	"github.com/wyvernzora/k2/kairos/node-agent/internal/runner"
+	"github.com/wyvernzora/k2/kairos/node-agent/internal/textfile"
 )
 
 const (
@@ -31,15 +33,15 @@ type Config struct {
 	ConfigFSRoot string
 	SaveConfig   string
 	StatusFile   string
+	MetadataFile string
 	Debug        io.Writer
 }
 
 // desc identifies a metric family; help is rendered once per family.
 type desc struct {
-	name string
-	help string
-	// label name for single-label families; empty for unlabeled ones.
-	label string
+	name   string
+	help   string
+	labels []string
 }
 
 type Collector struct {
@@ -47,6 +49,7 @@ type Collector struct {
 	run runner.Runner
 
 	collectorSuccess *desc
+	nodeBuildInfo    *desc
 	zfsPoolHealth    *desc
 	zfsPoolSize      *desc
 	zfsPoolAlloc     *desc
@@ -81,7 +84,7 @@ type sample struct {
 	labels []string
 }
 
-// Run collects every group once, renders Prometheus text exposition, and
+// Run collects every applicable group once, renders Prometheus text exposition, and
 // atomically replaces <textfile-dir>/k2.prom. Designed to run as a systemd
 // oneshot on a timer; freshness is monitored via node_textfile_mtime_seconds.
 func Run(cfg Config) error {
@@ -96,46 +99,58 @@ func NewCollector(cfg Config, run runner.Runner) *Collector {
 		cfg: cfg,
 		run: run,
 
-		collectorSuccess: &desc{"k2_collector_success", "Whether the K2 storage metrics collector group succeeded.", "collector"},
-		zfsPoolHealth:    &desc{"k2_zfs_pool_health", "ZFS pool health, 1 when ONLINE.", "pool"},
-		zfsPoolSize:      &desc{"k2_zfs_pool_size_bytes", "ZFS pool size in bytes.", "pool"},
-		zfsPoolAlloc:     &desc{"k2_zfs_pool_alloc_bytes", "ZFS pool allocated bytes.", "pool"},
-		zfsPoolFrag:      &desc{"k2_zfs_pool_fragmentation_ratio", "ZFS pool fragmentation ratio.", "pool"},
-		zfsPoolCap:       &desc{"k2_zfs_pool_capacity_ratio", "ZFS pool capacity ratio.", "pool"},
-		zfsKeyStatus:     &desc{"k2_zfs_keystatus_available", "ZFS encrypted dataset key availability.", "dataset"},
-		zfsVolumeSize:    &desc{"k2_zfs_volume_size_bytes", "ZFS volume size in bytes.", "volume"},
-		zfsVolumeUsed:    &desc{"k2_zfs_volume_used_bytes", "ZFS volume used bytes.", "volume"},
-		zfsVolumes:       &desc{"k2_zfs_volumes", "Total ZFS volume count.", ""},
-		lioTargets:       &desc{"k2_lio_targets", "LIO iSCSI target count.", ""},
-		lioLUNs:          &desc{"k2_lio_luns", "LIO LUN count.", ""},
-		lioSessions:      &desc{"k2_lio_sessions", "LIO active session count.", ""},
-		lioSaveInSync:    &desc{"k2_lio_saveconfig_in_sync", "Whether live LIO target count matches saveconfig.", ""},
-		smartTemp:        &desc{"k2_smart_temperature_celsius", "SMART temperature in Celsius.", "device"},
-		smartPctUsed:     &desc{"k2_smart_percentage_used", "NVMe SMART percentage used.", "device"},
-		smartMediaErrors: &desc{"k2_smart_media_errors", "SMART media error count.", "device"},
-		smartPowerHours:  &desc{"k2_smart_power_on_hours", "SMART power-on hours.", "device"},
-		storageHealthy:   &desc{"k2_storage_healthy", "K2 storage health status.", ""},
-		storageLastRun:   &desc{"k2_storage_health_last_run_timestamp_seconds", "Unix timestamp of the last storage health status write.", ""},
-		snapshotLast:     &desc{"k2_zfs_last_snapshot_timestamp_seconds", "Unix creation time of the newest cadence snapshot per prefix.", "prefix"},
-		snapshotCount:    &desc{"k2_zfs_snapshot_count", "Distinct cadence snapshot points retained per prefix.", "prefix"},
+		collectorSuccess: &desc{"k2_collector_success", "Whether the K2 metrics collector group succeeded.", []string{"collector"}},
+		nodeBuildInfo: &desc{
+			"k2_node_build_info",
+			"K2 node image build information.",
+			[]string{"target", "flavor", "flavor_version", "kairos_version", "kairos_agent_version", "kubernetes_distro", "kubernetes_version", "role", "arch", "hardware", "source_commit"},
+		},
+		zfsPoolHealth:    &desc{"k2_zfs_pool_health", "ZFS pool health, 1 when ONLINE.", []string{"pool"}},
+		zfsPoolSize:      &desc{"k2_zfs_pool_size_bytes", "ZFS pool size in bytes.", []string{"pool"}},
+		zfsPoolAlloc:     &desc{"k2_zfs_pool_alloc_bytes", "ZFS pool allocated bytes.", []string{"pool"}},
+		zfsPoolFrag:      &desc{"k2_zfs_pool_fragmentation_ratio", "ZFS pool fragmentation ratio.", []string{"pool"}},
+		zfsPoolCap:       &desc{"k2_zfs_pool_capacity_ratio", "ZFS pool capacity ratio.", []string{"pool"}},
+		zfsKeyStatus:     &desc{"k2_zfs_keystatus_available", "ZFS encrypted dataset key availability.", []string{"dataset"}},
+		zfsVolumeSize:    &desc{"k2_zfs_volume_size_bytes", "ZFS volume size in bytes.", []string{"volume"}},
+		zfsVolumeUsed:    &desc{"k2_zfs_volume_used_bytes", "ZFS volume used bytes.", []string{"volume"}},
+		zfsVolumes:       &desc{"k2_zfs_volumes", "Total ZFS volume count.", nil},
+		lioTargets:       &desc{"k2_lio_targets", "LIO iSCSI target count.", nil},
+		lioLUNs:          &desc{"k2_lio_luns", "LIO LUN count.", nil},
+		lioSessions:      &desc{"k2_lio_sessions", "LIO node ACL count; ACLs are cached, so this is not a live session count.", nil},
+		lioSaveInSync:    &desc{"k2_lio_saveconfig_in_sync", "Whether live LIO target count matches saveconfig.", nil},
+		smartTemp:        &desc{"k2_smart_temperature_celsius", "SMART temperature in Celsius.", []string{"device"}},
+		smartPctUsed:     &desc{"k2_smart_percentage_used", "NVMe SMART percentage used.", []string{"device"}},
+		smartMediaErrors: &desc{"k2_smart_media_errors", "SMART media error count.", []string{"device"}},
+		smartPowerHours:  &desc{"k2_smart_power_on_hours", "SMART power-on hours.", []string{"device"}},
+		storageHealthy:   &desc{"k2_storage_healthy", "K2 storage health status.", nil},
+		storageLastRun:   &desc{"k2_storage_health_last_run_timestamp_seconds", "Unix timestamp of the last storage health status write.", nil},
+		snapshotLast:     &desc{"k2_zfs_last_snapshot_timestamp_seconds", "Unix creation time of the newest cadence snapshot per prefix.", []string{"prefix"}},
+		snapshotCount:    &desc{"k2_zfs_snapshot_count", "Distinct cadence snapshot points retained per prefix.", []string{"prefix"}},
 	}
 }
 
 // Render collects all groups and returns the exposition text.
 func (c *Collector) Render() string {
-	var samples []sample
-	for _, group := range []struct {
+	type collectorGroup struct {
 		name string
 		fn   func() groupResult
-	}{
-		{"zfs_pools", c.collectZFSPools},
-		{"zfs_keystatus", c.collectZFSKeyStatus},
-		{"zfs_volumes", c.collectZFSVolumes},
-		{"zfs_snapshots", c.collectZFSSnapshots},
-		{"lio", c.collectLIO},
-		{"smart", c.collectSMART},
-		{"storage_health", c.collectStorageHealth},
-	} {
+	}
+	groups := []collectorGroup{{"node_build", c.collectNodeBuild}}
+	metadata, err := readBuildMetadata(c.cfg.MetadataFile)
+	if err == nil && metadata["role"] == "storage" {
+		groups = append(groups,
+			collectorGroup{"zfs_pools", c.collectZFSPools},
+			collectorGroup{"zfs_keystatus", c.collectZFSKeyStatus},
+			collectorGroup{"zfs_volumes", c.collectZFSVolumes},
+			collectorGroup{"zfs_snapshots", c.collectZFSSnapshots},
+			collectorGroup{"lio", c.collectLIO},
+			collectorGroup{"smart", c.collectSMART},
+			collectorGroup{"storage_health", c.collectStorageHealth},
+		)
+	}
+
+	var samples []sample
+	for _, group := range groups {
 		result := group.fn()
 		samples = append(samples, result.samples...)
 		success := 0.0
@@ -145,6 +160,64 @@ func (c *Collector) Render() string {
 		samples = append(samples, sample{desc: c.collectorSuccess, value: success, labels: []string{group.name}})
 	}
 	return renderExposition(samples)
+}
+
+func (c *Collector) collectNodeBuild() groupResult {
+	metadata, err := readBuildMetadata(c.cfg.MetadataFile)
+	if err != nil {
+		c.debugf("read node build metadata failed: %v", err)
+		return groupResult{success: false}
+	}
+	if metadata["target"] == "" {
+		c.debugf("node build metadata has empty target")
+		return groupResult{success: false}
+	}
+
+	flavor, flavorVersion := splitFlavor(metadata["flavor"])
+	kairosAgentVersion := ""
+	// Node identity remains useful on valid images where kairos-agent is absent
+	// or cannot report its version, so this subprocess is deliberately optional.
+	if out, err := c.run.Output("kairos-agent", "--version"); err == nil {
+		fields := strings.Fields(out)
+		if len(fields) > 0 {
+			kairosAgentVersion = fields[len(fields)-1]
+		}
+	}
+
+	return groupResult{
+		success: true,
+		samples: []sample{{
+			desc:  c.nodeBuildInfo,
+			value: 1,
+			labels: []string{
+				metadata["target"],
+				flavor,
+				flavorVersion,
+				metadata["kairosVersion"],
+				kairosAgentVersion,
+				metadata["kubernetesDistro"],
+				metadata["kubernetesVersion"],
+				metadata["role"],
+				metadata["arch"],
+				metadata["hardware"],
+				metadata["sourceCommit"],
+			},
+		}},
+	}
+}
+
+func readBuildMetadata(path string) (map[string]string, error) {
+	return buildmetadata.Read(path)
+}
+
+// Keep this split aligned with flavorFamily in tools/internal/image/plan/plan.go;
+// the separate Go modules cannot share the helper without a new shared module.
+func splitFlavor(flavor string) (family string, version string) {
+	family, version, found := strings.Cut(flavor, "-")
+	if !found || family == "" {
+		return flavor, ""
+	}
+	return family, version
 }
 
 // renderExposition emits gauges grouped by family, HELP/TYPE once each,
@@ -163,11 +236,21 @@ func renderExposition(samples []sample) string {
 	for _, d := range order {
 		fmt.Fprintf(&b, "# HELP %s %s\n# TYPE %s gauge\n", d.name, d.help, d.name)
 		for _, s := range byFamily[d] {
-			if d.label != "" && len(s.labels) == 1 {
-				fmt.Fprintf(&b, "%s{%s=%q} %s\n", d.name, d.label, s.labels[0], formatValue(s.value))
-			} else {
-				fmt.Fprintf(&b, "%s %s\n", d.name, formatValue(s.value))
+			if len(s.labels) != len(d.labels) {
+				continue
 			}
+			b.WriteString(d.name)
+			if len(d.labels) > 0 {
+				b.WriteByte('{')
+				for i, label := range d.labels {
+					if i > 0 {
+						b.WriteByte(',')
+					}
+					fmt.Fprintf(&b, "%s=%q", label, s.labels[i])
+				}
+				b.WriteByte('}')
+			}
+			fmt.Fprintf(&b, " %s\n", formatValue(s.value))
 		}
 	}
 	return b.String()
@@ -180,25 +263,7 @@ func formatValue(v float64) string {
 // writeTextfile replaces path atomically: the node_exporter textfile
 // collector reads on its own schedule and must never see a partial file.
 func writeTextfile(path string, content string) error {
-	dir := filepath.Dir(path)
-	tmp, err := os.CreateTemp(dir, promFileName+".tmp-*")
-	if err != nil {
-		return err
-	}
-	if _, err := tmp.WriteString(content); err != nil {
-		tmp.Close()
-		os.Remove(tmp.Name())
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmp.Name())
-		return err
-	}
-	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
-		os.Remove(tmp.Name())
-		return err
-	}
-	return os.Rename(tmp.Name(), path)
+	return textfile.Write(path, content)
 }
 
 func (c *Collector) collectZFSPools() groupResult {
@@ -344,7 +409,8 @@ func countLIO(root string) (targets, luns, sessions int, err error) {
 				continue
 			}
 			luns += countDirs(filepath.Join(root, entry.Name(), tpgt.Name(), "lun"), "lun_")
-			// ponytail: configfs session state is deeper; ACL dirs are enough for the D28 boot/e2e signal.
+			// ponytail: ACL dirs are enough for the D28 boot/e2e signal. They are cached
+			// (democratic-csi sets cache_dynamic_acls), so they outlive the sessions that created them.
 			sessions += countDirs(filepath.Join(root, entry.Name(), tpgt.Name(), "acls"), "")
 		}
 	}
@@ -365,10 +431,16 @@ func countDirs(path string, prefix string) int {
 	return count
 }
 
+// saveConfigInSync compares only the NUMBER of live targets against the number
+// in saveconfig.json — it does not compare target identities, TPGs, LUNs or
+// ACLs. An absent saveconfig.json is reported as out of sync rather than
+// trivially in sync: nothing would be restored at the next boot, and with an
+// unreadable configfs (live count 0) "both absent" would otherwise read as a
+// clean bill of health for a box whose LIO state is simply unknown.
 func saveConfigInSync(path string, liveTargets int) bool {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return os.IsNotExist(err) && liveTargets == 0
+		return false
 	}
 	var parsed struct {
 		Targets []json.RawMessage `json:"targets"`
@@ -498,6 +570,9 @@ func normalize(cfg Config) Config {
 	}
 	if cfg.StatusFile == "" {
 		cfg.StatusFile = health.DefaultStatusFile
+	}
+	if cfg.MetadataFile == "" {
+		cfg.MetadataFile = buildmetadata.DefaultPath
 	}
 	if cfg.Debug == nil {
 		cfg.Debug = io.Discard
