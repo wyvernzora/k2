@@ -27,6 +27,15 @@ inspect:
         contains:
           - "k2-backup ALL=(ALL) NOPASSWD:"
           - "/usr/sbin/zfs send *"
+          - "/usr/sbin/zfs recv *"
+          - "/usr/sbin/zfs create *"
+      # uids are pinned into the 7000 range because Kairos allocates the
+      # `kairos` user at first boot from the low range and has collided with
+      # image-created accounts. A shared uid defeats the sudo scoping above.
+      - path: /etc/passwd
+        contains:
+          - "k2-csi:x:7001:7001:"
+          - "k2-backup:x:7002:7002:"
       - path: /system/oem/10-storage-services.yaml
         structuredTests:
           - op: test
