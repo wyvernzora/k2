@@ -4124,7 +4124,7 @@ data:
     {
       "uid": "k2-storage-appliance",
       "title": "K2 / Storage Appliance",
-      "description": "At-a-glance storage appliance, zvol PVC, and K2 node image status.",
+      "description": "At-a-glance storage appliance and zvol PVC status.",
       "tags": [
         "k2",
         "storage"
@@ -5529,20 +5529,62 @@ data:
               }
             }
           ]
-        },
-        {
-          "type": "row",
-          "id": 28,
-          "title": "Fleet",
-          "collapsed": false,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 50
-          },
-          "panels": []
-        },
+        }
+      ]
+    }
+immutable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    k8s-sidecar-target-directory: /tmp/dashboards/Infrastructure
+  labels:
+    grafana_dashboard: "1"
+    k2.wyvernzora.io/app: prometheus
+    k2.wyvernzora.io/component: prometheus
+  name: k2-grafana-dashboard-k2-fleet
+  namespace: prometheus
+data:
+  k2-fleet.json: |-
+    {
+      "uid": "k2-fleet",
+      "title": "K2 / Fleet",
+      "description": "Image build and upgrade state for every K2 node: control planes, workers, and the storage appliance.",
+      "tags": [
+        "k2",
+        "fleet"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "1m",
+      "graphTooltip": 1,
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "templating": {
+        "list": []
+      },
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "panels": [
         {
           "type": "table",
           "id": 29,
@@ -5555,7 +5597,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 51
+            "y": 0
           },
           "fieldConfig": {
             "defaults": {
@@ -5637,7 +5679,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 61
+            "y": 10
           },
           "fieldConfig": {
             "defaults": {
@@ -5817,6 +5859,243 @@ data:
                   "Value #A": "upgrade available",
                   "Value #B": "check succeeded",
                   "Value #C": "check age"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "id": 31,
+          "title": "K2 node boot assessment",
+          "description": "GRUB rolls a node back to its passive slot when it finds boot_assessment_tentative still set. An armed node looks healthy until its NEXT reboot, whenever that happens to be — k2-pi-35d9 sat armed for 30 days and then reverted to a months-old image during unrelated rack work. Armed is the warning; passive boot and upgrade failure mean it already happened. Nodes appear here only once they run an image that reports these metrics.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 20
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "filterable": true
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "armed"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bool"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "assessment enabled"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bool"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "text",
+                          "value": null
+                        },
+                        {
+                          "color": "yellow",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "booted passive"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bool"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "upgrade failure"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "bool"
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "green",
+                          "value": null
+                        },
+                        {
+                          "color": "red",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "sortBy": [
+              {
+                "displayName": "armed",
+                "desc": true
+              }
+            ],
+            "footer": {
+              "show": false,
+              "reducer": [
+                "sum"
+              ],
+              "fields": ""
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "max by (instance) (k2_boot_assessment_armed)"
+            },
+            {
+              "refId": "B",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "max by (instance) (k2_boot_assessment_enabled)"
+            },
+            {
+              "refId": "C",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "max by (instance) (k2_boot_slot_passive)"
+            },
+            {
+              "refId": "D",
+              "editorMode": "code",
+              "format": "table",
+              "instant": true,
+              "expr": "max by (instance) (k2_boot_upgrade_failure)"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                },
+                "indexByName": {
+                  "instance": 0,
+                  "Value #A": 1,
+                  "Value #C": 2,
+                  "Value #D": 3,
+                  "Value #B": 4
+                },
+                "renameByName": {
+                  "instance": "node",
+                  "Value #A": "armed",
+                  "Value #B": "assessment enabled",
+                  "Value #C": "booted passive",
+                  "Value #D": "upgrade failure"
                 }
               }
             }
