@@ -29,7 +29,7 @@ const storagePVCScenarioName = "storage-pvc"
 
 var (
 	e2eProvisionTypes     = []string{"bootstrap", "storage", "worker"}
-	e2eStepTypes          = []string{"helmInstall", "nodePrepISCSI", "rebootVM"}
+	e2eStepTypes          = []string{"helmInstall", "imageUpgrade", "nodePrepISCSI", "rebootVM"}
 	e2eCheckTypes         = []string{"deleteHygiene", "nodesReady", "pvcLifecycle", "storageMetrics", "zfsConsistency"}
 	e2eValueGeneratorKeys = []string{"storageDriverValues"}
 )
@@ -42,6 +42,7 @@ type e2eRunCmd struct {
 	ClusterTarget      string `name:"cluster-target" default:"v3" help:"Cluster config/deploy target."`
 	ClusterName        string `name:"cluster-name" default:"k2e2e" help:"Local e2e cluster name."`
 	Namespace          string `name:"namespace" help:"Override PVC lifecycle namespace."`
+	UpgradeSource      string `name:"upgrade-source" help:"Override the imageUpgrade step's target image (CI pins the digest it just built)."`
 	SkipTeardownOnFail bool   `name:"skip-teardown-on-fail" help:"Preserve VMs and scratch state only when the harness fails."`
 }
 
@@ -50,6 +51,7 @@ type e2eRunOptions struct {
 	clusterTarget      string
 	clusterName        string
 	namespace          string
+	upgradeSource      string
 	pvcSize            string
 	chartVersion       string
 	skipTeardownOnFail bool
@@ -102,6 +104,7 @@ type e2eScenarioStepEntry struct {
 	NodePrepISCSI e2eNodePrepISCSIStep
 	HelmInstall   e2eHelmInstallStep
 	RebootVM      e2eVMCheck
+	ImageUpgrade  e2eImageUpgradeStep
 }
 
 type e2eNodePrepISCSIStep struct {
@@ -176,6 +179,7 @@ func (c e2eRunCmd) options() e2eRunOptions {
 		clusterTarget:      firstNonEmpty(c.ClusterTarget, "v3"),
 		clusterName:        firstNonEmpty(c.ClusterName, "k2e2e"),
 		namespace:          c.Namespace,
+		upgradeSource:      c.UpgradeSource,
 		skipTeardownOnFail: c.SkipTeardownOnFail,
 	}
 }
@@ -276,6 +280,10 @@ func validateE2ESteps(vms map[string]bool, steps []e2eScenarioStepEntry) error {
 			if err := validateE2EVMRef(vms, step.RebootVM.VM, step.Type); err != nil {
 				return err
 			}
+		case "imageUpgrade":
+			if err := validateE2EVMRef(vms, step.ImageUpgrade.VM, step.Type); err != nil {
+				return err
+			}
 		case "helmInstall":
 			if !slices.Contains(e2eValueGeneratorKeys, step.HelmInstall.Values) {
 				return fmt.Errorf("unknown values generator %q (known: %s)", step.HelmInstall.Values, strings.Join(e2eValueGeneratorKeys, ", "))
@@ -354,7 +362,7 @@ func buildE2EWorkflow(rcx *Runtime, state *e2eScenarioState, opts e2eRunOptions,
 	wf.Section("Steps")
 	for _, entry := range scenario.Steps {
 		entry := entry
-		wf.Shell(e2eStepLabel(entry), stepE2EScenarioStep(state, entry))
+		wf.Shell(e2eStepLabel(entry), stepE2EScenarioStep(state, opts, entry))
 	}
 
 	wf.Section("Checks")
@@ -714,7 +722,7 @@ func stepE2EProvisionWorker(rcx *Runtime, s *e2eScenarioState, opts e2eRunOption
 	}
 }
 
-func stepE2EScenarioStep(s *e2eScenarioState, entry e2eScenarioStepEntry) func(context.Context, ui.Step) error {
+func stepE2EScenarioStep(s *e2eScenarioState, opts e2eRunOptions, entry e2eScenarioStepEntry) func(context.Context, ui.Step) error {
 	switch entry.Type {
 	case "nodePrepISCSI":
 		return stepE2ENodePrepISCSI(s, entry.NodePrepISCSI)
@@ -722,6 +730,8 @@ func stepE2EScenarioStep(s *e2eScenarioState, entry e2eScenarioStepEntry) func(c
 		return stepE2EHelmInstall(s, entry.HelmInstall)
 	case "rebootVM":
 		return stepE2ERebootVM(s, entry.RebootVM)
+	case "imageUpgrade":
+		return stepE2EImageUpgrade(s, entry.ImageUpgrade, opts.upgradeSource)
 	default:
 		return func(context.Context, ui.Step) error { return fmt.Errorf("unknown step type %q", entry.Type) }
 	}
@@ -1194,6 +1204,8 @@ func e2eStepLabel(entry e2eScenarioStepEntry) string {
 		return "Install " + entry.HelmInstall.Release
 	case "rebootVM":
 		return "Reboot " + entry.RebootVM.VM + " and wait for active boot"
+	case "imageUpgrade":
+		return "Upgrade " + entry.ImageUpgrade.VM + " and verify identity survives"
 	default:
 		return entry.Type
 	}
@@ -1260,6 +1272,8 @@ func (e *e2eScenarioStepEntry) UnmarshalYAML(value *yaml.Node) error {
 		return decodeKnownYAML(node, &e.HelmInstall, "helmInstall", []string{"release", "chart", "repo", "namespace", "chartVersion", "values"})
 	case "rebootVM":
 		return decodeKnownYAML(node, &e.RebootVM, "rebootVM", []string{"vm"})
+	case "imageUpgrade":
+		return decodeKnownYAML(node, &e.ImageUpgrade, "imageUpgrade", []string{"vm", "source"})
 	default:
 		return fmt.Errorf("unknown step type %q (known: %s)", key, strings.Join(e2eStepTypes, ", "))
 	}
