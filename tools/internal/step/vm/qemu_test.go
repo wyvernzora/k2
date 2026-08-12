@@ -33,7 +33,7 @@ func TestQEMUArgsAttachExtraDisksAfterPersistent(t *testing.T) {
 		}
 	}
 
-	args := strings.Join(qemuArgs(meta, "/firmware.fd", "vmnet-shared,id=net0"), "\n")
+	args := strings.Join(qemuArgs(meta, qemuProfile{Binary: "qemu-system-aarch64", Machine: "virt,accel=hvf", CPU: "host", Firmware: "/firmware.fd"}, "vmnet-shared,id=net0"), "\n")
 	persistent := strings.Index(args, "id=persistent")
 	extra1 := strings.Index(args, "id=extra-storage-1")
 	extra2 := strings.Index(args, "id=extra-storage-2")
