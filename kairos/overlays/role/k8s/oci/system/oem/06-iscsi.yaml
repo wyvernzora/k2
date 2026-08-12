@@ -4,7 +4,15 @@ name: "K2 iSCSI initiator"
 # Kubernetes CSI initiators need a stable, node-unique IQN. /etc is ephemeral
 # on Kairos, while the open-iscsi package creates initiatorname.iscsi during
 # image build (and therefore gives every clone the same value). Persist the
-# directory, then replace that baked value exactly once on each installed node.
+# directory so sessions and node records survive, but keep the IDENTITY in K2
+# state and re-render it every boot.
+#
+# Identity cannot live in /etc/iscsi even though that directory is persisted:
+# an upgrade syncs the new image's /etc over the persisted copy, so the baked
+# initiatorname.iscsi wins while any marker file next to it survives — a
+# write-once guard therefore never re-fires and every node upgraded from one
+# image ends up answering to the SAME IQN. Observed live on 2026-08-11: two
+# nodes upgraded to 986edfe8 both took their image's baked value.
 
 stages:
   rootfs:
@@ -18,15 +26,15 @@ stages:
       if: '[ ! -f "/run/cos/recovery_mode" ]'
       commands:
         - |
-          marker=/etc/iscsi/.k2-initiator-initialized
+          state=/usr/local/.state/k2-iscsi-iqn
           initiator=/etc/iscsi/initiatorname.iscsi
-          if [ ! -f "$marker" ] || [ ! -s "$initiator" ]; then
-            install -d -m 0755 /etc/iscsi
-            iqn="$(/usr/sbin/iscsi-iname)"
-            umask 022
-            printf "InitiatorName=%s\n" "$iqn" > "$initiator"
-            touch "$marker"
+          if [ ! -s "$state" ]; then
+            install -d -m 0755 /usr/local/.state
+            /usr/sbin/iscsi-iname > "$state"
           fi
+          install -d -m 0755 /etc/iscsi
+          umask 022
+          printf "InitiatorName=%s\n" "$(cat "$state")" > "$initiator"
       systemctl:
         enable:
           - iscsid.service
