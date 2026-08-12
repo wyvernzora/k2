@@ -10,8 +10,8 @@ gateway = "10.10.1.1"
 dns = ["10.10.10.10", "1.1.1.1"]
 
 # Storage fabric leg (vmbr1): no gateway/DNS by design — unrouted bridge.
-# Inert until the VM gets its second NIC in PVE. MTU deliberately unset;
-# set to 9000 in lockstep with the bridge when the 100G DAC is enslaved.
+# Jumbo MTU matches vmbr1 and the 100G DAC to the NAS.
 [[nic]]
 iface = "ens19"
 address = "172.16.9.73/16"
+mtu = 9000
