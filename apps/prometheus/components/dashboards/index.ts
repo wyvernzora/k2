@@ -115,6 +115,7 @@ function dashboards(): DashboardSpec[] {
     ]),
     kuraSuiteDashboard(),
     storageApplianceDashboard(),
+    fleetDashboard(),
     dashboard("k2-dns", "Networking", "K2 / DNS", [
       stat(1, "DNS queries / sec", "sum(rate(blocky_query_total[$__rate_interval]))", 0, 0, "ops"),
       stat(2, "DNS errors / sec", "sum(rate(blocky_error_total[$__rate_interval]))", 6, 0, "ops"),
@@ -293,6 +294,17 @@ function kuraSuiteDashboard(): DashboardSpec {
       string,
       unknown
     >,
+  };
+}
+
+// Node build and image-check state covers control planes, workers, and the
+// appliance alike, so it does not belong under Storage — it lived there only
+// because the appliance was the first node to report those metrics.
+function fleetDashboard(): DashboardSpec {
+  return {
+    uid: "k2-fleet",
+    folder: "Infrastructure",
+    definition: JSON.parse(readFileSync(new URL("./fleet.json", import.meta.url), "utf8")) as Record<string, unknown>,
   };
 }
 
