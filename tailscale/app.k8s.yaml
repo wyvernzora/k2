@@ -465,5 +465,4 @@ spec:
   proxyClass: k2-router-iptables
   subnetRouter:
     advertiseRoutes:
-      - 10.10.10.10/32
-      - 10.10.13.0/24
+      - 10.10.0.0/16
