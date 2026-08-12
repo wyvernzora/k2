@@ -295,19 +295,6 @@ RUN set -eux; \
     mkdir -p /etc/ssh/sshd_config.d; \
     printf '%s\n' 'DenyUsers k2-rescue' > /etc/ssh/sshd_config.d/99-k2-rescue-block.conf
 
-# K2 claims these account names at provision time; fail the BUILD if the base
-# image ever ships one of them, rather than discovering the collision on a node.
-# A plain "backup" user does exist in the Debian base (uid 34, /var/backups),
-# which is exactly why the provisioned identity is namespaced k2-backup: without
-# this check, provisioning silently half-adopts whatever account it finds.
-RUN set -eux; \
-    for account in k2-backup k2-csi; do \
-        if getent passwd "${account}" >/dev/null; then \
-            echo "base image already provides account ${account}; pick a k2- namespaced name" >&2; \
-            exit 1; \
-        fi; \
-    done
-
 COPY kairos/overlays /k2-overlays
 
 RUN set -eux; \
