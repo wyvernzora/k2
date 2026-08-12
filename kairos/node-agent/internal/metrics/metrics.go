@@ -26,15 +26,22 @@ const (
 
 	defaultConfigFSRoot = "/sys/kernel/config/target/iscsi"
 	defaultSaveConfig   = "/etc/rtslib-fb-target/saveconfig.json"
+
+	// GRUB's boot-assessment sentinels live in this env block on COS_STATE,
+	// and /run/cos holds the markers immucore writes for the current boot.
+	defaultBootAssessment = "/run/initramfs/cos-state/boot_assessment"
+	defaultRunCosDir      = "/run/cos"
 )
 
 type Config struct {
-	TextfileDir  string
-	ConfigFSRoot string
-	SaveConfig   string
-	StatusFile   string
-	MetadataFile string
-	Debug        io.Writer
+	TextfileDir        string
+	ConfigFSRoot       string
+	SaveConfig         string
+	StatusFile         string
+	MetadataFile       string
+	BootAssessmentFile string
+	RunCosDir          string
+	Debug              io.Writer
 }
 
 // desc identifies a metric family; help is rendered once per family.
@@ -71,6 +78,10 @@ type Collector struct {
 	storageLastRun   *desc
 	snapshotLast     *desc
 	snapshotCount    *desc
+	bootAssessArmed  *desc
+	bootAssessOn     *desc
+	bootPassive      *desc
+	bootUpgradeFail  *desc
 }
 
 type groupResult struct {
@@ -126,6 +137,10 @@ func NewCollector(cfg Config, run runner.Runner) *Collector {
 		storageLastRun:   &desc{"k2_storage_health_last_run_timestamp_seconds", "Unix timestamp of the last storage health status write.", nil},
 		snapshotLast:     &desc{"k2_zfs_last_snapshot_timestamp_seconds", "Unix creation time of the newest cadence snapshot per prefix.", []string{"prefix"}},
 		snapshotCount:    &desc{"k2_zfs_snapshot_count", "Distinct cadence snapshot points retained per prefix.", []string{"prefix"}},
+		bootAssessArmed:  &desc{"k2_boot_assessment_armed", "Whether GRUB's boot_assessment_tentative sentinel is still set; the next reboot would roll this node back.", nil},
+		bootAssessOn:     &desc{"k2_boot_assessment_enabled", "Whether GRUB boot assessment is enabled for this node.", nil},
+		bootPassive:      &desc{"k2_boot_slot_passive", "Whether this boot came up on the passive (fallback) slot.", nil},
+		bootUpgradeFail:  &desc{"k2_boot_upgrade_failure", "Whether this boot was stamped as following a failed upgrade.", nil},
 	}
 }
 
@@ -135,7 +150,11 @@ func (c *Collector) Render() string {
 		name string
 		fn   func() groupResult
 	}
-	groups := []collectorGroup{{"node_build", c.collectNodeBuild}}
+	// boot_assessment applies to every Kairos node regardless of role.
+	groups := []collectorGroup{
+		{"node_build", c.collectNodeBuild},
+		{"boot_assessment", c.collectBootAssessment},
+	}
 	metadata, err := readBuildMetadata(c.cfg.MetadataFile)
 	if err == nil && metadata["role"] == "storage" {
 		groups = append(groups,
@@ -204,6 +223,72 @@ func (c *Collector) collectNodeBuild() groupResult {
 			},
 		}},
 	}
+}
+
+// collectBootAssessment reports whether this node is carrying a live GRUB
+// boot-assessment sentinel, and whether it already fell back.
+//
+// Written after k2-pi-35d9 rolled back on 2026-08-12. Kairos sets
+// boot_assessment_tentative=yes on the first boot after an upgrade and clears
+// it once that boot succeeds; if the clearing never happens the flag sits
+// there indefinitely, and the NEXT reboot — whenever that is, in that case 30
+// days later during unrelated rack work — makes GRUB conclude the last boot
+// failed and boot the passive slot instead. The node looks perfectly healthy
+// the whole time it is armed, which is exactly what made this expensive to
+// find: a control-plane node silently reverted to a months-old image.
+//
+// k2_boot_assessment_armed is the predictive signal (alert while it can still
+// be cleared); k2_boot_slot_passive and k2_boot_upgrade_failure are the
+// detective ones, and would have named this incident the moment it happened.
+func (c *Collector) collectBootAssessment() groupResult {
+	raw, err := os.ReadFile(c.cfg.BootAssessmentFile)
+	if err != nil {
+		// Absence is not "unarmed": on a node where COS_STATE is not mounted
+		// we simply cannot tell, so fail the group rather than report a
+		// reassuring zero.
+		c.debugf("read boot assessment env failed: %v", err)
+		return groupResult{success: false}
+	}
+	env := parseGRUBEnv(string(raw))
+	return groupResult{
+		success: true,
+		samples: []sample{
+			{desc: c.bootAssessArmed, value: boolValue(strings.EqualFold(env["boot_assessment_tentative"], "yes"))},
+			{desc: c.bootAssessOn, value: boolValue(strings.EqualFold(env["enable_boot_assessment"], "yes"))},
+			{desc: c.bootPassive, value: boolValue(fileExists(filepath.Join(c.cfg.RunCosDir, "passive_mode")))},
+			{desc: c.bootUpgradeFail, value: boolValue(fileExists(filepath.Join(c.cfg.RunCosDir, "upgrade_failure")))},
+		},
+	}
+}
+
+// parseGRUBEnv reads GRUB's env block format: key=value lines followed by a
+// long run of '#' padding that keeps the file a fixed size.
+func parseGRUBEnv(content string) map[string]string {
+	env := map[string]string{}
+	for _, line := range strings.Split(content, "\n") {
+		line = strings.TrimSpace(strings.TrimRight(line, "\x00"))
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, found := strings.Cut(line, "=")
+		if !found {
+			continue
+		}
+		env[strings.TrimSpace(key)] = strings.TrimSpace(value)
+	}
+	return env
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func boolValue(b bool) float64 {
+	if b {
+		return 1
+	}
+	return 0
 }
 
 func readBuildMetadata(path string) (map[string]string, error) {
@@ -573,6 +658,12 @@ func normalize(cfg Config) Config {
 	}
 	if cfg.MetadataFile == "" {
 		cfg.MetadataFile = buildmetadata.DefaultPath
+	}
+	if cfg.BootAssessmentFile == "" {
+		cfg.BootAssessmentFile = defaultBootAssessment
+	}
+	if cfg.RunCosDir == "" {
+		cfg.RunCosDir = defaultRunCosDir
 	}
 	if cfg.Debug == nil {
 		cfg.Debug = io.Discard
