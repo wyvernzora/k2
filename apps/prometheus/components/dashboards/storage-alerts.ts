@@ -189,7 +189,13 @@ function rollupGroup() {
     rules: [
       {
         alert: "StorageApplianceDegraded",
-        expr: RuleExpr.fromString(`count(ALERTS{k2_component="storage-appliance",alertstate="firing"}) > 0`),
+        // k2_rollup!="true" excludes this alert from its own count. Without it
+        // the rollup carries k2_component=storage-appliance into ALERTS, keeps
+        // matching itself, and stays firing forever after the leaf that first
+        // tripped it has cleared.
+        expr: RuleExpr.fromString(
+          `count(ALERTS{k2_component="storage-appliance",k2_rollup!="true",alertstate="firing"}) > 0`,
+        ),
         for: "0m",
         labels: { ...COMPONENT, severity: "warning", k2_rollup: "true" },
         annotations: {
