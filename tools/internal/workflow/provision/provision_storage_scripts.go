@@ -94,12 +94,32 @@ func splitMarkedSections(out string) map[string]string {
 // does not carry the account. The alternative — creating it here — is what
 // produced a user with no sudoers and, once, a half-adopted Debian system
 // account.
+//
+// It also refuses a shared uid. Kairos allocates the `kairos` user at first
+// boot against whatever /etc/passwd holds at that moment, and has landed on
+// top of an image-created account (k2-backup on the appliance, k2-rescue on
+// k2-pi-335e). A shared uid silently defeats the sudo scoping: whoever holds
+// this account's key can write the other account's ~/.ssh/authorized_keys and
+// log in as it. The collision only exists at runtime, so the image cannot
+// assert it at build time — this is the gate that can.
+//
+// Finally it reconciles home ownership. /home is persisted, so an image that
+// renumbers the account leaves the directory owned by the old uid and the
+// account can no longer read its own authorized_keys.
 func requireStorageAccountSnippet(account string) string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "if ! id %s >/dev/null 2>&1; then\n", account)
 	fmt.Fprintf(&buf, "  echo 'account %s is missing; this image predates the storage-users action - upgrade the appliance image first' >&2\n", account)
 	fmt.Fprintf(&buf, "  exit 1\n")
 	fmt.Fprintf(&buf, "fi\n")
+	fmt.Fprintf(&buf, "uid=\"$(id -u %s)\"\n", account)
+	fmt.Fprintf(&buf, "clash=\"$(getent passwd | awk -F: -v u=\"$uid\" -v a=%s '$3 == u && $1 != a {print $1}')\"\n", account)
+	fmt.Fprintf(&buf, "if [ -n \"$clash\" ]; then\n")
+	fmt.Fprintf(&buf, "  echo \"account %s shares uid $uid with: $clash - refusing to install a key onto a shared identity; rebuild the image with pinned uids\" >&2\n", account)
+	fmt.Fprintf(&buf, "  exit 1\n")
+	fmt.Fprintf(&buf, "fi\n")
+	fmt.Fprintf(&buf, "sudo install -d -o %s -g %s -m 0755 /home/%s\n", account, account, account)
+	fmt.Fprintf(&buf, "sudo chown -R %s:%s /home/%s\n", account, account, account)
 	return buf.String()
 }
 

@@ -105,7 +105,10 @@ inspect:
           - "Wait Until Kernel Time Synchronized"
       - path: /etc/passwd
         contains:
-          - "k2-rescue:"
+          # uid pinned into the 7000 range: Kairos allocates the `kairos` user
+          # at first boot from the low range and collided with k2-rescue at
+          # uid 1001 on k2-pi-335e.
+          - "k2-rescue:x:7003:7003:"
       - path: /etc/shadow
         contains:
           # Yescrypt-prefixed entry confirms the hash was actually
