@@ -125,6 +125,7 @@ RUN set -eux; \
     for action in ${POST_INSTALL_ACTIONS}; do \
         case "${action}" in \
             zfs-hostid) [ -f /etc/hostid ] || zgenhostid ;; \
+            drop-iscsi-identity) rm -f /etc/iscsi/initiatorname.iscsi ;; \
             disable-motd) if [ -d /etc/update-motd.d ]; then chmod -x /etc/update-motd.d/* || true; fi ;; \
             use-virtual-kernel) \
                 apt-get update; \

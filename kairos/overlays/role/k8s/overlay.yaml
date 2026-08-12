@@ -6,6 +6,14 @@ build:
     - parted
     - udev
     - util-linux
+  postInstall:
+    # open-iscsi's postinst generates an initiatorname.iscsi during the build,
+    # which every node from this image would otherwise share. Drop it: /oem
+    # renders the node's own name from K2 state at boot, and open-iscsi's
+    # startup-checks.sh generates a fresh unique one if that ever fails to run.
+    # Shipping no value at all is what keeps a stale image copy from landing on
+    # top of a node's identity during an upgrade.
+    - drop-iscsi-identity
   dracutInstallItems:
     - /usr/sbin/k2-node-agent
     - /usr/sbin/blkid
@@ -170,6 +178,7 @@ inspect:
           - "Persistent=true"
           - "RandomizedDelaySec=10min"
     absent:
+      - /etc/iscsi/initiatorname.iscsi
       - /system/oem/30-k2-k3s-provider.yaml
       - /etc/rancher/k3s/config.yaml
       - /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
