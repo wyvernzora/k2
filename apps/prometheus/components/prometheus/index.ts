@@ -36,19 +36,45 @@ function prometheusValues(grafanaHost: string) {
     crds: { enabled: false },
     grafana: grafanaValues(grafanaHost),
     prometheus: { prometheusSpec: prometheusSpec() },
-    "prometheus-node-exporter": {
-      extraArgs: nodeExporterExtraArgs(),
-      extraHostVolumeMounts: [
-        {
-          name: "textfile",
-          hostPath: "/var/lib/prometheus/node-exporter",
-          mountPath: "/var/lib/prometheus/node-exporter",
-          type: "DirectoryOrCreate",
-          readOnly: true,
-        },
-      ],
-    },
+    "prometheus-node-exporter": nodeExporterValues(),
   };
+}
+
+function nodeExporterValues() {
+  return {
+    extraArgs: nodeExporterExtraArgs(),
+    extraHostVolumeMounts: [nodeExporterTextfileMount()],
+    prometheus: { monitor: { relabelings: nodeExporterRelabelings() } },
+  };
+}
+
+function nodeExporterTextfileMount() {
+  return {
+    name: "textfile",
+    hostPath: "/var/lib/prometheus/node-exporter",
+    mountPath: "/var/lib/prometheus/node-exporter",
+    type: "DirectoryOrCreate",
+    readOnly: true,
+  };
+}
+
+// Without this, k8s nodes identify as "10.10.9.11:9100" while the storage
+// appliance — scraped by a static config — identifies as "k2-st-0e12". Any
+// fleet-wide panel or query then mixes IP:port rows with hostname rows for
+// the same k2_node_* metrics. Relabel at the scrape so `instance` is the node
+// name everywhere and queries can stay `by (instance)`.
+//
+// Same Helm caveat as extraArgs above: lists are replaced, not merged, so
+// anything the chart ships here has to be repeated. It currently ships none —
+// no target carries kubernetes_node today.
+function nodeExporterRelabelings() {
+  return [
+    {
+      action: "replace",
+      sourceLabels: ["__meta_kubernetes_pod_node_name"],
+      targetLabel: "instance",
+    },
+  ];
 }
 
 // Helm replaces lists instead of merging them, so the chart's own filesystem
