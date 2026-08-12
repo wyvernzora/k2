@@ -1,0 +1,13 @@
+set -eu
+zvol="$(sudo zfs list -H -o name -r {{ shq .DatasetParentName }} | grep {{ shq .PVName }} | head -n1)"
+test -n "$zvol"
+volsize="$(sudo zfs get -Hp -o value volsize "$zvol")"
+test "$volsize" -ge {{ .ExpectedBytes }}
+{{- /*
+  keystatus must be exactly 'available': '-' means unencrypted, and
+  'unavailable' means encrypted but NOT unlocked — both are failures.
+*/}}
+test "$(sudo zfs get -H -o value keystatus {{ shq .Pool }})" = 'available'
+test "$(sudo zfs get -H -o value encryption "$zvol")" != 'off'
+sudo targetcli ls /iscsi | grep {{ shq .IQNBase }} >/dev/null
+sudo targetcli ls /iscsi | grep {{ shq .PVName }} >/dev/null

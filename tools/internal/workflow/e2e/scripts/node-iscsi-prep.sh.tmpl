@@ -1,0 +1,7 @@
+set -eu
+echo 'k2-tools: preparing iSCSI initiator'
+{{- /* ponytail: phase-6 overlay work should replace this imperative VM-only workaround. */}}
+new_iqn="$(iscsi-iname)"
+printf 'InitiatorName=%s\n' "$new_iqn" | sudo tee /etc/iscsi/initiatorname.iscsi >/dev/null
+sudo systemctl enable --now iscsid
+sudo systemctl restart iscsid
