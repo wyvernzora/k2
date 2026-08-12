@@ -8,8 +8,7 @@ import { TailscaleRouterProxyClass } from "./proxy-class.js";
 
 const CONNECTOR_NAME = "k2-router";
 const PROXY_CLASS_NAME = "k2-router-iptables";
-const BLOCKY_POOL_NAME = "blocky";
-const K2_FRONT_DOOR_POOL_NAME = "privileged";
+const INFRASTRUCTURE_VLAN_NAME = "infrastructure";
 
 export class TailscaleConnector extends K2Chart {
   public constructor(scope: Construct, id: string) {
@@ -33,22 +32,11 @@ export class TailscaleConnector extends K2Chart {
 }
 
 function subnetRoutes(scope: Construct): string[] {
-  const pools = ClusterContext.of(scope).config.loadBalancerPools;
-  return [singleAddressPool(pools, BLOCKY_POOL_NAME), cidrPool(pools, K2_FRONT_DOOR_POOL_NAME)];
-}
-
-function singleAddressPool(pools: { name: string; cidr: string }[], name: string): string {
-  const cidr = cidrPool(pools, name);
-  if (!cidr.endsWith("/32")) {
-    throw new Error(`Tailscale connector route ${name} must be a single-address /32 pool`);
+  const vlan = ClusterContext.of(scope).config.network.vlans.find(
+    candidate => candidate.name === INFRASTRUCTURE_VLAN_NAME,
+  );
+  if (vlan === undefined) {
+    throw new Error(`Tailscale connector requires network.vlans entry ${INFRASTRUCTURE_VLAN_NAME}`);
   }
-  return cidr;
-}
-
-function cidrPool(pools: { name: string; cidr: string }[], name: string): string {
-  const pool = pools.find(candidate => candidate.name === name);
-  if (pool === undefined) {
-    throw new Error(`Tailscale connector requires loadBalancerPools entry ${name}`);
-  }
-  return pool.cidr;
+  return [vlan.cidr];
 }
