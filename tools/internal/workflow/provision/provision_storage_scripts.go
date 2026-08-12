@@ -90,6 +90,19 @@ func splitMarkedSections(out string) map[string]string {
 	return sections
 }
 
+// requireStorageAccountSnippet aborts with a legible message when the image
+// does not carry the account. The alternative — creating it here — is what
+// produced a user with no sudoers and, once, a half-adopted Debian system
+// account.
+func requireStorageAccountSnippet(account string) string {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "if ! id %s >/dev/null 2>&1; then\n", account)
+	fmt.Fprintf(&buf, "  echo 'account %s is missing; this image predates the storage-users action - upgrade the appliance image first' >&2\n", account)
+	fmt.Fprintf(&buf, "  exit 1\n")
+	fmt.Fprintf(&buf, "fi\n")
+	return buf.String()
+}
+
 func storageInstallScript(nodeName string, hasNetwork bool, hasBackup bool) string {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "set -eu\n")
@@ -113,53 +126,23 @@ func storageInstallScript(nodeName string, hasNetwork bool, hasBackup bool) stri
 	fmt.Fprintf(&buf, "else\n")
 	fmt.Fprintf(&buf, "  echo 'k2-tools: no operator SSH keys supplied'\n")
 	fmt.Fprintf(&buf, "fi\n")
-	fmt.Fprintf(&buf, "echo 'k2-tools: ensuring csi user'\n")
-	// The imperative bits below make the user usable IMMEDIATELY (no reboot
-	// in the provisioning flow); the /oem activation stage is what makes it
-	// survive reboots — useradd writes to the ephemeral /etc overlay, so
-	// without the stage the user (and its sudoers) vanish on first reboot.
-	fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/95-k2-storage-csi.yaml /oem/95-k2-storage-csi.yaml\n")
-	fmt.Fprintf(&buf, "if ! id csi >/dev/null 2>&1; then sudo useradd --create-home --shell /bin/sh csi; fi\n")
-	fmt.Fprintf(&buf, "sudo chown csi:csi /home/csi\n")
-	fmt.Fprintf(&buf, "sudo install -d -o csi -g csi -m 0700 /home/csi/.ssh\n")
-	fmt.Fprintf(&buf, "sudo install -o csi -g csi -m 0600 \"$remote_dir\"/csi_authorized_keys /home/csi/.ssh/authorized_keys\n")
-	fmt.Fprintf(&buf, "sudo install -m 0440 \"$remote_dir\"/99-csi /etc/sudoers.d/99-csi\n")
-	fmt.Fprintf(&buf, "sudo touch /home/csi/.hushlogin\n")
-	fmt.Fprintf(&buf, "sudo chown csi:csi /home/csi/.hushlogin\n")
+	// Accounts and sudo scope are image content (storage role, storage-users
+	// post-install action); provisioning supplies only the per-deployment key
+	// into persisted /home. A missing account means the appliance runs an image
+	// older than this provisioner — say so rather than silently useradd'ing a
+	// half-configured account with no sudoers, which is how the /oem-stage era
+	// failed.
+	fmt.Fprintf(&buf, "echo 'k2-tools: installing k2-csi key'\n")
+	fmt.Fprintf(&buf, "%s", requireStorageAccountSnippet("k2-csi"))
+	fmt.Fprintf(&buf, "sudo install -d -o k2-csi -g k2-csi -m 0700 /home/k2-csi/.ssh\n")
+	fmt.Fprintf(&buf, "sudo install -o k2-csi -g k2-csi -m 0600 \"$remote_dir\"/csi_authorized_keys /home/k2-csi/.ssh/authorized_keys\n")
 	fmt.Fprintf(&buf, "echo 'k2-tools: installing snapshot cadence config'\n")
 	fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/k2-snapshot.env /oem/k2-snapshot.env\n")
 	if hasBackup {
-		// Same imperative-now + /oem-stage-later split as the csi user:
-		// usable immediately, survives the ephemeral /etc overlay via 94-*.yaml.
-		//
-		// Two ordering rules learned the hard way on 2026-08-12:
-		//
-		//  1. Adopt an existing account only after proving it is OURS. A plain
-		//     "backup" user ships in the Debian base (uid 34, /var/backups,
-		//     nologin); `id` alone matched it, useradd was skipped, and the
-		//     failure surfaced as an unrelated chown error further down.
-		//  2. Install the /oem stage LAST. This script is set -eu, so an abort
-		//     part-way used to leave a persistent cloud-config declaring the
-		//     user + its sudoers with nothing else applied — which would have
-		//     attached an SSH key and zfs sudo rights to that system account on
-		//     the next boot.
-		fmt.Fprintf(&buf, "echo 'k2-tools: ensuring k2-backup user'\n")
-		fmt.Fprintf(&buf, "if id k2-backup >/dev/null 2>&1; then\n")
-		fmt.Fprintf(&buf, "  home=\"$(getent passwd k2-backup | cut -d: -f6)\"\n")
-		fmt.Fprintf(&buf, "  if [ \"$home\" != /home/k2-backup ]; then\n")
-		fmt.Fprintf(&buf, "    echo \"account k2-backup already exists with home $home (expected /home/k2-backup); refusing to adopt it\" >&2\n")
-		fmt.Fprintf(&buf, "    exit 1\n")
-		fmt.Fprintf(&buf, "  fi\n")
-		fmt.Fprintf(&buf, "else\n")
-		fmt.Fprintf(&buf, "  sudo useradd --create-home --shell /bin/sh k2-backup\n")
-		fmt.Fprintf(&buf, "fi\n")
-		fmt.Fprintf(&buf, "sudo chown k2-backup:k2-backup /home/k2-backup\n")
+		fmt.Fprintf(&buf, "echo 'k2-tools: installing k2-backup key'\n")
+		fmt.Fprintf(&buf, "%s", requireStorageAccountSnippet("k2-backup"))
 		fmt.Fprintf(&buf, "sudo install -d -o k2-backup -g k2-backup -m 0700 /home/k2-backup/.ssh\n")
 		fmt.Fprintf(&buf, "sudo install -o k2-backup -g k2-backup -m 0600 \"$remote_dir\"/backup_authorized_keys /home/k2-backup/.ssh/authorized_keys\n")
-		fmt.Fprintf(&buf, "sudo install -m 0440 \"$remote_dir\"/98-k2-backup /etc/sudoers.d/98-k2-backup\n")
-		fmt.Fprintf(&buf, "sudo touch /home/k2-backup/.hushlogin\n")
-		fmt.Fprintf(&buf, "sudo chown k2-backup:k2-backup /home/k2-backup/.hushlogin\n")
-		fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/94-k2-storage-backup.yaml /oem/94-k2-storage-backup.yaml\n")
 	}
 	return buf.String()
 }

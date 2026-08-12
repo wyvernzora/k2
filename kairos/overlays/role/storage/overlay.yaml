@@ -8,10 +8,25 @@ build:
   postInstall:
     - zfs-hostid
     - disable-motd
+    # Accounts + sudo scope are identical on every appliance, so they are image
+    # content: reviewed, build-asserted, and immune to the ephemeral /etc
+    # overlay. Provisioning supplies only the per-deployment SSH keys. The old
+    # split — useradd at provision time plus an /oem stage to survive reboots —
+    # is what let a Debian system account get half-adopted on 2026-08-12.
+    - storage-users
 
 inspect:
   oci:
     files:
+      # Identities are image content now, so assert them at build: a silently
+      # missing account would only surface later as a provisioning failure.
+      - path: /etc/sudoers.d/99-k2-csi
+        contains:
+          - "k2-csi ALL=(ALL) NOPASSWD:ALL"
+      - path: /etc/sudoers.d/98-k2-backup
+        contains:
+          - "k2-backup ALL=(ALL) NOPASSWD:"
+          - "/usr/sbin/zfs send *"
       - path: /system/oem/10-storage-services.yaml
         structuredTests:
           - op: test
