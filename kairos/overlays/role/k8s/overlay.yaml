@@ -126,7 +126,7 @@ inspect:
             value: /usr/sbin/k2-node-agent setup-persistence --verify-only --log-prefix kairos-persistent --marker .k2-persistent-ok
       - path: /system/oem/06-iscsi.yaml
         contains:
-          - /etc/iscsi/.k2-initiator-initialized
+          - /usr/local/.state/k2-iscsi-iqn
           - /etc/iscsi/initiatorname.iscsi
           - /usr/sbin/iscsi-iname
           - 'printf "InitiatorName=%s\n"'
