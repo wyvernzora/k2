@@ -118,7 +118,7 @@ spec:
                   name: kura-tvdb
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/wyvernzora/kura/library-manager:main@sha256:8f354004e53212b951039ac0378477a491ef10dcef3c4d401d77d58d3cd2dc40
+          image: ghcr.io/wyvernzora/kura/library-manager:main@sha256:e7dc071662b3f3de61e43adef0c92b11f6551194d1b35068d1e448a709ad127b
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -274,7 +274,7 @@ spec:
               value: /config
             - name: XDG_DATA_HOME
               value: /data
-          image: ghcr.io/wyvernzora/kura/gateway:main@sha256:53ce2fcc77ee8ee664e901dc967888b7d13fc77a500c078af952375fd1effc60
+          image: ghcr.io/wyvernzora/kura/gateway:main@sha256:d3f6ed323e2646adf20db8c75e14f23f5d1dbaa917c33bbdfe45d53bb0127584
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -562,7 +562,7 @@ spec:
                   name: release-indexer-credentials
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/wyvernzora/kura/release-indexer:main@sha256:79c9d9316860a9c4075e1b20c73abe6a9f938976ba4b804263fd5cb97f945ebf
+          image: ghcr.io/wyvernzora/kura/release-indexer:main@sha256:61c12a55d74c92ac487753e8cfa5280a3e2381be251b5b2ab9c1995c92af533b
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 6
