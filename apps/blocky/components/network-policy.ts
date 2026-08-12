@@ -40,6 +40,7 @@ export class NetworkPolicy extends K2Chart {
         ...ingress.fromCidrs(cidr.rfc1918(), ...DNS_PORTS),
         ...ingress.fromCidrTarget(tailscale.endpoints.tailnetDnsClients()),
         { from: { endpoint: tailscale.workloads.router() }, ports: DNS_PORTS },
+        ...ingress.fromNodes(...DNS_PORTS),
       ],
       egress: [
         ...egress.toCidrs(publicDnsCidrs, ...DNS_PORTS),
