@@ -53,11 +53,7 @@ type storageBundle struct {
 	AuthorizedKeys     []byte
 	OperatorActivation []byte
 	CSIPublicKey       []byte
-	CSISudoers         []byte
-	CSIActivation      []byte
 	BackupKeys         []byte // nil when no backup keys are supplied
-	BackupSudoers      []byte
-	BackupActivation   []byte
 	SnapshotEnv        []byte
 	PoolKey            []byte
 	InstallScript      []byte
@@ -495,7 +491,7 @@ func (c *storageCmd) writeStorageCredentials(s *storageState) (string, storageSu
 		DetachedSnapshotsDatasetParentName: c.snapshotsParent(),
 		SSHHost:                            c.Host,
 		SSHPort:                            c.SSHPort,
-		SSHUser:                            "csi",
+		SSHUser:                            "k2-csi",
 		CSIPrivateKey:                      s.csiPrivateKey,
 		CSIPublicKey:                       s.csiPublicKey,
 		CHAPUsername:                       s.chapUsername,
@@ -600,21 +596,17 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 		return storageBundle{}, err
 	}
 	// Design D7: targetcli requires root; the csi key is treated as a root credential.
-	csiSudoers := "csi ALL=(ALL) NOPASSWD:ALL\n"
+
 	bundle := storageBundle{
 		Activation:         render.HostnameActivationCloudConfig("K2 storage hostname activation", flags.NodeName),
 		AuthorizedKeys:     authorizedKeys,
 		OperatorActivation: operatorActivation,
 		CSIPublicKey:       []byte(strings.TrimSpace(csiPublicKey) + "\n"),
-		CSISudoers:         []byte(csiSudoers),
-		CSIActivation:      render.CSIUserActivationCloudConfig(strings.TrimSpace(csiPublicKey), csiSudoers),
 		SnapshotEnv:        []byte(snapshotEnv(flags)),
 		PoolKey:            rawPoolKey,
 	}
 	if len(backupKeys) > 0 {
 		bundle.BackupKeys = render.AuthorizedKeys(backupKeys)
-		bundle.BackupSudoers = []byte(backupSudoers)
-		bundle.BackupActivation = render.BackupUserActivationCloudConfig(backupKeys, backupSudoers)
 	}
 	if len(node.NICs) > 0 {
 		// Stage-only: the static addresses apply on the appliance's next
@@ -634,15 +626,6 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 	}))
 	return bundle, nil
 }
-
-// backupSudoers scopes the NAS pull identity to read-side zfs subcommands;
-// source-side pruning belongs to the appliance's own snapshot timers.
-//
-// The k2- prefix is load-bearing: a plain "backup" account already exists in
-// the Debian base (uid 34, home /var/backups, nologin), so useradd was skipped
-// and provisioning half-applied against a system account. Keep K2-owned
-// identities namespaced, as k2-rescue already is.
-const backupSudoers = "k2-backup ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *, /usr/sbin/zfs list *, /usr/sbin/zfs get *, /usr/sbin/zfs hold *, /usr/sbin/zfs release *\n"
 
 // Cadence retention defaults, mirrored by the --snapshot-*-keep kong tags and
 // by the storage overlay's unit Environment= fallbacks.
@@ -685,15 +668,11 @@ func writeStorageBundle(dir string, bundle storageBundle) error {
 		"98-k2-storage-operator-keys.yaml": bundle.OperatorActivation,
 		"operator_authorized_keys":         bundle.AuthorizedKeys,
 		"csi_authorized_keys":              bundle.CSIPublicKey,
-		"99-csi":                           bundle.CSISudoers,
-		"95-k2-storage-csi.yaml":           bundle.CSIActivation,
 		"zfs_pool.key":                     bundle.PoolKey,
 		"storage-install.sh":               bundle.InstallScript,
 		"storage-pool.sh":                  bundle.PoolScript,
 		"97-k2-network.yaml":               bundle.Network,
 		"backup_authorized_keys":           bundle.BackupKeys,
-		"98-k2-backup":                     bundle.BackupSudoers,
-		"94-k2-storage-backup.yaml":        bundle.BackupActivation,
 		"k2-snapshot.env":                  bundle.SnapshotEnv,
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {

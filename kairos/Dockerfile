@@ -126,6 +126,19 @@ RUN set -eux; \
         case "${action}" in \
             zfs-hostid) [ -f /etc/hostid ] || zgenhostid ;; \
             drop-iscsi-identity) rm -f /etc/iscsi/initiatorname.iscsi ;; \
+            storage-users) \
+                for account in k2-csi k2-backup; do \
+                    if getent passwd "${account}" >/dev/null; then \
+                        echo "base image already provides account ${account}" >&2; \
+                        exit 1; \
+                    fi; \
+                    useradd --create-home --shell /bin/sh "${account}"; \
+                    touch "/home/${account}/.hushlogin"; \
+                    chown "${account}:${account}" "/home/${account}/.hushlogin"; \
+                done; \
+                printf '%s\n' 'k2-csi ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/99-k2-csi; \
+                printf '%s\n' 'k2-backup ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *, /usr/sbin/zfs list *, /usr/sbin/zfs get *, /usr/sbin/zfs hold *, /usr/sbin/zfs release *' > /etc/sudoers.d/98-k2-backup; \
+                chmod 0440 /etc/sudoers.d/99-k2-csi /etc/sudoers.d/98-k2-backup ;; \
             disable-motd) if [ -d /etc/update-motd.d ]; then chmod -x /etc/update-motd.d/* || true; fi ;; \
             use-virtual-kernel) \
                 apt-get update; \
@@ -288,7 +301,7 @@ RUN set -eux; \
 # which is exactly why the provisioned identity is namespaced k2-backup: without
 # this check, provisioning silently half-adopts whatever account it finds.
 RUN set -eux; \
-    for account in k2-backup csi; do \
+    for account in k2-backup k2-csi; do \
         if getent passwd "${account}" >/dev/null; then \
             echo "base image already provides account ${account}; pick a k2- namespaced name" >&2; \
             exit 1; \

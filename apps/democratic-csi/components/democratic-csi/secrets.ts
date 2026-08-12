@@ -107,7 +107,7 @@ function driverConfigTemplate(): string {
 sshConnection:
   host: ${APPLIANCE_FABRIC_ADDRESS}
   port: ${APPLIANCE_SSH_PORT}
-  username: csi
+  username: k2-csi
   privateKey: {{ .csiPrivateKey | toJson }}
 zfs:
   cli:
