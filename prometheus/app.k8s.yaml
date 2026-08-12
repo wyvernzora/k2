@@ -7172,7 +7172,7 @@ spec:
           annotations:
             description: Aggregate for k2-st-0e12. Individual causes are the firing ALERTS with k2_component=storage-appliance; this exists so notification routing has one target that does not change as leaf alerts are added.
             summary: Storage appliance has {{ $value }} active alert(s)
-          expr: count(ALERTS{k2_component="storage-appliance",alertstate="firing"}) > 0
+          expr: count(ALERTS{k2_component="storage-appliance",k2_rollup!="true",alertstate="firing"}) > 0
           for: 0m
           labels:
             k2_component: storage-appliance
