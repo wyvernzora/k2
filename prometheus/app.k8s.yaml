@@ -5586,6 +5586,602 @@ data:
       },
       "panels": [
         {
+          "type": "stat",
+          "id": 40,
+          "title": "Upgrade available",
+          "description": "Any node whose floating image tag has moved past the digest it runs. Drill into K2 node image checks for which.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "No",
+                      "color": "green",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "Yes",
+                      "color": "red",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "noValue": "no data",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "max(k2_node_image_upgrade_available)",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 41,
+          "title": "Boot assessment armed",
+          "description": "Any node carrying a stale boot_assessment_tentative sentinel. Such a node looks healthy until its NEXT reboot, then rolls back to its passive slot. Drill into K2 node boot assessment.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "No",
+                      "color": "green",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "Yes",
+                      "color": "red",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "noValue": "no data",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "max(k2_boot_assessment_armed)",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 42,
+          "title": "Booted passive slot",
+          "description": "Any node currently running its fallback slot — i.e. a rollback already happened and the node is on an older image than intended.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "No",
+                      "color": "green",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "Yes",
+                      "color": "red",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "noValue": "no data",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "max(k2_boot_slot_passive)",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "id": 43,
+          "title": "Monitoring health",
+          "description": "All of: every fleet target scrapeable, every k2-node-agent collector succeeding, every image check succeeding, and no image check older than 2h. Red means the other panels on this dashboard may be stale or blind, so treat their green with suspicion.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "Degraded",
+                      "color": "red",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "Healthy",
+                      "color": "green",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "noValue": "no data",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "auto",
+            "orientation": "auto"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "min(up{job=~\"node-exporter|storage-appliance\"}) * min(k2_collector_success) * min(k2_node_image_check_success) * (max(time() - k2_node_image_check_timestamp_seconds) < bool 7200)",
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "piechart",
+          "id": 44,
+          "title": "Flavor",
+          "description": "Base OS across the fleet. More than one slice means a partial rollout.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 5,
+            "x": 0,
+            "y": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "pieType": "donut",
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "values": []
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "count by (flavor, flavor_version) (k2_node_build_info)",
+              "instant": true,
+              "legendFormat": "{{flavor}} {{flavor_version}}"
+            }
+          ]
+        },
+        {
+          "type": "piechart",
+          "id": 45,
+          "title": "Kairos",
+          "description": "Kairos release across the fleet.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 5,
+            "x": 5,
+            "y": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "pieType": "donut",
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "values": []
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "count by (kairos_version) (k2_node_build_info)",
+              "instant": true,
+              "legendFormat": "{{kairos_version}}"
+            }
+          ]
+        },
+        {
+          "type": "piechart",
+          "id": 46,
+          "title": "Kairos agent",
+          "description": "kairos-agent binary version, which drives upgrades — worth watching separately from the Kairos release.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 5,
+            "x": 10,
+            "y": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "pieType": "donut",
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "values": []
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "count by (kairos_agent_version) (k2_node_build_info)",
+              "instant": true,
+              "legendFormat": "{{kairos_agent_version}}"
+            }
+          ]
+        },
+        {
+          "type": "piechart",
+          "id": 47,
+          "title": "Kubernetes",
+          "description": "Kubernetes distro version. The storage appliance is excluded: it runs no Kubernetes, and an empty slice would misreport it as a version skew.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 5,
+            "x": 15,
+            "y": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "pieType": "donut",
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "values": []
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "count by (kubernetes_version) (k2_node_build_info{kubernetes_version!=\"\"})",
+              "instant": true,
+              "legendFormat": "{{kubernetes_version}}"
+            }
+          ]
+        },
+        {
+          "type": "piechart",
+          "id": 48,
+          "title": "Source commit",
+          "description": "Git commit each node's image was built from, shortened to 8 characters. One slice means the fleet is uniform.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 4,
+            "x": 20,
+            "y": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                }
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "pieType": "donut",
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "showLegend": true,
+              "displayMode": "list",
+              "placement": "bottom",
+              "values": []
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "count by (commit) (label_replace(k2_node_build_info, \"commit\", \"$1\", \"source_commit\", \"(.{8}).*\"))",
+              "instant": true,
+              "legendFormat": "{{commit}}"
+            }
+          ]
+        },
+        {
           "type": "table",
           "id": 29,
           "title": "K2 node builds",
@@ -5597,7 +6193,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 0
+            "y": 11
           },
           "fieldConfig": {
             "defaults": {
@@ -5679,7 +6275,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 10
+            "y": 21
           },
           "fieldConfig": {
             "defaults": {
@@ -5877,7 +6473,7 @@ data:
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 20
+            "y": 31
           },
           "fieldConfig": {
             "defaults": {
@@ -13512,6 +14108,11 @@ spec:
     node: false
   endpoints:
     - port: http-metrics
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: instance
       scheme: http
   jobLabel: jobLabel
   selector:
