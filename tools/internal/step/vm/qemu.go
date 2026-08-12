@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -19,7 +20,7 @@ func (r Runner) start(meta Metadata, sudo bool) error {
 		r.successf("%s already running%s", meta.Name, pidSuffix(meta))
 		return nil
 	}
-	firmware, err := qemuFirmware()
+	profile, err := hostQEMUProfile()
 	if err != nil {
 		return err
 	}
@@ -41,11 +42,11 @@ func (r Runner) start(meta Metadata, sudo bool) error {
 	if err != nil {
 		return err
 	}
-	args := qemuArgs(meta, firmware, netdev)
+	args := qemuArgs(meta, profile, netdev)
 	r.logf("starting %s", meta.Name)
-	cmd := exec.Command("qemu-system-aarch64", args...)
+	cmd := exec.Command(profile.Binary, args...)
 	if sudo {
-		cmd = exec.Command("sudo", append([]string{"qemu-system-aarch64"}, args...)...)
+		cmd = exec.Command("sudo", append([]string{profile.Binary}, args...)...)
 		cmd.Stdin = r.stdin()
 	}
 	if err := runCommand(cmd); err != nil {
@@ -97,14 +98,14 @@ func (r Runner) ensureConsoleSocketReady(meta Metadata, sudo bool) error {
 	return fmt.Errorf("console socket %s did not appear within 5s", meta.ConsoleSocket)
 }
 
-func qemuArgs(meta Metadata, firmware string, netdev string) []string {
+func qemuArgs(meta Metadata, profile qemuProfile, netdev string) []string {
 	args := []string{
 		"-name", meta.Name,
-		"-machine", "virt,accel=hvf",
-		"-cpu", "host",
+		"-machine", profile.Machine,
+		"-cpu", profile.CPU,
 		"-smp", strconv.Itoa(meta.CPUs),
 		"-m", strconv.Itoa(meta.MemoryMB),
-		"-bios", firmware,
+		"-bios", profile.Firmware,
 		"-drive", "if=none,file=" + meta.KairosQCOW2 + ",format=qcow2,id=system",
 		"-device", "virtio-blk-pci,drive=system,bootindex=0",
 		"-netdev", netdev,
@@ -215,19 +216,70 @@ func qemuStartError(meta Metadata, err error, sudo bool) error {
 	return err
 }
 
-func qemuFirmware() (string, error) {
-	candidates := []string{
-		"/opt/homebrew/share/qemu/edk2-aarch64-code.fd",
-		"/usr/local/share/qemu/edk2-aarch64-code.fd",
-		"/usr/share/qemu-efi-aarch64/QEMU_EFI.fd",
-		"/usr/share/AAVMF/AAVMF_CODE.fd",
+// qemuProfile is the host-dependent half of a launch: which emulator binary,
+// machine type, CPU model and firmware to use. macOS/arm64 was the only
+// supported host until CI started running these same VMs on Linux runners,
+// where the machine type and accelerator both differ.
+type qemuProfile struct {
+	Binary   string
+	Machine  string
+	CPU      string
+	Firmware string
+}
+
+func hostQEMUProfile() (qemuProfile, error) {
+	accel, cpu := qemuAccel()
+	switch runtime.GOARCH {
+	case "arm64":
+		firmware, err := firstExistingFile([]string{
+			"/opt/homebrew/share/qemu/edk2-aarch64-code.fd",
+			"/usr/local/share/qemu/edk2-aarch64-code.fd",
+			"/usr/share/qemu-efi-aarch64/QEMU_EFI.fd",
+			"/usr/share/AAVMF/AAVMF_CODE.fd",
+		})
+		if err != nil {
+			return qemuProfile{}, fmt.Errorf("could not find AArch64 QEMU firmware")
+		}
+		return qemuProfile{Binary: "qemu-system-aarch64", Machine: "virt,accel=" + accel, CPU: cpu, Firmware: firmware}, nil
+	case "amd64":
+		firmware, err := firstExistingFile([]string{
+			"/usr/share/ovmf/OVMF.fd",
+			"/usr/share/OVMF/OVMF_CODE.fd",
+			"/usr/share/edk2/ovmf/OVMF_CODE.fd",
+			"/opt/homebrew/share/qemu/edk2-x86_64-code.fd",
+			"/usr/local/share/qemu/edk2-x86_64-code.fd",
+		})
+		if err != nil {
+			return qemuProfile{}, fmt.Errorf("could not find x86_64 QEMU firmware")
+		}
+		return qemuProfile{Binary: "qemu-system-x86_64", Machine: "q35,accel=" + accel, CPU: cpu, Firmware: firmware}, nil
+	default:
+		return qemuProfile{}, fmt.Errorf("unsupported host architecture for QEMU: %s", runtime.GOARCH)
 	}
+}
+
+// qemuAccel picks the accelerator, and with it the CPU model: TCG rejects
+// "-cpu host", so software emulation has to ask for "max" instead. A Linux
+// host without /dev/kvm (some hosted CI runners) still boots, just slowly —
+// which is the right trade for a correctness check that would otherwise not
+// run at all.
+func qemuAccel() (accel string, cpu string) {
+	if runtime.GOOS == "darwin" {
+		return "hvf", "host"
+	}
+	if _, err := os.Stat("/dev/kvm"); err == nil {
+		return "kvm", "host"
+	}
+	return "tcg", "max"
+}
+
+func firstExistingFile(candidates []string) (string, error) {
 	for _, candidate := range candidates {
 		if _, err := os.Stat(candidate); err == nil {
 			return candidate, nil
 		}
 	}
-	return "", fmt.Errorf("could not find AArch64 QEMU firmware")
+	return "", errors.New("no candidate file exists")
 }
 
 func macAddress(meta Metadata) string {
