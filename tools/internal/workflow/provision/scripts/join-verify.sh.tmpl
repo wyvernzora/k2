@@ -1,0 +1,21 @@
+{{ template "verification-prelude" . -}}
+verify '{{ .Role }} join config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/{{ .ConfigFile }}
+verify '{{ .Role }} activation installed' sudo test -s /oem/{{ .ActivationFile }}
+verify 'operator activation installed' sudo test -s /oem/98-k2-operator-keys.yaml
+{{ if .HasNetwork -}}
+verify 'network activation installed' sudo test -s /oem/97-k2-network.yaml
+verify 'static network applied' ls /etc/systemd/network/10-k2-*.network
+{{ end -}}
+{{ if .IsServer -}}
+verify 'server invariant config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
+verify 'cluster config installed' sudo test -s /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml
+verify 'k3s service enabled' systemctl is-enabled --quiet k3s
+verify 'k3s service active' systemctl is-active --quiet k3s
+verify 'k3s kubeconfig exists' sudo test -s /etc/rancher/k3s/k3s.yaml
+{{ template "server-packaged-manifest-checks" . -}}
+{{ else -}}
+verify 'server invariant config absent on worker' sudo test ! -e /etc/rancher/k3s/config.yaml.d/10-k2-invariant.yaml
+verify 'cluster config absent on worker' sudo test ! -e /etc/rancher/k3s/config.yaml.d/20-k2-cluster.yaml
+verify 'k3s-agent service enabled' systemctl is-enabled --quiet k3s-agent
+verify 'k3s-agent service active' systemctl is-active --quiet k3s-agent
+{{ end -}}

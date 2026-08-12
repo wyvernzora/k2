@@ -1,0 +1,47 @@
+{{- define "verification-prelude" -}}
+set -eu
+verify() { label="$1"; shift; echo "k2-tools: verify: ${label}"; "$@"; }
+verify 'hostname set' test "$(hostname)" = {{ shq .NodeName }}
+verify 'operator authorized keys installed' sudo test -s /home/kairos/.ssh/authorized_keys
+{{ end -}}
+
+{{- define "server-packaged-manifest-checks" -}}
+verify 'traefik packaged manifest disabled' sudo test -f /var/lib/rancher/k3s/server/manifests/traefik.yaml.skip
+verify 'local-storage packaged manifest disabled' sudo test -f /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip
+verify 'metrics-server packaged manifest disabled' sudo test -f /var/lib/rancher/k3s/server/manifests/metrics-server.yaml.skip
+{{ end -}}
+
+{{- /*
+  Accounts and sudo scope are image content (storage role, storage-users
+  post-install action); provisioning supplies only the per-deployment key into
+  persisted /home. A missing account means the appliance runs an image older
+  than this provisioner — say so rather than silently useradd'ing a
+  half-configured account with no sudoers, which is how the /oem-stage era
+  failed.
+
+  The uid check refuses a shared uid. Kairos allocates the `kairos` user at
+  first boot against whatever /etc/passwd holds at that moment, and has landed
+  on top of an image-created account (k2-backup on the appliance, k2-rescue on
+  k2-pi-335e). A shared uid silently defeats the sudo scoping: whoever holds
+  this account's key can write the other account's ~/.ssh/authorized_keys and
+  log in as it. The collision only exists at runtime, so the image cannot
+  assert it at build time — this is the gate that can.
+
+  The chown reconciles home ownership: /home is persisted, so an image that
+  renumbers the account leaves the directory owned by the old uid and the
+  account can no longer read its own authorized_keys.
+*/ -}}
+{{- define "require-account" -}}
+if ! id {{ . }} >/dev/null 2>&1; then
+  echo 'account {{ . }} is missing; this image predates the storage-users action - upgrade the appliance image first' >&2
+  exit 1
+fi
+uid="$(id -u {{ . }})"
+clash="$(getent passwd | awk -F: -v u="$uid" -v a={{ . }} '$3 == u && $1 != a {print $1}')"
+if [ -n "$clash" ]; then
+  echo "account {{ . }} shares uid $uid with: $clash - refusing to install a key onto a shared identity; rebuild the image with pinned uids" >&2
+  exit 1
+fi
+sudo install -d -o {{ . }} -g {{ . }} -m 0755 /home/{{ . }}
+sudo chown -R {{ . }}:{{ . }} /home/{{ . }}
+{{ end -}}

@@ -2,10 +2,10 @@ package e2e
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/wyvernzora/k2/tools/internal/kubeconfig"
+	"github.com/wyvernzora/k2/tools/internal/shellscript"
 	"github.com/wyvernzora/k2/tools/internal/ui"
 	workflowcore "github.com/wyvernzora/k2/tools/internal/workflow"
 	workflowprovision "github.com/wyvernzora/k2/tools/internal/workflow/provision"
@@ -34,8 +34,5 @@ func sleepCtx(ctx context.Context, duration time.Duration) error {
 }
 
 func shellQuote(value string) string {
-	if value == "" {
-		return "''"
-	}
-	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
+	return shellscript.Quote(value)
 }
