@@ -15,6 +15,7 @@ func (c *buildLintCmd) Run(ctx *Runtime) error {
 	wf := ui.NewWorkflow(currentReporter())
 	wf.Command("TypeScript typecheck", ui.CommandSpec{Name: "npx", Args: []string{"tsc", "--noEmit"}, Dir: opts.RepoRoot})
 	wf.Command("ESLint rule tests", ui.CommandSpec{Name: "npm", Args: []string{"run", "test:eslint-rules"}, Dir: opts.RepoRoot})
+	wf.Command("cdk-lib tests", ui.CommandSpec{Name: "npm", Args: []string{"run", "test:cdk-lib"}, Dir: opts.RepoRoot})
 	wf.Command("ESLint", ui.CommandSpec{Name: "npx", Args: []string{"eslint"}, Dir: opts.RepoRoot})
 	return wf.Execute(runCtx)
 }

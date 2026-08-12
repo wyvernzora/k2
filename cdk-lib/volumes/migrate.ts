@@ -24,9 +24,37 @@ import { K2Volume, type K2MigrateProps, type MaterializedVolume } from "./base.j
  * - `from` still EMITS a PVC, so for a live app it must declare the existing
  *   claim exactly as it stands today — apply adopts a match, but storage
  *   class, size and access modes are immutable, so a PVC that was expanded
- *   past its declared size fails to apply rather than migrating.
+ *   past its declared size fails to apply rather than migrating. It must keep
+ *   emitting one for the whole migration: stop declaring it and Argo prunes
+ *   the claim, which on a Delete-reclaim class destroys the data.
  *
- * Not wired into any app yet — this is the seam for the Longhorn migration.
+ * The whole lifecycle is three edits and two syncs, with no operator commands
+ * and no intermediate state to remember:
+ *
+ *   1. wrap:    `v`  ->  `migrate({from: v, to: w})`   deploy; the copy runs
+ *   2. unwrap:  `migrate({from: v, to: w})`  ->  `w`   deploy; done
+ *
+ * Both steps are safe because of how the two claims are named:
+ *
+ * - The SOURCE materializes under the SAME construct id this volume was given,
+ *   so `migrate({from: v, ...})` emits byte-identical PVC objects to a bare
+ *   `v`. Wrapping a live volume is transparent and adopts the existing claim.
+ * - The DESTINATION is named from a SEED — the id this volume was declared
+ *   under — rather than from its own construct path, so it is named as though
+ *   it had been declared directly. Unwrapping to a bare `w` therefore emits
+ *   the identical claim: no rename, no rebind, nothing to migrate twice.
+ * - A type discriminator in that name keeps the two claims distinct while they
+ *   coexist, which they must, since cdk8s would otherwise derive the same name
+ *   for both (it hashes the construct path, ignoring kind and storage class).
+ *
+ * Unwrapping stops declaring the source, so Argo prunes it — on a
+ * Delete-reclaim class that is what actually frees the old volume. Do not
+ * unwrap until the destination has soaked and is backed up.
+ *
+ * Destination support is per volume type: it requires seed-based naming, which
+ * `K2Volume.iscsi` has. `K2Volume.replicated` deliberately keeps cdk8s' default
+ * naming so the existing Longhorn claims across the cluster are not renamed,
+ * so it works as a SOURCE but not yet as a destination.
  */
 export class K2MigrateVolume extends K2Volume {
   public constructor(private readonly props: K2MigrateProps) {
@@ -34,10 +62,36 @@ export class K2MigrateVolume extends K2Volume {
   }
 
   public materialize(scope: Construct, id: string): MaterializedVolume {
-    const source = this.props.from.materialize(scope, `${id}-source`);
-    const destination = this.props.to.materialize(scope, `${id}-destination`);
+    const source = this.props.from.materialize(scope, id);
+    // Seeded with the id this volume was declared under, so the destination
+    // claim is named as if it were declared there directly. Removing the
+    // wrapper then changes nothing about it.
+    let destination: MaterializedVolume;
+    try {
+      destination = this.props.to.materialize(scope, `${id}-destination`, id);
+    } catch (error) {
+      // A clash means both volumes derived the same construct id, i.e. the same
+      // storage class. cdk8s' own message does not explain why that is fatal.
+      if (error instanceof Error && /already a construct|already exists/i.test(error.message)) {
+        throw new Error(sameStorageClassMessage(id), { cause: error });
+      }
+      throw error;
+    }
+    if (source.claimName !== undefined && source.claimName === destination.claimName) {
+      throw new Error(sameStorageClassMessage(id));
+    }
     return new MigratingVolume(source, destination, this.props);
   }
+}
+
+function sameStorageClassMessage(id: string): string {
+  return (
+    `migrate(${id}): the source and destination resolve to the same volume. ` +
+    "Migrating within a single storage class is not supported: the two claims must coexist while " +
+    "the copy runs, and they are told apart by storage class, so there is nothing left to " +
+    "distinguish them. Migrate to a different class, or resize in place if the class allows " +
+    "expansion."
+  );
 }
 
 class MigratingVolume implements MaterializedVolume {
