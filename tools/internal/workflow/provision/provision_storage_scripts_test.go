@@ -147,13 +147,29 @@ func TestStorageInstallScriptBackupUserAndSnapshotEnv(t *testing.T) {
 	for _, want := range []string{
 		"sudo install -m 0644 \"$remote_dir\"/k2-snapshot.env /oem/k2-snapshot.env",
 		"sudo install -m 0644 \"$remote_dir\"/94-k2-storage-backup.yaml /oem/94-k2-storage-backup.yaml",
-		"sudo useradd --create-home --shell /bin/sh backup",
-		"sudo install -o backup -g backup -m 0600 \"$remote_dir\"/backup_authorized_keys /home/backup/.ssh/authorized_keys",
-		"sudo install -m 0440 \"$remote_dir\"/98-backup /etc/sudoers.d/98-backup",
+		"sudo useradd --create-home --shell /bin/sh k2-backup",
+		"sudo install -o k2-backup -g k2-backup -m 0600 \"$remote_dir\"/backup_authorized_keys /home/k2-backup/.ssh/authorized_keys",
+		"sudo install -m 0440 \"$remote_dir\"/98-k2-backup /etc/sudoers.d/98-k2-backup",
 	} {
 		if !strings.Contains(withBackup, want) {
 			t.Fatalf("backup install script missing %q:\n%s", want, withBackup)
 		}
+	}
+	// The identity must be namespaced: a plain "backup" account ships in the
+	// Debian base, and adopting it silently is what broke provisioning once.
+	if strings.Contains(withBackup, "useradd --create-home --shell /bin/sh backup") {
+		t.Fatalf("install script creates the distro-colliding 'backup' account:\n%s", withBackup)
+	}
+	// An existing same-named account must be proven ours before adoption.
+	if !strings.Contains(withBackup, "refusing to adopt it") {
+		t.Fatalf("install script adopts a pre-existing k2-backup account unchecked:\n%s", withBackup)
+	}
+	// set -eu means a mid-script abort must not leave the /oem stage behind:
+	// it declares the user + sudoers and would apply on the next boot.
+	oem := strings.Index(withBackup, "/oem/94-k2-storage-backup.yaml")
+	keys := strings.Index(withBackup, "/home/k2-backup/.ssh/authorized_keys")
+	if oem < keys {
+		t.Fatalf("/oem backup stage installs before the user is set up:\n%s", withBackup)
 	}
 	without := storageInstallScript("k2-storage", false, false)
 	if strings.Contains(without, "backup") {
