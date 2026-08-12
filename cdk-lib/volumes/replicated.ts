@@ -16,6 +16,6 @@ export class K2ReplicatedVolume extends K2Volume {
       accessModes: this.props.accessModes ?? [PersistentVolumeAccessMode.READ_WRITE_ONCE],
     });
     const volume = Volume.fromPersistentVolumeClaim(scope, id, claim);
-    return new SimpleMaterializedVolume(volume);
+    return new SimpleMaterializedVolume(volume, claim.name);
   }
 }
