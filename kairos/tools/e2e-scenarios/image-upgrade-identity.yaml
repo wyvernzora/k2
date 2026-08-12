@@ -1,0 +1,23 @@
+name: image-upgrade-identity
+description: Upgrade a booted node to a K2 image and assert node-owned identity survives the A/B swap.
+# No provisioning: this scenario tests the image's own boot and upgrade
+# behaviour, not k3s. The node generates its identity on first boot, the
+# upgrade replays the path that has twice overwritten it (image /etc landing
+# on persisted state), and the step re-reads the same facts afterwards.
+#
+# `source` names the floating slot tag so a local run tests the published
+# image; CI overrides it with `--upgrade-source <repo>@<digest>` to pin the
+# build under test. Upgrading to the image the node already runs is a valid
+# run: what breaks is the copy, not the version difference.
+vms:
+  # qemu-user, not qemu-vmnet: vmnet-shared is a macOS framework needing sudo,
+  # and this scenario is meant to run on a Linux CI runner. User-mode
+  # networking is enough for one node with no peers to reach.
+  - name: node
+    preset: qemu-user
+provision: []
+steps:
+  - imageUpgrade:
+      vm: node
+      source: ghcr.io/wyvernzora/k2-kairos:ubuntu-amd64-qemu-k8s
+checks: []

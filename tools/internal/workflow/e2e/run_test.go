@@ -68,6 +68,25 @@ func TestE2EShippedScenarioWorkflowNames(t *testing.T) {
 				"shell Remove e2e resources",
 			},
 		},
+		{
+			name: "image-upgrade-identity",
+			want: []string{
+				"sudo launch QEMU with vmnet networking",
+				"section Preflight",
+				"keyvalues",
+				"shell Check local artifacts and tools",
+				"task Generate e2e operator key",
+				"section Create VMs",
+				"shell Create/start VM e2e-k2e2e-node",
+				"shell Wait for VM e2e-k2e2e-node",
+				"section Provision",
+				"section Steps",
+				"shell Upgrade node and verify identity survives",
+				"section Checks",
+				"section Teardown",
+				"shell Remove e2e resources",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
