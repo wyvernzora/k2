@@ -637,7 +637,12 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 
 // backupSudoers scopes the NAS pull identity to read-side zfs subcommands;
 // source-side pruning belongs to the appliance's own snapshot timers.
-const backupSudoers = "backup ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *, /usr/sbin/zfs list *, /usr/sbin/zfs get *, /usr/sbin/zfs hold *, /usr/sbin/zfs release *\n"
+//
+// The k2- prefix is load-bearing: a plain "backup" account already exists in
+// the Debian base (uid 34, home /var/backups, nologin), so useradd was skipped
+// and provisioning half-applied against a system account. Keep K2-owned
+// identities namespaced, as k2-rescue already is.
+const backupSudoers = "k2-backup ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *, /usr/sbin/zfs list *, /usr/sbin/zfs get *, /usr/sbin/zfs hold *, /usr/sbin/zfs release *\n"
 
 // Cadence retention defaults, mirrored by the --snapshot-*-keep kong tags and
 // by the storage overlay's unit Environment= fallbacks.
@@ -687,7 +692,7 @@ func writeStorageBundle(dir string, bundle storageBundle) error {
 		"storage-pool.sh":                  bundle.PoolScript,
 		"97-k2-network.yaml":               bundle.Network,
 		"backup_authorized_keys":           bundle.BackupKeys,
-		"98-backup":                        bundle.BackupSudoers,
+		"98-k2-backup":                     bundle.BackupSudoers,
 		"94-k2-storage-backup.yaml":        bundle.BackupActivation,
 		"k2-snapshot.env":                  bundle.SnapshotEnv,
 	}

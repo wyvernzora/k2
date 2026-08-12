@@ -319,7 +319,7 @@ func BackupUserActivationCloudConfig(backupPublicKeys []string, sudoers string) 
 		Name: "K2 storage backup user",
 		Users: []cloudUser{
 			{
-				Name:              "backup",
+				Name:              "k2-backup",
 				SSHAuthorizedKeys: backupPublicKeys,
 			},
 		},
@@ -329,7 +329,7 @@ func BackupUserActivationCloudConfig(backupPublicKeys []string, sudoers string) 
 					Name: "Backup user support files",
 					Files: []activationFile{
 						{
-							Path:        "/etc/sudoers.d/98-backup",
+							Path:        "/etc/sudoers.d/98-k2-backup",
 							Content:     sudoers,
 							Permissions: 0o440,
 							Owner:       0,
@@ -337,7 +337,7 @@ func BackupUserActivationCloudConfig(backupPublicKeys []string, sudoers string) 
 						},
 					},
 					Commands: []string{
-						"chown -R backup:backup /home/backup || true",
+						"chown -R k2-backup:k2-backup /home/k2-backup || true",
 					},
 				},
 			},

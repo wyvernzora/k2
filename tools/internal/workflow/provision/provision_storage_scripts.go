@@ -131,15 +131,35 @@ func storageInstallScript(nodeName string, hasNetwork bool, hasBackup bool) stri
 	if hasBackup {
 		// Same imperative-now + /oem-stage-later split as the csi user:
 		// usable immediately, survives the ephemeral /etc overlay via 94-*.yaml.
-		fmt.Fprintf(&buf, "echo 'k2-tools: ensuring backup user'\n")
+		//
+		// Two ordering rules learned the hard way on 2026-08-12:
+		//
+		//  1. Adopt an existing account only after proving it is OURS. A plain
+		//     "backup" user ships in the Debian base (uid 34, /var/backups,
+		//     nologin); `id` alone matched it, useradd was skipped, and the
+		//     failure surfaced as an unrelated chown error further down.
+		//  2. Install the /oem stage LAST. This script is set -eu, so an abort
+		//     part-way used to leave a persistent cloud-config declaring the
+		//     user + its sudoers with nothing else applied — which would have
+		//     attached an SSH key and zfs sudo rights to that system account on
+		//     the next boot.
+		fmt.Fprintf(&buf, "echo 'k2-tools: ensuring k2-backup user'\n")
+		fmt.Fprintf(&buf, "if id k2-backup >/dev/null 2>&1; then\n")
+		fmt.Fprintf(&buf, "  home=\"$(getent passwd k2-backup | cut -d: -f6)\"\n")
+		fmt.Fprintf(&buf, "  if [ \"$home\" != /home/k2-backup ]; then\n")
+		fmt.Fprintf(&buf, "    echo \"account k2-backup already exists with home $home (expected /home/k2-backup); refusing to adopt it\" >&2\n")
+		fmt.Fprintf(&buf, "    exit 1\n")
+		fmt.Fprintf(&buf, "  fi\n")
+		fmt.Fprintf(&buf, "else\n")
+		fmt.Fprintf(&buf, "  sudo useradd --create-home --shell /bin/sh k2-backup\n")
+		fmt.Fprintf(&buf, "fi\n")
+		fmt.Fprintf(&buf, "sudo chown k2-backup:k2-backup /home/k2-backup\n")
+		fmt.Fprintf(&buf, "sudo install -d -o k2-backup -g k2-backup -m 0700 /home/k2-backup/.ssh\n")
+		fmt.Fprintf(&buf, "sudo install -o k2-backup -g k2-backup -m 0600 \"$remote_dir\"/backup_authorized_keys /home/k2-backup/.ssh/authorized_keys\n")
+		fmt.Fprintf(&buf, "sudo install -m 0440 \"$remote_dir\"/98-k2-backup /etc/sudoers.d/98-k2-backup\n")
+		fmt.Fprintf(&buf, "sudo touch /home/k2-backup/.hushlogin\n")
+		fmt.Fprintf(&buf, "sudo chown k2-backup:k2-backup /home/k2-backup/.hushlogin\n")
 		fmt.Fprintf(&buf, "sudo install -m 0644 \"$remote_dir\"/94-k2-storage-backup.yaml /oem/94-k2-storage-backup.yaml\n")
-		fmt.Fprintf(&buf, "if ! id backup >/dev/null 2>&1; then sudo useradd --create-home --shell /bin/sh backup; fi\n")
-		fmt.Fprintf(&buf, "sudo chown backup:backup /home/backup\n")
-		fmt.Fprintf(&buf, "sudo install -d -o backup -g backup -m 0700 /home/backup/.ssh\n")
-		fmt.Fprintf(&buf, "sudo install -o backup -g backup -m 0600 \"$remote_dir\"/backup_authorized_keys /home/backup/.ssh/authorized_keys\n")
-		fmt.Fprintf(&buf, "sudo install -m 0440 \"$remote_dir\"/98-backup /etc/sudoers.d/98-backup\n")
-		fmt.Fprintf(&buf, "sudo touch /home/backup/.hushlogin\n")
-		fmt.Fprintf(&buf, "sudo chown backup:backup /home/backup/.hushlogin\n")
 	}
 	return buf.String()
 }
