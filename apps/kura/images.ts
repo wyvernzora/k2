@@ -3,8 +3,8 @@ import { oci } from "@k2/cdk-lib";
 // One deployment tuple: after Kura's publish workflow succeeds, replace all
 // four main digests together and run `earthly +kura-image-suite` before commit.
 export const KURA_IMAGES = {
-  libraryManager: oci`ghcr.io/wyvernzora/kura/library-manager:main@sha256:8f354004e53212b951039ac0378477a491ef10dcef3c4d401d77d58d3cd2dc40`,
-  gateway: oci`ghcr.io/wyvernzora/kura/gateway:main@sha256:53ce2fcc77ee8ee664e901dc967888b7d13fc77a500c078af952375fd1effc60`,
-  releaseIndexer: oci`ghcr.io/wyvernzora/kura/release-indexer:main@sha256:79c9d9316860a9c4075e1b20c73abe6a9f938976ba4b804263fd5cb97f945ebf`,
-  n8nNodes: oci`ghcr.io/wyvernzora/kura/n8n-nodes:main@sha256:2d9d756384361341b2df88c33dc84b91bb1c924911c91c6d026247c41cc87efd`,
+  libraryManager: oci`ghcr.io/wyvernzora/kura/library-manager:main@sha256:50654042b04b8b2f231fbab8d3ae5c75c5345584b53876a7124b2eec31ada7a4`,
+  gateway: oci`ghcr.io/wyvernzora/kura/gateway:main@sha256:5c3cc1532782cee4047dba434f3716ca976652d36eedbd5173bc78678749d575`,
+  releaseIndexer: oci`ghcr.io/wyvernzora/kura/release-indexer:main@sha256:a6539846b739602a4de7ff441dd419a7d359a8cca579a3e597326b9fbd9afd5a`,
+  n8nNodes: oci`ghcr.io/wyvernzora/kura/n8n-nodes:main@sha256:cb1ea4b089a51bc79faecffd19806f7a79c7378ed013ca4e2f7fe1c581a0596e`,
 };
