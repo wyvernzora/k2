@@ -28,8 +28,12 @@ targets:
     artifacts:
       - raw
     upgradeSizeAllowanceMiB: 1536
-    # Measured 690.2 on 2026-07-09 (slice 2: virtual kernel + firmware drop).
-    maxRawXzMB: 700
+    # Coarse regression guard: measured 690.2 on 2026-07-09 (slice 2: virtual
+    # kernel + firmware drop), 696.9 on 2026-08-11, 700.8 hours later. A 700
+    # ceiling left 1.4% headroom and duly failed the build on mutable-base
+    # drift, which is not what this guard is for — catch major package/image
+    # size regressions only, like the storage target's 800 against 619.6.
+    maxRawXzMB: 800
     overlays:
       - base
       - hardware/qemu
