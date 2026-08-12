@@ -10,8 +10,8 @@ gateway = "10.10.1.1"
 dns = ["10.10.10.10", "1.1.1.1"]
 
 # Storage fabric leg (vmbr1): iSCSI portal address. No gateway/DNS by
-# design — unrouted bridge. MTU deliberately unset; set to 9000 in
-# lockstep with the bridge when the 100G DAC is enslaved.
+# design — unrouted bridge. Jumbo MTU matches vmbr1 and the 100G DAC.
 [[nic]]
 iface = "ens19"
 address = "172.16.9.250/16"
+mtu = 9000
