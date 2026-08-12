@@ -127,17 +127,23 @@ RUN set -eux; \
             zfs-hostid) [ -f /etc/hostid ] || zgenhostid ;; \
             drop-iscsi-identity) rm -f /etc/iscsi/initiatorname.iscsi ;; \
             storage-users) \
-                for account in k2-csi k2-backup; do \
+                for spec in k2-csi:7001 k2-backup:7002; do \
+                    account="${spec%:*}"; uid="${spec#*:}"; \
                     if getent passwd "${account}" >/dev/null; then \
                         echo "base image already provides account ${account}" >&2; \
                         exit 1; \
                     fi; \
-                    useradd --create-home --shell /bin/sh "${account}"; \
+                    if getent passwd "${uid}" >/dev/null || getent group "${uid}" >/dev/null; then \
+                        echo "uid/gid ${uid} is already taken; the 7000 range is reserved for k2 accounts" >&2; \
+                        exit 1; \
+                    fi; \
+                    groupadd --gid "${uid}" "${account}"; \
+                    useradd --create-home --shell /bin/sh --uid "${uid}" --gid "${uid}" "${account}"; \
                     touch "/home/${account}/.hushlogin"; \
                     chown "${account}:${account}" "/home/${account}/.hushlogin"; \
                 done; \
                 printf '%s\n' 'k2-csi ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/99-k2-csi; \
-                printf '%s\n' 'k2-backup ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *, /usr/sbin/zfs list *, /usr/sbin/zfs get *, /usr/sbin/zfs hold *, /usr/sbin/zfs release *' > /etc/sudoers.d/98-k2-backup; \
+                printf '%s\n' 'k2-backup ALL=(ALL) NOPASSWD: /usr/sbin/zfs send *, /usr/sbin/zfs list *, /usr/sbin/zfs get *, /usr/sbin/zfs hold *, /usr/sbin/zfs release *, /usr/sbin/zfs recv *, /usr/sbin/zfs receive *, /usr/sbin/zfs create *' > /etc/sudoers.d/98-k2-backup; \
                 chmod 0440 /etc/sudoers.d/99-k2-csi /etc/sudoers.d/98-k2-backup ;; \
             disable-motd) if [ -d /etc/update-motd.d ]; then chmod -x /etc/update-motd.d/* || true; fi ;; \
             use-virtual-kernel) \
@@ -288,7 +294,12 @@ RUN set -eux; \
 # rebuild image, re-engrave plate.
 # ----------------------------------------------------------------
 RUN set -eux; \
-    useradd --create-home --shell /bin/bash k2-rescue; \
+    if getent passwd 7003 >/dev/null || getent group 7003 >/dev/null; then \
+        echo "uid/gid 7003 is already taken; the 7000 range is reserved for k2 accounts" >&2; \
+        exit 1; \
+    fi; \
+    groupadd --gid 7003 k2-rescue; \
+    useradd --create-home --shell /bin/bash --uid 7003 --gid 7003 k2-rescue; \
     echo 'k2-rescue:$y$j9T$5oZ2TfT8.Q38aVPqk2jPT/$SLyChcYpT3rj1KjRU4giE2MLifEXwiW1jg/bv5J/a71' | chpasswd -e; \
     printf '%s\n' 'k2-rescue ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99-k2-rescue; \
     chmod 0440 /etc/sudoers.d/99-k2-rescue; \
