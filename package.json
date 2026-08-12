@@ -39,6 +39,7 @@
   },
   "scripts": {
     "test:eslint-rules": "tsx build/eslint/rules/*.test.ts",
+    "test:cdk-lib": "tsx cdk-lib/volumes/*.test.ts",
     "typecheck": "tsc --noEmit"
   }
 }

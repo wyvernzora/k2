@@ -1,9 +1,13 @@
+import { createHash } from "node:crypto";
+
 import { Size } from "cdk8s";
 import { PersistentVolumeAccessMode, Volume, type VolumeMount, type Workload } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
 export interface MaterializedVolume {
   readonly volume: Volume;
+  /** Set by types that emit a PVC; used to detect a migration whose two claims would collide. */
+  readonly claimName?: string;
   configureWorkload(workload: Workload): void;
 }
 
@@ -64,8 +68,40 @@ export interface K2ReplicatedProps {
   readonly accessModes?: PersistentVolumeAccessMode[];
 }
 
+/**
+ * Opaque construct-id suffix distinguishing one volume's claim from another's
+ * at the same declared id.
+ *
+ * cdk8s derives resource names from the construct path alone, so two volume
+ * types built at the same id produce the same claim name. Rather than compute
+ * names by hand, the volume type builds its claim under `<id>-<suffix>`, and
+ * cdk8s names it from there as usual. That keeps naming — length limits, DNS
+ * rules, hashing — entirely cdk8s' business.
+ *
+ * The suffix is derived from the STORAGE CLASS, not the size: a class cannot be
+ * changed on an existing PVC, so a different class genuinely needs a different
+ * volume, while a size change can be applied in place. Deriving it from size
+ * would silently rename — and so empty — a volume being expanded.
+ *
+ * Four hex characters, deliberately opaque: it exists to disambiguate, and
+ * nothing should come to depend on reading it.
+ *
+ * This only affects claims whose name cdk8s generates. An explicit `name` is
+ * used verbatim, so a volume declared with one is unaffected by any of this —
+ * which is how every claim in this repo except one is declared.
+ */
+export function volumeIdSuffix(discriminator: string): string {
+  return createHash("sha256").update(discriminator).digest("hex").slice(0, 4);
+}
+
 export abstract class K2Volume {
-  public abstract materialize(scope: Construct, id: string): MaterializedVolume;
+  /**
+   * `identity` overrides the id a volume builds its constructs under, so a
+   * volume materialized somewhere else is built exactly as if it had been
+   * declared at `identity`. Migration destinations pass it — see
+   * {@link volumeIdSuffix}. Types that emit no PVC ignore it.
+   */
+  public abstract materialize(scope: Construct, id: string, identity?: string): MaterializedVolume;
 
   /**
    * Static factories below are initialized in `volumes/index.ts` to break the
@@ -84,7 +120,10 @@ export abstract class K2Volume {
 }
 
 export class SimpleMaterializedVolume implements MaterializedVolume {
-  public constructor(public readonly volume: Volume) {}
+  public constructor(
+    public readonly volume: Volume,
+    public readonly claimName?: string,
+  ) {}
 
   public configureWorkload(): void {
     // cdk8s-plus adds the volume to the workload automatically when a
