@@ -94,7 +94,7 @@ spec:
             - mountPath: /downloads/anime
               name: vol-anime
             - mountPath: /config
-              name: pvc-qbittorrent-deployment-vol-appdata-claim-c8f9d988
+              name: pvc-qbittorrent-deployment-vol-appdata-a7d7-claim-c8ef9298
               subPath: qbittorrent
         - env:
             - name: FLOOD_OPTION_AUTH
@@ -150,7 +150,7 @@ spec:
               name: vol-anime
               readOnly: true
             - mountPath: /config
-              name: pvc-qbittorrent-deployment-vol-appdata-claim-c8f9d988
+              name: pvc-qbittorrent-deployment-vol-appdata-a7d7-claim-c8ef9298
               subPath: flood
         - args:
             - --transport=http
@@ -199,6 +199,40 @@ spec:
       hostNetwork: false
       initContainers:
         - command:
+            - /bin/sh
+            - -c
+            - |-
+              set -eu
+              if [ -f /migrate/destination/.k2-migration-complete ]; then echo "migration already complete; skipping"; exit 0; fi
+              echo "copying /migrate/source -> /migrate/destination"
+              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
+              sync
+              date -u +%Y-%m-%dT%H:%M:%SZ > /migrate/destination/.k2-migration-complete
+              echo "migration complete"
+          image: instrumentisto/rsync-ssh:alpine
+          imagePullPolicy: Always
+          name: migrate-volume
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /migrate/source
+              name: pvc-qbittorrent-deployment-vol-appdata-claim-c8f9d988
+              readOnly: true
+            - mountPath: /migrate/destination
+              name: pvc-qbittorrent-deployment-vol-appdata-a7d7-claim-c8ef9298
+        - command:
             - sh
             - /init/appdata.sh
           image: busybox:1.38.0
@@ -218,7 +252,7 @@ spec:
             runAsNonRoot: false
           volumeMounts:
             - mountPath: /config
-              name: pvc-qbittorrent-deployment-vol-appdata-claim-c8f9d988
+              name: pvc-qbittorrent-deployment-vol-appdata-a7d7-claim-c8ef9298
             - mountPath: /init
               name: configmap-qbittorrent-deployment-qbittorrent-init-c8b071f3
         - command:
@@ -264,6 +298,10 @@ spec:
           nfs:
             path: /mnt/data/media/anime
             server: 10.10.8.1
+        - name: pvc-qbittorrent-deployment-vol-appdata-a7d7-claim-c8ef9298
+          persistentVolumeClaim:
+            claimName: qbittorrent-deployment-vol-appdata-a7d7-claim-c8ef9298
+            readOnly: false
         - name: pvc-qbittorrent-deployment-vol-appdata-claim-c8f9d988
           persistentVolumeClaim:
             claimName: qbittorrent-deployment-vol-appdata-claim-c8f9d988
@@ -287,6 +325,23 @@ spec:
     requests:
       storage: 4Gi
   storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: qbittorrent
+    k2.wyvernzora.io/component: qbittorrent
+  name: qbittorrent-deployment-vol-appdata-a7d7-claim-c8ef9298
+  namespace: qbittorrent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: k2-iscsi
   volumeMode: Filesystem
 ---
 apiVersion: v1
