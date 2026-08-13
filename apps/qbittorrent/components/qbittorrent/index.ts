@@ -18,14 +18,7 @@ export class Qbittorrent extends K2Chart {
 
     new QbittorrentDeployment(this, "deployment", {
       volumes: {
-        // First Longhorn -> appliance migration. `from` is the volume exactly
-        // as it was declared before the wrapper, which is what adopts the live
-        // claim; see the cutover note in cdk-lib/volumes/migrate.ts before
-        // removing the wrapper.
-        appdata: K2Volume.migrate({
-          from: K2Volume.replicated({ size: Size.gibibytes(4) }),
-          to: K2Volume.iscsi({ size: Size.gibibytes(4) }),
-        }),
+        appdata: K2Volume.iscsi({ size: Size.gibibytes(4) }),
         default: K2Volume.mountNfs({ path: "/mnt/data/downloads" }),
         anime: K2Volume.mountNfs({ path: "/mnt/data/media/anime" }),
       },
