@@ -47,7 +47,16 @@ func Run(cfg Config, run runner.Runner) error {
 	name := fmt.Sprintf("%s@%s-%s", cfg.Dataset, cfg.Prefix, now().UTC().Format("20060102T150405Z"))
 	logf("start dataset=%s prefix=%s keep=%d", cfg.Dataset, cfg.Prefix, cfg.Keep)
 	logf("creating %s", name)
-	if err := run.Run("zfs", "snapshot", "-r", name); err != nil {
+	// `-o democratic-csi:managed_resource=false` is load-bearing, not cosmetic.
+	// democratic-csi sets that property local=true on every zvol it provisions,
+	// and ZFS user properties INHERIT to snapshots — so a cadence snapshot of a
+	// CSI volume looks to the driver like a CSI-managed snapshot. Its
+	// DeleteVolume then refuses with "filesystem has dependent snapshots" and
+	// retries forever, leaving the PV Released and the zvol leaked. Setting the
+	// property local=false here makes the cadence snapshots invisible to that
+	// check, so DeleteVolume proceeds to `zfs destroy -R` and removes the volume
+	// with its snapshots. Off-box copies on the NAS are the safety net.
+	if err := run.Run("zfs", "snapshot", "-r", "-o", "democratic-csi:managed_resource=false", name); err != nil {
 		return fmt.Errorf("create snapshot %s: %w", name, err)
 	}
 

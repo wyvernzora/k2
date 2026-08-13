@@ -48,7 +48,7 @@ func TestRunCreatesRecursiveSnapshotAndPrunes(t *testing.T) {
 	}
 
 	want := [][]string{
-		{"zfs", "snapshot", "-r", "tank/csi/k2@k2-hourly-20260809T180000Z"},
+		{"zfs", "snapshot", "-r", "-o", "democratic-csi:managed_resource=false", "tank/csi/k2@k2-hourly-20260809T180000Z"},
 		{"zfs", "list", "-H", "-t", "snapshot", "-o", "name", "-d", "1", "tank/csi/k2"},
 		{"zfs", "destroy", "-r", "tank/csi/k2@k2-hourly-20260809T150000Z"},
 		{"zfs", "destroy", "-r", "tank/csi/k2@k2-hourly-20260809T160000Z"},
@@ -122,5 +122,23 @@ func TestRunValidatesConfig(t *testing.T) {
 	}
 	if err := Run(Config{Dataset: "d", Prefix: "p", Keep: 0}, &fakeRunner{}); err == nil {
 		t.Fatal("expected error for keep=0")
+	}
+}
+
+// democratic-csi sets `democratic-csi:managed_resource=true` local on every
+// zvol it provisions, and ZFS user properties inherit to snapshots. Without an
+// explicit local=false, a cadence snapshot reads back as CSI-managed and the
+// driver's DeleteVolume refuses with "filesystem has dependent snapshots",
+// retrying forever and leaking the zvol. Assert the flag is present and false —
+// if it is ever dropped, PVC deletion silently breaks for every volume older
+// than one snapshot interval.
+func TestRunMarksSnapshotsUnmanagedSoCsiCanDeleteTheVolume(t *testing.T) {
+	run := &fakeRunner{listOut: "tank/csi/k2@k2-hourly-20260809T180000Z"}
+	if err := Run(Config{Dataset: "tank/csi/k2", Prefix: "k2-hourly", Keep: 5, Now: fixedNow, Log: &strings.Builder{}}, run); err != nil {
+		t.Fatal(err)
+	}
+	create := strings.Join(run.commands[0], " ")
+	if !strings.Contains(create, "-o democratic-csi:managed_resource=false") {
+		t.Fatalf("cadence snapshot must be marked unmanaged or CSI cannot delete the volume; got: %s", create)
 	}
 }
