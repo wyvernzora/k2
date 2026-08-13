@@ -118,13 +118,27 @@ function leafGroup() {
       // Backup cadence. Absence is the real risk here: a pool that has never
       // been snapshotted emits no series at all, so a staleness threshold
       // alone would stay silent forever.
+      // Thresholds are per-cadence. A single 3h bound fired against prefix
+      // "k2-daily" for 21 hours out of every 24 — unsatisfiable by
+      // construction, and it pinned the StorageApplianceDegraded rollup so a
+      // real fault could not be seen. Each bound is ~3x its own interval, so a
+      // timer has to miss several runs before it trips.
       alert(
         "StorageSnapshotStale",
-        `time() - k2_zfs_last_snapshot_timestamp_seconds{${APPLIANCE}} > 10800`,
+        `time() - k2_zfs_last_snapshot_timestamp_seconds{${APPLIANCE},prefix="k2-hourly"} > 10800`,
         "0m",
         "warning",
-        "No {{ $labels.prefix }} snapshot for over 3 hours",
-        "The appliance snapshot timer has stopped or is failing; recent writes are unprotected.",
+        "No hourly snapshot for over 3 hours",
+        "The appliance hourly snapshot timer has stopped or is failing; recent writes are unprotected.",
+      ),
+
+      alert(
+        "StorageDailySnapshotStale",
+        `time() - k2_zfs_last_snapshot_timestamp_seconds{${APPLIANCE},prefix="k2-daily"} > 259200`,
+        "0m",
+        "warning",
+        "No daily snapshot for over 3 days",
+        "The appliance daily snapshot timer has stopped or is failing; the long-horizon restore points are not being created.",
       ),
 
       alert(
