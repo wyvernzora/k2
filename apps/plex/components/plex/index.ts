@@ -16,17 +16,7 @@ export class Plex extends K2Chart {
           name: "plex-config",
           size: Size.gibibytes(256),
         }),
-        // 8Gi -> 16Gi on the way across. 4.0G is in use, but the percentage
-        // understates it: ~850M of that is SQLite WALs and Plex keeps adding
-        // dated database backups, of which there are already 8 totalling 2.4G.
-        // `from` must keep declaring the live 8Gi.
-        databases: K2Volume.migrate({
-          from: K2Volume.replicated({
-            name: "plex-databases",
-            size: Size.gibibytes(8),
-          }),
-          to: K2Volume.iscsi({ size: Size.gibibytes(16) }),
-        }),
+        databases: K2Volume.iscsi({ size: Size.gibibytes(16) }),
         series: K2Volume.mountNfs({ path: "/mnt/data/media/anime/series", readOnly: true }),
         features: K2Volume.mountNfs({ path: "/mnt/data/media/anime/features", readOnly: true }),
         transcode: K2Volume.ephemeral({ sizeLimit: Size.gibibytes(32) }),
