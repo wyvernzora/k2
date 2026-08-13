@@ -112,7 +112,7 @@ class MigratingVolume implements MaterializedVolume {
     workload.addInitContainer({
       name: this.props.initContainerName ?? "migrate-volume",
       image: this.props.image ?? "instrumentisto/rsync-ssh:alpine",
-      command: ["/bin/sh", "-c", migrationScript(this.props)],
+      command: ["/bin/sh", "-c", migrationScript(this.props, this.source.volume.name)],
       securityContext: rootSecurityContext(),
       volumeMounts: [
         { path: SOURCE_PATH, volume: this.source.volume, readOnly: true },
@@ -129,20 +129,36 @@ const DESTINATION_PATH = "/migrate/destination";
  * The marker lives on the DESTINATION so it shares the volume's lifetime: a
  * destroyed-and-recreated destination re-copies, which is the correct
  * behaviour and the reason it is not a ConfigMap or an annotation.
+ *
+ * Sharing the volume's lifetime also means the marker OUTLIVES the migration
+ * that wrote it — unwrapping removes the init container but not the file. So
+ * it does not record "a migration finished here", which stops being true of
+ * the next migration into this volume while the file still claims it: the copy
+ * would be skipped and the app would come up on stale data with a green init
+ * container. It records WHICH SOURCE these contents came from, which stays
+ * true forever. A later migration from a different source does not match, and
+ * copies; a re-run of the same one does, and skips.
+ *
+ * The source is identified by its generated volume name rather than its claim
+ * name because volumes without a claim (an NFS mount, say) are legal sources.
  */
-function migrationScript(props: K2MigrateProps): string {
-  const marker = `${DESTINATION_PATH}/${props.markerFile ?? ".k2-migration-complete"}`;
+function migrationScript(props: K2MigrateProps, sourceName: string): string {
+  const markerFile = props.markerFile ?? ".k2-migration-complete";
+  const marker = `${DESTINATION_PATH}/${markerFile}`;
+  const seededFrom = `source=${sourceName}`;
   return [
     "set -eu",
-    `if [ -f ${marker} ]; then echo "migration already complete; skipping"; exit 0; fi`,
+    `if [ -f ${marker} ] && grep -qxF ${JSON.stringify(seededFrom)} ${marker}; then echo "already seeded from ${sourceName}; skipping"; exit 0; fi`,
     `echo "copying ${SOURCE_PATH} -> ${DESTINATION_PATH}"`,
     // -a preserves ownership/modes/times, which apps notice; --delete keeps a
-    // retried partial copy from leaving orphans behind.
-    `rsync -a --delete --exclude ${JSON.stringify(props.markerFile ?? ".k2-migration-complete")} ${SOURCE_PATH}/ ${DESTINATION_PATH}/`,
+    // retried partial copy from leaving orphans behind. The marker is excluded
+    // both ways: never copied off a source that was itself once a destination,
+    // and never deleted off the destination by --delete.
+    `rsync -a --delete --exclude ${JSON.stringify(markerFile)} ${SOURCE_PATH}/ ${DESTINATION_PATH}/`,
     "sync",
     // Marker written only after rsync exits 0 and the data is flushed, so an
     // interruption anywhere above leaves the copy visibly unfinished.
-    `date -u +%Y-%m-%dT%H:%M:%SZ > ${marker}`,
+    `{ echo ${JSON.stringify(seededFrom)}; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > ${marker}`,
     'echo "migration complete"',
   ].join("\n");
 }

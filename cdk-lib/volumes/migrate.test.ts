@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { Size, Testing } from "cdk8s";
+import { Deployment } from "cdk8s-plus-32";
 
 import { K2Volume } from "./index.js";
 
@@ -114,4 +115,33 @@ test("an explicitly named claim is identical wrapped or not", () => {
     standalone[0],
     "wrapping must not alter an explicitly named claim",
   );
+});
+
+// The marker is a file on the destination, so it OUTLIVES the migration that
+// wrote it: unwrapping leaves it behind forever. A marker that only says "a
+// migration finished here" therefore suppresses the copy for any LATER
+// migration into the same volume, which reports success while leaving the old
+// data in place. Naming the source in the marker is what keeps that
+// unrepresentable rather than merely documented.
+test("the completion marker identifies its source, so a stale one cannot suppress a later migration", () => {
+  const script = (from: K2Volume): string => {
+    const chart = Testing.chart();
+    const deployment = new Deployment(chart, "workload", { containers: [{ image: "app" }] });
+    K2Volume.migrate({ from, to: K2Volume.iscsi({ size: SIZE }) })
+      .materialize(chart, ID)
+      .configureWorkload?.(deployment);
+    const synthed = Testing.synth(chart).find(object => object.kind === "Deployment");
+    const spec = synthed?.spec as { template: { spec: { initContainers: { command: string[] }[] } } };
+    return spec.template.spec.initContainers[0].command[2];
+  };
+
+  const fromLonghorn = script(K2Volume.replicated({ size: SIZE }));
+  const fromElsewhere = script(K2Volume.replicated({ name: "some-other-source", size: SIZE }));
+
+  assert.notEqual(
+    fromLonghorn,
+    fromElsewhere,
+    "two different sources must not share a completion check, or a marker left by one skips the other",
+  );
+  assert.match(fromElsewhere, /some-other-source/, "the completion check must name the source it is asserting about");
 });
