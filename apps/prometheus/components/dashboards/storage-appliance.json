@@ -1366,14 +1366,14 @@
           "editorMode": "code",
           "format": "table",
           "instant": true,
-          "expr": "k2_zfs_volume_pvc_size_bytes"
+          "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_size_bytes)"
         },
         {
           "refId": "B",
           "editorMode": "code",
           "format": "table",
           "instant": true,
-          "expr": "k2_zfs_volume_pvc_used_bytes"
+          "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_used_bytes)"
         }
       ],
       "transformations": [
@@ -1385,11 +1385,7 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Time": true,
-              "instance": true,
-              "job": true,
-              "volume": true,
-              "volumename": true
+              "Time": true
             },
             "indexByName": {
               "namespace": 0,
@@ -1398,7 +1394,6 @@
               "Value #B": 3
             },
             "renameByName": {
-              "namespace": "namespace",
               "persistentvolumeclaim": "PVC",
               "Value #A": "size",
               "Value #B": "used"
