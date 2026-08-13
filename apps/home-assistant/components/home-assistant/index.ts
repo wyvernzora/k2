@@ -21,7 +21,15 @@ export class HomeAssistant extends K2Chart {
       configName: config.name,
       configChecksum: config.checksum,
       volumes: {
-        config: K2Volume.replicated({ name: "home-assistant-config", size: Size.gibibytes(1) }),
+        // 1Gi -> 4Gi on the way across: the config volume holds the SQLite
+        // recorder database, which grows with state history once devices are
+        // actually configured. k2-iscsi allows expansion, so this is sized for
+        // what is known rather than guessed at. `from` must keep declaring the
+        // live 1Gi.
+        config: K2Volume.migrate({
+          from: K2Volume.replicated({ name: "home-assistant-config", size: Size.gibibytes(1) }),
+          to: K2Volume.iscsi({ size: Size.gibibytes(4) }),
+        }),
       },
     });
     new HomeAssistantService(this, "service");
