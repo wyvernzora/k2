@@ -34,7 +34,18 @@ export class Prometheus extends K2Chart {
 function prometheusValues(grafanaHost: string) {
   return {
     crds: { enabled: false },
+    defaultRules: {
+      rules: {
+        kubeControllerManager: false,
+        kubeProxy: false,
+        kubeSchedulerAlerting: false,
+        kubeSchedulerRecording: false,
+      },
+    },
     grafana: grafanaValues(grafanaHost),
+    kubeControllerManager: { enabled: false },
+    kubeProxy: { enabled: false },
+    kubeScheduler: { enabled: false },
     prometheus: { prometheusSpec: prometheusSpec() },
     "prometheus-node-exporter": nodeExporterValues(),
   };
