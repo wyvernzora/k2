@@ -999,7 +999,7 @@ spec:
             timeoutSeconds: 5
           volumeMounts:
             - mountPath: /usr/src/paperless/data
-              name: pvc-paperless-data
+              name: pvc-paperless-deployment-vol-data-a7d7-claim-c850591f
             - mountPath: /usr/src/paperless/consume
               name: vol-documents
               subPath: inbox
@@ -1048,6 +1048,40 @@ spec:
       enableServiceLinks: false
       hostNetwork: false
       initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - |-
+              set -eu
+              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-paperless-data" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-paperless-data; skipping"; exit 0; fi
+              echo "copying /migrate/source -> /migrate/destination"
+              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
+              sync
+              { echo "source=pvc-paperless-data"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
+              echo "migration complete"
+          image: instrumentisto/rsync-ssh:alpine
+          imagePullPolicy: Always
+          name: migrate-0d6e
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /migrate/source
+              name: pvc-paperless-data
+              readOnly: true
+            - mountPath: /migrate/destination
+              name: pvc-paperless-deployment-vol-data-a7d7-claim-c850591f
         - args:
             - |-
               set -eu
@@ -1094,14 +1128,18 @@ spec:
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: pvc-paperless-data
+        - name: pvc-paperless-deployment-vol-data-a7d7-claim-c850591f
           persistentVolumeClaim:
-            claimName: paperless-data
+            claimName: paperless-deployment-vol-data-a7d7-claim-c850591f
             readOnly: false
         - name: vol-documents
           nfs:
             path: /mnt/data/documents/archive
             server: 10.10.8.1
+        - name: pvc-paperless-data
+          persistentVolumeClaim:
+            claimName: paperless-data
+            readOnly: false
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -1118,6 +1156,23 @@ spec:
     requests:
       storage: 4Gi
   storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: paperless
+    k2.wyvernzora.io/component: paperless
+  name: paperless-deployment-vol-data-a7d7-claim-c850591f
+  namespace: paperless
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+  storageClassName: k2-iscsi
   volumeMode: Filesystem
 ---
 apiVersion: v1

@@ -277,10 +277,10 @@ spec:
             timeoutSeconds: 5
           volumeMounts:
             - mountPath: /var/lib/gitea
-              name: pvc-forgejo-appdata
+              name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
               subPath: data
             - mountPath: /etc/gitea
-              name: pvc-forgejo-appdata
+              name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
               subPath: config
         - env:
             - name: XDG_CONFIG_HOME
@@ -353,6 +353,40 @@ spec:
       hostNetwork: false
       initContainers:
         - command:
+            - /bin/sh
+            - -c
+            - |-
+              set -eu
+              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-forgejo-appdata" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-forgejo-appdata; skipping"; exit 0; fi
+              echo "copying /migrate/source -> /migrate/destination"
+              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
+              sync
+              { echo "source=pvc-forgejo-appdata"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
+              echo "migration complete"
+          image: instrumentisto/rsync-ssh:alpine
+          imagePullPolicy: Always
+          name: migrate-55bf
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2048Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /migrate/source
+              name: pvc-forgejo-appdata
+              readOnly: true
+            - mountPath: /migrate/destination
+              name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
+        - command:
             - sh
             - -c
             - |-
@@ -380,7 +414,7 @@ spec:
             runAsUser: 0
           volumeMounts:
             - mountPath: /forgejo
-              name: pvc-forgejo-appdata
+              name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
       restartPolicy: Always
       securityContext:
         fsGroup: 1000
@@ -389,9 +423,9 @@ spec:
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: pvc-forgejo-appdata
+        - name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
           persistentVolumeClaim:
-            claimName: forgejo-appdata
+            claimName: forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
             readOnly: false
         - configMap:
             name: forgejo-deployment-caddy-config-c88efaad
@@ -408,6 +442,10 @@ spec:
         - emptyDir:
             sizeLimit: 1024Mi
           name: caddy-tmp
+        - name: pvc-forgejo-appdata
+          persistentVolumeClaim:
+            claimName: forgejo-appdata
+            readOnly: false
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -424,6 +462,23 @@ spec:
     requests:
       storage: 20Gi
   storageClassName: longhorn
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    k2.wyvernzora.io/app: forgejo
+    k2.wyvernzora.io/component: forgejo
+  name: forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
+  namespace: forgejo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: k2-iscsi
   volumeMode: Filesystem
 ---
 apiVersion: v1
@@ -561,7 +616,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   annotations:
-    argocd.argoproj.io/sync-options: Force=true,Replace=true
+    argocd.argoproj.io/sync-options: Replace=true
   labels:
     k2.wyvernzora.io/app: forgejo
     k2.wyvernzora.io/component: forgejo
@@ -747,10 +802,10 @@ spec:
             - mountPath: /tmp
               name: tmp
             - mountPath: /var/lib/gitea
-              name: pvc-forgejo-appdata
+              name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
               subPath: data
             - mountPath: /etc/gitea
-              name: pvc-forgejo-appdata
+              name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
               subPath: config
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
@@ -772,9 +827,9 @@ spec:
         - emptyDir:
             sizeLimit: 16Mi
           name: tmp
-        - name: pvc-forgejo-appdata
+        - name: pvc-forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
           persistentVolumeClaim:
-            claimName: forgejo-appdata
+            claimName: forgejo-deployment-vol-appdata-a7d7-claim-c8df3b42
             readOnly: false
 ---
 apiVersion: cilium.io/v2
