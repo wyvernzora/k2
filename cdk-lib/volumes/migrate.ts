@@ -1,7 +1,7 @@
 import { type ContainerSecurityContextProps, Volume, type Workload } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { K2Volume, type K2MigrateProps, type MaterializedVolume } from "./base.js";
+import { K2Volume, volumeIdSuffix, type K2MigrateProps, type MaterializedVolume } from "./base.js";
 
 /**
  * A one-shot copy from an existing volume into a new one, used to move an
@@ -80,8 +80,31 @@ export class K2MigrateVolume extends K2Volume {
     if (source.claimName !== undefined && source.claimName === destination.claimName) {
       throw new Error(sameStorageClassMessage(id));
     }
-    return new MigratingVolume(source, destination, this.props);
+    return new MigratingVolume(source, destination, this.props, id);
   }
+}
+
+/**
+ * A container name is an RFC 1123 label, and unlike a resource name cdk8s does
+ * not sanitize it — the construct id reaches the manifest verbatim. Hashing
+ * sidesteps that entirely: volume ids are typically camelCase record keys and
+ * can be arbitrarily long, so a readable name would need both case-folding and
+ * truncation, each of which can silently map two distinct ids onto one name.
+ * A fixed-width hex suffix is always a legal label whatever the id looks like.
+ * Same construction as the claim suffix, so the two read alike.
+ */
+function initContainerNameFor(id: string): string {
+  return `migrate-${volumeIdSuffix(id)}`;
+}
+
+function duplicateInitContainerMessage(name: string, id: string): string {
+  return (
+    `migrate(${id}): init container "${name}" is already on this workload. ` +
+    "Two migrations in one workload must not share an init container name: initContainers is " +
+    "merged on name, so the duplicate would be dropped at apply time and this volume would mount " +
+    "empty with nothing reporting a failure. If both names were generated, two volume ids hashed " +
+    "alike — rename one, or set initContainerName explicitly."
+  );
 }
 
 function sameStorageClassMessage(id: string): string {
@@ -99,6 +122,7 @@ class MigratingVolume implements MaterializedVolume {
     private readonly source: MaterializedVolume,
     private readonly destination: MaterializedVolume,
     private readonly props: K2MigrateProps,
+    private readonly id: string,
   ) {}
 
   public get volume(): Volume {
@@ -109,8 +133,19 @@ class MigratingVolume implements MaterializedVolume {
     this.source.configureWorkload?.(workload);
     this.destination.configureWorkload?.(workload);
 
+    // Per-volume by default, and asserted unique rather than assumed so.
+    // `initContainers` is a merge-key list keyed on `name`, so duplicates do
+    // NOT fail loudly anywhere downstream: cdk8s emits them, kubectl apply
+    // collapses them, and the API server validates only the survivor. That
+    // turns "migrate every volume of this app at once" into one copy plus N-1
+    // volumes silently mounted empty. Neither a hash nor a caller-supplied
+    // name can rule that out on its own, so check before adding.
+    const name = this.props.initContainerName ?? initContainerNameFor(this.id);
+    if (workload.initContainers.some(container => container.name === name)) {
+      throw new Error(duplicateInitContainerMessage(name, this.id));
+    }
     workload.addInitContainer({
-      name: this.props.initContainerName ?? "migrate-volume",
+      name,
       image: this.props.image ?? "instrumentisto/rsync-ssh:alpine",
       command: ["/bin/sh", "-c", migrationScript(this.props, this.source.volume.name)],
       securityContext: rootSecurityContext(),
