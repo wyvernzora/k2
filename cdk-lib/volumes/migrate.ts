@@ -129,6 +129,15 @@ class MigratingVolume implements MaterializedVolume {
     return this.destination.volume;
   }
 
+  /**
+   * The destination's, matching `volume` above: anything that mounts this claim
+   * from a second object must follow the workload onto the new volume, not stay
+   * on the source that unwrapping prunes.
+   */
+  public get claimName(): string | undefined {
+    return this.destination.claimName;
+  }
+
   public configureWorkload(workload: Workload): void {
     this.source.configureWorkload?.(workload);
     this.destination.configureWorkload?.(workload);

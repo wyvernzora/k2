@@ -197,3 +197,21 @@ test("a duplicate init container name fails at synth rather than at apply", () =
     add("vol-second");
   }, /already on this workload/);
 });
+
+// Some apps mount the same claim from a second object -- forgejo's setup Job is
+// one -- and those need the name the WORKLOAD ends up on, which during a
+// migration is the destination. Reporting the source, or nothing, points them
+// at the claim that is about to be pruned.
+test("a migrating volume reports its destination's claim name", () => {
+  const chart = Testing.chart();
+  const destination = K2Volume.iscsi({ size: SIZE });
+  const expected = destination.materialize(Testing.chart(), ID).claimName;
+
+  const migrating = K2Volume.migrate({
+    from: K2Volume.replicated({ name: "old-claim", size: SIZE }),
+    to: K2Volume.iscsi({ size: SIZE }),
+  }).materialize(chart, ID);
+
+  assert.notEqual(migrating.claimName, "old-claim", "must not report the source, which unwrapping prunes");
+  assert.equal(migrating.claimName, expected, "must match the claim a bare destination would emit");
+});

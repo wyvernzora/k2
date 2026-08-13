@@ -16,16 +16,23 @@ export class Forgejo extends K2Chart {
     const secret = new ForgejoSecret(this, "secret");
     const database = new ForgejoDatabase(this, "database");
 
-    new ForgejoDeployment(this, "deployment", {
+    const deployment = new ForgejoDeployment(this, "deployment", {
       credentialsSecretName: database.credentialsSecretName,
       secretName: secret.secretName,
       volumes: {
-        appdata: K2Volume.replicated({ name: FORGEJO_APPDATA_CLAIM_NAME, size: Size.gibibytes(20) }),
+        appdata: K2Volume.migrate({
+          from: K2Volume.replicated({ name: FORGEJO_APPDATA_CLAIM_NAME, size: Size.gibibytes(20) }),
+          to: K2Volume.iscsi({ size: Size.gibibytes(20) }),
+        }),
       },
     });
     new ForgejoService(this, "service");
+    // The setup Job mounts the same claim as the deployment, so it has to read
+    // the name off the deployment rather than repeat it: during the migration
+    // the workload moves to the destination claim, and a Job still naming the
+    // source would write to the volume that unwrapping prunes.
     new ForgejoSetup(this, "setup", {
-      appdataClaimName: FORGEJO_APPDATA_CLAIM_NAME,
+      appdataClaimName: deployment.appdataClaimName,
       credentialsSecretName: database.credentialsSecretName,
       secretName: secret.secretName,
     });

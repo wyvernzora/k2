@@ -72,6 +72,15 @@ export class ForgejoSetup extends Construct {
     ApiObject.of(setupJob.job).addJsonPatch(
       JsonPatch.add("/spec/template/spec/affinity/podAffinity", setupPodAffinity()),
     );
+    // A Job's pod template is immutable, so ANY change to this one -- the
+    // script, the image, the claim it mounts -- is rejected as
+    // "field is immutable" once the Job exists, and the sync fails rather than
+    // drifting silently. Replace makes Argo delete and recreate it instead of
+    // patching. It only fires when the manifest actually changes, so the Job
+    // does not re-run on every sync.
+    ApiObject.of(setupJob.job).addJsonPatch(
+      JsonPatch.add("/metadata/annotations", { "argocd.argoproj.io/sync-options": "Replace=true" }),
+    );
   }
 }
 
