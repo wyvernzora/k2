@@ -12,7 +12,9 @@ import {
 } from "../crds/postgresql.cnpg.io.js";
 import { NEXUS_CLUSTER_NAME } from "../lib/nexus.js";
 
-const STORAGE_CLASS = "longhorn";
+// New PVCs only: CNPG never moves an existing volume when this changes. The
+// cluster converges as each instance is re-created via `cnpg destroy`.
+const STORAGE_CLASS = "k2-iscsi";
 const ResourceLimits = ClusterSpecResourcesLimits;
 const ResourceRequests = ClusterSpecResourcesRequests;
 
