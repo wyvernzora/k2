@@ -8381,28 +8381,6 @@ metadata:
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
-  name: prometheus-kube-prometheus-controller-manager
-  namespace: prometheus
-data:
-  controller-manager.json: '{"editable":true,"links":[{"asDropdown":true,"includeVars":true,"keepTime":true,"tags":["kubernetes-mixin"],"targetBlank":false,"title":"Kubernetes","type":"dashboards"}],"panels":[{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"unit":"none"}},"gridPos":{"h":7,"w":4,"x":0,"y":0},"id":1,"interval":"1m","options":{"colorMode":"none"},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(up{cluster=\"$cluster\", job=\"kube-controller-manager\"})","instant":true}],"title":"Up","type":"stat"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":20,"x":4,"y":0},"id":2,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(workqueue_adds_total{cluster=\"$cluster\", job=\"kube-controller-manager\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, name)","legendFormat":"{{cluster}} {{instance}} {{name}}"}],"title":"Work Queue Add Rate","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"short"}},"gridPos":{"h":7,"w":24,"x":0,"y":7},"id":3,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(workqueue_depth{cluster=\"$cluster\", job=\"kube-controller-manager\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, name)","legendFormat":"{{cluster}} {{instance}} {{name}}"}],"title":"Work Queue Depth","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":24,"x":0,"y":14},"id":4,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-controller-manager\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, name, le))","legendFormat":"{{cluster}} {{instance}} {{name}}"}],"title":"Work Queue Latency","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":8,"x":0,"y":21},"id":5,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{job=\"kube-controller-manager\", instance=~\"$instance\",code=~\"2..\"}[$__rate_interval]))","legendFormat":"2xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{job=\"kube-controller-manager\", instance=~\"$instance\",code=~\"3..\"}[$__rate_interval]))","legendFormat":"3xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{job=\"kube-controller-manager\", instance=~\"$instance\",code=~\"4..\"}[$__rate_interval]))","legendFormat":"4xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{job=\"kube-controller-manager\", instance=~\"$instance\",code=~\"5..\"}[$__rate_interval]))","legendFormat":"5xx"}],"title":"Kube API Request Rate","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":16,"x":8,"y":21},"id":6,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-controller-manager\", instance=~\"$instance\", verb=\"POST\"}[$__rate_interval])) by (verb, le))","legendFormat":"{{verb}}"}],"title":"Post Request Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":24,"x":0,"y":28},"id":7,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-controller-manager\", instance=~\"$instance\", verb=\"GET\"}[$__rate_interval])) by (verb, le))","legendFormat":"{{verb}}"}],"title":"Get Request Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"bytes"}},"gridPos":{"h":7,"w":8,"x":0,"y":35},"id":8,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"process_resident_memory_bytes{cluster=\"$cluster\", job=\"kube-controller-manager\",instance=~\"$instance\"}","legendFormat":"{{instance}}"}],"title":"Memory","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"short"}},"gridPos":{"h":7,"w":8,"x":8,"y":35},"id":9,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"kube-controller-manager\",instance=~\"$instance\"}[$__rate_interval])","legendFormat":"{{instance}}"}],"title":"CPU usage","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"short"}},"gridPos":{"h":7,"w":8,"x":16,"y":35},"id":10,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"go_goroutines{cluster=\"$cluster\", job=\"kube-controller-manager\",instance=~\"$instance\"}","legendFormat":"{{instance}}"}],"title":"Goroutines","type":"timeseries"}],"refresh":"10s","schemaVersion":39,"tags":["kubernetes-mixin"],"templating":{"list":[{"current":{"selected":true,"text":"default","value":"default"},"hide":0,"label":"Data source","name":"datasource","query":"prometheus","regex":"","type":"datasource"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"hide":2,"label":"cluster","name":"cluster","query":"label_values(up{job=\"kube-controller-manager\"}, cluster)","refresh":2,"sort":1,"type":"query","allValue":".*"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"hide":0,"includeAll":true,"label":"instance","name":"instance","query":"label_values(up{cluster=\"$cluster\", job=\"kube-controller-manager\"}, instance)","refresh":2,"sort":1,"type":"query"}]},"time":{"from":"now-1h","to":"now"},"timezone": "utc","title":"Kubernetes / Controller Manager","uid":"72e0e05bef5099e5f049b05fdc429ed4"}'
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  annotations:
-    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
-  labels:
-    app: kube-prometheus-stack-grafana
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    grafana_dashboard: "1"
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
   name: prometheus-kube-prometheus-etcd
   namespace: prometheus
 data:
@@ -8869,50 +8847,6 @@ metadata:
   namespace: prometheus
 data:
   prometheus.json: '{"panels":[{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":0},"id":1,"panels":[],"title":"Prometheus Stats","type":"row"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"decimals":2,"displayName":"","unit":"short"},"overrides":[{"matcher":{"id":"byName","options":"Time"},"properties":[{"id":"displayName","value":"Time"},{"id":"custom.align","value":null},{"id":"custom.hidden","value":"true"}]},{"matcher":{"id":"byName","options":"cluster"},"properties":[{"id":"custom.align","value":null},{"id":"unit","value":"short"},{"id":"decimals","value":2},{"id":"displayName","value":"Cluster"}]},{"matcher":{"id":"byName","options":"job"},"properties":[{"id":"custom.align","value":null},{"id":"unit","value":"short"},{"id":"decimals","value":2},{"id":"displayName","value":"Job"}]},{"matcher":{"id":"byName","options":"instance"},"properties":[{"id":"displayName","value":"Instance"},{"id":"custom.align","value":null},{"id":"unit","value":"short"},{"id":"decimals","value":2}]},{"matcher":{"id":"byName","options":"version"},"properties":[{"id":"displayName","value":"Version"},{"id":"custom.align","value":null},{"id":"unit","value":"short"},{"id":"decimals","value":2}]},{"matcher":{"id":"byName","options":"Value #A"},"properties":[{"id":"displayName","value":"Count"},{"id":"custom.align","value":null},{"id":"unit","value":"short"},{"id":"decimals","value":2},{"id":"custom.hidden","value":"true"}]},{"matcher":{"id":"byName","options":"Value #B"},"properties":[{"id":"displayName","value":"Uptime"},{"id":"custom.align","value":null},{"id":"unit","value":"s"}]}]},"gridPos":{"h":7,"w":24,"x":0,"y":1},"id":2,"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"count by (cluster, job, instance, version) (prometheus_build_info{cluster=~\"$cluster\", job=~\"$job\", instance=~\"$instance\"})","format":"table","instant":true,"legendFormat":""},{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"max by (cluster, job, instance) (time() - process_start_time_seconds{cluster=~\"$cluster\", job=~\"$job\", instance=~\"$instance\"})","format":"table","instant":true,"legendFormat":""}],"title":"Prometheus Stats","type":"table"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":8},"id":3,"panels":[],"title":"Discovery","type":"row"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never"},"min":0,"unit":"ms"}},"gridPos":{"h":7,"w":12,"x":0,"y":9},"id":4,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"sum(rate(prometheus_target_sync_length_seconds_sum{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}[5m])) by (cluster, job, scrape_job, instance) * 1e3","format":"time_series","legendFormat":"{{cluster}}:{{job}}:{{instance}}:{{scrape_job}}"}],"title":"Target Sync","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":100,"lineWidth":0,"showPoints":"never","stacking":{"mode":"normal"}},"min":0,"unit":"short"}},"gridPos":{"h":7,"w":12,"x":12,"y":9},"id":5,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"sum by (cluster, job, instance) (prometheus_sd_discovered_targets{cluster=~\"$cluster\", job=~\"$job\",instance=~\"$instance\"})","format":"time_series","legendFormat":"{{cluster}}:{{job}}:{{instance}}"}],"title":"Targets","type":"timeseries"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":16},"id":6,"panels":[],"title":"Retrieval","type":"row"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never"},"min":0,"unit":"ms"}},"gridPos":{"h":7,"w":8,"x":0,"y":17},"id":7,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"rate(prometheus_target_interval_length_seconds_sum{cluster=~\"$cluster\", job=~\"$job\",instance=~\"$instance\"}[5m]) / rate(prometheus_target_interval_length_seconds_count{cluster=~\"$cluster\", job=~\"$job\",instance=~\"$instance\"}[5m]) * 1e3","format":"time_series","legendFormat":"{{cluster}}:{{job}}:{{instance}} {{interval}} configured"}],"title":"Average Scrape Interval Duration","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":100,"lineWidth":0,"showPoints":"never","stacking":{"mode":"normal"}},"min":0,"unit":"short"}},"gridPos":{"h":7,"w":8,"x":8,"y":17},"id":8,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"sum by (cluster, job, instance) (rate(prometheus_target_scrapes_exceeded_body_size_limit_total{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}[1m]))","format":"time_series","legendFormat":"exceeded body size limit: {{cluster}} {{job}} {{instance}}"},{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"sum by (cluster, job, instance) (rate(prometheus_target_scrapes_exceeded_sample_limit_total{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}[1m]))","format":"time_series","legendFormat":"exceeded sample limit: {{cluster}} {{job}} {{instance}}"},{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"sum by (cluster, job, instance) (rate(prometheus_target_scrapes_sample_duplicate_timestamp_total{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}[1m]))","format":"time_series","legendFormat":"duplicate timestamp: {{cluster}} {{job}} {{instance}}"},{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"sum by (cluster, job, instance) (rate(prometheus_target_scrapes_sample_out_of_bounds_total{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}[1m]))","format":"time_series","legendFormat":"out of bounds: {{cluster}} {{job}} {{instance}}"},{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"sum by (cluster, job, instance) (rate(prometheus_target_scrapes_sample_out_of_order_total{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}[1m]))","format":"time_series","legendFormat":"out of order: {{cluster}} {{job}} {{instance}}"}],"title":"Scrape failures","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":100,"lineWidth":0,"showPoints":"never","stacking":{"mode":"normal"}},"min":0,"unit":"short"}},"gridPos":{"h":7,"w":8,"x":16,"y":17},"id":9,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"rate(prometheus_tsdb_head_samples_appended_total{cluster=~\"$cluster\", job=~\"$job\",instance=~\"$instance\"}[5m])","format":"time_series","legendFormat":"{{cluster}} {{job}} {{instance}}"}],"title":"Appended Samples","type":"timeseries"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":24},"id":10,"panels":[],"title":"Storage","type":"row"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":100,"lineWidth":0,"showPoints":"never","stacking":{"mode":"normal"}},"min":0,"unit":"short"}},"gridPos":{"h":7,"w":12,"x":0,"y":25},"id":11,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"prometheus_tsdb_head_series{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}","format":"time_series","legendFormat":"{{cluster}} {{job}} {{instance}} head series"}],"title":"Head Series","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":100,"lineWidth":0,"showPoints":"never","stacking":{"mode":"normal"}},"min":0,"unit":"short"}},"gridPos":{"h":7,"w":12,"x":12,"y":25},"id":12,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"prometheus_tsdb_head_chunks{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\"}","format":"time_series","legendFormat":"{{cluster}} {{job}} {{instance}} head chunks"}],"title":"Head Chunks","type":"timeseries"},{"collapsed":false,"gridPos":{"h":1,"w":24,"x":0,"y":32},"id":13,"panels":[],"title":"Query","type":"row"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":100,"lineWidth":0,"showPoints":"never","stacking":{"mode":"normal"}},"min":0,"unit":"short"}},"gridPos":{"h":7,"w":12,"x":0,"y":33},"id":14,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"rate(prometheus_engine_query_duration_seconds_count{cluster=~\"$cluster\",job=~\"$job\",instance=~\"$instance\",slice=\"inner_eval\"}[5m])","format":"time_series","legendFormat":"{{cluster}} {{job}} {{instance}}"}],"title":"Query Rate","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"$datasource"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":100,"lineWidth":0,"showPoints":"never","stacking":{"mode":"normal"}},"min":0,"unit":"ms"}},"gridPos":{"h":7,"w":12,"x":12,"y":33},"id":15,"options":{"tooltip":{"mode":"multi","sort":"desc"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"$datasource"},"expr":"max by (slice) (prometheus_engine_query_duration_seconds{quantile=\"0.9\",cluster=~\"$cluster\", job=~\"$job\",instance=~\"$instance\"}) * 1e3","format":"time_series","legendFormat":"{{slice}}"}],"title":"Stage Duration","type":"timeseries"}],"schemaVersion":39,"tags":["prometheus-mixin"],"templating":{"list":[{"current":{"selected":false,"text":"default","value":"default"},"hide":0,"label":"Data source","name":"datasource","query":"prometheus","type":"datasource"},{"allValue":".*","current":{"selected":false,"text":["$__all"],"value":["$__all"]},"datasource":{"type":"prometheus","uid":"${datasource}"},"hide":2,"includeAll":true,"label":"cluster","multi":true,"name":"cluster","query":"label_values(prometheus_build_info{}, cluster)","refresh":2,"sort":2,"type":"query"},{"allValue":".+","datasource":{"type":"prometheus","uid":"${datasource}"},"includeAll":true,"label":"job","multi":true,"name":"job","query":"label_values(prometheus_build_info{cluster=~\"$cluster\"}, job)","refresh":2,"sort":2,"type":"query"},{"allValue":".+","datasource":{"type":"prometheus","uid":"${datasource}"},"includeAll":true,"label":"instance","multi":true,"name":"instance","query":"label_values(prometheus_build_info{cluster=~\"$cluster\", job=~\"$job\"}, instance)","refresh":2,"sort":2,"type":"query"}]},"time":{"from":"now-1h","to":"now"},"timepicker":{"refresh_intervals":["60s"]},"timezone": "utc","title":"Prometheus / Overview","uid":"9fa0d141-d019-4ad7-8bc5-42196ee308bd"}'
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  annotations:
-    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
-  labels:
-    app: kube-prometheus-stack-grafana
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    grafana_dashboard: "1"
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-proxy
-  namespace: prometheus
-data:
-  proxy.json: '{"editable":true,"links":[{"asDropdown":true,"includeVars":true,"keepTime":true,"tags":["kubernetes-mixin"],"targetBlank":false,"title":"Kubernetes","type":"dashboards"}],"panels":[{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"unit":"none"}},"gridPos":{"h":7,"w":4,"x":0,"y":0},"id":1,"interval":"1m","options":{"colorMode":"none"},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(up{cluster=\"$cluster\", job=\"kube-proxy\"})","instant":true}],"title":"Up","type":"stat"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":10,"x":4,"y":0},"id":2,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(kubeproxy_sync_proxy_rules_duration_seconds_count{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))","legendFormat":"rate"}],"title":"Rules Sync Rate","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":10,"x":14,"y":0},"id":3,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99,rate(kubeproxy_sync_proxy_rules_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))","legendFormat":"{{instance}}"}],"title":"Rules Sync Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":12,"x":0,"y":7},"id":4,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(kubeproxy_network_programming_duration_seconds_count{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval]))","legendFormat":"rate"}],"title":"Network Programming Rate","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":12,"x":12,"y":7},"id":5,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(kubeproxy_network_programming_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\"}[$__rate_interval])) by (instance, le))","legendFormat":"{{instance}}"}],"title":"Network Programming Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":8,"x":0,"y":14},"id":6,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"2..\"}[$__rate_interval]))","legendFormat":"2xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"3..\"}[$__rate_interval]))","legendFormat":"3xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"4..\"}[$__rate_interval]))","legendFormat":"4xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\",job=\"kube-proxy\", instance=~\"$instance\",code=~\"5..\"}[$__rate_interval]))","legendFormat":"5xx"}],"title":"Kube API Request Rate","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":16,"x":8,"y":14},"id":7,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\",verb=\"POST\"}[$__rate_interval])) by (verb, le))","legendFormat":"{{verb}}"}],"title":"Post Request Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":24,"x":0,"y":21},"id":8,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-proxy\", instance=~\"$instance\", verb=\"GET\"}[$__rate_interval])) by (verb, le))","legendFormat":"{{verb}}"}],"title":"Get Request Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"bytes"}},"gridPos":{"h":7,"w":8,"x":0,"y":28},"id":9,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"process_resident_memory_bytes{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}","legendFormat":"{{instance}}"}],"title":"Memory","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"short"}},"gridPos":{"h":7,"w":8,"x":8,"y":28},"id":10,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}[$__rate_interval])","legendFormat":"{{instance}}"}],"title":"CPU usage","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"short"}},"gridPos":{"h":7,"w":8,"x":16,"y":28},"id":11,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"go_goroutines{cluster=\"$cluster\", job=\"kube-proxy\",instance=~\"$instance\"}","legendFormat":"{{instance}}"}],"title":"Goroutines","type":"timeseries"}],"refresh":"10s","schemaVersion":39,"tags":["kubernetes-mixin"],"templating":{"list":[{"current":{"selected":true,"text":"default","value":"default"},"hide":0,"label":"Data source","name":"datasource","query":"prometheus","regex":"","type":"datasource"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"hide":2,"label":"cluster","name":"cluster","query":"label_values(up{job=\"kube-proxy\"}, cluster)","refresh":2,"sort":1,"type":"query","allValue":".*"},{"allValue":".+","datasource":{"type":"prometheus","uid":"${datasource}"},"hide":0,"includeAll":true,"label":"instance","name":"instance","query":"label_values(up{job=\"kube-proxy\", cluster=\"$cluster\", job=\"kube-proxy\"}, instance)","refresh":2,"type":"query"}]},"time":{"from":"now-1h","to":"now"},"timezone": "utc","title":"Kubernetes / Proxy","uid":"632e265de029684c40b21cb76bca4f94"}'
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  annotations:
-    k8s-sidecar-target-directory: /tmp/dashboards/Kubernetes
-  labels:
-    app: kube-prometheus-stack-grafana
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    grafana_dashboard: "1"
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-scheduler
-  namespace: prometheus
-data:
-  scheduler.json: '{"editable":true,"links":[{"asDropdown":true,"includeVars":true,"keepTime":true,"tags":["kubernetes-mixin"],"targetBlank":false,"title":"Kubernetes","type":"dashboards"}],"panels":[{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"unit":"none"}},"gridPos":{"h":7,"w":4,"x":0,"y":0},"id":1,"interval":"1m","options":{"colorMode":"none"},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(up{cluster=\"$cluster\", job=\"kube-scheduler\"})","instant":true}],"title":"Up","type":"stat"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":10,"x":4,"y":0},"id":2,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(scheduler_scheduling_attempt_duration_seconds_count{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)","legendFormat":"{{cluster}} {{instance}} e2e"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(scheduler_pod_scheduling_sli_duration_seconds_count{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)","legendFormat":"{{cluster}} {{instance}} binding"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(scheduler_scheduling_algorithm_duration_seconds_count{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)","legendFormat":"{{cluster}} {{instance}} scheduling algorithm"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(scheduler_volume_scheduling_duration_seconds_count{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance)","legendFormat":"{{cluster}} {{instance}} volume"}],"title":"Scheduling Rate","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":10,"x":14,"y":0},"id":3,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(scheduler_scheduling_attempt_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-scheduler\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))","legendFormat":"{{cluster}} {{instance}} e2e"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(scheduler_pod_scheduling_sli_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-scheduler\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))","legendFormat":"{{cluster}} {{instance}} binding"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-scheduler\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))","legendFormat":"{{cluster}} {{instance}} scheduling algorithm"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(scheduler_volume_scheduling_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-scheduler\",instance=~\"$instance\"}[$__rate_interval])) by (cluster, instance, le))","legendFormat":"{{cluster}} {{instance}} volume"}],"title":"Scheduling latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":8,"x":0,"y":7},"id":4,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\",code=~\"2..\"}[$__rate_interval]))","legendFormat":"2xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\",code=~\"3..\"}[$__rate_interval]))","legendFormat":"3xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\",code=~\"4..\"}[$__rate_interval]))","legendFormat":"4xx"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"sum(rate(rest_client_requests_total{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\",code=~\"5..\"}[$__rate_interval]))","legendFormat":"5xx"}],"title":"Kube API Request Rate","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"ops"}},"gridPos":{"h":7,"w":16,"x":8,"y":7},"id":5,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\", verb=\"POST\"}[$__rate_interval])) by (verb, le))","legendFormat":"{{verb}}"}],"title":"Post Request Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"s"}},"gridPos":{"h":7,"w":24,"x":0,"y":14},"id":6,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"histogram_quantile(0.99, sum(rate(rest_client_request_duration_seconds_bucket{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\", verb=\"GET\"}[$__rate_interval])) by (verb, le))","legendFormat":"{{verb}}"}],"title":"Get Request Latency 99th Quantile","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"bytes"}},"gridPos":{"h":7,"w":8,"x":0,"y":21},"id":7,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"process_resident_memory_bytes{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\"}","legendFormat":"{{instance}}"}],"title":"Memory","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"short"}},"gridPos":{"h":7,"w":8,"x":8,"y":21},"id":8,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"rate(process_cpu_seconds_total{cluster=\"$cluster\", job=\"kube-scheduler\", instance=~\"$instance\"}[$__rate_interval])","legendFormat":"{{instance}}"}],"title":"CPU usage","type":"timeseries"},{"datasource":{"type":"datasource","uid":"-- Mixed --"},"fieldConfig":{"defaults":{"custom":{"fillOpacity":10,"showPoints":"never","spanNulls":true},"unit":"short"}},"gridPos":{"h":7,"w":8,"x":16,"y":21},"id":9,"interval":"1m","options":{"legend":{"asTable":true,"calcs":["lastNotNull"],"displayMode":"table","placement":"right","showLegend":true},"tooltip":{"mode":"single"}},"pluginVersion":"v13.0.0","targets":[{"datasource":{"type":"prometheus","uid":"${datasource}"},"expr":"go_goroutines{cluster=\"$cluster\", job=\"kube-scheduler\",instance=~\"$instance\"}","legendFormat":"{{instance}}"}],"title":"Goroutines","type":"timeseries"}],"refresh":"10s","schemaVersion":39,"tags":["kubernetes-mixin"],"templating":{"list":[{"current":{"selected":true,"text":"default","value":"default"},"hide":0,"label":"Data source","name":"datasource","query":"prometheus","regex":"","type":"datasource"},{"datasource":{"type":"prometheus","uid":"${datasource}"},"hide":2,"label":"cluster","name":"cluster","query":"label_values(up{job=\"kube-scheduler\"}, cluster)","refresh":2,"sort":1,"type":"query","allValue":".*"},{"allValue":".+","datasource":{"type":"prometheus","uid":"${datasource}"},"hide":0,"includeAll":true,"label":"instance","name":"instance","query":"label_values(up{job=\"kube-scheduler\", cluster=\"$cluster\"}, instance)","refresh":2,"type":"query"}]},"time":{"from":"now-1h","to":"now"},"timezone": "utc","title":"Kubernetes / Scheduler","uid":"2e6b6a3b4bddf1427b3a55aa1311c656"}'
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -9585,34 +9519,6 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: kube-prometheus-stack-kube-controller-manager
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    jobLabel: kube-controller-manager
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kube-controller-manager
-  namespace: kube-system
-spec:
-  clusterIP: None
-  ports:
-    - name: http-metrics
-      port: 10257
-      protocol: TCP
-      targetPort: 10257
-  selector:
-    component: kube-controller-manager
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
     app: kube-prometheus-stack-kube-etcd
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
@@ -9635,62 +9541,6 @@ spec:
       targetPort: 2381
   selector:
     component: etcd
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: kube-prometheus-stack-kube-proxy
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    jobLabel: kube-proxy
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kube-proxy
-  namespace: kube-system
-spec:
-  clusterIP: None
-  ports:
-    - name: http-metrics
-      port: 10249
-      protocol: TCP
-      targetPort: 10249
-  selector:
-    k8s-app: kube-proxy
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: kube-prometheus-stack-kube-scheduler
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    jobLabel: kube-scheduler
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kube-scheduler
-  namespace: kube-system
-spec:
-  clusterIP: None
-  ports:
-    - name: http-metrics
-      port: 10259
-      protocol: TCP
-      targetPort: 10259
-  selector:
-    component: kube-scheduler
   type: ClusterIP
 ---
 apiVersion: v1
@@ -11927,63 +11777,6 @@ metadata:
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
-  name: prometheus-kube-prometheus-kube-scheduler.rules
-  namespace: prometheus
-spec:
-  groups:
-    - name: kube-scheduler.rules
-      rules:
-        - expr: histogram_quantile(0.99, sum(rate(scheduler_scheduling_attempt_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.99"
-          record: cluster_quantile:scheduler_scheduling_attempt_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.99, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.99"
-          record: cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.99, sum(rate(scheduler_pod_scheduling_sli_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.99"
-          record: cluster_quantile:scheduler_pod_scheduling_sli_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.9, sum(rate(scheduler_scheduling_attempt_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.9"
-          record: cluster_quantile:scheduler_scheduling_attempt_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.9, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.9"
-          record: cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.9, sum(rate(scheduler_pod_scheduling_sli_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.9"
-          record: cluster_quantile:scheduler_pod_scheduling_sli_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.5, sum(rate(scheduler_scheduling_attempt_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.5"
-          record: cluster_quantile:scheduler_scheduling_attempt_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.5, sum(rate(scheduler_scheduling_algorithm_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.5"
-          record: cluster_quantile:scheduler_scheduling_algorithm_duration_seconds:histogram_quantile
-        - expr: histogram_quantile(0.5, sum(rate(scheduler_pod_scheduling_sli_duration_seconds_bucket{job="kube-scheduler"}[5m])) without(instance, pod))
-          labels:
-            quantile: "0.5"
-          record: cluster_quantile:scheduler_pod_scheduling_sli_duration_seconds:histogram_quantile
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  labels:
-    app: kube-prometheus-stack
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
   name: prometheus-kube-prometheus-kube-state-metrics
   namespace: prometheus
 spec:
@@ -12803,84 +12596,6 @@ metadata:
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
-  name: prometheus-kube-prometheus-kubernetes-system-controller-manager
-  namespace: prometheus
-spec:
-  groups:
-    - name: kubernetes-system-controller-manager
-      rules:
-        - alert: KubeControllerManagerDown
-          annotations:
-            description: KubeControllerManager has disappeared from Prometheus target discovery.
-            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubecontrollermanagerdown
-            summary: Target disappeared from Prometheus target discovery.
-          expr: absent(up{job="kube-controller-manager"})
-          for: 15m
-          labels:
-            severity: critical
-        - alert: KubeControllerManagerInstanceUnreachable
-          annotations:
-            description: A KubeControllerManager instance has been unreachable for more than 15 minutes.
-            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubecontrollermanagerinstanceunreachable
-            summary: KubeControllerManager instance is unreachable.
-          expr: up{job="kube-controller-manager"} == 0
-          for: 15m
-          labels:
-            severity: warning
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  labels:
-    app: kube-prometheus-stack
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kubernetes-system-kube-proxy
-  namespace: prometheus
-spec:
-  groups:
-    - name: kubernetes-system-kube-proxy
-      rules:
-        - alert: KubeProxyDown
-          annotations:
-            description: KubeProxy has disappeared from Prometheus target discovery.
-            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeproxydown
-            summary: Target disappeared from Prometheus target discovery.
-          expr: absent(up{job="kube-proxy"})
-          for: 15m
-          labels:
-            severity: critical
-        - alert: KubeProxyInstanceUnreachable
-          annotations:
-            description: A KubeProxy instance has been unreachable for more than 15 minutes.
-            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeproxyinstanceunreachable
-            summary: KubeProxy instance is unreachable.
-          expr: up{job="kube-proxy"} == 0
-          for: 15m
-          labels:
-            severity: warning
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  labels:
-    app: kube-prometheus-stack
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
   name: prometheus-kube-prometheus-kubernetes-system-kubelet
   namespace: prometheus
 spec:
@@ -13070,45 +12785,6 @@ spec:
           for: 15m
           labels:
             severity: critical
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  labels:
-    app: kube-prometheus-stack
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kubernetes-system-scheduler
-  namespace: prometheus
-spec:
-  groups:
-    - name: kubernetes-system-scheduler
-      rules:
-        - alert: KubeSchedulerDown
-          annotations:
-            description: KubeScheduler has disappeared from Prometheus target discovery.
-            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeschedulerdown
-            summary: Target disappeared from Prometheus target discovery.
-          expr: absent(up{job="kube-scheduler"})
-          for: 15m
-          labels:
-            severity: critical
-        - alert: KubeSchedulerInstanceUnreachable
-          annotations:
-            description: A KubeScheduler instance has been unreachable for more than 15 minutes.
-            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeschedulerinstanceunreachable
-            summary: KubeScheduler instance is unreachable.
-          expr: up{job="kube-scheduler"} == 0
-          for: 15m
-          labels:
-            severity: warning
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -14220,39 +13896,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app: kube-prometheus-stack-kube-controller-manager
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kube-controller-manager
-  namespace: prometheus
-spec:
-  endpoints:
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      port: http-metrics
-      scheme: https
-      tlsConfig:
-        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        insecureSkipVerify: true
-  jobLabel: jobLabel
-  namespaceSelector:
-    matchNames:
-      - kube-system
-  selector:
-    matchLabels:
-      app: kube-prometheus-stack-kube-controller-manager
-      release: prometheus
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
     app: kube-prometheus-stack-kube-etcd
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
@@ -14276,68 +13919,6 @@ spec:
   selector:
     matchLabels:
       app: kube-prometheus-stack-kube-etcd
-      release: prometheus
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
-    app: kube-prometheus-stack-kube-proxy
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kube-proxy
-  namespace: prometheus
-spec:
-  endpoints:
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      port: http-metrics
-  jobLabel: jobLabel
-  namespaceSelector:
-    matchNames:
-      - kube-system
-  selector:
-    matchLabels:
-      app: kube-prometheus-stack-kube-proxy
-      release: prometheus
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
-    app: kube-prometheus-stack-kube-scheduler
-    app.kubernetes.io/instance: prometheus
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.1.3
-    chart: kube-prometheus-stack-88.1.3
-    heritage: Helm
-    k2.wyvernzora.io/app: prometheus
-    k2.wyvernzora.io/component: prometheus
-    release: prometheus
-  name: prometheus-kube-prometheus-kube-scheduler
-  namespace: prometheus
-spec:
-  endpoints:
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      port: http-metrics
-      scheme: https
-      tlsConfig:
-        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        insecureSkipVerify: true
-  jobLabel: jobLabel
-  namespaceSelector:
-    matchNames:
-      - kube-system
-  selector:
-    matchLabels:
-      app: kube-prometheus-stack-kube-scheduler
       release: prometheus
 ---
 apiVersion: monitoring.coreos.com/v1
