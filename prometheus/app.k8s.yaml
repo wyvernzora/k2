@@ -7984,9 +7984,18 @@ spec:
             severity: warning
         - alert: StorageSnapshotStale
           annotations:
-            description: The appliance snapshot timer has stopped or is failing; recent writes are unprotected.
-            summary: No {{ $labels.prefix }} snapshot for over 3 hours
-          expr: time() - k2_zfs_last_snapshot_timestamp_seconds{job="storage-appliance",instance="k2-st-0e12"} > 10800
+            description: The appliance hourly snapshot timer has stopped or is failing; recent writes are unprotected.
+            summary: No hourly snapshot for over 3 hours
+          expr: time() - k2_zfs_last_snapshot_timestamp_seconds{job="storage-appliance",instance="k2-st-0e12",prefix="k2-hourly"} > 10800
+          for: 0m
+          labels:
+            k2_component: storage-appliance
+            severity: warning
+        - alert: StorageDailySnapshotStale
+          annotations:
+            description: The appliance daily snapshot timer has stopped or is failing; the long-horizon restore points are not being created.
+            summary: No daily snapshot for over 3 days
+          expr: time() - k2_zfs_last_snapshot_timestamp_seconds{job="storage-appliance",instance="k2-st-0e12",prefix="k2-daily"} > 259200
           for: 0m
           labels:
             k2_component: storage-appliance
