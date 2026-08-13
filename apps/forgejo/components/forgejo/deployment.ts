@@ -52,6 +52,9 @@ export interface ForgejoDeploymentProps {
 }
 
 export class ForgejoDeployment extends K2Deployment {
+  /** Claim the appdata volume resolved to; the setup Job mounts the same one. */
+  public readonly appdataClaimName: string;
+
   public constructor(scope: Construct, id: string, props: ForgejoDeploymentProps) {
     super(scope, id, {
       metadata: { name: "forgejo" },
@@ -78,6 +81,11 @@ export class ForgejoDeployment extends K2Deployment {
       ]),
     );
     const volumes = this.attachVolumes(props.volumes);
+    const appdataClaimName = this.volumeClaims.appdata;
+    if (appdataClaimName === undefined) {
+      throw new Error("forgejo appdata must be a claim-backed volume: the setup Job mounts the same claim");
+    }
+    this.appdataClaimName = appdataClaimName;
     const credentialsSecret = Secret.fromSecretName(this, "credentials-secret", props.credentialsSecretName);
     const forgejoSecret = Secret.fromSecretName(this, "forgejo-secret", props.secretName);
     const caddyMounts = caddyVolumeMounts(this);
