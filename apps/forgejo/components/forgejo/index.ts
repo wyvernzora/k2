@@ -4,7 +4,7 @@ import type { Construct } from "constructs";
 import { K2Chart, K2Volume } from "@k2/cdk-lib";
 
 import { ForgejoDatabase } from "./database.js";
-import { FORGEJO_APPDATA_CLAIM_NAME, ForgejoDeployment } from "./deployment.js";
+import { ForgejoDeployment } from "./deployment.js";
 import { ForgejoSecret } from "./secret.js";
 import { ForgejoService } from "./service.js";
 import { ForgejoSetup } from "./setup.js";
@@ -20,10 +20,7 @@ export class Forgejo extends K2Chart {
       credentialsSecretName: database.credentialsSecretName,
       secretName: secret.secretName,
       volumes: {
-        appdata: K2Volume.migrate({
-          from: K2Volume.replicated({ name: FORGEJO_APPDATA_CLAIM_NAME, size: Size.gibibytes(20) }),
-          to: K2Volume.iscsi({ size: Size.gibibytes(20) }),
-        }),
+        appdata: K2Volume.iscsi({ size: Size.gibibytes(20) }),
       },
     });
     new ForgejoService(this, "service");

@@ -16,10 +16,7 @@ export class Mosquitto extends K2Chart {
       configName: config.name,
       configChecksum: config.checksum,
       volumes: {
-        data: K2Volume.migrate({
-          from: K2Volume.replicated({ name: "mosquitto-data", size: Size.gibibytes(1) }),
-          to: K2Volume.iscsi({ size: Size.gibibytes(1) }),
-        }),
+        data: K2Volume.iscsi({ size: Size.gibibytes(1) }),
         logs: K2Volume.ephemeral({ sizeLimit: Size.gibibytes(1) }),
       },
     });

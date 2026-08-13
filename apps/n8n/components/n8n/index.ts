@@ -34,23 +34,9 @@ export class N8N extends K2Chart {
       secretName: secret.secretName,
       userManagementSecretName: secret.userManagementSecretName,
       volumes: {
-        appdata: K2Volume.migrate({
-          from: K2Volume.replicated({ name: "n8n-appdata", size: Size.gibibytes(4) }),
-          to: K2Volume.iscsi({ size: Size.gibibytes(4) }),
-        }),
-        // The homes migrate to 8Gi from 1Gi: opencode was at 75% and agent
-        // homes grow through caches. `from` must keep declaring the live 1Gi
-        // or the source claim no longer matches and fails to apply. The
-        // appliance is thin-provisioned, so the larger size costs nothing
-        // until it is written.
-        opencodeHome: K2Volume.migrate({
-          from: K2Volume.replicated({ name: "n8n-opencode-home", size: Size.gibibytes(1) }),
-          to: K2Volume.iscsi({ size: Size.gibibytes(8) }),
-        }),
-        codexHome: K2Volume.migrate({
-          from: K2Volume.replicated({ name: "n8n-codex-home", size: Size.gibibytes(1) }),
-          to: K2Volume.iscsi({ size: Size.gibibytes(8) }),
-        }),
+        appdata: K2Volume.iscsi({ size: Size.gibibytes(4) }),
+        opencodeHome: K2Volume.iscsi({ size: Size.gibibytes(8) }),
+        codexHome: K2Volume.iscsi({ size: Size.gibibytes(8) }),
       },
     });
     new N8NService(this, "service");
