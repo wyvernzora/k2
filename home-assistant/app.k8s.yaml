@@ -105,41 +105,6 @@ spec:
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
       hostNetwork: false
-      initContainers:
-        - command:
-            - /bin/sh
-            - -c
-            - |-
-              set -eu
-              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-mosquitto-data" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-mosquitto-data; skipping"; exit 0; fi
-              echo "copying /migrate/source -> /migrate/destination"
-              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
-              sync
-              { echo "source=pvc-mosquitto-data"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
-              echo "migration complete"
-          image: instrumentisto/rsync-ssh:alpine
-          imagePullPolicy: Always
-          name: migrate-0d6e
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /migrate/source
-              name: pvc-mosquitto-data
-              readOnly: true
-            - mountPath: /migrate/destination
-              name: pvc-mosquitto-deployment-vol-data-a7d7-claim-c8945b4f
       restartPolicy: Always
       securityContext:
         fsGroupChangePolicy: Always
@@ -158,27 +123,6 @@ spec:
         - configMap:
             name: mosquitto-config
           name: configmap-mosquitto-config
-        - name: pvc-mosquitto-data
-          persistentVolumeClaim:
-            claimName: mosquitto-data
-            readOnly: false
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: home-assistant
-    k2.wyvernzora.io/component: mosquitto
-  name: mosquitto-data
-  namespace: home-assistant
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -333,40 +277,6 @@ spec:
       hostNetwork: false
       initContainers:
         - command:
-            - /bin/sh
-            - -c
-            - |-
-              set -eu
-              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-zigbee2mqtt-data" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-zigbee2mqtt-data; skipping"; exit 0; fi
-              echo "copying /migrate/source -> /migrate/destination"
-              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
-              sync
-              { echo "source=pvc-zigbee2mqtt-data"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
-              echo "migration complete"
-          image: instrumentisto/rsync-ssh:alpine
-          imagePullPolicy: Always
-          name: migrate-0d6e
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /migrate/source
-              name: pvc-zigbee2mqtt-data
-              readOnly: true
-            - mountPath: /migrate/destination
-              name: pvc-zigbee2mqtt-deployment-vol-data-a7d7-claim-c8678318
-        - command:
             - sh
             - /init/init.sh
           image: busybox:1.38.0
@@ -402,30 +312,9 @@ spec:
           persistentVolumeClaim:
             claimName: zigbee2mqtt-deployment-vol-data-a7d7-claim-c8678318
             readOnly: false
-        - name: pvc-zigbee2mqtt-data
-          persistentVolumeClaim:
-            claimName: zigbee2mqtt-data
-            readOnly: false
         - configMap:
             name: zigbee2mqtt-init
           name: configmap-zigbee2mqtt-init
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: home-assistant
-    k2.wyvernzora.io/component: zigbee2mqtt
-  name: zigbee2mqtt-data
-  namespace: home-assistant
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -625,40 +514,6 @@ spec:
       hostNetwork: false
       initContainers:
         - command:
-            - /bin/sh
-            - -c
-            - |-
-              set -eu
-              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-home-assistant-config" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-home-assistant-config; skipping"; exit 0; fi
-              echo "copying /migrate/source -> /migrate/destination"
-              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
-              sync
-              { echo "source=pvc-home-assistant-config"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
-              echo "migration complete"
-          image: instrumentisto/rsync-ssh:alpine
-          imagePullPolicy: Always
-          name: migrate-0ca1
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /migrate/source
-              name: pvc-home-assistant-config
-              readOnly: true
-            - mountPath: /migrate/destination
-              name: pvc-home-assista-deployment-vol-config-a7d7-claim-c8ad7690
-        - command:
             - sh
             - /init/init.sh
           image: busybox:1.38.0
@@ -694,30 +549,9 @@ spec:
           persistentVolumeClaim:
             claimName: home-assista-deployment-vol-config-a7d7-claim-c8ad7690
             readOnly: false
-        - name: pvc-home-assistant-config
-          persistentVolumeClaim:
-            claimName: home-assistant-config
-            readOnly: false
         - configMap:
             name: home-assistant-init
           name: configmap-home-assistant-init
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: home-assistant
-    k2.wyvernzora.io/component: home-assistant
-  name: home-assistant-config
-  namespace: home-assistant
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

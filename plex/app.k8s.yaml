@@ -176,40 +176,6 @@ spec:
       hostNetwork: false
       initContainers:
         - command:
-            - /bin/sh
-            - -c
-            - |-
-              set -eu
-              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-plex-databases" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-plex-databases; skipping"; exit 0; fi
-              echo "copying /migrate/source -> /migrate/destination"
-              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
-              sync
-              { echo "source=pvc-plex-databases"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
-              echo "migration complete"
-          image: instrumentisto/rsync-ssh:alpine
-          imagePullPolicy: Always
-          name: migrate-9d40
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /migrate/source
-              name: pvc-plex-databases
-              readOnly: true
-            - mountPath: /migrate/destination
-              name: pvc-plex-deployment-vol-databases-a7d7-claim-c8abcdbc
-        - command:
             - sh
             - -c
             - |-
@@ -317,10 +283,6 @@ spec:
         - emptyDir:
             sizeLimit: 1024Mi
           name: caddy-tmp
-        - name: pvc-plex-databases
-          persistentVolumeClaim:
-            claimName: plex-databases
-            readOnly: false
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -337,23 +299,6 @@ spec:
     requests:
       storage: 256Gi
   storageClassName: nfs-csi
-  volumeMode: Filesystem
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: plex
-    k2.wyvernzora.io/component: plex
-  name: plex-databases
-  namespace: plex
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 8Gi
-  storageClassName: longhorn
   volumeMode: Filesystem
 ---
 apiVersion: v1

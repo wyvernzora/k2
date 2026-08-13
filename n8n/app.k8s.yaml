@@ -382,108 +382,6 @@ spec:
       enableServiceLinks: false
       hostNetwork: false
       initContainers:
-        - command:
-            - /bin/sh
-            - -c
-            - |-
-              set -eu
-              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-n8n-appdata" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-n8n-appdata; skipping"; exit 0; fi
-              echo "copying /migrate/source -> /migrate/destination"
-              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
-              sync
-              { echo "source=pvc-n8n-appdata"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
-              echo "migration complete"
-          image: instrumentisto/rsync-ssh:alpine
-          imagePullPolicy: Always
-          name: migrate-55bf
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /migrate/source
-              name: pvc-n8n-appdata
-              readOnly: true
-            - mountPath: /migrate/destination
-              name: pvc-n8n-deployment-vol-appdata-a7d7-claim-c81bdd56
-        - command:
-            - /bin/sh
-            - -c
-            - |-
-              set -eu
-              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-n8n-opencode-home" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-n8n-opencode-home; skipping"; exit 0; fi
-              echo "copying /migrate/source -> /migrate/destination"
-              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
-              sync
-              { echo "source=pvc-n8n-opencode-home"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
-              echo "migration complete"
-          image: instrumentisto/rsync-ssh:alpine
-          imagePullPolicy: Always
-          name: migrate-8335
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /migrate/source
-              name: pvc-n8n-opencode-home
-              readOnly: true
-            - mountPath: /migrate/destination
-              name: pvc-n8n-deployment-vol-opencodehome-a7d7-claim-c8ec3400
-        - command:
-            - /bin/sh
-            - -c
-            - |-
-              set -eu
-              if [ -f /migrate/destination/.k2-migration-complete ] && grep -qxF "source=pvc-n8n-codex-home" /migrate/destination/.k2-migration-complete; then echo "already seeded from pvc-n8n-codex-home; skipping"; exit 0; fi
-              echo "copying /migrate/source -> /migrate/destination"
-              rsync -a --delete --exclude ".k2-migration-complete" /migrate/source/ /migrate/destination/
-              sync
-              { echo "source=pvc-n8n-codex-home"; echo "completed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"; } > /migrate/destination/.k2-migration-complete
-              echo "migration complete"
-          image: instrumentisto/rsync-ssh:alpine
-          imagePullPolicy: Always
-          name: migrate-a113
-          resources:
-            limits:
-              cpu: 1500m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 512Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /migrate/source
-              name: pvc-n8n-codex-home
-              readOnly: true
-            - mountPath: /migrate/destination
-              name: pvc-n8n-deployment-vol-codexhome-a7d7-claim-c80ef99e
         - image: ghcr.io/wyvernzora/n8n-proxy-auth-hook:v0.1.0
           imagePullPolicy: IfNotPresent
           name: install-proxy-auth-hook
@@ -622,35 +520,6 @@ spec:
         - emptyDir:
             sizeLimit: 1024Mi
           name: codex-session-workspaces
-        - name: pvc-n8n-appdata
-          persistentVolumeClaim:
-            claimName: n8n-appdata
-            readOnly: false
-        - name: pvc-n8n-opencode-home
-          persistentVolumeClaim:
-            claimName: n8n-opencode-home
-            readOnly: false
-        - name: pvc-n8n-codex-home
-          persistentVolumeClaim:
-            claimName: n8n-codex-home
-            readOnly: false
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: n8n
-    k2.wyvernzora.io/component: n8n
-  name: n8n-appdata
-  namespace: n8n
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 4Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -675,23 +544,6 @@ metadata:
   labels:
     k2.wyvernzora.io/app: n8n
     k2.wyvernzora.io/component: n8n
-  name: n8n-opencode-home
-  namespace: n8n
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: longhorn
-  volumeMode: Filesystem
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: n8n
-    k2.wyvernzora.io/component: n8n
   name: n8n-deployment-vol-opencodehome-a7d7-claim-c8ec3400
   namespace: n8n
 spec:
@@ -701,23 +553,6 @@ spec:
     requests:
       storage: 8Gi
   storageClassName: k2-iscsi
-  volumeMode: Filesystem
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: n8n
-    k2.wyvernzora.io/component: n8n
-  name: n8n-codex-home
-  namespace: n8n
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: longhorn
   volumeMode: Filesystem
 ---
 apiVersion: v1
