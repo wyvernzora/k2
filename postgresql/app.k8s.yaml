@@ -1554,7 +1554,7 @@ spec:
       memory: 1Gi
   storage:
     size: 8Gi
-    storageClass: longhorn
+    storageClass: k2-iscsi
   topologySpreadConstraints:
     - labelSelector:
         matchLabels:
@@ -1570,7 +1570,7 @@ spec:
       whenUnsatisfiable: ScheduleAnyway
   walStorage:
     size: 16Gi
-    storageClass: longhorn
+    storageClass: k2-iscsi
 ---
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
