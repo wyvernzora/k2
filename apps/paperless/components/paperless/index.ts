@@ -55,7 +55,10 @@ export class Paperless extends K2Chart {
       mcpTokenSecretName: mcpTokenSecret.secretName,
       secretName: secret.secretName,
       volumes: {
-        data: K2Volume.replicated({ name: "paperless-data", size: Size.gibibytes(4) }),
+        data: K2Volume.migrate({
+          from: K2Volume.replicated({ name: "paperless-data", size: Size.gibibytes(4) }),
+          to: K2Volume.iscsi({ size: Size.gibibytes(4) }),
+        }),
         documents: K2Volume.mountNfs({ path: DOCUMENTS_PATH }),
       },
     });
