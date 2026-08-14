@@ -9,7 +9,7 @@ metadata:
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
-  replicas: 0
+  replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -100,9 +100,7 @@ spec:
             timeoutSeconds: 5
           volumeMounts:
             - mountPath: /config
-              name: pvc-plex-config
-            - mountPath: /config/Library/Application Support/Plex Media Server/Plug-in Support/Databases
-              name: pvc-plex-deployment-vol-databases-a7d7-claim-c8abcdbc
+              name: pvc-plex-deployment-vol-config-a7d7-claim-c883e97f
             - mountPath: /anime/series
               name: vol-series
             - mountPath: /anime/features
@@ -204,40 +202,7 @@ spec:
             runAsUser: 3001
           volumeMounts:
             - mountPath: /config
-              name: pvc-plex-config
-        - command:
-            - sh
-            - -c
-            - |-
-              set -eu
-
-              mkdir -p "/databases"
-              if [ ! -f "/databases/.k2-plex-permissions-3001-2001-initialized" ]; then
-                chown -R 3001:2001 "/databases"
-                touch "/databases/.k2-plex-permissions-3001-2001-initialized"
-                chown 3001:2001 "/databases/.k2-plex-permissions-3001-2001-initialized"
-              fi
-          image: busybox:1.38.0
-          imagePullPolicy: IfNotPresent
-          name: init-plex-databases
-          resources:
-            limits:
-              cpu: 500m
-              ephemeral-storage: 1Gi
-              memory: 256Mi
-            requests:
-              cpu: 25m
-              memory: 32Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 0
-            runAsNonRoot: false
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /databases
-              name: pvc-plex-deployment-vol-databases-a7d7-claim-c8abcdbc
+              name: pvc-plex-deployment-vol-config-a7d7-claim-c883e97f
       restartPolicy: Always
       securityContext:
         runAsNonRoot: false
@@ -247,13 +212,9 @@ spec:
       shareProcessNamespace: false
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: pvc-plex-config
+        - name: pvc-plex-deployment-vol-config-a7d7-claim-c883e97f
           persistentVolumeClaim:
-            claimName: plex-config
-            readOnly: false
-        - name: pvc-plex-deployment-vol-databases-a7d7-claim-c8abcdbc
-          persistentVolumeClaim:
-            claimName: plex-deployment-vol-databases-a7d7-claim-c8abcdbc
+            claimName: plex-deployment-vol-config-a7d7-claim-c883e97f
             readOnly: false
         - name: vol-series
           nfs:
@@ -290,31 +251,14 @@ metadata:
   labels:
     k2.wyvernzora.io/app: plex
     k2.wyvernzora.io/component: plex
-  name: plex-config
-  namespace: plex
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 256Gi
-  storageClassName: nfs-csi
-  volumeMode: Filesystem
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    k2.wyvernzora.io/app: plex
-    k2.wyvernzora.io/component: plex
-  name: plex-deployment-vol-databases-a7d7-claim-c8abcdbc
+  name: plex-deployment-vol-config-a7d7-claim-c883e97f
   namespace: plex
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 16Gi
+      storage: 32Gi
   storageClassName: k2-iscsi
   volumeMode: Filesystem
 ---
