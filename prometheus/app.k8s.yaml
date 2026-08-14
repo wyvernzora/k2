@@ -10648,9 +10648,9 @@ spec:
   portName: http-web
   probeNamespaceSelector: {}
   probeSelector: {}
-  replicas: 1
+  replicas: 0
   retention: 15d
-  retentionSize: 15GiB
+  retentionSize: 30GiB
   routePrefix: /
   ruleNamespaceSelector: {}
   ruleSelector: {}
@@ -10674,8 +10674,8 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 20Gi
-        storageClassName: longhorn
+            storage: 32Gi
+        storageClassName: k2-iscsi
   tsdb:
     outOfOrderTimeWindow: 0s
   version: v3.13.2-distroless
