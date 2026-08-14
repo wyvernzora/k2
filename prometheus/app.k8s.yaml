@@ -10648,7 +10648,7 @@ spec:
   portName: http-web
   probeNamespaceSelector: {}
   probeSelector: {}
-  replicas: 0
+  replicas: 1
   retention: 15d
   retentionSize: 30GiB
   routePrefix: /
