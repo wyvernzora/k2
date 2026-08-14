@@ -45,7 +45,11 @@ export class PlexDeployment extends K2Deployment {
   public constructor(scope: Construct, id: string, props: PlexDeploymentProps) {
     super(scope, id, {
       metadata: { name: "plex" },
-      replicas: 1,
+      // Stopped while /config is unified onto one volume. The config tree and
+      // the databases currently live on two volumes, with the iSCSI one mounted
+      // inside the NFS one; merging them means assembling both under a single
+      // claim with nothing writing to either. Restored to 1 in the follow-up.
+      replicas: 0,
       select: false,
       strategy: DeploymentStrategy.recreate(),
       podMetadata: { labels: PLEX_LABELS },
