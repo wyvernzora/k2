@@ -54,7 +54,7 @@ spec:
               value: https://plex.wyvernzora.io
             - name: CHANGE_CONFIG_DIR_OWNERSHIP
               value: "false"
-          image: plexinc/pms-docker:1.43.3.10828-00f62d37d
+          image: plexinc/pms-docker:1.43.3.10861-07dfddaeb
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 6
