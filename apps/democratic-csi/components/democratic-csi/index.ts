@@ -28,7 +28,10 @@ function storageClassProps(namespace: string): k8s.KubeStorageClassProps {
     metadata: {
       name: STORAGE_CLASS_NAME,
       annotations: {
-        "storageclass.kubernetes.io/is-default-class": "false",
+        // The only storage class in the cluster since longhorn was retired, so
+        // a claim that omits storageClassName has nothing to bind to otherwise.
+        // Longhorn previously supplied the default via persistence.defaultClass.
+        "storageclass.kubernetes.io/is-default-class": "true",
       },
     },
     provisioner: CSI_DRIVER_NAME,
