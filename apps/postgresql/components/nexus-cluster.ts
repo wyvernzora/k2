@@ -52,7 +52,7 @@ function nexusClusterSpec(): ClusterSpec {
   const name = NEXUS_CLUSTER_NAME;
   return {
     instances: 3,
-    imageName: oci`ghcr.io/cloudnative-pg/postgresql:18.4-standard-bookworm`,
+    imageName: oci`ghcr.io/cloudnative-pg/postgresql:18.6-standard-bookworm`,
     enableSuperuserAccess: true,
     storage: volumeStorage(8),
     walStorage: volumeStorage(16),
