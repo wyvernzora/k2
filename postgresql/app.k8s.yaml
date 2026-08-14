@@ -1282,8 +1282,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.3.1
-    helm.sh/chart: dbclaim-operator-0.3.1
+    app.kubernetes.io/version: v0.3.2
+    helm.sh/chart: dbclaim-operator-0.3.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator
@@ -1296,8 +1296,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.3.1
-    helm.sh/chart: dbclaim-operator-0.3.1
+    app.kubernetes.io/version: v0.3.2
+    helm.sh/chart: dbclaim-operator-0.3.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-manager
@@ -1372,8 +1372,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.3.1
-    helm.sh/chart: dbclaim-operator-0.3.1
+    app.kubernetes.io/version: v0.3.2
+    helm.sh/chart: dbclaim-operator-0.3.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-manager
@@ -1393,8 +1393,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.3.1
-    helm.sh/chart: dbclaim-operator-0.3.1
+    app.kubernetes.io/version: v0.3.2
+    helm.sh/chart: dbclaim-operator-0.3.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-leader-election
@@ -1427,8 +1427,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.3.1
-    helm.sh/chart: dbclaim-operator-0.3.1
+    app.kubernetes.io/version: v0.3.2
+    helm.sh/chart: dbclaim-operator-0.3.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator-leader-election
@@ -1449,8 +1449,8 @@ metadata:
     app.kubernetes.io/instance: dbclaim-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: dbclaim-operator
-    app.kubernetes.io/version: v0.3.1
-    helm.sh/chart: dbclaim-operator-0.3.1
+    app.kubernetes.io/version: v0.3.2
+    helm.sh/chart: dbclaim-operator-0.3.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: dbclaim-operator
   name: dbclaim-operator
@@ -1472,7 +1472,7 @@ spec:
             - --health-probe-bind-address=:8081
             - --metrics-bind-address=:8080
             - --leader-elect
-          image: ghcr.io/wyvernzora/cnpg-dbclaim-operator:v0.3.1
+          image: ghcr.io/wyvernzora/cnpg-dbclaim-operator:v0.3.2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
