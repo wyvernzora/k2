@@ -52,9 +52,8 @@ import { K2Volume, volumeIdSuffix, type K2MigrateProps, type MaterializedVolume 
  * unwrap until the destination has soaked and is backed up.
  *
  * Destination support is per volume type: it requires seed-based naming, which
- * `K2Volume.iscsi` has. `K2Volume.replicated` deliberately keeps cdk8s' default
- * naming so the existing Longhorn claims across the cluster are not renamed,
- * so it works as a SOURCE but not yet as a destination.
+ * `K2Volume.iscsi` has. A volume type that keeps cdk8s' default naming can
+ * still serve as a SOURCE, but not as a destination.
  */
 export class K2MigrateVolume extends K2Volume {
   public constructor(private readonly props: K2MigrateProps) {

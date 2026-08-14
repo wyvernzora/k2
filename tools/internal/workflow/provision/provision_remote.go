@@ -3,19 +3,16 @@ package provision
 import (
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/wyvernzora/k2/tools/internal/client/kubectl"
 	"github.com/wyvernzora/k2/tools/internal/client/remote"
 	"github.com/wyvernzora/k2/tools/internal/clusterconfig"
 	"github.com/wyvernzora/k2/tools/internal/kubeconfig"
 	"github.com/wyvernzora/k2/tools/internal/render"
-	"github.com/wyvernzora/k2/tools/internal/ui"
 )
 
 func logf(format string, args ...any) {
@@ -43,69 +40,6 @@ func readRemoteMetadata(client *remote.Client) (render.ImageMetadata, error) {
 		return render.ImageMetadata{}, fmt.Errorf("remote image metadata is incomplete; target, arch, and hardware are required")
 	}
 	return metadata, nil
-}
-
-func markLonghornStorageWorker(ctx context.Context, clusterName string, nodeName string, out ui.Step) error {
-	kubeconfigPath, err := kubeconfigPathFor(clusterName)
-	if err != nil {
-		return err
-	}
-	kc := kubectl.New(kubeconfigPath)
-	kc.Stderr = out
-	kc.Logger = logf
-	if err := kc.Available(); err != nil {
-		return fmt.Errorf("%w; install kubectl + ensure it's on PATH", err)
-	}
-	return markLonghornStorageNodeWithRetry(ctx, kc, nodeName, out, 2*time.Minute, 5*time.Second)
-}
-
-type longhornStorageNodeMarker interface {
-	AnnotateNode(ctx context.Context, node string, keyValue string) error
-	LabelNode(ctx context.Context, node string, keyValue string) error
-}
-
-func markLonghornStorageNodeWithRetry(ctx context.Context, marker longhornStorageNodeMarker, nodeName string, out io.Writer, timeout time.Duration, interval time.Duration) error {
-	if timeout <= 0 {
-		timeout = 2 * time.Minute
-	}
-	if interval <= 0 {
-		interval = 5 * time.Second
-	}
-	deadline := time.Now().Add(timeout)
-	var lastErr error
-	attempt := 0
-	for {
-		attempt++
-		err := applyLonghornStorageNodeMark(ctx, marker, nodeName)
-		if err == nil {
-			return nil
-		}
-		lastErr = err
-		if time.Now().After(deadline) {
-			return fmt.Errorf("timed out marking worker node %s for Longhorn replica storage: %w", nodeName, lastErr)
-		}
-		if out != nil {
-			fmt.Fprintf(out, "waiting for Kubernetes node %s before Longhorn storage mark (attempt %d): %v\n", nodeName, attempt, err)
-		}
-		wait := interval
-		if remaining := time.Until(deadline); remaining < wait {
-			wait = remaining
-		}
-		timer := time.NewTimer(wait)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			return ctx.Err()
-		case <-timer.C:
-		}
-	}
-}
-
-func applyLonghornStorageNodeMark(ctx context.Context, marker longhornStorageNodeMarker, nodeName string) error {
-	if err := marker.AnnotateNode(ctx, nodeName, longhornStorageNodeTagsAnnotation); err != nil {
-		return err
-	}
-	return marker.LabelNode(ctx, nodeName, longhornStorageNodeLabel)
 }
 
 func detectBootstrapAPIHost(client *remote.Client) (string, error) {

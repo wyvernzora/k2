@@ -48,7 +48,6 @@ function homerConfig(apex: ApexDomain) {
         items: [
           service("Argo CD", "GitOps control plane", "argo-cd", apex.subdomain("argo")),
           service("Hubble", "Cilium observability", "cilium", apex.subdomain("hubble")),
-          service("Longhorn", "Storage dashboard", "rancher-longhorn-dark", apex.subdomain("longhorn")),
         ],
       },
       {

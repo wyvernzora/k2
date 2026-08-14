@@ -19,7 +19,7 @@ type buildCRDConstructsCmd struct {
 }
 
 type buildCRDManifestCmd struct {
-	AppRoot string `arg:"" help:"App directory, such as apps/longhorn." type:"path"`
+	AppRoot string `arg:"" help:"App directory, such as apps/prometheus." type:"path"`
 }
 
 type buildKuraImageSuiteCmd struct{}

@@ -156,10 +156,5 @@ const (
 	nodeRoleServer nodeRole = "server"
 	nodeRoleWorker nodeRole = "worker"
 
-	longhornStorageNodeLabel          = "node.longhorn.io/create-default-disk=true"
-	longhornStorageNodeTag            = "k2-storage"
-	longhornStorageNodeTagsAnnotation = `node.longhorn.io/default-node-tags=["k2-storage"]`
-	longhornNodeLabelPrefix           = "node.longhorn.io/"
-
 	remoteRootArgoAppManifestPath = "/var/lib/rancher/k3s/server/k2-root-argocd-app.k8s.yaml"
 )

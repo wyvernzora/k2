@@ -61,13 +61,6 @@ export interface K2MigrateProps {
   readonly markerFile?: string;
 }
 
-export interface K2ReplicatedProps {
-  readonly name?: string;
-  readonly size: Size;
-  readonly storageClass?: string;
-  readonly accessModes?: PersistentVolumeAccessMode[];
-}
-
 /**
  * Opaque construct-id suffix distinguishing one volume's claim from another's
  * at the same declared id.
@@ -106,7 +99,7 @@ export abstract class K2Volume {
   /**
    * Static factories below are initialized in `volumes/index.ts` to break the
    * import cycle that would otherwise exist between this file and the concrete
-   * subclasses in `ephemeral.ts`, `nfs.ts`, `replicated.ts` (all of which
+   * subclasses in `ephemeral.ts`, `nfs.ts`, `iscsi.ts` (all of which
    * `extends K2Volume`). Anyone importing `K2Volume` via `@k2/cdk-lib` or
    * `cdk-lib/volumes/index.js` gets the factories assigned by the time they
    * call them.
@@ -114,7 +107,6 @@ export abstract class K2Volume {
   declare public static ephemeral: (props?: K2EphemeralProps) => K2Volume;
   declare public static mountNfs: (props: K2NfsProps) => K2Volume;
   declare public static provisionNfs: (props: K2ProvisionedNfsProps) => K2Volume;
-  declare public static replicated: (props: K2ReplicatedProps) => K2Volume;
   declare public static iscsi: (props: K2IscsiProps) => K2Volume;
   declare public static migrate: (props: K2MigrateProps) => K2Volume;
 }
