@@ -31,11 +31,8 @@ const PGID = 2001;
 const MEDIA_ACCESS_GID = 2001;
 const CONFIG_MOUNT_PATH = "/config";
 const PLEX_ROOT = `${CONFIG_MOUNT_PATH}/Library/Application Support/Plex Media Server`;
-const DATABASES_PATH = `${PLEX_ROOT}/Plug-in Support/Databases`;
-const DATABASES_INIT_PATH = "/databases";
 const TRANSCODE_PATH = "/transcode";
 const CONFIG_READY_MARKER = `${CONFIG_MOUNT_PATH}/.k2-plex-config-initialized`;
-const DATABASES_PERMISSIONS_MARKER = `${DATABASES_INIT_PATH}/.k2-plex-permissions-${PUID}-${PGID}-initialized`;
 
 export interface PlexDeploymentProps {
   readonly volumes: K2Volumes;
@@ -45,11 +42,7 @@ export class PlexDeployment extends K2Deployment {
   public constructor(scope: Construct, id: string, props: PlexDeploymentProps) {
     super(scope, id, {
       metadata: { name: "plex" },
-      // Stopped while /config is unified onto one volume. The config tree and
-      // the databases currently live on two volumes, with the iSCSI one mounted
-      // inside the NFS one; merging them means assembling both under a single
-      // claim with nothing writing to either. Restored to 1 in the follow-up.
-      replicas: 0,
+      replicas: 1,
       select: false,
       strategy: DeploymentStrategy.recreate(),
       podMetadata: { labels: PLEX_LABELS },
@@ -68,7 +61,6 @@ export class PlexDeployment extends K2Deployment {
     const volumes = this.attachVolumes(props.volumes);
     const caddyMounts = caddyVolumeMounts(this);
     this.addInitContainer(initConfigContainer(volumes));
-    this.addInitContainer(initDatabaseContainer(volumes));
     this.addContainer(plexContainer(volumes));
     this.addContainer(caddyContainer(caddyMounts));
   }
@@ -86,22 +78,6 @@ function initConfigContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
       user: PUID,
       group: PGID,
       ensureNonRoot: true,
-    },
-  };
-}
-
-function initDatabaseContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
-  return {
-    name: "init-plex-databases",
-    image: BUSYBOX_IMAGE,
-    imagePullPolicy: ImagePullPolicy.IF_NOT_PRESENT,
-    command: ["sh", "-c", initDatabaseScript()],
-    volumeMounts: [volumes.databases(DATABASES_INIT_PATH)],
-    resources: initResources(),
-    securityContext: {
-      user: 0,
-      group: 0,
-      ensureNonRoot: false,
     },
   };
 }
@@ -140,7 +116,6 @@ function plexContainer(volumes: K2Mounters<K2Volumes>): ContainerProps {
     },
     volumeMounts: [
       volumes.config(CONFIG_MOUNT_PATH),
-      volumes.databases(DATABASES_PATH),
       volumes.series("/anime/series"),
       volumes.features("/anime/features"),
       volumes.transcode(TRANSCODE_PATH),
@@ -278,19 +253,6 @@ function initConfigScript(): string {
     mkdir -p "${PLEX_ROOT}/Plug-in Support"
     mkdir -p "${PLEX_ROOT}/Plug-in Support/Databases"
     touch "${CONFIG_READY_MARKER}"
-  `;
-}
-
-function initDatabaseScript(): string {
-  return dedent`
-    set -eu
-
-    mkdir -p "${DATABASES_INIT_PATH}"
-    if [ ! -f "${DATABASES_PERMISSIONS_MARKER}" ]; then
-      chown -R ${PUID}:${PGID} "${DATABASES_INIT_PATH}"
-      touch "${DATABASES_PERMISSIONS_MARKER}"
-      chown ${PUID}:${PGID} "${DATABASES_PERMISSIONS_MARKER}"
-    fi
   `;
 }
 

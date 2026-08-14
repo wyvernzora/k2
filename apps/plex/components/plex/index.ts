@@ -12,11 +12,10 @@ export class Plex extends K2Chart {
 
     new PlexDeployment(this, "deployment", {
       volumes: {
-        config: K2Volume.provisionNfs({
-          name: "plex-config",
-          size: Size.gibibytes(256),
-        }),
-        databases: K2Volume.iscsi({ size: Size.gibibytes(16) }),
+        // One volume for the whole config tree, databases included. They were
+        // split only because Longhorn triplicated the metadata and SQLite is
+        // unreliable over NFS; neither constraint survives the appliance.
+        config: K2Volume.iscsi({ size: Size.gibibytes(32) }),
         series: K2Volume.mountNfs({ path: "/mnt/data/media/anime/series", readOnly: true }),
         features: K2Volume.mountNfs({ path: "/mnt/data/media/anime/features", readOnly: true }),
         transcode: K2Volume.ephemeral({ sizeLimit: Size.gibibytes(32) }),
