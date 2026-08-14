@@ -8,6 +8,12 @@ import { K2Volume } from "./index.js";
 
 const SIZE = Size.gibibytes(4);
 const ID = "vol-appdata";
+// A source volume on a class other than the destination's. migrate() tells the
+// two claims apart by storage class, so the source only has to differ; it does
+// not have to be any particular driver.
+const SOURCE_CLASS = "k2-iscsi-legacy";
+const source = (props: { name?: string } = {}): K2Volume =>
+  K2Volume.iscsi({ size: SIZE, storageClass: SOURCE_CLASS, ...props });
 
 function claims(volume: K2Volume): Record<string, unknown>[] {
   const chart = Testing.chart();
@@ -26,7 +32,7 @@ function storageClassOf(claim: Record<string, unknown>): string {
 function migrating(): Record<string, unknown>[] {
   return claims(
     K2Volume.migrate({
-      from: K2Volume.replicated({ size: SIZE }),
+      from: source(),
       to: K2Volume.iscsi({ size: SIZE }),
     }),
   );
@@ -37,7 +43,7 @@ function migrating(): Record<string, unknown>[] {
 // empty volume rather than failing loudly.
 
 test("step 1: wrapping emits the source claim unchanged, so the live PVC is adopted", () => {
-  const before = claims(K2Volume.replicated({ size: SIZE }));
+  const before = claims(source());
   const wrapped = migrating();
 
   assert.equal(before.length, 1);
@@ -64,7 +70,7 @@ test("step 2: unwrapping emits the destination claim unchanged, so the data is k
 test("the two claims coexist under distinct names while the copy runs", () => {
   const wrapped = migrating();
   assert.notEqual(nameOf(wrapped[0]), nameOf(wrapped[1]));
-  assert.deepEqual(wrapped.map(storageClassOf).sort(), ["k2-iscsi", "longhorn"], "one claim per storage class");
+  assert.deepEqual(wrapped.map(storageClassOf).sort(), ["k2-iscsi", SOURCE_CLASS], "one claim per storage class");
 });
 
 // Naming must be reproducible across synths: it is what ties a deployed PVC to
@@ -105,7 +111,7 @@ test("migrating within one storage class fails loudly rather than colliding", ()
 // the path the remaining migrations take: an explicit name is used verbatim and
 // is unaffected by being wrapped, leaving nothing about naming to get wrong.
 test("an explicitly named claim is identical wrapped or not", () => {
-  const named = (): K2Volume => K2Volume.replicated({ name: "n8n-appdata", size: SIZE });
+  const named = (): K2Volume => source({ name: "n8n-appdata" });
   const standalone = claims(named());
   const wrapped = claims(K2Volume.migrate({ from: named(), to: K2Volume.iscsi({ size: SIZE }) }));
 
@@ -135,11 +141,11 @@ test("the completion marker identifies its source, so a stale one cannot suppres
     return spec.template.spec.initContainers[0].command[2];
   };
 
-  const fromLonghorn = script(K2Volume.replicated({ size: SIZE }));
-  const fromElsewhere = script(K2Volume.replicated({ name: "some-other-source", size: SIZE }));
+  const fromDefault = script(source());
+  const fromElsewhere = script(source({ name: "some-other-source" }));
 
   assert.notEqual(
-    fromLonghorn,
+    fromDefault,
     fromElsewhere,
     "two different sources must not share a completion check, or a marker left by one skips the other",
   );
@@ -159,7 +165,7 @@ test("each migration in a workload gets its own init container", () => {
   // reaches the manifest verbatim and must be made a legal label here.
   for (const id of ["vol-appdata", "vol-codexHome"]) {
     K2Volume.migrate({
-      from: K2Volume.replicated({ name: `src-${id}`, size: SIZE }),
+      from: source({ name: `src-${id}` }),
       to: K2Volume.iscsi({ size: SIZE }),
     })
       .materialize(chart, id)
@@ -184,7 +190,7 @@ test("a duplicate init container name fails at synth rather than at apply", () =
   const deployment = new Deployment(chart, "workload", { containers: [{ image: "app" }] });
   const add = (id: string): void => {
     K2Volume.migrate({
-      from: K2Volume.replicated({ name: `src-${id}`, size: SIZE }),
+      from: source({ name: `src-${id}` }),
       to: K2Volume.iscsi({ size: SIZE }),
       initContainerName: "shared-name",
     })
@@ -208,7 +214,7 @@ test("a migrating volume reports its destination's claim name", () => {
   const expected = destination.materialize(Testing.chart(), ID).claimName;
 
   const migrating = K2Volume.migrate({
-    from: K2Volume.replicated({ name: "old-claim", size: SIZE }),
+    from: source({ name: "old-claim" }),
     to: K2Volume.iscsi({ size: SIZE }),
   }).materialize(chart, ID);
 

@@ -1,15 +1,11 @@
 package provision
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/wyvernzora/k2/tools/internal/clusterconfig"
 	testvm "github.com/wyvernzora/k2/tools/internal/step/vm"
@@ -218,60 +214,6 @@ func TestNodeLabelsForRolePreservesWorkerLabels(t *testing.T) {
 	if !contains(got, "example.com/custom=true") {
 		t.Fatalf("worker labels missing custom label: %v", got)
 	}
-	if contains(got, "node.longhorn.io/create-default-disk=true") {
-		t.Fatalf("Longhorn storage label should be applied after worker join, not during K3s registration: %v", got)
-	}
-}
-
-func TestNodeLabelsForRoleRejectsLonghornLabelsOnServers(t *testing.T) {
-	_, err := nodeLabelsForRole(nodeRoleServer, []string{"node.longhorn.io/create-default-disk=true"})
-	if err == nil || !strings.Contains(err.Error(), "k2-tools manages Longhorn") {
-		t.Fatalf("error = %v", err)
-	}
-}
-
-func TestNodeLabelsForRoleRejectsLonghornLabelsOnWorkers(t *testing.T) {
-	_, err := nodeLabelsForRole(nodeRoleWorker, []string{"node.longhorn.io/create-default-disk=true"})
-	if err == nil || !strings.Contains(err.Error(), "k2-tools manages Longhorn") {
-		t.Fatalf("error = %v", err)
-	}
-}
-
-func TestRejectLonghornNodeLabelsCatchesPrefixWithoutValue(t *testing.T) {
-	err := rejectLonghornNodeLabels("bootstrap", []string{"node.longhorn.io/create-default-disk"})
-	if err == nil || !strings.Contains(err.Error(), "k2-tools manages Longhorn") {
-		t.Fatalf("error = %v", err)
-	}
-}
-
-func TestMarkLonghornStorageNodeRetriesUntilNodeExists(t *testing.T) {
-	temporary := errors.New("not found")
-	marker := &fakeLonghornMarker{annotateErrs: []error{temporary, temporary, nil}}
-	var out bytes.Buffer
-
-	err := markLonghornStorageNodeWithRetry(context.Background(), marker, "v3-worker-01", &out, time.Second, time.Millisecond)
-	if err != nil {
-		t.Fatalf("markLonghornStorageNodeWithRetry: %v", err)
-	}
-	if marker.annotateCalls != 3 {
-		t.Fatalf("annotate calls = %d, want 3", marker.annotateCalls)
-	}
-	if marker.labelCalls != 1 {
-		t.Fatalf("label calls = %d, want 1", marker.labelCalls)
-	}
-	if !strings.Contains(out.String(), "waiting for Kubernetes node v3-worker-01") {
-		t.Fatalf("expected retry output, got:\n%s", out.String())
-	}
-}
-
-func TestApplyLonghornStorageNodeMarkAnnotatesBeforeLabel(t *testing.T) {
-	marker := &fakeLonghornMarker{}
-	if err := applyLonghornStorageNodeMark(context.Background(), marker, "v3-worker-01"); err != nil {
-		t.Fatalf("applyLonghornStorageNodeMark: %v", err)
-	}
-	if got := strings.Join(marker.calls, ","); got != "annotate,label" {
-		t.Fatalf("call order = %s, want annotate,label", got)
-	}
 }
 
 func TestApplyProvisionTestVMDefaultsClusterNodeAndSSH(t *testing.T) {
@@ -329,36 +271,6 @@ func TestApplyProvisionTestVMKeepsExplicitNodeName(t *testing.T) {
 	if nodeName != "custom-node" {
 		t.Fatalf("nodeName = %s, want custom-node", nodeName)
 	}
-}
-
-type fakeLonghornMarker struct {
-	calls         []string
-	annotateErrs  []error
-	labelErrs     []error
-	annotateCalls int
-	labelCalls    int
-}
-
-func (m *fakeLonghornMarker) AnnotateNode(ctx context.Context, node string, keyValue string) error {
-	m.calls = append(m.calls, "annotate")
-	m.annotateCalls++
-	if len(m.annotateErrs) == 0 {
-		return nil
-	}
-	err := m.annotateErrs[0]
-	m.annotateErrs = m.annotateErrs[1:]
-	return err
-}
-
-func (m *fakeLonghornMarker) LabelNode(ctx context.Context, node string, keyValue string) error {
-	m.calls = append(m.calls, "label")
-	m.labelCalls++
-	if len(m.labelErrs) == 0 {
-		return nil
-	}
-	err := m.labelErrs[0]
-	m.labelErrs = m.labelErrs[1:]
-	return err
 }
 
 func contains(values []string, want string) bool {

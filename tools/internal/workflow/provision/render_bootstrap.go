@@ -31,9 +31,6 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	if err != nil {
 		return bundle{}, err
 	}
-	if err := rejectLonghornNodeLabels("bootstrap", flags.Label); err != nil {
-		return bundle{}, err
-	}
 	prodAPI := cfg.Kubernetes.API
 	if flags.testKubeVIP != "" {
 		applyTestKubeVIP(&cfg, flags.testKubeVIP)

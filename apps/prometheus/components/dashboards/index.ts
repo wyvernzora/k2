@@ -249,22 +249,11 @@ function dashboards(): DashboardSpec[] {
         "ops",
       ),
     ]),
-    dashboard("k2-storage-databases", "Storage", "K2 / Storage and Databases", [
-      stat(1, "Longhorn volumes", "count(longhorn_volume_state)", 0, 0, "short"),
-      stat(2, "Longhorn nodes ready", 'sum(longhorn_node_status{condition="Ready",status="True"})', 6, 0, "short"),
-      stat(3, "Postgres collectors up", "sum(cnpg_collector_up)", 12, 0, "short"),
-      stat(4, "Postgres DB size", "sum(cnpg_pg_database_size_bytes)", 18, 0, "bytes"),
-      timeSeries(
-        5,
-        "Longhorn volume throughput",
-        [
-          { expr: "sum by (volume) (longhorn_volume_read_throughput)", legendFormat: "{{volume}} read" },
-          { expr: "sum by (volume) (longhorn_volume_write_throughput)", legendFormat: "{{volume}} write" },
-        ],
-        0,
-        4,
-        "Bps",
-      ),
+    // Longhorn panels removed with the driver; appliance storage has its own
+    // dashboard, and panels querying longhorn_* would never return data again.
+    dashboard("k2-storage-databases", "Storage", "K2 / Databases", [
+      stat(3, "Postgres collectors up", "sum(cnpg_collector_up)", 0, 0, "short"),
+      stat(4, "Postgres DB size", "sum(cnpg_pg_database_size_bytes)", 6, 0, "bytes"),
       timeSeries(
         6,
         "Postgres transactions",
@@ -279,7 +268,7 @@ function dashboards(): DashboardSpec[] {
           },
         ],
         0,
-        12,
+        4,
         "ops",
       ),
     ]),

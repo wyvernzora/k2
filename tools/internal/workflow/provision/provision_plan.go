@@ -18,24 +18,8 @@ func clusterNameOrFallback(name, target string) string {
 	return name
 }
 
-func nodeLabelsForRole(role nodeRole, labels []string) ([]string, error) {
-	if err := rejectLonghornNodeLabels(string(role), labels); err != nil {
-		return nil, err
-	}
+func nodeLabelsForRole(_ nodeRole, labels []string) ([]string, error) {
 	return append([]string{}, labels...), nil
-}
-
-func rejectLonghornNodeLabels(role string, labels []string) error {
-	for _, label := range labels {
-		key := strings.TrimSpace(label)
-		if before, _, found := strings.Cut(key, "="); found {
-			key = strings.TrimSpace(before)
-		}
-		if strings.HasPrefix(key, longhornNodeLabelPrefix) {
-			return fmt.Errorf("%s provisioning does not allow user-supplied Longhorn node label %q; k2-tools manages Longhorn replica-storage labels after worker join", role, key)
-		}
-	}
-	return nil
 }
 
 func bootstrapPlanFields(c *bootstrapCmd, testTarget testVMProvisionTarget) []ui.KV {

@@ -152,14 +152,6 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 		defer client.SwapIO(sh)()
 		return hardenRemoteDefaultAccess(&client)
 	}).Unless(!postInstall)
-	wf.Shell("Mark worker as Longhorn storage node", func(ctx context.Context, sh ui.Step) error {
-		if err := markLonghornStorageWorker(ctx, clusterNameOrFallback(flags.ClusterName, flags.ClusterTarget), flags.NodeName, sh); err != nil {
-			return err
-		}
-		sh.Successf("marked %s for Longhorn replica storage (%s)", flags.NodeName, longhornStorageNodeTag)
-		return nil
-	}).Unless(!postInstall || role != nodeRoleWorker)
-
 	wf.BannerFn(ui.BannerSuccess, func() []string {
 		if remoteFlags.NoReboot {
 			return []string{
