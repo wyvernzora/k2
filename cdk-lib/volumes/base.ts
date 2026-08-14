@@ -31,16 +31,8 @@ export interface K2NfsProps {
 /**
  * Dynamically provision a new NFS-backed PVC through the cluster's NFS CSI
  * StorageClass. This is for new Kubernetes-owned directories, not importing an
- * existing NFS export path; use {@link K2Volume.mountNfs} for existing paths.
+ * existing NFS export path.
  */
-export interface K2ProvisionedNfsProps {
-  readonly name?: string;
-  readonly size: Size;
-  readonly storageClass?: string;
-  readonly accessModes?: PersistentVolumeAccessMode[];
-  readonly readOnly?: boolean;
-}
-
 export interface K2IscsiProps {
   readonly name?: string;
   readonly size: Size;
@@ -106,7 +98,6 @@ export abstract class K2Volume {
    */
   declare public static ephemeral: (props?: K2EphemeralProps) => K2Volume;
   declare public static mountNfs: (props: K2NfsProps) => K2Volume;
-  declare public static provisionNfs: (props: K2ProvisionedNfsProps) => K2Volume;
   declare public static iscsi: (props: K2IscsiProps) => K2Volume;
   declare public static migrate: (props: K2MigrateProps) => K2Volume;
 }
