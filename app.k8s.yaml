@@ -254,29 +254,6 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: longhorn
-  namespace: argocd
-spec:
-  destination:
-    namespace: longhorn
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: longhorn
-    repoURL: https://github.com/wyvernzora/k2.git
-    targetRevision: deploy
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - ApplyOutOfSyncOnly=true
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
   name: mcp-unifi
   namespace: argocd
 spec:

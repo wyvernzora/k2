@@ -7928,7 +7928,7 @@ data:
         "to": "now"
       },
       "timezone": "browser",
-      "title": "K2 / Storage and Databases",
+      "title": "K2 / Databases",
       "uid": "k2-storage-databases",
       "panels": [
         {
@@ -7946,92 +7946,6 @@ data:
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 0
-          },
-          "id": 1,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "expr": "count(longhorn_volume_state)",
-              "refId": "A"
-            }
-          ],
-          "title": "Longhorn volumes",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 6,
-            "x": 6,
-            "y": 0
-          },
-          "id": 2,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "expr": "sum(longhorn_node_status{condition=\"Ready\",status=\"True\"})",
-              "refId": "A"
-            }
-          ],
-          "title": "Longhorn nodes ready",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 6,
-            "x": 12,
             "y": 0
           },
           "id": 3,
@@ -8074,7 +7988,7 @@ data:
           "gridPos": {
             "h": 4,
             "w": 6,
-            "x": 18,
+            "x": 6,
             "y": 0
           },
           "id": 4,
@@ -8110,60 +8024,6 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "Bps"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 24,
-            "x": 0,
-            "y": 4
-          },
-          "id": 5,
-          "options": {
-            "legend": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "displayMode": "table",
-              "placement": "right",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "expr": "sum by (volume) (longhorn_volume_read_throughput)",
-              "legendFormat": "{{volume}} read",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "expr": "sum by (volume) (longhorn_volume_write_throughput)",
-              "legendFormat": "{{volume}} write",
-              "refId": "B"
-            }
-          ],
-          "title": "Longhorn volume throughput",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
               "unit": "ops"
             },
             "overrides": []
@@ -8172,7 +8032,7 @@ data:
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 12
+            "y": 4
           },
           "id": 6,
           "options": {

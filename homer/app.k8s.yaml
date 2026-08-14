@@ -27,10 +27,6 @@ data:
             subtitle: Cilium observability
             logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/cilium.svg
             url: https://hubble.wyvernzora.io
-          - name: Longhorn
-            subtitle: Storage dashboard
-            logo: https://cdn.jsdelivr.net/gh/selfhst/icons/svg/rancher-longhorn-dark.svg
-            url: https://longhorn.wyvernzora.io
       - name: Identity
         items:
           - name: Pocket ID
@@ -88,7 +84,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/homer-config: 5a5b3dc1b55493e6b666f71b8f1524a3d294eb4b93ef39b46eae61ec11c62055
+        checksum/homer-config: a80c481bf53493e6874f6e7dab040237ea28b8eec30dc910abd6a34240ab09aa
       labels:
         app.kubernetes.io/component: dashboard
         app.kubernetes.io/name: homer
