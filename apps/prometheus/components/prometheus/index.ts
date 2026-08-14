@@ -140,8 +140,15 @@ function grafanaDashboardSidecarValues() {
 
 function prometheusSpec() {
   return {
+    // Stopped for the storage migration. The claim template is immutable, so
+    // moving to the appliance means deleting the PVC and recreating it under
+    // the same templated name; the TSDB is copied across while nothing writes
+    // to it. Restored to 1 in the follow-up commit.
+    replicas: 0,
     retention: "15d",
-    retentionSize: "15GiB",
+    // Was 15GiB, which bound before the 15d window did and capped history at
+    // ~9.75 days. 30GiB lets the time retention be the limit.
+    retentionSize: "30GiB",
     ruleSelectorNilUsesHelmValues: false,
     ruleSelector: {},
     ruleNamespaceSelector: {},
@@ -191,7 +198,7 @@ function prometheusStorageSpec() {
 
 function prometheusStorageClaimSpec() {
   return {
-    storageClassName: "longhorn",
+    storageClassName: "k2-iscsi",
     accessModes: ["ReadWriteOnce"],
     resources: { requests: storageRequests() },
   };
@@ -199,6 +206,6 @@ function prometheusStorageClaimSpec() {
 
 function storageRequests() {
   return {
-    storage: "20Gi",
+    storage: "32Gi",
   };
 }
