@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.26
 
 ARG BASE_IMAGE=ubuntu:26.04
-ARG KAIROS_INIT_VERSION=v0.17.0
+# Supplied by k2-tools from kairos/versions.env; keep the version pin single-sourced.
+ARG KAIROS_INIT_VERSION
 
 FROM quay.io/kairos/kairos-init:${KAIROS_INIT_VERSION} AS kairos-init
 
