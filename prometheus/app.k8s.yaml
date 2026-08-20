@@ -8320,8 +8320,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-alertmanager
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8340,8 +8340,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8360,8 +8360,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8378,8 +8378,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8461,8 +8461,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_datasource: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8502,8 +8502,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8524,8 +8524,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8546,8 +8546,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8568,8 +8568,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8590,8 +8590,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8612,8 +8612,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8634,8 +8634,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8656,8 +8656,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8678,8 +8678,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8700,8 +8700,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8722,8 +8722,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8744,8 +8744,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8766,8 +8766,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8788,8 +8788,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8810,8 +8810,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8832,8 +8832,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8854,8 +8854,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8876,8 +8876,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8898,8 +8898,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8920,8 +8920,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8942,8 +8942,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8964,8 +8964,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8986,8 +8986,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9008,8 +9008,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9030,8 +9030,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9052,8 +9052,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9309,8 +9309,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9433,8 +9433,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9529,8 +9529,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9553,8 +9553,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9657,8 +9657,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9690,8 +9690,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     jobLabel: coredns
     k2.wyvernzora.io/app: prometheus
@@ -9717,8 +9717,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     jobLabel: kube-etcd
     k2.wyvernzora.io/app: prometheus
@@ -9747,8 +9747,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9773,8 +9773,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10250,8 +10250,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10274,8 +10274,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
         app.kubernetes.io/part-of: kube-prometheus-stack
-        app.kubernetes.io/version: 88.2.0
-        chart: kube-prometheus-stack-88.2.0
+        app.kubernetes.io/version: 88.3.0
+        chart: kube-prometheus-stack-88.3.0
         heritage: Helm
         release: prometheus
     spec:
@@ -10361,8 +10361,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10421,8 +10421,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10460,8 +10460,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10549,8 +10549,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10704,8 +10704,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10736,8 +10736,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10918,8 +10918,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10975,8 +10975,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11010,8 +11010,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11037,8 +11037,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11064,8 +11064,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11091,8 +11091,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11118,8 +11118,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11207,8 +11207,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11355,8 +11355,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11477,8 +11477,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11799,8 +11799,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11830,8 +11830,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11907,8 +11907,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11932,8 +11932,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11965,8 +11965,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12034,8 +12034,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12085,8 +12085,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12374,8 +12374,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12580,8 +12580,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12694,8 +12694,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12784,8 +12784,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12988,8 +12988,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13031,8 +13031,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13134,8 +13134,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13464,8 +13464,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13494,8 +13494,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13551,8 +13551,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13644,8 +13644,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13993,8 +13993,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14025,8 +14025,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14054,8 +14054,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14094,8 +14094,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14123,8 +14123,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14239,8 +14239,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14275,8 +14275,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14308,8 +14308,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14374,8 +14374,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14397,8 +14397,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14428,8 +14428,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14457,8 +14457,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14487,8 +14487,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14517,8 +14517,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14535,8 +14535,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
         app.kubernetes.io/part-of: kube-prometheus-stack
-        app.kubernetes.io/version: 88.2.0
-        chart: kube-prometheus-stack-88.2.0
+        app.kubernetes.io/version: 88.3.0
+        chart: kube-prometheus-stack-88.3.0
         heritage: Helm
         release: prometheus
       name: prometheus-kube-prometheus-admission-create
@@ -14580,8 +14580,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 88.2.0
-    chart: kube-prometheus-stack-88.2.0
+    app.kubernetes.io/version: 88.3.0
+    chart: kube-prometheus-stack-88.3.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14598,8 +14598,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
         app.kubernetes.io/part-of: kube-prometheus-stack
-        app.kubernetes.io/version: 88.2.0
-        chart: kube-prometheus-stack-88.2.0
+        app.kubernetes.io/version: 88.3.0
+        chart: kube-prometheus-stack-88.3.0
         heritage: Helm
         release: prometheus
       name: prometheus-kube-prometheus-admission-patch
