@@ -430,7 +430,7 @@ spec:
         - env:
             - name: KURA_NODES_TARGET
               value: /opt/n8n/custom
-          image: ghcr.io/wyvernzora/kura/n8n-nodes:main@sha256:2509c5fd557c6e8fc791267b3c6f60263b3b0a8bfd8ff8ac57747e9ebfe1a911
+          image: ghcr.io/wyvernzora/kura/n8n-nodes:main@sha256:1a8a0fae3059e357b62ff27512564677ae4b2e02a5ea6c16ebdf9ed06f2ce9ff
           imagePullPolicy: Always
           name: install-kura-nodes
           resources:
