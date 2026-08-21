@@ -5,6 +5,7 @@ Description=Hourly K2 ZFS cadence snapshot
 OnCalendar=hourly
 Persistent=true
 RandomizedDelaySec=2min
+AccuracySec=1s
 
 [Install]
 WantedBy=timers.target
