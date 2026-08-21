@@ -319,9 +319,39 @@ function storageZvolPvcRecordingGroup() {
   return {
     name: "k2.storage.zvol-pvc",
     rules: [
+      storageIscsiPvcUsedRecordingRule(),
+      storageIscsiPvcAllocationRecordingRule(),
+      storageIscsiPvcUsedRatioRecordingRule(),
       storageZvolPvcRecordingRule("k2_zfs_volume_size_bytes", "k2_zfs_volume_pvc_size_bytes"),
-      storageZvolPvcRecordingRule("k2_zfs_volume_used_bytes", "k2_zfs_volume_pvc_used_bytes"),
+      storageZvolPvcRecordingRule("k2_zfs_volume_used_bytes", "k2_zfs_volume_pvc_total_used_bytes"),
+      storageZvolPvcRecordingRule("k2_zfs_volume_dataset_used_bytes", "k2_zfs_volume_pvc_dataset_used_bytes"),
+      storageZvolPvcRecordingRule("k2_zfs_volume_snapshot_used_bytes", "k2_zfs_volume_pvc_snapshot_used_bytes"),
     ],
+  };
+}
+
+function storageIscsiPvcUsedRecordingRule() {
+  return {
+    record: "k2_iscsi_pvc_used_bytes",
+    expr: RuleExpr.fromString(
+      `max by (namespace, persistentvolumeclaim, volumename) (kubelet_volume_stats_used_bytes * on (namespace, persistentvolumeclaim) group_left(volumename) max by (namespace, persistentvolumeclaim, volumename) (kube_persistentvolumeclaim_info{storageclass="k2-iscsi",volumename!=""}))`,
+    ),
+  };
+}
+
+function storageIscsiPvcAllocationRecordingRule() {
+  return {
+    record: "k2_iscsi_pvc_allocation_bytes",
+    expr: RuleExpr.fromString(
+      `max by (namespace, persistentvolumeclaim, volumename) (label_replace(kube_persistentvolume_capacity_bytes, "volumename", "$1", "persistentvolume", "(.*)") * on (volumename) group_left(namespace, persistentvolumeclaim) max by (namespace, persistentvolumeclaim, volumename) (kube_persistentvolumeclaim_info{storageclass="k2-iscsi",volumename!=""}))`,
+    ),
+  };
+}
+
+function storageIscsiPvcUsedRatioRecordingRule() {
+  return {
+    record: "k2_iscsi_pvc_used_ratio",
+    expr: RuleExpr.fromString("k2_iscsi_pvc_used_bytes / k2_iscsi_pvc_allocation_bytes"),
   };
 }
 

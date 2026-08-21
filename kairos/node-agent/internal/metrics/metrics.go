@@ -55,33 +55,35 @@ type Collector struct {
 	cfg Config
 	run runner.Runner
 
-	collectorSuccess *desc
-	nodeBuildInfo    *desc
-	zfsPoolHealth    *desc
-	zfsPoolSize      *desc
-	zfsPoolAlloc     *desc
-	zfsPoolFrag      *desc
-	zfsPoolCap       *desc
-	zfsKeyStatus     *desc
-	zfsVolumeSize    *desc
-	zfsVolumeUsed    *desc
-	zfsVolumes       *desc
-	lioTargets       *desc
-	lioLUNs          *desc
-	lioSessions      *desc
-	lioSaveInSync    *desc
-	smartTemp        *desc
-	smartPctUsed     *desc
-	smartMediaErrors *desc
-	smartPowerHours  *desc
-	storageHealthy   *desc
-	storageLastRun   *desc
-	snapshotLast     *desc
-	snapshotCount    *desc
-	bootAssessArmed  *desc
-	bootAssessOn     *desc
-	bootPassive      *desc
-	bootUpgradeFail  *desc
+	collectorSuccess  *desc
+	nodeBuildInfo     *desc
+	zfsPoolHealth     *desc
+	zfsPoolSize       *desc
+	zfsPoolAlloc      *desc
+	zfsPoolFrag       *desc
+	zfsPoolCap        *desc
+	zfsKeyStatus      *desc
+	zfsVolumeSize     *desc
+	zfsVolumeUsed     *desc
+	zfsVolumeDataset  *desc
+	zfsVolumeSnapshot *desc
+	zfsVolumes        *desc
+	lioTargets        *desc
+	lioLUNs           *desc
+	lioSessions       *desc
+	lioSaveInSync     *desc
+	smartTemp         *desc
+	smartPctUsed      *desc
+	smartMediaErrors  *desc
+	smartPowerHours   *desc
+	storageHealthy    *desc
+	storageLastRun    *desc
+	snapshotLast      *desc
+	snapshotCount     *desc
+	bootAssessArmed   *desc
+	bootAssessOn      *desc
+	bootPassive       *desc
+	bootUpgradeFail   *desc
 }
 
 type groupResult struct {
@@ -116,31 +118,33 @@ func NewCollector(cfg Config, run runner.Runner) *Collector {
 			"K2 node image build information.",
 			[]string{"target", "flavor", "flavor_version", "kairos_version", "kairos_agent_version", "kubernetes_distro", "kubernetes_version", "role", "arch", "hardware", "source_commit"},
 		},
-		zfsPoolHealth:    &desc{"k2_zfs_pool_health", "ZFS pool health, 1 when ONLINE.", []string{"pool"}},
-		zfsPoolSize:      &desc{"k2_zfs_pool_size_bytes", "ZFS pool size in bytes.", []string{"pool"}},
-		zfsPoolAlloc:     &desc{"k2_zfs_pool_alloc_bytes", "ZFS pool allocated bytes.", []string{"pool"}},
-		zfsPoolFrag:      &desc{"k2_zfs_pool_fragmentation_ratio", "ZFS pool fragmentation ratio.", []string{"pool"}},
-		zfsPoolCap:       &desc{"k2_zfs_pool_capacity_ratio", "ZFS pool capacity ratio.", []string{"pool"}},
-		zfsKeyStatus:     &desc{"k2_zfs_keystatus_available", "ZFS encrypted dataset key availability.", []string{"dataset"}},
-		zfsVolumeSize:    &desc{"k2_zfs_volume_size_bytes", "ZFS volume size in bytes.", []string{"volume"}},
-		zfsVolumeUsed:    &desc{"k2_zfs_volume_used_bytes", "ZFS volume used bytes.", []string{"volume"}},
-		zfsVolumes:       &desc{"k2_zfs_volumes", "Total ZFS volume count.", nil},
-		lioTargets:       &desc{"k2_lio_targets", "LIO iSCSI target count.", nil},
-		lioLUNs:          &desc{"k2_lio_luns", "LIO LUN count.", nil},
-		lioSessions:      &desc{"k2_lio_sessions", "LIO node ACL count; ACLs are cached, so this is not a live session count.", nil},
-		lioSaveInSync:    &desc{"k2_lio_saveconfig_in_sync", "Whether live LIO target count matches saveconfig.", nil},
-		smartTemp:        &desc{"k2_smart_temperature_celsius", "SMART temperature in Celsius.", []string{"device"}},
-		smartPctUsed:     &desc{"k2_smart_percentage_used", "NVMe SMART percentage used.", []string{"device"}},
-		smartMediaErrors: &desc{"k2_smart_media_errors", "SMART media error count.", []string{"device"}},
-		smartPowerHours:  &desc{"k2_smart_power_on_hours", "SMART power-on hours.", []string{"device"}},
-		storageHealthy:   &desc{"k2_storage_healthy", "K2 storage health status.", nil},
-		storageLastRun:   &desc{"k2_storage_health_last_run_timestamp_seconds", "Unix timestamp of the last storage health status write.", nil},
-		snapshotLast:     &desc{"k2_zfs_last_snapshot_timestamp_seconds", "Unix creation time of the newest cadence snapshot per prefix.", []string{"prefix"}},
-		snapshotCount:    &desc{"k2_zfs_snapshot_count", "Distinct cadence snapshot points retained per prefix.", []string{"prefix"}},
-		bootAssessArmed:  &desc{"k2_boot_assessment_armed", "Whether GRUB's boot_assessment_tentative sentinel is still set; the next reboot would roll this node back.", nil},
-		bootAssessOn:     &desc{"k2_boot_assessment_enabled", "Whether GRUB boot assessment is enabled for this node.", nil},
-		bootPassive:      &desc{"k2_boot_slot_passive", "Whether this boot came up on the passive (fallback) slot.", nil},
-		bootUpgradeFail:  &desc{"k2_boot_upgrade_failure", "Whether this boot was stamped as following a failed upgrade.", nil},
+		zfsPoolHealth:     &desc{"k2_zfs_pool_health", "ZFS pool health, 1 when ONLINE.", []string{"pool"}},
+		zfsPoolSize:       &desc{"k2_zfs_pool_size_bytes", "Total ZFS pool capacity in bytes.", []string{"pool"}},
+		zfsPoolAlloc:      &desc{"k2_zfs_pool_alloc_bytes", "Total ZFS pool allocated bytes, including datasets, snapshots, and metadata.", []string{"pool"}},
+		zfsPoolFrag:       &desc{"k2_zfs_pool_fragmentation_ratio", "ZFS pool fragmentation ratio.", []string{"pool"}},
+		zfsPoolCap:        &desc{"k2_zfs_pool_capacity_ratio", "Total ZFS pool allocated bytes divided by total pool capacity.", []string{"pool"}},
+		zfsKeyStatus:      &desc{"k2_zfs_keystatus_available", "ZFS encrypted dataset key availability.", []string{"dataset"}},
+		zfsVolumeSize:     &desc{"k2_zfs_volume_size_bytes", "Logical ZFS volume size in bytes.", []string{"volume"}},
+		zfsVolumeUsed:     &desc{"k2_zfs_volume_used_bytes", "Total ZFS pool bytes consumed by the volume, including snapshots.", []string{"volume"}},
+		zfsVolumeDataset:  &desc{"k2_zfs_volume_dataset_used_bytes", "ZFS pool bytes consumed by the live volume dataset, excluding snapshots.", []string{"volume"}},
+		zfsVolumeSnapshot: &desc{"k2_zfs_volume_snapshot_used_bytes", "ZFS pool bytes consumed by snapshots of the volume.", []string{"volume"}},
+		zfsVolumes:        &desc{"k2_zfs_volumes", "Total ZFS volume count.", nil},
+		lioTargets:        &desc{"k2_lio_targets", "LIO iSCSI target count.", nil},
+		lioLUNs:           &desc{"k2_lio_luns", "LIO LUN count.", nil},
+		lioSessions:       &desc{"k2_lio_sessions", "LIO node ACL count; ACLs are cached, so this is not a live session count.", nil},
+		lioSaveInSync:     &desc{"k2_lio_saveconfig_in_sync", "Whether live LIO target count matches saveconfig.", nil},
+		smartTemp:         &desc{"k2_smart_temperature_celsius", "SMART temperature in Celsius.", []string{"device"}},
+		smartPctUsed:      &desc{"k2_smart_percentage_used", "NVMe SMART percentage used.", []string{"device"}},
+		smartMediaErrors:  &desc{"k2_smart_media_errors", "SMART media error count.", []string{"device"}},
+		smartPowerHours:   &desc{"k2_smart_power_on_hours", "SMART power-on hours.", []string{"device"}},
+		storageHealthy:    &desc{"k2_storage_healthy", "K2 storage health status.", nil},
+		storageLastRun:    &desc{"k2_storage_health_last_run_timestamp_seconds", "Unix timestamp of the last storage health status write.", nil},
+		snapshotLast:      &desc{"k2_zfs_last_snapshot_timestamp_seconds", "Unix creation time of the newest cadence snapshot per prefix.", []string{"prefix"}},
+		snapshotCount:     &desc{"k2_zfs_snapshot_count", "Distinct cadence snapshot points retained per prefix.", []string{"prefix"}},
+		bootAssessArmed:   &desc{"k2_boot_assessment_armed", "Whether GRUB's boot_assessment_tentative sentinel is still set; the next reboot would roll this node back.", nil},
+		bootAssessOn:      &desc{"k2_boot_assessment_enabled", "Whether GRUB boot assessment is enabled for this node.", nil},
+		bootPassive:       &desc{"k2_boot_slot_passive", "Whether this boot came up on the passive (fallback) slot.", nil},
+		bootUpgradeFail:   &desc{"k2_boot_upgrade_failure", "Whether this boot was stamped as following a failed upgrade.", nil},
 	}
 }
 
@@ -352,7 +356,7 @@ func writeTextfile(path string, content string) error {
 }
 
 func (c *Collector) collectZFSPools() groupResult {
-	out, err := c.run.Output("zpool", "list", "-Hp", "-o", "name,size,alloc,frag,cap,health")
+	out, err := c.run.Output("zpool", "list", "-Hp", "-o", "name,size,alloc,frag,health")
 	if err != nil {
 		c.debugf("zpool list failed: %v", err)
 		return groupResult{success: false}
@@ -360,20 +364,20 @@ func (c *Collector) collectZFSPools() groupResult {
 	result := groupResult{success: true}
 	for _, line := range lines(out) {
 		fields := strings.Fields(line)
-		if len(fields) != 6 {
+		if len(fields) != 5 {
 			result.success = false
 			continue
 		}
 		size, okSize := parseFloat(fields[1])
 		alloc, okAlloc := parseFloat(fields[2])
 		frag, okFrag := parseRatio(fields[3])
-		capacity, okCap := parseRatio(fields[4])
-		if !okSize || !okAlloc || !okFrag || !okCap {
+		if !okSize || size <= 0 || !okAlloc || !okFrag {
 			result.success = false
 			continue
 		}
+		capacity := alloc / size
 		healthValue := 0.0
-		if fields[5] == "ONLINE" {
+		if fields[4] == "ONLINE" {
 			healthValue = 1
 		}
 		pool := fields[0]
@@ -422,7 +426,7 @@ func (c *Collector) collectZFSKeyStatus() groupResult {
 }
 
 func (c *Collector) collectZFSVolumes() groupResult {
-	out, err := c.run.Output("zfs", "list", "-Hp", "-t", "volume", "-o", "name,volsize,used")
+	out, err := c.run.Output("zfs", "list", "-Hp", "-t", "volume", "-o", "name,volsize,used,usedbydataset,usedbysnapshots")
 	if err != nil {
 		c.debugf("zfs volume list failed: %v", err)
 		return groupResult{success: false}
@@ -431,13 +435,15 @@ func (c *Collector) collectZFSVolumes() groupResult {
 	count := 0
 	for _, line := range lines(out) {
 		fields := strings.Fields(line)
-		if len(fields) != 3 {
+		if len(fields) != 5 {
 			result.success = false
 			continue
 		}
 		size, okSize := parseFloat(fields[1])
 		used, okUsed := parseFloat(fields[2])
-		if !okSize || !okUsed {
+		datasetUsed, okDataset := parseFloat(fields[3])
+		snapshotUsed, okSnapshot := parseFloat(fields[4])
+		if !okSize || !okUsed || !okDataset || !okSnapshot {
 			result.success = false
 			continue
 		}
@@ -445,6 +451,8 @@ func (c *Collector) collectZFSVolumes() groupResult {
 		result.samples = append(result.samples,
 			sample{desc: c.zfsVolumeSize, value: size, labels: []string{fields[0]}},
 			sample{desc: c.zfsVolumeUsed, value: used, labels: []string{fields[0]}},
+			sample{desc: c.zfsVolumeDataset, value: datasetUsed, labels: []string{fields[0]}},
+			sample{desc: c.zfsVolumeSnapshot, value: snapshotUsed, labels: []string{fields[0]}},
 		)
 	}
 	result.samples = append(result.samples, sample{desc: c.zfsVolumes, value: float64(count)})

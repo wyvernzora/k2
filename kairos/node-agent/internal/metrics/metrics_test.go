@@ -12,7 +12,7 @@ import (
 func TestCollectZFSPools(t *testing.T) {
 	c := testCollector(fakeRunner{
 		outputs: map[string]string{
-			"zpool list -Hp -o name,size,alloc,frag,cap,health": "tank\t1000\t250\t12\t25\tONLINE\nbad line",
+			"zpool list -Hp -o name,size,alloc,frag,health": "tank\t1000\t255\t12\tONLINE\nbad line",
 		},
 	})
 
@@ -22,9 +22,9 @@ func TestCollectZFSPools(t *testing.T) {
 	}
 	assertSample(t, got.samples, c.zfsPoolHealth, []string{"tank"}, 1)
 	assertSample(t, got.samples, c.zfsPoolSize, []string{"tank"}, 1000)
-	assertSample(t, got.samples, c.zfsPoolAlloc, []string{"tank"}, 250)
+	assertSample(t, got.samples, c.zfsPoolAlloc, []string{"tank"}, 255)
 	assertSample(t, got.samples, c.zfsPoolFrag, []string{"tank"}, 0.12)
-	assertSample(t, got.samples, c.zfsPoolCap, []string{"tank"}, 0.25)
+	assertSample(t, got.samples, c.zfsPoolCap, []string{"tank"}, 0.255)
 }
 
 func TestCollectZFSKeyStatus(t *testing.T) {
@@ -52,7 +52,7 @@ func TestCollectZFSKeyStatus(t *testing.T) {
 func TestCollectZFSVolumes(t *testing.T) {
 	c := testCollector(fakeRunner{
 		outputs: map[string]string{
-			"zfs list -Hp -t volume -o name,volsize,used": "tank/vol1\t1073741824\t4096\nbroken",
+			"zfs list -Hp -t volume -o name,volsize,used,usedbydataset,usedbysnapshots": "tank/vol1\t1073741824\t4096\t3072\t1024\nbroken",
 		},
 	})
 
@@ -62,6 +62,8 @@ func TestCollectZFSVolumes(t *testing.T) {
 	}
 	assertSample(t, got.samples, c.zfsVolumeSize, []string{"tank/vol1"}, 1073741824)
 	assertSample(t, got.samples, c.zfsVolumeUsed, []string{"tank/vol1"}, 4096)
+	assertSample(t, got.samples, c.zfsVolumeDataset, []string{"tank/vol1"}, 3072)
+	assertSample(t, got.samples, c.zfsVolumeSnapshot, []string{"tank/vol1"}, 1024)
 	assertSample(t, got.samples, c.zfsVolumes, nil, 1)
 }
 
@@ -400,11 +402,11 @@ func TestRenderAndTextfileWrite(t *testing.T) {
 		MetadataFile: testRoleMetadata(t, "storage"),
 	}, fakeRunner{
 		outputs: map[string]string{
-			"zpool list -Hp -o name,size,alloc,frag,cap,health":         "tank\t1000\t250\t0\t25\tONLINE",
-			"zpool list -Hp -o name":                                    "tank",
-			"zfs get -Hp -o name,value keystatus -r -t filesystem tank": "tank\tavailable",
-			"zfs list -Hp -t volume -o name,volsize,used":               "tank/vol1\t1073741824\t4096",
-			"smartctl --scan -j":                                        `{"devices":[]}`,
+			"zpool list -Hp -o name,size,alloc,frag,health":                             "tank\t1000\t250\t0\tONLINE",
+			"zpool list -Hp -o name":                                                    "tank",
+			"zfs get -Hp -o name,value keystatus -r -t filesystem tank":                 "tank\tavailable",
+			"zfs list -Hp -t volume -o name,volsize,used,usedbydataset,usedbysnapshots": "tank/vol1\t1073741824\t4096\t3072\t1024",
+			"smartctl --scan -j":                                                        `{"devices":[]}`,
 		},
 	})
 	body := c.Render()
@@ -416,6 +418,8 @@ func TestRenderAndTextfileWrite(t *testing.T) {
 		`k2_storage_healthy 1`,
 		`k2_collector_success{collector="zfs_pools"} 1`,
 		`k2_zfs_volume_size_bytes{volume="tank/vol1"} 1.073741824e+09`,
+		`k2_zfs_volume_dataset_used_bytes{volume="tank/vol1"} 3072`,
+		`k2_zfs_volume_snapshot_used_bytes{volume="tank/vol1"} 1024`,
 	} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("rendered exposition missing %q:\n%s", want, body)
