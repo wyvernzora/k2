@@ -1,7 +1,7 @@
 {
  "uid": "k2-storage-appliance",
  "title": "K2 / Storage Appliance",
- "description": "At-a-glance storage appliance and zvol PVC status.",
+ "description": "PVC expansion pressure from guest-visible filesystem use, plus total storage-pool pressure including snapshots.",
  "tags": [
   "k2",
   "storage"
@@ -20,14 +20,14 @@
   "list": [
    {
     "name": "zvol",
-    "label": "zvol",
-    "description": "ZFS dataset backing a PVC. Empty when no k2-iscsi PVCs exist.",
+    "label": "PVC volume",
+    "description": "Bound volume name for a k2-iscsi PVC. Empty when no matching PVCs exist.",
     "type": "query",
     "datasource": {
      "type": "prometheus",
      "uid": "prometheus"
     },
-    "query": "label_values(k2_zfs_volume_size_bytes, volume)",
+    "query": "label_values(k2_zfs_volume_pvc_size_bytes, volumename)",
     "refresh": 1,
     "includeAll": true,
     "allValue": ".*",
@@ -319,8 +319,8 @@
   {
    "type": "gauge",
    "id": 6,
-   "title": "Pool capacity",
-   "description": "Allocated bytes divided by pool size bytes.",
+   "title": "Total pool used",
+   "description": "All bytes allocated from the ZFS pool divided by total pool capacity. This includes live datasets, snapshots, and ZFS metadata.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -596,7 +596,7 @@
    "type": "timeseries",
    "id": 31,
    "title": "Per-PVC ZFS throughput",
-   "description": "Read plus write bytes/s per zvol, at the ZFS layer, so it shows WHICH volume is busy. The join against k2_zfs_volume_pvc_used_bytes only supplies namespace and claim labels; multiplying by zero plus one keeps the value a rate rather than scaling it by used bytes. Resolution is bounded by the 30s scrape interval, so brief spikes shorter than that are not visible.",
+   "description": "Read plus write bytes/s per zvol, at the ZFS layer, so it shows WHICH volume is busy. The join against k2_zfs_volume_pvc_size_bytes only supplies namespace and claim labels; multiplying by zero plus one keeps the value a rate rather than scaling it by size. Resolution is bounded by the 30s scrape interval, so brief spikes shorter than that are not visible.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -646,7 +646,7 @@
     {
      "refId": "A",
      "editorMode": "code",
-     "expr": "label_replace(\n  sum by (dataset) (rate(node_zfs_zpool_dataset_nread{job=\"storage-appliance\",instance=\"k2-st-0e12\"}[$__rate_interval]))\n  + sum by (dataset) (rate(node_zfs_zpool_dataset_nwritten{job=\"storage-appliance\",instance=\"k2-st-0e12\"}[$__rate_interval])),\n  \"volume\", \"$1\", \"dataset\", \"(.*)\")\n* on (volume) group_left(namespace, persistentvolumeclaim)\n  (max by (volume, namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_used_bytes{job=\"storage-appliance\",instance=\"k2-st-0e12\"}) * 0 + 1)",
+     "expr": "label_replace(\n  sum by (dataset) (rate(node_zfs_zpool_dataset_nread{job=\"storage-appliance\",instance=\"k2-st-0e12\"}[$__rate_interval]))\n  + sum by (dataset) (rate(node_zfs_zpool_dataset_nwritten{job=\"storage-appliance\",instance=\"k2-st-0e12\"}[$__rate_interval])),\n  \"volume\", \"$1\", \"dataset\", \"(.*)\")\n* on (volume) group_left(namespace, persistentvolumeclaim)\n  (max by (volume, namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_size_bytes{job=\"storage-appliance\",instance=\"k2-st-0e12\"}) * 0 + 1)",
      "legendFormat": "{{namespace}}/{{persistentvolumeclaim}}",
      "range": true
     }
@@ -735,8 +735,8 @@
   {
    "type": "timeseries",
    "id": 26,
-   "title": "Selected PVC size and used",
-   "description": "No data means no matching k2-iscsi PVC exists. Legends use namespace/PVC names from the recording-rule join.",
+   "title": "Selected PVC capacity and storage footprint",
+   "description": "PVC used is kubelet-reported filesystem use. Allocation is the bound PV capacity. ZFS live and snapshots are separate physical pool costs and do not affect the PVC used percentage.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -782,15 +782,36 @@
     {
      "refId": "A",
      "editorMode": "code",
-     "expr": "k2_zfs_volume_pvc_size_bytes{volume=~\"${zvol:regex}\"}",
-     "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} size",
+     "expr": "k2_iscsi_pvc_allocation_bytes{volumename=~\"${zvol:regex}\"}",
+     "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} allocation",
      "range": true
     },
     {
      "refId": "B",
      "editorMode": "code",
-     "expr": "k2_zfs_volume_pvc_used_bytes{volume=~\"${zvol:regex}\"}",
-     "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} used",
+     "expr": "k2_iscsi_pvc_used_bytes{volumename=~\"${zvol:regex}\"}",
+     "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} PVC used",
+     "range": true
+    },
+    {
+     "refId": "C",
+     "editorMode": "code",
+     "expr": "k2_zfs_volume_pvc_dataset_used_bytes{volumename=~\"${zvol:regex}\"}",
+     "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} ZFS live",
+     "range": true
+    },
+    {
+     "refId": "D",
+     "editorMode": "code",
+     "expr": "k2_zfs_volume_pvc_snapshot_used_bytes{volumename=~\"${zvol:regex}\"}",
+     "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} snapshots",
+     "range": true
+    },
+    {
+     "refId": "E",
+     "editorMode": "code",
+     "expr": "k2_zfs_volume_pvc_total_used_bytes{volumename=~\"${zvol:regex}\"}",
+     "legendFormat": "{{namespace}}/{{persistentvolumeclaim}} ZFS total",
      "range": true
     }
    ]
@@ -799,7 +820,7 @@
    "type": "table",
    "id": 27,
    "title": "All zvol PVCs",
-   "description": "Sorted by percent used (used / provisioned), highest first. Percent is red above 70%. Provisioning is thin, so used is what the volume actually occupies on the pool, not what it reserves. No data means no zvol-backed PVCs exist.",
+   "description": "Sorted by PVC used percent: kubelet-reported filesystem bytes divided only by bound PV allocation. Snapshot bytes are shown separately and never enter that percentage. ZFS total is the volume's complete physical pool footprint.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -821,7 +842,7 @@
      {
       "matcher": {
        "id": "byRegexp",
-       "options": "^(size|used)$"
+       "options": "^(allocation|PVC used|ZFS live|snapshots|ZFS total)$"
       },
       "properties": [
        {
@@ -864,8 +885,12 @@
            "value": null
           },
           {
-           "color": "red",
+           "color": "yellow",
            "value": 0.7
+          },
+          {
+           "color": "red",
+           "value": 0.85
           }
          ]
         }
@@ -897,21 +922,42 @@
      "editorMode": "code",
      "format": "table",
      "instant": true,
-     "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_size_bytes)"
+     "expr": "max by (namespace, persistentvolumeclaim) (k2_iscsi_pvc_allocation_bytes)"
     },
     {
      "refId": "B",
      "editorMode": "code",
      "format": "table",
      "instant": true,
-     "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_used_bytes)"
+     "expr": "max by (namespace, persistentvolumeclaim) (k2_iscsi_pvc_used_bytes)"
     },
     {
      "refId": "C",
      "editorMode": "code",
      "format": "table",
      "instant": true,
-     "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_used_bytes) / max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_size_bytes)"
+     "expr": "max by (namespace, persistentvolumeclaim) (k2_iscsi_pvc_used_ratio)"
+    },
+    {
+     "refId": "D",
+     "editorMode": "code",
+     "format": "table",
+     "instant": true,
+     "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_dataset_used_bytes)"
+    },
+    {
+     "refId": "E",
+     "editorMode": "code",
+     "format": "table",
+     "instant": true,
+     "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_snapshot_used_bytes)"
+    },
+    {
+     "refId": "F",
+     "editorMode": "code",
+     "format": "table",
+     "instant": true,
+     "expr": "max by (namespace, persistentvolumeclaim) (k2_zfs_volume_pvc_total_used_bytes)"
     }
    ],
    "transformations": [
@@ -930,13 +976,19 @@
        "persistentvolumeclaim": 1,
        "Value #A": 3,
        "Value #B": 4,
-       "Value #C": 2
+       "Value #C": 2,
+       "Value #D": 5,
+       "Value #E": 6,
+       "Value #F": 7
       },
       "renameByName": {
        "persistentvolumeclaim": "PVC",
-       "Value #A": "size",
-       "Value #B": "used",
-       "Value #C": "used %"
+       "Value #A": "allocation",
+       "Value #B": "PVC used",
+       "Value #C": "used %",
+       "Value #D": "ZFS live",
+       "Value #E": "snapshots",
+       "Value #F": "ZFS total"
       }
      }
     }
@@ -1672,8 +1724,8 @@
   {
    "type": "timeseries",
    "id": 24,
-   "title": "Pool capacity over time",
-   "description": "Collector ratio is already 0-1; this query does not divide it again.",
+   "title": "Total pool used over time",
+   "description": "All ZFS pool allocation divided by total pool capacity, including live datasets, snapshots, and ZFS metadata.",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"

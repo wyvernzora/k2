@@ -92,7 +92,7 @@ function leafGroup() {
         "30m",
         "warning",
         "ZFS pool {{ $labels.pool }} is over 80% full",
-        "ZFS performance degrades well before 100%; expand or reclaim before it becomes urgent.",
+        "Total pool allocation, including live datasets, snapshots, and metadata, is above 80%. Expand or reclaim before it becomes urgent.",
       ),
 
       // The collector's own health. Without this a broken collector looks

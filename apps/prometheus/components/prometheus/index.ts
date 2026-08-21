@@ -141,9 +141,9 @@ function grafanaDashboardSidecarValues() {
 function prometheusSpec() {
   return {
     retention: "15d",
-    // Was 15GiB, which bound before the 15d window did and capped history at
-    // ~9.75 days. 30GiB lets the time retention be the limit.
-    retentionSize: "30GiB",
+    // Leave headroom for the WAL, m-mapped head chunks, and compaction. This
+    // is 81.25% of the 32Gi PVC, within Prometheus's recommended 80-85%.
+    retentionSize: "26GiB",
     ruleSelectorNilUsesHelmValues: false,
     ruleSelector: {},
     ruleNamespaceSelector: {},
