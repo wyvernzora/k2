@@ -6,7 +6,7 @@ ARG KAIROS_INIT_VERSION
 
 FROM quay.io/kairos/kairos-init:${KAIROS_INIT_VERSION} AS kairos-init
 
-FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS k2-node-agent
+FROM --platform=$BUILDPLATFORM golang:1.27-bookworm AS k2-node-agent
 
 ARG TARGETOS
 ARG TARGETARCH
