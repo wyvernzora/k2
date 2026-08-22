@@ -111,9 +111,10 @@ func (cmd imageCheckCommand) Run() error {
 
 func (cmd snapshotCommand) Run() error {
 	return snapshot.Run(snapshot.Config{
-		Dataset: cmd.Dataset,
-		Prefix:  cmd.Prefix,
-		Keep:    cmd.Keep,
-		Log:     os.Stdout,
+		Dataset:  cmd.Dataset,
+		Prefix:   cmd.Prefix,
+		Keep:     cmd.Keep,
+		LockPath: "/run/lock/k2-snapshot.lock",
+		Log:      os.Stdout,
 	}, runner.OSRunner{})
 }
