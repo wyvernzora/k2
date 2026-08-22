@@ -2,9 +2,10 @@
 Description=Daily K2 ZFS cadence snapshot
 
 [Timer]
-OnCalendar=daily
+OnCalendar=*-*-* 00:05:00 UTC
 Persistent=true
 RandomizedDelaySec=5min
+AccuracySec=1s
 
 [Install]
 WantedBy=timers.target
