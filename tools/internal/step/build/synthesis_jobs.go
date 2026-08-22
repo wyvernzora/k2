@@ -44,6 +44,9 @@ func synthesizeApp(ctx context.Context, repoRoot string, appRoot string, crdExcl
 	if err != nil {
 		return err
 	}
+	if err := validateNoEmbeddedPrivateKeys(manifest); err != nil {
+		return fmt.Errorf("[%s] %w", appName, err)
+	}
 	appOutDir := filepath.Join(repoRoot, "deploy", appName)
 	if err := os.MkdirAll(appOutDir, 0o755); err != nil {
 		return err
