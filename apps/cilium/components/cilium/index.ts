@@ -21,6 +21,18 @@ const CILIUM_OPERATOR_POD_ANTI_AFFINITY = {
   ],
 };
 
+function hubbleValues() {
+  return {
+    relay: { enabled: true },
+    ui: { enabled: true },
+    tls: {
+      auto: {
+        method: "cronJob",
+      },
+    },
+  };
+}
+
 export class Cilium extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
@@ -64,10 +76,7 @@ export class Cilium extends K2Chart {
       // flow data; UI consumes Relay. Co-located in the cilium namespace
       // (chart default) — they're adjuncts of cilium itself, not a
       // standalone product.
-      hubble: {
-        relay: { enabled: true },
-        ui: { enabled: true },
-      },
+      hubble: hubbleValues(),
     });
 
     for (const pool of cluster.loadBalancerPools) {
