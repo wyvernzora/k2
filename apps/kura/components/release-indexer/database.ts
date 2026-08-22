@@ -21,6 +21,7 @@ export class ReleaseIndexerDatabase extends Construct {
       spec: {
         databaseName: DATABASE_NAME,
         deletionPolicy: DeletionPolicy.RETAIN,
+        extensions: [{ name: "pg_trgm", schema: RELEASES_SCHEMA_NAME }],
         schemas: [RELEASES_SCHEMA_NAME],
       },
     });
