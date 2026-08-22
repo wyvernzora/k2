@@ -450,6 +450,9 @@ spec:
     namespace: postgresql
   databaseName: kura
   deletionPolicy: Retain
+  extensions:
+    - name: pg_trgm
+      schema: releases
   schemas:
     - releases
 ---
