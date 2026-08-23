@@ -1,0 +1,84 @@
+---
+- name: Validate Pocket ID OIDC credentials
+  assert:
+    that:
+      - pve_oidc_client_id is defined
+      - pve_oidc_client_id | length > 0
+      - pve_oidc_client_key is defined
+      - pve_oidc_client_key | length > 0
+    fail_msg: Pocket ID client ID and client key are required for the post-K2 OIDC phase.
+  no_log: true
+
+- name: Read PVE ACLs
+  command: pveum acl list --output-format json
+  changed_when: false
+  register: __pve_oidc_acls
+
+- name: Select authority ACLs
+  set_fact:
+    __pve_oidc_authority_acls: >-
+      {{ (__pve_oidc_acls.stdout | from_json)
+         | selectattr('type', 'equalto', 'user')
+         | selectattr('ugid', 'equalto', pve_oidc_authority_user)
+         | list }}
+
+- name: Validate authority ACL
+  assert:
+    that:
+      - __pve_oidc_authority_acls | length == 1
+      - __pve_oidc_authority_acls[0].path == pve_oidc_path
+      - __pve_oidc_authority_acls[0].roleid == pve_oidc_role
+      - __pve_oidc_authority_acls[0].propagate | int == 1
+    fail_msg: >-
+      {{ pve_oidc_authority_user }} must have exactly the expected propagating
+      {{ pve_oidc_role }} ACL on {{ pve_oidc_path }} before OIDC rights are mirrored.
+
+- name: Configure Pocket ID realm
+  pveum_realm:
+    realm: "{{ pve_oidc_realm }}"
+    issuer_url: "{{ pve_oidc_issuer_url }}"
+    client_id: "{{ pve_oidc_client_id }}"
+    client_key: "{{ pve_oidc_client_key }}"
+    autocreate: true
+    username_claim: username
+    scopes: profile email
+    default: false
+    comment: K2 Pocket ID
+  no_log: true
+
+- name: Create Pocket ID realm user
+  pveum_user:
+    username: "{{ pve_oidc_username }}"
+    realm: "{{ pve_oidc_realm }}"
+
+- name: Mirror PVE administrator permission
+  pveum_acl:
+    username: "{{ pve_oidc_username }}"
+    realm: "{{ pve_oidc_realm }}"
+    role: "{{ pve_oidc_role }}"
+    path: "{{ pve_oidc_path }}"
+
+- name: Read resulting PVE ACLs
+  command: pveum acl list --output-format json
+  changed_when: false
+  register: __pve_oidc_result_acls
+
+- name: Select resulting OIDC ACLs
+  set_fact:
+    __pve_oidc_result_user: "{{ pve_oidc_username }}@{{ pve_oidc_realm }}"
+    __pve_oidc_result_user_acls: >-
+      {{ (__pve_oidc_result_acls.stdout | from_json)
+         | selectattr('type', 'equalto', 'user')
+         | selectattr('ugid', 'equalto', pve_oidc_username ~ '@' ~ pve_oidc_realm)
+         | list }}
+
+- name: Verify OIDC ACL equivalence
+  assert:
+    that:
+      - __pve_oidc_result_user_acls | length == 1
+      - __pve_oidc_result_user_acls[0].path == __pve_oidc_authority_acls[0].path
+      - __pve_oidc_result_user_acls[0].roleid == __pve_oidc_authority_acls[0].roleid
+      - (__pve_oidc_result_user_acls[0].propagate | int) == (__pve_oidc_authority_acls[0].propagate | int)
+    fail_msg: >-
+      {{ __pve_oidc_result_user }} ACLs do not exactly match
+      {{ pve_oidc_authority_user }} ACLs.

@@ -9,10 +9,12 @@ image:
 
     COPY entrypoint.sh ./
     COPY hosts.example.yaml ./
+    COPY library ./library
     COPY playbooks ./playbooks
     COPY roles ./roles
 
     ENV ANSIBLE_ROLES_PATH=/ansible/roles
+    ENV ANSIBLE_LIBRARY=/ansible/library
     VOLUME [ "/ansible/credentials", "/ansible/inventory", "/root/.ssh" ]
     ENTRYPOINT [ "/ansible/entrypoint.sh" ]
     SAVE IMAGE k2-ansible:local
@@ -21,3 +23,4 @@ syntax-check:
     FROM +image
     RUN mkdir -p /ansible/inventory && cp hosts.example.yaml /ansible/inventory/hosts.yaml
     RUN ansible-playbook -i /ansible/inventory --syntax-check playbooks/pve-bootstrap.yml
+    RUN ansible-playbook -i /ansible/inventory --syntax-check playbooks/pve-oidc.yml

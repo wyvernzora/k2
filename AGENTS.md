@@ -399,3 +399,5 @@ proper section above and remove the inbox duplicate.
 - Proxmox hosts do not need local GPU or HDMI-audio drivers; keep them
   blacklisted, and leave a new host's `vfio_devices` empty until a concrete
   passthrough target is selected.
+- Configure PVE OIDC only in a post-K2 Ansible phase because Pocket ID depends on
+  the cluster; baseline PVE bootstrap must remain usable through PAM before K2 exists.

@@ -35,6 +35,12 @@ class Settings:
     forgejo_client_id: str
     forgejo_callback_url: str
     forgejo_launch_url: str
+    proxmox_secret: str
+    proxmox_client_id: str
+    proxmox_callback_url: str
+    proxmox_launch_url: str
+    proxmox_user_group: str
+    proxmox_username: str
 
 
 def main() -> None:
@@ -45,43 +51,72 @@ def main() -> None:
 
     pomerium_secret_ready = oidc_secret_ready(core_api, settings.pomerium_namespace, settings.pomerium_secret)
     forgejo_secret_ready = oidc_secret_ready(core_api, settings.forgejo_namespace, settings.forgejo_secret)
+    proxmox_secret_ready = oidc_secret_ready(core_api, settings.pod_namespace, settings.proxmox_secret)
     api_key = ensure_static_api_key(core_api, settings)
-    restart_pocket_id(apps_api, settings)
-    upsert_oidc_client(
-        settings,
-        api_key,
-        client_id=settings.pomerium_client_id,
-        name="Pomerium",
-        callback_url=settings.pomerium_callback_url,
-        launch_url=settings.pomerium_launch_url,
-    )
-    if not pomerium_secret_ready:
-        write_oidc_secret(
-            core_api,
+    try:
+        restart_pocket_id(apps_api, settings)
+        upsert_oidc_client(
             settings,
             api_key,
-            namespace=settings.pomerium_namespace,
-            secret_name=settings.pomerium_secret,
             client_id=settings.pomerium_client_id,
+            name="Pomerium",
+            callback_url=settings.pomerium_callback_url,
+            launch_url=settings.pomerium_launch_url,
         )
-    upsert_oidc_client(
-        settings,
-        api_key,
-        client_id=settings.forgejo_client_id,
-        name="Forgejo",
-        callback_url=settings.forgejo_callback_url,
-        launch_url=settings.forgejo_launch_url,
-    )
-    if not forgejo_secret_ready:
-        write_oidc_secret(
-            core_api,
+        if not pomerium_secret_ready:
+            write_oidc_secret(
+                core_api,
+                settings,
+                api_key,
+                namespace=settings.pomerium_namespace,
+                secret_name=settings.pomerium_secret,
+                client_id=settings.pomerium_client_id,
+            )
+        upsert_oidc_client(
             settings,
             api_key,
-            namespace=settings.forgejo_namespace,
-            secret_name=settings.forgejo_secret,
             client_id=settings.forgejo_client_id,
+            name="Forgejo",
+            callback_url=settings.forgejo_callback_url,
+            launch_url=settings.forgejo_launch_url,
         )
-    cleanup_static_api_key(core_api, apps_api, settings)
+        if not forgejo_secret_ready:
+            write_oidc_secret(
+                core_api,
+                settings,
+                api_key,
+                namespace=settings.forgejo_namespace,
+                secret_name=settings.forgejo_secret,
+                client_id=settings.forgejo_client_id,
+            )
+        proxmox_group_id = upsert_user_group(
+            settings,
+            api_key,
+            name=settings.proxmox_user_group,
+            friendly_name="Proxmox Administrators",
+            username=settings.proxmox_username,
+        )
+        upsert_oidc_client(
+            settings,
+            api_key,
+            client_id=settings.proxmox_client_id,
+            name="Proxmox VE on shuna",
+            callback_url=settings.proxmox_callback_url,
+            launch_url=settings.proxmox_launch_url,
+            is_group_restricted=True,
+        )
+        set_allowed_user_groups(settings, api_key, settings.proxmox_client_id, [proxmox_group_id])
+        if not proxmox_secret_ready:
+            write_oidc_secret(
+                core_api,
+                settings,
+                api_key,
+                namespace=settings.pod_namespace,
+                secret_name=settings.proxmox_secret,
+                client_id=settings.proxmox_client_id,
+            )
+    finally:
+        cleanup_static_api_key(core_api, apps_api, settings)
     print("Pocket ID OIDC client bootstrap complete")
 
 
@@ -101,6 +136,12 @@ def load_settings() -> Settings:
         forgejo_client_id=required_env("FORGEJO_CLIENT_ID"),
         forgejo_callback_url=required_env("FORGEJO_CALLBACK_URL"),
         forgejo_launch_url=required_env("FORGEJO_LAUNCH_URL"),
+        proxmox_secret=required_env("PROXMOX_SECRET"),
+        proxmox_client_id=required_env("PROXMOX_CLIENT_ID"),
+        proxmox_callback_url=required_env("PROXMOX_CALLBACK_URL"),
+        proxmox_launch_url=required_env("PROXMOX_LAUNCH_URL"),
+        proxmox_user_group=required_env("PROXMOX_USER_GROUP"),
+        proxmox_username=required_env("PROXMOX_USERNAME"),
     )
 
 
@@ -219,13 +260,20 @@ def upsert_oidc_client(
     name: str,
     callback_url: str,
     launch_url: str,
+    is_group_restricted: bool = False,
 ) -> None:
     response = requests.get(
         f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}",
         headers=api_headers(api_key),
         timeout=REQUEST_TIMEOUT,
     )
-    payload = client_payload(client_id=client_id, name=name, callback_url=callback_url, launch_url=launch_url)
+    payload = client_payload(
+        client_id=client_id,
+        name=name,
+        callback_url=callback_url,
+        launch_url=launch_url,
+        is_group_restricted=is_group_restricted,
+    )
     if response.status_code == requests.codes.ok:
         put_response = requests.put(
             f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}",
@@ -261,8 +309,9 @@ def write_oidc_secret(
     client_id: str,
 ) -> None:
     response = requests.post(
-        f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}/secret",
+        f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}/secrets",
         headers=api_headers(api_key),
+        json={},
         timeout=REQUEST_TIMEOUT,
     )
     response.raise_for_status()
@@ -281,7 +330,14 @@ def write_oidc_secret(
     )
 
 
-def client_payload(*, client_id: str, name: str, callback_url: str, launch_url: str) -> dict[str, Any]:
+def client_payload(
+    *,
+    client_id: str,
+    name: str,
+    callback_url: str,
+    launch_url: str,
+    is_group_restricted: bool,
+) -> dict[str, Any]:
     return {
         "id": client_id,
         "name": name,
@@ -292,8 +348,99 @@ def client_payload(*, client_id: str, name: str, callback_url: str, launch_url: 
         "requiresReauthentication": False,
         "credentials": {"federatedIdentities": []},
         "launchURL": launch_url,
-        "isGroupRestricted": False,
+        "isGroupRestricted": is_group_restricted,
     }
+
+
+def upsert_user_group(
+    settings: Settings,
+    api_key: str,
+    *,
+    name: str,
+    friendly_name: str,
+    username: str,
+) -> str:
+    user = find_exact(
+        settings,
+        api_key,
+        path="users",
+        search=username,
+        field="username",
+    )
+    if user is None:
+        raise RuntimeError(f"Pocket ID user does not exist: {username}")
+
+    group = find_exact(
+        settings,
+        api_key,
+        path="user-groups",
+        search=name,
+        field="name",
+    )
+    payload = {"name": name, "friendlyName": friendly_name}
+    if group is None:
+        response = requests.post(
+            f"{settings.pocket_id_internal_url}/api/user-groups",
+            headers=api_headers(api_key),
+            json=payload,
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        group = response.json()
+    else:
+        response = requests.put(
+            f"{settings.pocket_id_internal_url}/api/user-groups/{group['id']}",
+            headers=api_headers(api_key),
+            json=payload,
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        group = response.json()
+
+    response = requests.put(
+        f"{settings.pocket_id_internal_url}/api/user-groups/{group['id']}/users",
+        headers=api_headers(api_key),
+        json={"userIds": [user["id"]]},
+        timeout=REQUEST_TIMEOUT,
+    )
+    response.raise_for_status()
+    return group["id"]
+
+
+def find_exact(
+    settings: Settings,
+    api_key: str,
+    *,
+    path: str,
+    search: str,
+    field: str,
+) -> dict[str, Any] | None:
+    response = requests.get(
+        f"{settings.pocket_id_internal_url}/api/{path}",
+        headers=api_headers(api_key),
+        params={"search": search, "pagination[limit]": 100},
+        timeout=REQUEST_TIMEOUT,
+    )
+    response.raise_for_status()
+    for item in response.json().get("data", []):
+        if item.get(field) == search:
+            return item
+    return None
+
+
+def set_allowed_user_groups(
+    settings: Settings,
+    api_key: str,
+    client_id: str,
+    user_group_ids: list[str],
+) -> None:
+    response = requests.put(
+        f"{settings.pocket_id_internal_url}/api/oidc/clients/{client_id}/allowed-user-groups",
+        headers=api_headers(api_key),
+        json={"userGroupIds": user_group_ids},
+        timeout=REQUEST_TIMEOUT,
+    )
+    response.raise_for_status()
 
 
 def api_headers(api_key: str) -> dict[str, str]:
