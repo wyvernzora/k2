@@ -14,6 +14,10 @@ import { STATIC_API_KEY_SECRET_NAME } from "./deployment.js";
 const SETUP_JOB_NAME = "setup";
 const POMERIUM_RBAC_NAME = "pocket-id-setup";
 const FORGEJO_RBAC_NAME = "pocket-id-forgejo-setup";
+const PROXMOX_CLIENT_ID = "proxmox-shuna";
+const PROXMOX_SECRET_NAME = "proxmox-shuna-oidc";
+const PROXMOX_USER_GROUP = "proxmox-admins";
+const PROXMOX_USERNAME = "wyvernzora";
 const SETUP_SCRIPT_PATH = fileURLToPath(new URL("./scripts/setup.py", import.meta.url));
 
 export class PocketIdSetup extends Construct {
@@ -27,7 +31,7 @@ export class PocketIdSetup extends Construct {
         path: SETUP_SCRIPT_PATH,
         filename: "setup.py",
       },
-      env: setupEnv(apex.subdomain(POMERIUM_AUTHENTICATE_HOST_PREFIX)),
+      env: setupEnv(apex.subdomain(POMERIUM_AUTHENTICATE_HOST_PREFIX), apex.subdomain("shuna")),
       labels: setupLabels(),
       rbacRules: [
         scriptedJobRbacRule(["create", "delete", "get", "patch", "update"], ApiResource.SECRETS),
@@ -65,9 +69,10 @@ function createForgejoRbac(scope: Construct, serviceAccount: IServiceAccount): v
   }).addSubjects(serviceAccount);
 }
 
-function setupEnv(authenticateHost: string): Record<string, EnvValue> {
+function setupEnv(authenticateHost: string, proxmoxHost: string): Record<string, EnvValue> {
   const authenticateUrl = `https://${authenticateHost}`;
   const forgejoUrl = `https://${FORGEJO_HOST}`;
+  const proxmoxUrl = `https://${proxmoxHost}`;
   return {
     POD_NAMESPACE: EnvValue.fromFieldRef(EnvFieldPaths.POD_NAMESPACE),
     POCKET_ID_INTERNAL_URL: EnvValue.fromValue(`http://${POCKET_ID_SERVICE_NAME}`),
@@ -83,6 +88,12 @@ function setupEnv(authenticateHost: string): Record<string, EnvValue> {
     FORGEJO_CLIENT_ID: EnvValue.fromValue(FORGEJO_OIDC_CLIENT_ID),
     FORGEJO_CALLBACK_URL: EnvValue.fromValue(`${forgejoUrl}/user/oauth2/PocketID/callback`),
     FORGEJO_LAUNCH_URL: EnvValue.fromValue(forgejoUrl),
+    PROXMOX_SECRET: EnvValue.fromValue(PROXMOX_SECRET_NAME),
+    PROXMOX_CLIENT_ID: EnvValue.fromValue(PROXMOX_CLIENT_ID),
+    PROXMOX_CALLBACK_URL: EnvValue.fromValue(proxmoxUrl),
+    PROXMOX_LAUNCH_URL: EnvValue.fromValue(proxmoxUrl),
+    PROXMOX_USER_GROUP: EnvValue.fromValue(PROXMOX_USER_GROUP),
+    PROXMOX_USERNAME: EnvValue.fromValue(PROXMOX_USERNAME),
   };
 }
 

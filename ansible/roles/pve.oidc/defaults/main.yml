@@ -1,0 +1,6 @@
+pve_oidc_realm: k2
+pve_oidc_issuer_url: https://id.wyvernzora.io
+pve_oidc_username: wyvernzora
+pve_oidc_authority_user: wyvernzora@pam
+pve_oidc_role: Administrator
+pve_oidc_path: /

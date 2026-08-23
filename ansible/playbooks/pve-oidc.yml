@@ -1,0 +1,38 @@
+# Configures Pocket ID OIDC after K2 is running
+---
+- hosts: proxmox_amd
+  remote_user: root
+  gather_facts: false
+  vars:
+    pve_oidc_credentials_file: "/ansible/credentials/oidc/{{ inventory_hostname }}.json"
+  pre_tasks:
+    - name: Inspect exported Pocket ID credential
+      stat:
+        path: "{{ pve_oidc_credentials_file }}"
+      delegate_to: localhost
+      become: false
+      register: __pve_oidc_credentials_file
+
+    - name: Require exported Pocket ID credential
+      assert:
+        that:
+          - __pve_oidc_credentials_file.stat.exists
+          - __pve_oidc_credentials_file.stat.isreg
+        fail_msg: >-
+          Export the pocket-id/proxmox-shuna-oidc Secret to
+          {{ pve_oidc_credentials_file }} before running this post-K2 playbook.
+
+    - name: Load Pocket ID credential
+      set_fact:
+        __pve_oidc_credentials: "{{ lookup('file', pve_oidc_credentials_file) | from_json }}"
+      no_log: true
+
+    - name: Decode Pocket ID credential
+      set_fact:
+        pve_oidc_client_id: "{{ __pve_oidc_credentials.data.client_id | b64decode }}"
+        pve_oidc_client_key: "{{ __pve_oidc_credentials.data.client_secret | b64decode }}"
+      no_log: true
+
+  roles:
+    - role: pve.oidc
+      tags: [oidc]
