@@ -42,8 +42,11 @@ func runBootstrapProvision(parent context.Context, rcx *Runtime, c *bootstrapCmd
 
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
-	prevCancel := currentReporter().SetInterruptCancel(cancel)
-	defer currentReporter().SetInterruptCancel(prevCancel)
+	reporter := currentReporter()
+	prevCancel := reporter.SetInterruptCancel(cancel)
+	defer func() {
+		reporter.SetInterruptCancel(prevCancel)
+	}()
 
 	state := &bootstrapState{
 		client: &remote.Client{
