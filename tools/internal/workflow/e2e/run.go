@@ -416,8 +416,11 @@ func runE2EScenario(parent context.Context, rcx *Runtime, scenario *e2eScenario,
 	currentReporter().Infof("scratch: %s", scratchDir)
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
-	prevCancel := currentReporter().SetInterruptCancel(cancel)
-	defer currentReporter().SetInterruptCancel(prevCancel)
+	reporter := currentReporter()
+	prevCancel := reporter.SetInterruptCancel(cancel)
+	defer func() {
+		reporter.SetInterruptCancel(prevCancel)
+	}()
 
 	wf := buildE2EWorkflow(rcx, state, opts, scenario)
 	return wf.Execute(ctx)

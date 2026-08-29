@@ -71,7 +71,9 @@ func (r Runner) Rpi4cb(parentCtx context.Context, opts Rpi4cbOptions) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 	r.Reporter.SetInterruptCancel(cancel)
-	defer r.Reporter.SetInterruptCancel(nil)
+	defer func() {
+		r.Reporter.SetInterruptCancel(nil)
+	}()
 
 	st := &rpi4cbState{}
 	wf := ui.NewWorkflow(r.Reporter)
