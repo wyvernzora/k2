@@ -9,7 +9,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/alecthomas/kong v1.16.1
 	github.com/gonvenience/ytbx v1.5.0
-	github.com/google/go-containerregistry v0.21.9
+	github.com/google/go-containerregistry v0.22.0
 	github.com/homeport/dyff v1.12.0
 	github.com/pkg/sftp v1.13.11
 	golang.org/x/crypto v0.55.0
@@ -26,14 +26,14 @@ require (
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/docker/cli v29.6.2+incompatible // indirect
+	github.com/docker/cli v29.7.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/gonvenience/bunt v1.4.3 // indirect
 	github.com/gonvenience/idem v0.0.3 // indirect
 	github.com/gonvenience/neat v1.3.20 // indirect
 	github.com/gonvenience/term v1.0.5 // indirect
 	github.com/gonvenience/text v1.0.10 // indirect
-	github.com/klauspost/compress v1.19.1 // indirect
+	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mattn/go-ciede2000 v0.0.0-20170301095244-782e8c62fec3 // indirect
