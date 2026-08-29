@@ -628,10 +628,6 @@ spec:
     expire: 168h
   identityProvider:
     provider: oidc
-    scopes:
-      - openid
-      - email
-      - profile
     secret: pomerium/pocket-id
     url: https://id.wyvernzora.io
   jwtClaimHeaders:
