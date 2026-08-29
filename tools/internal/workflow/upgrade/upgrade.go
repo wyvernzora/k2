@@ -45,8 +45,11 @@ type upgradeCmd struct {
 func (c *upgradeCmd) Run(rcx *Runtime) error {
 	parent, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	prevCancel := currentReporter().SetInterruptCancel(cancel)
-	defer currentReporter().SetInterruptCancel(prevCancel)
+	reporter := currentReporter()
+	prevCancel := reporter.SetInterruptCancel(cancel)
+	defer func() {
+		reporter.SetInterruptCancel(prevCancel)
+	}()
 
 	// ---- inputs + I/O surfaces ------------------------------------------
 
