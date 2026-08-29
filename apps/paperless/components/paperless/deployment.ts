@@ -21,7 +21,7 @@ import { PAPERLESS_HTTP_PORT, PAPERLESS_LABELS, PAPERLESS_MCP_PORT } from "../..
 
 import { PAPERLESS_SETUP_USER } from "./setup.js";
 
-const PAPERLESS_IMAGE = oci`ghcr.io/paperless-ngx/paperless-ngx:3.0.5`;
+const PAPERLESS_IMAGE = oci`ghcr.io/paperless-ngx/paperless-ngx:3.1.0`;
 const PAPERLESS_MCP_IMAGE = oci`ghcr.io/baruchiro/paperless-mcp:latest`;
 const DATA_MOUNT_PATH = "/usr/src/paperless/data";
 const DOCUMENTS_MOUNT_PATH = "/paperless-documents";
