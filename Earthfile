@@ -107,7 +107,7 @@ lint:
 # need the Go toolchain; +lint BUILDs it so `earthly +lint` covers both stacks.
 #
 go-lint:
-    FROM golang:1.26-bookworm
+    FROM golang:1.27-bookworm
     # Keep in sync with the golangci-lint-action version in go.yaml.
     ARG GOLANGCI_LINT_VERSION=v2.13.1
     RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
@@ -141,7 +141,7 @@ npm-install:
 # +kairos-image-build-unit: tests and validates the root k2-tools image builder
 #
 kairos-image-build-unit:
-    FROM golang:1.26-bookworm
+    FROM golang:1.27-bookworm
     WORKDIR /src
     COPY tools/go.mod tools/go.sum ./tools/
     RUN --mount=type=cache,target=/go/pkg/mod cd tools && go mod download
