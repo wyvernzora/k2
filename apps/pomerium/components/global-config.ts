@@ -63,7 +63,8 @@ function globalSpec(apex: ApexDomain): PomeriumSpec {
     },
     identityProvider: {
       provider: IdentityProvider.OIDC,
-      scopes: ["openid", "email", "profile"],
+      // No scopes override: Pomerium's OIDC default includes offline_access, which
+      // Pocket ID needs to issue refresh tokens; without it MCP token refresh is impossible.
       secret: `${POMERIUM_NAMESPACE}/${POMERIUM_IDP_SECRET_NAME}`,
       url: `https://${apex.subdomain(POMERIUM_IDP_HOST_PREFIX)}`,
     },
