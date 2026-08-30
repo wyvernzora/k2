@@ -16,7 +16,7 @@ import { oci, only, Scheduling, workers } from "@k2/cdk-lib";
 
 import { HOMER_HTTP_PORT, HOMER_LABELS } from "../../constants.js";
 
-const HOMER_IMAGE = oci`b4bz/homer:v26.08.2`;
+const HOMER_IMAGE = oci`b4bz/homer:v26.08.3`;
 const CONFIG_KEY = "config.yml";
 const CONFIG_VOLUME_NAME = "config";
 const CONFIG_MOUNT_PATH = "/www/assets/config.yml";
