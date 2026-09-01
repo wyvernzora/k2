@@ -572,6 +572,16 @@ specs:
                 protocol: UDP
               - port: "53"
                 protocol: TCP
+      - fromEndpoints:
+          - matchLabels:
+              k8s-app: kube-dns
+              k8s:io.kubernetes.pod.namespace: kube-system
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
       - fromEntities:
           - host
         toPorts:
