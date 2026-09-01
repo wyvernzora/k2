@@ -73,7 +73,10 @@ function globalSpec(apex: ApexDomain): PomeriumSpec {
       "X-Pomerium-Claim-Preferred-Username": "preferred_username",
     },
     mcpAllowedClientIdDomains: MCP_ALLOWED_CLIENT_ID_DOMAINS,
-    runtimeFlags: { mcp: true },
+    // mcp_dynamic_client_registration: local CLI clients (mcp-remote) register via
+    // DCR; hosted clients (claude.ai, chatgpt.com) use CIMD restricted by
+    // mcpAllowedClientIdDomains. Users still authenticate through Pocket ID either way.
+    runtimeFlags: { mcp: true, mcp_dynamic_client_registration: true },
     secrets: `${POMERIUM_NAMESPACE}/${POMERIUM_BOOTSTRAP_SECRET_NAME}`,
     storage: {
       postgres: {
