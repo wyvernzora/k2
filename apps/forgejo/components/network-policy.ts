@@ -53,7 +53,7 @@ export class NetworkPolicy extends K2Chart {
           tcp(FORGEJO_HTTPS_PORT),
           tcp(FORGEJO_SSH_PORT),
         ),
-        ...ingress.fromHost(tcp(FORGEJO_HTTP_REDIRECT_PORT), tcp(FORGEJO_HTTPS_PORT), tcp(FORGEJO_SSH_PORT)),
+        ...ingress.fromNodes(tcp(FORGEJO_HTTP_REDIRECT_PORT), tcp(FORGEJO_HTTPS_PORT), tcp(FORGEJO_SSH_PORT)),
       ],
       ingressDeny: [
         {
