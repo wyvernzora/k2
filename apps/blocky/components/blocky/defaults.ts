@@ -8,7 +8,7 @@ export const K8S_GATEWAY_UPSTREAM = "tcp+udp:k8s-gateway.blocky.svc.cluster.loca
 
 const INTERNAL_UPSTREAMS = [K8S_GATEWAY_UPSTREAM];
 
-const INTERNAL_CLIENT_VLANS = new Set(["default", "privileged", "infrastructure"]);
+const INTERNAL_CLIENT_VLANS = new Set(["default", "standard", "privileged", "infrastructure"]);
 const PUBLIC_CLIENT_VLANS = new Set(["sandbox"]);
 
 export interface DefaultClientGroupsProps {
