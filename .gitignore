@@ -89,6 +89,8 @@ deploy-diff.md
 # Private working documents
 *.private
 *.private.*
+/.reviews/
+/docs/design/
 
 # Host-specific Ansible inventory is mounted at runtime.
 /ansible/inventory/
