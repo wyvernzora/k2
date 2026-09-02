@@ -302,6 +302,7 @@ spec:
   externalTrafficPolicy: Cluster
   loadBalancerSourceRanges:
     - 10.1.0.0/16
+    - 10.4.0.0/16
     - 10.8.0.0/16
     - 10.10.0.0/16
   ports:
@@ -390,6 +391,12 @@ specs:
               - port: "80"
                 protocol: TCP
       - fromCIDR:
+          - 10.4.0.0/16
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+      - fromCIDR:
           - 10.8.0.0/16
         toPorts:
           - ports:
@@ -403,6 +410,12 @@ specs:
                 protocol: TCP
       - fromCIDR:
           - 10.1.0.0/16
+        toPorts:
+          - ports:
+              - port: "8443"
+                protocol: TCP
+      - fromCIDR:
+          - 10.4.0.0/16
         toPorts:
           - ports:
               - port: "8443"

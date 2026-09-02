@@ -466,6 +466,7 @@ spec:
   externalTrafficPolicy: Cluster
   loadBalancerSourceRanges:
     - 10.1.0.0/16
+    - 10.4.0.0/16
     - 10.8.0.0/16
     - 10.10.0.0/16
   ports:
@@ -847,6 +848,16 @@ specs:
               - port: "2222"
                 protocol: TCP
       - fromCIDR:
+          - 10.4.0.0/16
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+              - port: "2222"
+                protocol: TCP
+      - fromCIDR:
           - 10.8.0.0/16
         toPorts:
           - ports:
@@ -868,6 +879,16 @@ specs:
                 protocol: TCP
       - fromEntities:
           - host
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+              - port: "2222"
+                protocol: TCP
+      - fromEntities:
+          - remote-node
         toPorts:
           - ports:
               - port: "80"

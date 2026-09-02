@@ -300,6 +300,8 @@ data:
           - tcp+udp:k8s-gateway.blocky.svc.cluster.local:53
         10.2.0.0/16:
           - 10.10.1.1
+        10.4.0.0/16:
+          - tcp+udp:k8s-gateway.blocky.svc.cluster.local:53
         10.8.0.0/16:
           - tcp+udp:k8s-gateway.blocky.svc.cluster.local:53
         10.10.0.0/16:
@@ -324,6 +326,8 @@ data:
         10.1.0.0/16:
           - default
         10.2.0.0/16:
+          - default
+        10.4.0.0/16:
           - default
         10.8.0.0/16:
           - default
@@ -356,7 +360,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/blocky-config: e08b602b2f91c38ef1c9102740ec9709891231dcae61e55c6d35ff07d546742d
+        checksum/blocky-config: 3d77b5a68edaca9e8fe363c2b6fbf4f5e2b85e03a43296cc9f4517fd672a17bd
       labels:
         app.kubernetes.io/component: resolver
         app.kubernetes.io/name: blocky

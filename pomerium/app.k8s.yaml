@@ -641,6 +641,7 @@ spec:
     - claude.ai
   runtimeFlags:
     mcp: true
+    mcp_dynamic_client_registration: true
   secrets: pomerium/bootstrap
   storage:
     postgres:
