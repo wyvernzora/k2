@@ -55,6 +55,9 @@ network:
     - name: sandbox
       id: 2
       cidr: 10.2.0.0/16
+    - name: standard
+      id: 4
+      cidr: 10.4.0.0/16
     - name: privileged
       id: 8
       cidr: 10.8.0.0/16
