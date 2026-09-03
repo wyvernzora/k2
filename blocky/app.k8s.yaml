@@ -44,7 +44,7 @@ data:
           10.10.7.254 pve.wyvernzora.io
           10.10.8.1 rumi.wyvernzora.io
           10.10.13.1 login.wyvernzora.io
-          10.10.9.1 k8s.wyvernzora.io
+          10.12.9.1 k8s.wyvernzora.io
           fallthrough
         }
         health { 
@@ -186,7 +186,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 9d56f5ae033816aa05400b4d82548bb11c20de5360856ad03a3e8612ebcda92d
+        checksum/config: 80647268b7182ae0659347910b634b3977ee7d844fc0f93edbf439825f550b5c
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm

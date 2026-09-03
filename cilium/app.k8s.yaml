@@ -1173,7 +1173,7 @@ spec:
                   divisor: "1"
                   resource: limits.memory
             - name: KUBERNETES_SERVICE_HOST
-              value: 10.10.9.1
+              value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
             - name: KUBE_CLIENT_BACKOFF_BASE
@@ -1335,7 +1335,7 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.namespace
             - name: KUBERNETES_SERVICE_HOST
-              value: 10.10.9.1
+              value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
           image: quay.io/cilium/cilium:v1.20.0@sha256:383968cd5e8873f7976fa76aa6196045643558f4cc9518a207b9335cb24a0e93
@@ -1451,7 +1451,7 @@ spec:
                   name: cilium-config
                   optional: true
             - name: KUBERNETES_SERVICE_HOST
-              value: 10.10.9.1
+              value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
           image: quay.io/cilium/cilium:v1.20.0@sha256:383968cd5e8873f7976fa76aa6196045643558f4cc9518a207b9335cb24a0e93
@@ -1678,7 +1678,7 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.namespace
             - name: KUBERNETES_SERVICE_HOST
-              value: 10.10.9.1
+              value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
           image: quay.io/cilium/cilium-envoy:v1.37.5-1782911245-7cffc778c923f68a77954a53b1a98d6b5353f004@sha256:583057dd4f7d54cd41efff3c413aa0b148ac201f522e2c3336851fa89c78b039
@@ -1859,7 +1859,7 @@ spec:
                   name: cilium-config
                   optional: true
             - name: KUBERNETES_SERVICE_HOST
-              value: 10.10.9.1
+              value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
           image: quay.io/cilium/operator-generic:v1.20.0@sha256:80744a8cc7c91c2f9e6347629406844eb35d79b30a732c6d41c15b17232a74f3
