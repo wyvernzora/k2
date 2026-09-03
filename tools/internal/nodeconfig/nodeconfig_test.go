@@ -49,8 +49,10 @@ address = "172.16.9.228/16"
 mtu = 9000
 
 [[nic]]
-iface = "ens20"
+iface = "ens18.12"
 address = "10.12.9.228/16"
+vlan_parent = "ens18"
+vlan_id = 12
 `)
 	cfg, found, err := Load(root, "v3", "k2-qm-5cc8")
 	if err != nil {
@@ -71,17 +73,87 @@ address = "10.12.9.228/16"
 	if cfg.NodeIP != "10.12.9.228" {
 		t.Fatalf("NodeIP = %q, want 10.12.9.228", cfg.NodeIP)
 	}
+	if cfg.NICs[2].VLANParent != "ens18" || cfg.NICs[2].VLANID != 12 {
+		t.Fatalf("VLAN = %q/%d, want ens18/12", cfg.NICs[2].VLANParent, cfg.NICs[2].VLANID)
+	}
 }
 
 func TestLoadRejectsBadInput(t *testing.T) {
 	cases := map[string]string{
-		"unknown key":        "nodename = \"typo\"\n",
-		"missing iface":      "[[nic]]\naddress = \"10.0.0.1/16\"\n",
-		"non-cidr address":   "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1\"\n",
-		"bad gateway":        "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ngateway = \"nope\"\n",
-		"bad dns":            "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ndns = [\"nope\"]\n",
-		"mtu out of range":   "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\nmtu = 100\n",
-		"duplicate iface":    "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.2/16\"\n",
+		"unknown key":      "nodename = \"typo\"\n",
+		"missing iface":    "[[nic]]\naddress = \"10.0.0.1/16\"\n",
+		"non-cidr address": "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1\"\n",
+		"bad gateway":      "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ngateway = \"nope\"\n",
+		"bad dns":          "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ndns = [\"nope\"]\n",
+		"mtu out of range": "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\nmtu = 100\n",
+		"duplicate iface":  "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.2/16\"\n",
+		"vlan id without parent": `
+[[nic]]
+iface = "ens18.12"
+address = "10.12.0.1/16"
+vlan_id = 12
+`,
+		"vlan parent without id": `
+[[nic]]
+iface = "ens18.12"
+address = "10.12.0.1/16"
+vlan_parent = "ens18"
+`,
+		"vlan id out of range": `
+[[nic]]
+iface = "ens18.4095"
+address = "10.12.0.1/16"
+vlan_parent = "ens18"
+vlan_id = 4095
+`,
+		"missing vlan parent": `
+[[nic]]
+iface = "ens18.12"
+address = "10.12.0.1/16"
+vlan_parent = "ens18"
+vlan_id = 12
+`,
+		"self vlan parent": `
+[[nic]]
+iface = "ens18.12"
+address = "10.12.0.1/16"
+vlan_parent = "ens18.12"
+vlan_id = 12
+`,
+		"stacked vlan": `
+[[nic]]
+iface = "ens18"
+address = "10.10.0.1/16"
+vlan_parent = "eth0"
+vlan_id = 10
+
+[[nic]]
+iface = "ens18.12"
+address = "10.12.0.1/16"
+vlan_parent = "ens18"
+vlan_id = 12
+
+[[nic]]
+iface = "eth0"
+address = "192.0.2.1/24"
+`,
+		"duplicate vlan": `
+[[nic]]
+iface = "ens18"
+address = "10.10.0.1/16"
+
+[[nic]]
+iface = "cluster0"
+address = "10.12.0.1/16"
+vlan_parent = "ens18"
+vlan_id = 12
+
+[[nic]]
+iface = "cluster1"
+address = "10.13.0.1/16"
+vlan_parent = "ens18"
+vlan_id = 12
+`,
 		"bad node ip":        "node_ip = \"nope\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\n",
 		"unassigned node ip": "node_ip = \"10.12.0.1\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.10.0.1/16\"\n",
 	}

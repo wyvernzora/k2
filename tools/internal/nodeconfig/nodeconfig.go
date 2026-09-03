@@ -22,12 +22,14 @@ type Config struct {
 }
 
 type NIC struct {
-	Iface   string   `toml:"iface"`
-	Address string   `toml:"address"` // CIDR, e.g. 10.10.9.228/16
-	Gateway string   `toml:"gateway,omitempty"`
-	DNS     []string `toml:"dns,omitempty"`
-	MTU     int      `toml:"mtu,omitempty"`
-	Routes  []Route  `toml:"route,omitempty"`
+	Iface      string   `toml:"iface"`
+	Address    string   `toml:"address"` // CIDR, e.g. 10.10.9.228/16
+	Gateway    string   `toml:"gateway,omitempty"`
+	DNS        []string `toml:"dns,omitempty"`
+	MTU        int      `toml:"mtu,omitempty"`
+	VLANParent string   `toml:"vlan_parent,omitempty"`
+	VLANID     int      `toml:"vlan_id,omitempty"`
+	Routes     []Route  `toml:"route,omitempty"`
 }
 
 type Route struct {
@@ -116,7 +118,52 @@ func (c Config) validate(path string) error {
 			return err
 		}
 	}
+	if err := validateVLANs(path, c.NICs); err != nil {
+		return err
+	}
 	return validateNodeIP(path, c.NodeIP, c.NICs)
+}
+
+func validateVLANs(path string, nics []NIC) error {
+	byIface := make(map[string]NIC, len(nics))
+	for _, nic := range nics {
+		byIface[nic.Iface] = nic
+	}
+	type vlanKey struct {
+		parent string
+		id     int
+	}
+	seen := make(map[vlanKey]bool)
+	for i, nic := range nics {
+		at := fmt.Sprintf("%s: nic[%d]", path, i)
+		hasParent := nic.VLANParent != ""
+		hasID := nic.VLANID != 0
+		if hasParent != hasID {
+			return fmt.Errorf("%s: vlan_parent and vlan_id must be set together", at)
+		}
+		if !hasParent {
+			continue
+		}
+		if nic.VLANID < 1 || nic.VLANID > 4094 {
+			return fmt.Errorf("%s: vlan_id %d out of range [1, 4094]", at, nic.VLANID)
+		}
+		if nic.VLANParent == nic.Iface {
+			return fmt.Errorf("%s: vlan_parent must differ from iface", at)
+		}
+		parent, ok := byIface[nic.VLANParent]
+		if !ok {
+			return fmt.Errorf("%s: vlan_parent %q is not a configured nic", at, nic.VLANParent)
+		}
+		if parent.VLANParent != "" {
+			return fmt.Errorf("%s: vlan_parent %q must be a physical nic", at, nic.VLANParent)
+		}
+		key := vlanKey{parent: nic.VLANParent, id: nic.VLANID}
+		if seen[key] {
+			return fmt.Errorf("%s: duplicate vlan_id %d on parent %q", at, nic.VLANID, nic.VLANParent)
+		}
+		seen[key] = true
+	}
+	return nil
 }
 
 func validateRoutes(nicPath string, routes []Route) error {

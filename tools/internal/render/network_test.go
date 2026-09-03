@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/wyvernzora/k2/tools/internal/nodeconfig"
+	"gopkg.in/yaml.v3"
 )
 
 func TestNetworkActivationCloudConfig(t *testing.T) {
@@ -64,6 +65,57 @@ func TestNetworkActivationCloudConfig(t *testing.T) {
 	for _, forbidden := range []string{"ListenAddress 172.16.9.228", "ListenAddress 10.12.9.228"} {
 		if strings.Contains(got, forbidden) {
 			t.Fatalf("sshd must not listen on a non-management fabric (%s):\n%s", forbidden, got)
+		}
+	}
+	for _, forbidden := range []string{".netdev", "VLAN="} {
+		if strings.Contains(got, forbidden) {
+			t.Fatalf("physical-only config must not contain %q:\n%s", forbidden, got)
+		}
+	}
+}
+
+func TestNetworkActivationCloudConfigVLAN(t *testing.T) {
+	got := NetworkActivationCloudConfig([]nodeconfig.NIC{
+		{
+			Iface: "end0", Address: "10.10.9.10/16", Gateway: "10.10.1.1", DNS: []string{"10.10.10.10"},
+		},
+		{
+			Iface: "end0.12", Address: "10.12.9.10/16", VLANParent: "end0", VLANID: 12,
+		},
+	})
+	var config struct {
+		Stages activationStages `yaml:"stages"`
+	}
+	if err := yaml.Unmarshal(got, &config); err != nil {
+		t.Fatal(err)
+	}
+	if len(config.Stages.Initramfs) != 1 {
+		t.Fatalf("initramfs stages = %d, want 1", len(config.Stages.Initramfs))
+	}
+	files := make(map[string]string, len(config.Stages.Initramfs[0].Files))
+	for _, file := range config.Stages.Initramfs[0].Files {
+		files[file.Path] = file.Content
+	}
+	want := map[string]string{
+		"/etc/ssh/sshd_config.d/20-k2-listen-address.conf": "ListenAddress 10.10.9.10\n",
+		"/etc/systemd/network/10-k2-end0.12.netdev":        "[NetDev]\nName=end0.12\nKind=vlan\n\n[VLAN]\nId=12\n",
+		"/etc/systemd/network/10-k2-end0.12.network":       "[Match]\nName=end0.12\n\n[Network]\nAddress=10.12.9.10/16\n",
+		"/etc/systemd/network/10-k2-end0.network": `[Match]
+Name=end0
+
+[Network]
+Address=10.10.9.10/16
+VLAN=end0.12
+Gateway=10.10.1.1
+DNS=10.10.10.10
+`,
+	}
+	if len(files) != len(want) {
+		t.Fatalf("rendered files = %d, want %d: %#v", len(files), len(want), files)
+	}
+	for path, content := range want {
+		if files[path] != content {
+			t.Errorf("%s content:\n%s\nwant:\n%s", path, files[path], content)
 		}
 	}
 }
