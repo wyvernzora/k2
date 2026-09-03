@@ -318,8 +318,7 @@ func (c *storageCmd) buildStorageWorkflow(wf *ui.Workflow, s *storageState) {
 	wf.Shell("Install hostname and users", c.stepRunStorageInstall(s))
 	wf.Shell("Provision ZFS pool and datasets", c.stepRunStoragePool(s))
 	wf.Shell("Run storage health check", c.stepStorageHealth(s))
-	wf.Shell("Harden default access", c.stepStorageHarden(s)).
-		Unless(!c.hasOperatorKeys())
+	wf.Shell("Harden default access", c.stepStorageHarden(s))
 	wf.Task("Write local storage credentials", c.stepWriteStorageCredentials(s))
 
 	wf.BannerFn(ui.BannerSuccess, func() []string { return c.storageBanner(s) }).
@@ -531,10 +530,6 @@ func (c *storageCmd) storagePlanFields(s *storageState) []ui.KV {
 	if !s.csiKeyGenerated && s.csiPrivateKey != "" {
 		chapStatus = "reused from credentials file"
 	}
-	hardenStatus := "kairos password auth will be disabled"
-	if !c.hasOperatorKeys() {
-		hardenStatus = "SKIPPED — no operator keys supplied; kairos password auth stays enabled"
-	}
 	return []ui.KV{
 		{Key: "Cluster target", Value: c.ClusterTarget},
 		{Key: "Cluster name", Value: c.ClusterName},
@@ -548,16 +543,9 @@ func (c *storageCmd) storagePlanFields(s *storageState) []ui.KV {
 		{Key: "Detached snapshots", Value: c.snapshotsParent()},
 		{Key: "CSI user/key", Value: "csi, " + keyStatus},
 		{Key: "CHAP", Value: chapStatus},
-		{Key: "Hardening", Value: hardenStatus},
+		{Key: "Hardening", Value: "kairos password auth will be disabled"},
 		{Key: "Reboot", Value: "not required"},
 	}
-}
-
-// hasOperatorKeys reports whether any operator key flags were supplied.
-// Hardening (disabling the default kairos password auth) without an
-// operator key installed would lock the operator out of the node.
-func (c *storageCmd) hasOperatorKeys() bool {
-	return len(c.OperatorKey) > 0 || len(c.OperatorFiles) > 0
 }
 
 func (c *storageCmd) storageBanner(s *storageState) []string {
@@ -580,19 +568,13 @@ func (c *storageCmd) snapshotsParent() string {
 }
 
 func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceWipe bool, vdevs []storageVDev, csiPublicKey, poolKey string) (storageBundle, error) {
-	operatorKeys, err := loadOptionalOperatorKeys(flags.OperatorKey, flags.OperatorFiles)
+	operatorKeys, err := keys.Load(flags.OperatorKey, flags.OperatorFiles)
 	if err != nil {
 		return storageBundle{}, err
 	}
 	rawPoolKey, err := decodePoolKey(poolKey)
 	if err != nil {
 		return storageBundle{}, err
-	}
-	var authorizedKeys []byte
-	var operatorActivation []byte
-	if len(operatorKeys) > 0 {
-		authorizedKeys = render.AuthorizedKeys(operatorKeys)
-		operatorActivation = render.OperatorKeysActivationCloudConfig("K2 storage operator keys", "kairos", operatorKeys)
 	}
 	backupKeys, err := loadOptionalOperatorKeys(flags.BackupKey, flags.BackupKeyFiles)
 	if err != nil {
@@ -602,8 +584,8 @@ func buildStorageBundle(flags commonStorageFlags, node nodeconfig.Config, forceW
 
 	bundle := storageBundle{
 		Activation:         render.HostnameActivationCloudConfig("K2 storage hostname activation", flags.NodeName),
-		AuthorizedKeys:     authorizedKeys,
-		OperatorActivation: operatorActivation,
+		AuthorizedKeys:     render.AuthorizedKeys(operatorKeys),
+		OperatorActivation: render.OperatorKeysActivationCloudConfig("K2 storage operator keys", "kairos", operatorKeys),
 		CSIPublicKey:       []byte(strings.TrimSpace(csiPublicKey) + "\n"),
 		SnapshotEnv:        []byte(snapshotEnv(flags)),
 		PoolKey:            rawPoolKey,

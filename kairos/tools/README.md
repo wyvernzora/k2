@@ -61,7 +61,9 @@ patch.
 
 Operator keys must be literal `ssh-ed25519` public keys. `github:` key sources
 are intentionally rejected; callers can fetch and review those keys before
-passing them in.
+passing them in. Every provisioning mode requires at least one operator key:
+successful provisioning disables the raw artifact's bootstrap password and
+leaves the `kairos` account accessible by SSH key only.
 
 ## Common Environment Defaults
 
@@ -234,12 +236,15 @@ VM-subnet kube-vip address chosen during provisioning.
 
 After credentials are harvested, the provisioner SSHes back into the node and
 verifies the expected post-reboot state: hostname, operator SSH keys, active
-K3s config files, disabled stock Kairos credentials, disabled packaged
-manifests, enabled and active `k3s`, and generated K3s credentials. The command
-fails if those checks do not converge.
+K3s config files, disabled packaged manifests, enabled and active `k3s`, and
+generated K3s credentials. It then requires a non-empty operator
+`authorized_keys`, disables `/oem/90_custom.yaml`, locks the `kairos` password,
+and verifies the locked state. `--no-reboot` skips post-reboot service checks
+but still performs this access hardening before the command succeeds.
 
 SSH authentication is selected once at the start and reused for the rest of the
-run. The provisioner first tries the clean Kairos default password `kairos`,
+run. A fresh raw artifact supplies the bootstrap-only `kairos` password through
+a K2-owned top-level `users:` config. The provisioner first tries that password,
 then tries the local SSH agent and unencrypted default private keys, then
 prompts for a password and caches it for the rest of the run. Loopback targets
 skip host-key checks for VM port-forward convenience; non-loopback targets use

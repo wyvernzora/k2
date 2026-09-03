@@ -50,6 +50,23 @@ func TestInstallScriptInstallsBootstrapFilesWithoutLockingDefaultPassword(t *tes
 	}
 }
 
+func TestHardenDefaultAccessRequiresKeysAndLocksPassword(t *testing.T) {
+	got := hardenDefaultAccessScript()
+	for _, want := range []string{
+		"sudo test -s /home/kairos/.ssh/authorized_keys",
+		"sudo mv /oem/90_custom.yaml /oem/90_custom.yaml.k2-disabled",
+		"sudo passwd -l kairos",
+		`sudo passwd -S kairos | awk '$2 == "L" { found=1 } END { exit !found }'`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("hardening script missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Index(got, "authorized_keys") > strings.Index(got, "passwd -l kairos") {
+		t.Fatalf("hardening locks password before checking operator keys:\n%s", got)
+	}
+}
+
 func TestJoinInstallScriptForServerActivatesInvariantConfig(t *testing.T) {
 	got := joinInstallScript("/tmp/k2-tools.test", "v3-server-02", nodeRoleServer, false, true)
 	for _, want := range []string{

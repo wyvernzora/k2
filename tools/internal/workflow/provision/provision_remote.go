@@ -185,17 +185,22 @@ func verifyRemoteProvisioning(ctx context.Context, client *remote.Client, descri
 
 func hardenRemoteDefaultAccess(client *remote.Client) error {
 	logf("hardening default kairos access")
-	script := strings.Join([]string{
-		"set -eu",
-		"if sudo test -f /oem/90_custom.yaml; then sudo mv /oem/90_custom.yaml /oem/90_custom.yaml.k2-disabled; fi",
-		"sudo passwd -l kairos",
-		"sudo test ! -e /oem/90_custom.yaml",
-	}, "\n")
-	if err := client.Run(script); err != nil {
+	if err := client.Run(hardenDefaultAccessScript()); err != nil {
 		return fmt.Errorf("harden default kairos access: %w", err)
 	}
 	successf("default kairos access hardened")
 	return nil
+}
+
+func hardenDefaultAccessScript() string {
+	return strings.Join([]string{
+		"set -eu",
+		"sudo test -s /home/kairos/.ssh/authorized_keys",
+		"if sudo test -f /oem/90_custom.yaml; then sudo mv /oem/90_custom.yaml /oem/90_custom.yaml.k2-disabled; fi",
+		"sudo passwd -l kairos",
+		"sudo test ! -e /oem/90_custom.yaml",
+		`sudo passwd -S kairos | awk '$2 == "L" { found=1 } END { exit !found }'`,
+	}, "\n")
 }
 
 // sleepCtx sleeps for d or until ctx is cancelled, so Ctrl-C actually stops

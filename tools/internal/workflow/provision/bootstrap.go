@@ -105,8 +105,9 @@ func (c *bootstrapCmd) buildBootstrapWorkflow(wf *ui.Workflow, rcx *Runtime, s *
 		Unless(!postInstall)
 	wf.Shell("Verify provisioning", c.stepVerify(s)).
 		Unless(!postInstall)
-	wf.Shell("Harden default access", c.stepHarden(s)).
-		Unless(!postInstall)
+
+	wf.Section("Access hardening")
+	wf.Shell("Harden default access", c.stepHarden(s))
 
 	wf.BannerFn(ui.BannerSuccess, func() []string { return c.bootstrapBanner(s) })
 }

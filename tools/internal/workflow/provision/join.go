@@ -151,10 +151,12 @@ func runJoinProvision(parent context.Context, rcx *Runtime, role nodeRole, flags
 		// the API VIP answers, and the joining agent blocks on that VIP.
 		return verifyRemoteProvisioning(ctx, &client, string(role)+" node "+flags.NodeName, joinVerificationScript(flags.NodeName, role, len(bundle.Network) > 0), 10*time.Minute)
 	}).Unless(!postInstall)
+
+	wf.Section("Access hardening")
 	wf.Shell("Harden default access", func(ctx context.Context, sh ui.Step) error {
 		defer client.SwapIO(sh)()
 		return hardenRemoteDefaultAccess(&client)
-	}).Unless(!postInstall)
+	})
 	wf.BannerFn(ui.BannerSuccess, func() []string {
 		if remoteFlags.NoReboot {
 			return []string{

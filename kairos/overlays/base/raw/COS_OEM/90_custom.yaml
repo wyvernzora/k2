@@ -1,0 +1,6 @@
+#cloud-config
+users:
+  - name: kairos
+    passwd: kairos
+    groups:
+      - admin

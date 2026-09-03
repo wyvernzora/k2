@@ -161,21 +161,29 @@ func (c *Client) WaitForAuthCtx(ctx context.Context, timeout time.Duration) erro
 	var lastErr error
 	for {
 		c.ResetAuth()
-		passwordErr := c.probePassword("kairos")
-		if passwordErr == nil {
-			c.authMode = authModePassword
-			c.password = "kairos"
-			c.logf("using default kairos password auth")
-			return nil
+		var probeErrs []error
+		for _, mode := range waitForAuthProbeOrder(c.IdentityFile) {
+			switch mode {
+			case authModeLocalSSH:
+				if err := c.probeLocalSSH(); err == nil {
+					c.authMode = authModeLocalSSH
+					c.logf("using local SSH agent/key auth")
+					return nil
+				} else {
+					probeErrs = append(probeErrs, err)
+				}
+			case authModePassword:
+				if err := c.probePassword("kairos"); err == nil {
+					c.authMode = authModePassword
+					c.password = "kairos"
+					c.logf("using default kairos password auth")
+					return nil
+				} else {
+					probeErrs = append(probeErrs, err)
+				}
+			}
 		}
-
-		localErr := c.probeLocalSSH()
-		if localErr == nil {
-			c.authMode = authModeLocalSSH
-			c.logf("using local SSH agent/key auth")
-			return nil
-		}
-		lastErr = errors.Join(passwordErr, localErr)
+		lastErr = errors.Join(probeErrs...)
 
 		if time.Now().After(deadline) {
 			return fmt.Errorf("timed out waiting for SSH auth to %s: %w", c.Address(), lastErr)
@@ -186,6 +194,13 @@ func (c *Client) WaitForAuthCtx(ctx context.Context, timeout time.Duration) erro
 		case <-time.After(5 * time.Second):
 		}
 	}
+}
+
+func waitForAuthProbeOrder(identityFile string) [2]authMode {
+	if identityFile != "" {
+		return [2]authMode{authModeLocalSSH, authModePassword}
+	}
+	return [2]authMode{authModePassword, authModeLocalSSH}
 }
 
 func (c *Client) ReadFile(file string) ([]byte, error) {

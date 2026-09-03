@@ -570,6 +570,22 @@ func TestBuildStorageBundleGoldenStyle(t *testing.T) {
 	}
 }
 
+func TestBuildStorageBundleRequiresOperatorKey(t *testing.T) {
+	pub, _, _, err := resolveCSIKey("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	poolKey, err := generatePoolKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = buildStorageBundle(commonStorageFlags{}, nodeconfig.Config{}, false, nil, pub, poolKey)
+	if err == nil || !strings.Contains(err.Error(), "at least one literal operator SSH public key is required") {
+		t.Fatalf("error = %v, want missing operator key rejection", err)
+	}
+}
+
 type ioDiscard struct{}
 
 func (ioDiscard) Write(p []byte) (int, error) { return len(p), nil }

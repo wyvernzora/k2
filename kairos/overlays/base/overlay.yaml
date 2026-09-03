@@ -39,3 +39,18 @@ inspect:
           - op: test
             path: /stages/boot/0/commands/1
             value: rm -f /etc/sudoers.d/99-k2-rescue
+  raw:
+    partitions:
+      COS_OEM:
+        files:
+          - path: 90_custom.yaml
+            structuredTests:
+              - op: test
+                path: /users/0/name
+                value: kairos
+              - op: test
+                path: /users/0/passwd
+                value: kairos
+              - op: test
+                path: /users/0/groups/0
+                value: admin

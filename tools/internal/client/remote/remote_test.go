@@ -36,6 +36,32 @@ func TestKnownHostTargetUsesPlainHostForDefaultPort(t *testing.T) {
 	}
 }
 
+func TestWaitForAuthProbeOrder(t *testing.T) {
+	tests := []struct {
+		name         string
+		identityFile string
+		want         [2]authMode
+	}{
+		{
+			name:         "explicit identity before bootstrap password",
+			identityFile: "/tmp/operator-key",
+			want:         [2]authMode{authModeLocalSSH, authModePassword},
+		},
+		{
+			name: "bootstrap password before discovered local keys",
+			want: [2]authMode{authModePassword, authModeLocalSSH},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := waitForAuthProbeOrder(tt.identityFile); got != tt.want {
+				t.Fatalf("waitForAuthProbeOrder(%q) = %v, want %v", tt.identityFile, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRunAllowDisconnectAcceptsSSHDisconnect(t *testing.T) {
 	if !isSSHDisconnect(io.EOF) {
 		t.Fatalf("EOF should be treated as SSH disconnect")
