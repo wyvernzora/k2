@@ -5,7 +5,7 @@ export const FORGEJO_HTTP_PORT = 3000;
 export const FORGEJO_HTTP_REDIRECT_PORT = 80;
 export const FORGEJO_HTTPS_PORT = 8443;
 export const FORGEJO_SSH_PORT = 2222;
-export const FORGEJO_ALLOW_VLANS = ["default", "privileged", "infrastructure"];
+export const FORGEJO_ALLOW_VLANS = ["default", "standard", "privileged", "infrastructure"];
 export const FORGEJO_OIDC_SECRET_NAME = "forgejo-oidc";
 export const FORGEJO_OIDC_CLIENT_ID = "forgejo";
 
