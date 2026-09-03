@@ -1,0 +1,18 @@
+# Durable identity for control-plane node k2-pi-335e.
+# Loaded by k2-tools provision server via --node-name.
+node_ip = "10.12.9.10"
+
+# Infrastructure VLAN10 remains the management and default-egress leg.
+[[nic]]
+iface = "end0"
+address = "10.10.9.10/16"
+gateway = "10.10.1.1"
+dns = ["10.10.10.10", "1.1.1.1"]
+
+# Cluster VLAN12 carries K3s node identity and east-west traffic. end0 is a
+# trunk with VLAN10 native and VLAN12 tagged on the blade switch profile.
+[[nic]]
+iface = "end0.12"
+address = "10.12.9.10/16"
+vlan_parent = "end0"
+vlan_id = 12

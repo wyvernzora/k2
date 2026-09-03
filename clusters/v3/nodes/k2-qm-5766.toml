@@ -1,0 +1,21 @@
+# Durable identity for worker k2-qm-5766 (Proxmox VM214). Loaded by
+# k2-tools provision via --node-name.
+node_ip = "10.12.9.14"
+
+# Infrastructure VLAN10 leg (vmbr0): default route and DNS only.
+[[nic]]
+iface = "ens18"
+address = "10.10.9.14/16"
+gateway = "10.10.1.1"
+dns = ["10.10.10.10", "1.1.1.1"]
+
+# Storage fabric leg (vmbr1): no gateway/DNS by design.
+[[nic]]
+iface = "ens19"
+address = "172.16.9.14/16"
+mtu = 9000
+
+# Cluster VLAN12 leg (vmbr2): K3s node identity and east-west traffic.
+[[nic]]
+iface = "ens20"
+address = "10.12.9.14/16"
