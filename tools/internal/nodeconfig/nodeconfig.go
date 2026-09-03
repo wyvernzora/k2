@@ -27,6 +27,13 @@ type NIC struct {
 	Gateway string   `toml:"gateway,omitempty"`
 	DNS     []string `toml:"dns,omitempty"`
 	MTU     int      `toml:"mtu,omitempty"`
+	Routes  []Route  `toml:"route,omitempty"`
+}
+
+type Route struct {
+	Destination     string `toml:"destination"`
+	Gateway         string `toml:"gateway,omitempty"`
+	PreferredSource string `toml:"preferred_source,omitempty"`
 }
 
 // Path returns where the node file for the given node lives.
@@ -105,8 +112,27 @@ func (c Config) validate(path string) error {
 		if nic.MTU != 0 && (nic.MTU < 576 || nic.MTU > 9216) {
 			return fmt.Errorf("%s: mtu %d out of range [576, 9216]", at, nic.MTU)
 		}
+		if err := validateRoutes(at, nic.Routes); err != nil {
+			return err
+		}
 	}
 	return validateNodeIP(path, c.NodeIP, c.NICs)
+}
+
+func validateRoutes(nicPath string, routes []Route) error {
+	for i, route := range routes {
+		at := fmt.Sprintf("%s: route[%d]", nicPath, i)
+		if _, _, err := net.ParseCIDR(route.Destination); err != nil {
+			return fmt.Errorf("%s: destination must be CIDR: %w", at, err)
+		}
+		if route.Gateway != "" && net.ParseIP(route.Gateway) == nil {
+			return fmt.Errorf("%s: invalid gateway %q", at, route.Gateway)
+		}
+		if route.PreferredSource != "" && net.ParseIP(route.PreferredSource) == nil {
+			return fmt.Errorf("%s: invalid preferred_source %q", at, route.PreferredSource)
+		}
+	}
+	return nil
 }
 
 func validateNodeIP(path, raw string, nics []NIC) error {

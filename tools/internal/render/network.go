@@ -9,11 +9,12 @@ import (
 )
 
 // NetworkActivationCloudConfig renders the /oem stage that pins static NIC
-// configuration. It writes one 10-k2-<iface>.network file per NIC; systemd-
-// networkd applies the first matching file in lexical order, so these win
-// over the image-baked 20-dhcp.network catch-all without touching it. /etc
-// is ephemeral on Kairos, which is why the files are (re)written from /oem
-// on every boot rather than installed once.
+// configuration and binds sshd to the first, management NIC. It writes one
+// 10-k2-<iface>.network file per NIC; systemd-networkd applies the first
+// matching file in lexical order, so these win over the image-baked
+// 20-dhcp.network catch-all without touching it. /etc is ephemeral on Kairos,
+// which is why the files are (re)written from /oem on every boot rather than
+// installed once.
 func NetworkActivationCloudConfig(nics []nodeconfig.NIC) []byte {
 	type config struct {
 		Name   string           `yaml:"name"`
@@ -29,13 +30,23 @@ func NetworkActivationCloudConfig(nics []nodeconfig.NIC) []byte {
 			Group:       0,
 		})
 	}
+	if len(nics) > 0 {
+		managementIP, _, _ := strings.Cut(nics[0].Address, "/")
+		files = append(files, activationFile{
+			Path:        "/etc/ssh/sshd_config.d/20-k2-listen-address.conf",
+			Content:     fmt.Sprintf("ListenAddress %s\n", managementIP),
+			Permissions: 0o644,
+			Owner:       0,
+			Group:       0,
+		})
+	}
 	sort.Slice(files, func(i, j int) bool { return files[i].Path < files[j].Path })
 	out := config{
 		Name: "K2 static network",
 		Stages: activationStages{
 			Initramfs: []activationStage{
 				{
-					Name:  "Pin static NIC configuration",
+					Name:  "Pin static NIC and SSH listener configuration",
 					Files: files,
 				},
 			},
@@ -56,6 +67,15 @@ func networkdUnit(nic nodeconfig.NIC) string {
 	}
 	for _, dns := range nic.DNS {
 		fmt.Fprintf(&b, "DNS=%s\n", dns)
+	}
+	for _, route := range nic.Routes {
+		fmt.Fprintf(&b, "\n[Route]\nDestination=%s\n", route.Destination)
+		if route.Gateway != "" {
+			fmt.Fprintf(&b, "Gateway=%s\n", route.Gateway)
+		}
+		if route.PreferredSource != "" {
+			fmt.Fprintf(&b, "PreferredSource=%s\n", route.PreferredSource)
+		}
 	}
 	return b.String()
 }
