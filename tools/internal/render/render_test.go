@@ -189,11 +189,15 @@ func TestJoinConfigRendersServerJoinWithControlPlaneTaint(t *testing.T) {
 			t.Fatalf("server join config missing %q:\n%s", want, got)
 		}
 	}
+	if strings.Contains(got, "node-ip:") {
+		t.Fatalf("server join config unexpectedly has an empty node IP:\n%s", got)
+	}
 }
 
 func TestJoinConfigRendersWorkerWithoutControlPlaneTaint(t *testing.T) {
 	data, err := JoinConfig(JoinInput{
 		NodeName:  "worker-01",
+		NodeIP:    "10.12.9.200",
 		ServerURL: "https://10.10.9.1:6443",
 		Token:     "agent-token",
 		Taints:    []string{"example.com/gpu=true:NoSchedule"},
@@ -206,6 +210,7 @@ func TestJoinConfigRendersWorkerWithoutControlPlaneTaint(t *testing.T) {
 		"server: https://10.10.9.1:6443",
 		"token: agent-token",
 		"node-name: worker-01",
+		"node-ip: 10.12.9.200",
 		"example.com/gpu=true:NoSchedule",
 	} {
 		if !strings.Contains(got, want) {

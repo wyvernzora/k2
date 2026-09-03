@@ -35,6 +35,7 @@ func TestLoadFullConfig(t *testing.T) {
 	writeNodeFile(t, root, "v3", "k2-qm-5cc8", `
 labels = ["role=worker"]
 taints = []
+node_ip = "10.12.9.228"
 
 [[nic]]
 iface = "ens18"
@@ -46,6 +47,10 @@ dns = ["10.10.1.1"]
 iface = "ens19"
 address = "172.16.9.228/16"
 mtu = 9000
+
+[[nic]]
+iface = "ens20"
+address = "10.12.9.228/16"
 `)
 	cfg, found, err := Load(root, "v3", "k2-qm-5cc8")
 	if err != nil {
@@ -54,8 +59,8 @@ mtu = 9000
 	if !found {
 		t.Fatal("expected found=true")
 	}
-	if len(cfg.NICs) != 2 {
-		t.Fatalf("expected 2 nics, got %d", len(cfg.NICs))
+	if len(cfg.NICs) != 3 {
+		t.Fatalf("expected 3 nics, got %d", len(cfg.NICs))
 	}
 	if cfg.NICs[1].Gateway != "" || len(cfg.NICs[1].DNS) != 0 {
 		t.Fatal("fabric nic must have no gateway/dns")
@@ -63,17 +68,22 @@ mtu = 9000
 	if got := cfg.PrimaryAddress(); got != "10.10.9.228" {
 		t.Fatalf("PrimaryAddress = %q, want 10.10.9.228", got)
 	}
+	if cfg.NodeIP != "10.12.9.228" {
+		t.Fatalf("NodeIP = %q, want 10.12.9.228", cfg.NodeIP)
+	}
 }
 
 func TestLoadRejectsBadInput(t *testing.T) {
 	cases := map[string]string{
-		"unknown key":      "nodename = \"typo\"\n",
-		"missing iface":    "[[nic]]\naddress = \"10.0.0.1/16\"\n",
-		"non-cidr address": "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1\"\n",
-		"bad gateway":      "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ngateway = \"nope\"\n",
-		"bad dns":          "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ndns = [\"nope\"]\n",
-		"mtu out of range": "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\nmtu = 100\n",
-		"duplicate iface":  "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.2/16\"\n",
+		"unknown key":        "nodename = \"typo\"\n",
+		"missing iface":      "[[nic]]\naddress = \"10.0.0.1/16\"\n",
+		"non-cidr address":   "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1\"\n",
+		"bad gateway":        "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ngateway = \"nope\"\n",
+		"bad dns":            "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\ndns = [\"nope\"]\n",
+		"mtu out of range":   "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\nmtu = 100\n",
+		"duplicate iface":    "[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.2/16\"\n",
+		"bad node ip":        "node_ip = \"nope\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.0.0.1/16\"\n",
+		"unassigned node ip": "node_ip = \"10.12.0.1\"\n[[nic]]\niface = \"ens18\"\naddress = \"10.10.0.1/16\"\n",
 	}
 	for name, content := range cases {
 		t.Run(name, func(t *testing.T) {

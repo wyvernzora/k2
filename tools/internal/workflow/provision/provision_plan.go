@@ -51,6 +51,7 @@ func joinPlanFields(role nodeRole, flags commonJoinFlags, node nodeconfig.Config
 		{Key: "Cluster target", Value: flags.ClusterTarget},
 		{Key: "Cluster name", Value: clusterNameOrFallback(flags.ClusterName, flags.ClusterTarget)},
 		{Key: "Node name", Value: flags.NodeName},
+		{Key: "Node IP", Value: hostOrAutoDetect(node.NodeIP)},
 		{Key: "SSH", Value: fmt.Sprintf("%s@%s:%d", remoteFlags.SSHUser, remoteFlags.Host, remoteFlags.SSHPort)},
 		{Key: "Operator keys", Value: keysSummary(flags.OperatorKey, flags.OperatorFiles)},
 		{Key: "Labels", Value: joinOrNone(node.Labels)},

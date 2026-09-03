@@ -1,6 +1,6 @@
 // Package nodeconfig loads per-node provisioning config from
 // clusters/<target>/nodes/<name>.toml. The file is the durable identity
-// record for a node: labels, taints, and static NIC configuration. Nodes
+// record for a node: labels, taints, node IP, and static NIC configuration. Nodes
 // without a file (test VMs, DHCP-only nodes) provision exactly as before.
 package nodeconfig
 
@@ -17,6 +17,7 @@ import (
 type Config struct {
 	Labels []string `toml:"labels"`
 	Taints []string `toml:"taints"`
+	NodeIP string   `toml:"node_ip"`
 	NICs   []NIC    `toml:"nic"`
 }
 
@@ -89,7 +90,8 @@ func (c Config) validate(path string) error {
 			return fmt.Errorf("%s: duplicate iface %q", at, nic.Iface)
 		}
 		seen[nic.Iface] = true
-		if _, _, err := net.ParseCIDR(nic.Address); err != nil {
+		_, _, err := net.ParseCIDR(nic.Address)
+		if err != nil {
 			return fmt.Errorf("%s: address must be CIDR (e.g. 10.10.9.228/16): %w", at, err)
 		}
 		if nic.Gateway != "" && net.ParseIP(nic.Gateway) == nil {
@@ -104,5 +106,22 @@ func (c Config) validate(path string) error {
 			return fmt.Errorf("%s: mtu %d out of range [576, 9216]", at, nic.MTU)
 		}
 	}
-	return nil
+	return validateNodeIP(path, c.NodeIP, c.NICs)
+}
+
+func validateNodeIP(path, raw string, nics []NIC) error {
+	if raw == "" {
+		return nil
+	}
+	nodeIP := net.ParseIP(raw)
+	if nodeIP == nil {
+		return fmt.Errorf("%s: invalid node_ip %q", path, raw)
+	}
+	for _, nic := range nics {
+		ip, _, _ := net.ParseCIDR(nic.Address)
+		if nodeIP.Equal(ip) {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s: node_ip %q is not assigned to a configured nic", path, raw)
 }

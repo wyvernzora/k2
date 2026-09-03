@@ -131,6 +131,7 @@ func buildJoinBundle(repoRoot string, role nodeRole, flags commonJoinFlags, node
 	}
 	joinConfig, err := render.JoinConfig(render.JoinInput{
 		NodeName:      flags.NodeName,
+		NodeIP:        node.NodeIP,
 		ServerURL:     serverURL,
 		Token:         token,
 		Labels:        nodeLabels,

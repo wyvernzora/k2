@@ -26,6 +26,7 @@ type BootstrapInput struct {
 
 type JoinInput struct {
 	NodeName      string
+	NodeIP        string
 	ServerURL     string
 	Token         string
 	Labels        []string
@@ -147,6 +148,7 @@ func JoinConfig(in JoinInput) ([]byte, error) {
 		Server    string   `yaml:"server"`
 		Token     string   `yaml:"token"`
 		NodeName  string   `yaml:"node-name"`
+		NodeIP    string   `yaml:"node-ip,omitempty"`
 		NodeLabel []string `yaml:"node-label,omitempty"`
 		NodeTaint []string `yaml:"node-taint,omitempty"`
 	}
@@ -154,6 +156,7 @@ func JoinConfig(in JoinInput) ([]byte, error) {
 		Server:    in.ServerURL,
 		Token:     in.Token,
 		NodeName:  in.NodeName,
+		NodeIP:    in.NodeIP,
 		NodeLabel: labels,
 		NodeTaint: taints,
 	})
