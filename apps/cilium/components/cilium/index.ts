@@ -53,6 +53,7 @@ export class Cilium extends K2Chart {
       },
       routingMode: "native",
       autoDirectNodeRoutes: true,
+      directRoutingSkipUnreachable: true,
       ipv4NativeRoutingCIDR: cluster.kubernetes.subnets.pods,
       l2announcements: {
         enabled: true,
