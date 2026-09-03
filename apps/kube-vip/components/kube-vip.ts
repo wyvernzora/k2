@@ -9,29 +9,42 @@ export class KubeVip extends K2Chart {
     const cluster = ClusterContext.of(this).config;
     const scheduling = Scheduling.profile(only(controlPlane()));
 
-    HelmCharts.of(this).asChart(this, "kube-vip", "kube-vip", {
-      config: {
-        address: cluster.kubernetes.api,
-      },
-      env: {
-        cp_enable: "true",
-        KUBERNETES_SERVICE_HOST: "127.0.0.1",
-        KUBERNETES_SERVICE_PORT: "6443",
-        svc_enable: "false",
-        vip_leaderelection: "true",
-      },
-      resources: {
-        limits: {
-          cpu: "200m",
-          memory: "200Mi",
+    cluster.kubernetes.api.vips.forEach((vip, index) => {
+      const isExistingInstance = vip.name === "kube-vip";
+
+      HelmCharts.of(this).asChart(this, vip.name, "kube-vip", {
+        nameOverride: vip.name,
+        config: {
+          address: vip.address,
         },
-        requests: {
-          cpu: "50m",
-          memory: "100Mi",
+        env: {
+          cp_enable: "true",
+          KUBERNETES_SERVICE_HOST: "127.0.0.1",
+          KUBERNETES_SERVICE_PORT: "6443",
+          prometheus_server: `:${2112 + index}`,
+          svc_enable: "false",
+          vip_interface: vip.interface ?? "",
+          vip_leaderelection: "true",
+          ...(isExistingInstance
+            ? {}
+            : {
+                instance_name: vip.name,
+                vip_leasename: `${vip.name}-cp-lock`,
+              }),
         },
-      },
-      tolerations: scheduling.tolerations,
-      affinity: scheduling.affinity,
+        resources: {
+          limits: {
+            cpu: "200m",
+            memory: "200Mi",
+          },
+          requests: {
+            cpu: "50m",
+            memory: "100Mi",
+          },
+        },
+        tolerations: scheduling.tolerations,
+        affinity: scheduling.affinity,
+      });
     });
   }
 }

@@ -89,7 +89,13 @@ func TestBootstrapConfigAllowsWhitelistedKubeletReservedLabel(t *testing.T) {
 
 func TestClusterConfig(t *testing.T) {
 	cfg := clusterconfig.Config{}
-	cfg.Kubernetes.API = "10.10.9.1"
+	cfg.Kubernetes.API = clusterconfig.KubernetesAPI{
+		Primary: "kube-vip",
+		VIPs: []clusterconfig.APIVIP{
+			{Name: "kube-vip", Address: "10.10.9.1", Interface: "end0"},
+			{Name: "kube-vip-cluster", Address: "10.12.9.1", Interface: "end0.12"},
+		},
+	}
 	cfg.Kubernetes.DNS = "10.43.0.10"
 	cfg.Kubernetes.Domain = "cluster.local"
 	cfg.Kubernetes.Subnets.Pods = "10.42.0.0/16"
@@ -108,6 +114,7 @@ func TestClusterConfig(t *testing.T) {
 		"cluster-dns: 10.43.0.10",
 		"cluster-domain: cluster.local",
 		"- 10.10.9.1",
+		"- 10.12.9.1",
 		"- service-account-issuer=https://oidc.k2.wyvernzora.io/v3",
 		"- service-account-issuer=https://kubernetes.default.svc.cluster.local",
 		"- service-account-jwks-uri=https://oidc.k2.wyvernzora.io/v3/openid/v1/jwks",

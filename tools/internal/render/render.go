@@ -101,7 +101,7 @@ func ClusterConfig(c clusterconfig.Config) ([]byte, error) {
 		ServiceCIDR:       c.Kubernetes.Subnets.Services,
 		ClusterDNS:        c.Kubernetes.DNS,
 		ClusterDomain:     c.Kubernetes.Domain,
-		TLSSAN:            []string{c.Kubernetes.API},
+		TLSSAN:            c.Kubernetes.API.Addresses(),
 		KubeAPIServerArgs: kubeAPIServerArgs,
 	})
 }

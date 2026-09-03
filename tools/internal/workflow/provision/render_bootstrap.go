@@ -31,7 +31,7 @@ func buildBundle(repoRoot string, flags commonBootstrapFlags, metadata render.Im
 	if err != nil {
 		return bundle{}, err
 	}
-	prodAPI := cfg.Kubernetes.API
+	prodAPI := cfg.Kubernetes.API.PrimaryAddress()
 	if flags.testKubeVIP != "" {
 		applyTestKubeVIP(&cfg, flags.testKubeVIP)
 	}

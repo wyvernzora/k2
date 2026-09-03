@@ -1,6 +1,6 @@
 import type { Construct } from "constructs";
 
-import { ApexDomain, ClusterContext, HelmCharts, K2Chart } from "@k2/cdk-lib";
+import { ApexDomain, ClusterContext, HelmCharts, K2Chart, primaryKubernetesApiVip } from "@k2/cdk-lib";
 
 import { k8sGatewayValues } from "./chart-values.js";
 import { defaultCustomDns } from "./defaults.js";
@@ -15,9 +15,10 @@ export class K8sGateway extends K2Chart {
 
     const apexDomain = ApexDomain.of(this).apexDomain;
     const cluster = ClusterContext.of(this).config;
+    const kubernetesApi = primaryKubernetesApiVip(cluster.kubernetes.api);
     const customDns = defaultCustomDns({
       apexDomain,
-      kubernetesApi: cluster.kubernetes.api,
+      kubernetesApi: kubernetesApi.address,
       staticRecords: cluster.dns.staticRecords,
     });
 

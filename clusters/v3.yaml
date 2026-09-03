@@ -21,9 +21,9 @@ onePassword:
   vault: zfsyjjcwge4w4gw6dh4zaqndhq
 
 # Kubernetes / k3s networking facts.
-#   api      — kube-vip VIP IP. Used as the Kubernetes API endpoint and the
-#              cdk-lib kube-vip Helm value. Read by both cdk8s and the
-#              provisioner (k3s tls-san + bootstrap Cilium KUBERNETES_SERVICE_HOST).
+#   api.primary — name of the VIP used by kubeconfigs, join configs, and bootstrap Cilium.
+#   api.vips    — kube-vip instances. Every address is included in the K3s TLS SANs;
+#                 interface is optional and leaves kube-vip interface discovery enabled.
 #   dns      — CoreDNS ClusterIP. PROVISIONER-ONLY (k3s --cluster-dns). Must lie
 #              inside subnets.services. Standard k3s default = 10.43.0.10.
 #   domain   — In-cluster DNS suffix. PROVISIONER-ONLY (k3s --cluster-domain).
@@ -38,7 +38,15 @@ onePassword:
 # defaults inside the Go provisioner. DO NOT delete on the basis of
 # "cdk8s never reads this".
 kubernetes:
-  api: 10.10.9.1
+  api:
+    primary: kube-vip
+    vips:
+      - name: kube-vip
+        address: 10.10.9.1
+        interface: end0
+      - name: kube-vip-cluster
+        address: 10.12.9.1
+        interface: end0.12
   dns: 10.43.0.10
   domain: cluster.local
   subnets:

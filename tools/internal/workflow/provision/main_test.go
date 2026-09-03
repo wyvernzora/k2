@@ -218,8 +218,11 @@ func TestApplyTestKubeVIPRewritesAPI(t *testing.T) {
 	cfg := testClusterConfig()
 	applyTestKubeVIP(&cfg, "192.168.64.254")
 
-	if cfg.Kubernetes.API != "192.168.64.254" {
-		t.Fatalf("api = %s, want 192.168.64.254", cfg.Kubernetes.API)
+	if got := cfg.Kubernetes.API.PrimaryAddress(); got != "192.168.64.254" {
+		t.Fatalf("api = %s, want 192.168.64.254", got)
+	}
+	if len(cfg.Kubernetes.API.VIPs) != 1 {
+		t.Fatalf("VIPs = %v, want exactly one test VIP", cfg.Kubernetes.API.VIPs)
 	}
 }
 
@@ -301,7 +304,10 @@ func contains(values []string, want string) bool {
 
 func testClusterConfig() clusterconfig.Config {
 	cfg := clusterconfig.Config{ID: "v3"}
-	cfg.Kubernetes.API = "10.10.9.1"
+	cfg.Kubernetes.API = clusterconfig.KubernetesAPI{
+		Primary: "kube-vip",
+		VIPs:    []clusterconfig.APIVIP{{Name: "kube-vip", Address: "10.10.9.1"}},
+	}
 	cfg.Kubernetes.DNS = "10.43.0.10"
 	cfg.Kubernetes.Domain = "cluster.local"
 	cfg.Kubernetes.Subnets.Pods = "10.42.0.0/16"

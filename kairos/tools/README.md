@@ -192,8 +192,8 @@ stringData:
 For local VM swarm tests, use `--test-vm <id>` instead of `--host`. The
 provisioner resolves the VM SSH endpoint, defaults `--cluster-name` to
 `<cluster-target>-vmtest`, defaults `--node-name` to the VM id, uses the guest
-IP for the bootstrap-only Cilium API patch, adds a VM-local API VIP to the
-bootstrap server TLS SANs, and patches the kube-vip DaemonSet after bootstrap
+IP for the bootstrap-only Cilium API patch, replaces the configured API VIPs
+with one VM-local VIP for the bootstrap server TLS SANs, and patches the kube-vip DaemonSet after bootstrap
 so the saved kubeconfig and join URL point at an address in the VM subnet:
 
 ```sh
@@ -214,7 +214,7 @@ The command writes:
 
 During bootstrap, the rendered Cilium resources use the bootstrap node IP as
 `KUBERNETES_SERVICE_HOST`. The steady-state deploy manifests still use the
-cluster API VIP from `clusters/<target>.yaml`, so once kube-vip and Argo CD are
+primary cluster API VIP from `clusters/<target>.yaml`, so once kube-vip and Argo CD are
 running GitOps reconciles Cilium back to the normal cluster-wide endpoint.
 
 By default the target node reboots after files are installed. Pass
@@ -294,7 +294,7 @@ invariants:
 ```
 
 Both commands default the join endpoint from
-`~/.kube/k2/<cluster-name>/server-url`, falling back to the API VIP from
+`~/.kube/k2/<cluster-name>/server-url`, falling back to the primary API VIP from
 `clusters/<target>.yaml`. The saved join URL intentionally uses the VIP IP, not
 the API DNS name, because cluster DNS depends on Kubernetes already being
 healthy. Use `--server-url https://<host>:6443` when a test network needs nodes

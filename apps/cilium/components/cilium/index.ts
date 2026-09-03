@@ -1,6 +1,14 @@
 import type { Construct } from "constructs";
 
-import { ClusterContext, controlPlane, HelmCharts, K2Chart, prefer, Scheduling } from "@k2/cdk-lib";
+import {
+  ClusterContext,
+  controlPlane,
+  HelmCharts,
+  K2Chart,
+  prefer,
+  primaryKubernetesApiVip,
+  Scheduling,
+} from "@k2/cdk-lib";
 
 import { CiliumL2AnnouncementPolicy, CiliumLoadBalancerIpPool } from "../../crds/cilium.io.js";
 
@@ -37,10 +45,11 @@ export class Cilium extends K2Chart {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
     const cluster = ClusterContext.of(this).config;
+    const kubernetesApi = primaryKubernetesApiVip(cluster.kubernetes.api);
 
     HelmCharts.of(this).asChart(this, "cilium", "cilium", {
       kubeProxyReplacement: true,
-      k8sServiceHost: cluster.kubernetes.api,
+      k8sServiceHost: kubernetesApi.address,
       k8sServicePort: 6443,
       k8sClientRateLimit: {
         qps: 20,

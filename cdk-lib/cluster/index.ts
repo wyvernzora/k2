@@ -5,6 +5,7 @@ import { parse } from "yaml";
 import type { ClusterConfig } from "./config.js";
 
 const CIDR_PATTERN = /^(?:\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/;
+const DNS_LABEL_PATTERN = /^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$/;
 
 export async function loadClusterConfig(path = "clusters/v3.yaml"): Promise<ClusterConfig> {
   const raw = await readFile(path, "utf8");
@@ -33,7 +34,36 @@ function validateClusterConfig(value: unknown, path: string): asserts value is C
   requireNonEmptyString(op, "vault", `${path}.onePassword`);
 
   const kubernetes = requireObject(root.kubernetes, `${path}.kubernetes`);
-  requireNonEmptyString(kubernetes, "api", `${path}.kubernetes`);
+  const api = requireObject(kubernetes.api, `${path}.kubernetes.api`);
+  requireNonEmptyString(api, "primary", `${path}.kubernetes.api`);
+  const vips = requireArray(api.vips, `${path}.kubernetes.api.vips`);
+  if (vips.length === 0) {
+    throw new Error(`${path}.kubernetes.api.vips: must not be empty`);
+  }
+  const vipNames = new Set<string>();
+  const vipAddresses = new Set<string>();
+  vips.forEach((entry, index) => {
+    const vipPath = `${path}.kubernetes.api.vips[${index}]`;
+    const vip = requireObject(entry, vipPath);
+    requireDnsLabel(vip, "name", vipPath);
+    requireIpv4Address(vip, "address", vipPath);
+    if (vip.interface !== undefined) {
+      requireNonEmptyString(vip, "interface", vipPath);
+    }
+    const name = vip.name as string;
+    const address = vip.address as string;
+    if (vipNames.has(name)) {
+      throw new Error(`${vipPath}.name: duplicate name ${JSON.stringify(name)}`);
+    }
+    if (vipAddresses.has(address)) {
+      throw new Error(`${vipPath}.address: duplicate address ${JSON.stringify(address)}`);
+    }
+    vipNames.add(name);
+    vipAddresses.add(address);
+  });
+  if (!vipNames.has(api.primary as string)) {
+    throw new Error(`${path}.kubernetes.api.primary: no VIP named ${JSON.stringify(api.primary)}`);
+  }
   requireNonEmptyString(kubernetes, "dns", `${path}.kubernetes`);
   requireNonEmptyString(kubernetes, "domain", `${path}.kubernetes`);
   const subnets = requireObject(kubernetes.subnets, `${path}.kubernetes.subnets`);
@@ -119,6 +149,14 @@ function requireNonEmptyString(obj: Record<string, unknown>, key: string, path: 
   }
 }
 
+function requireDnsLabel(obj: Record<string, unknown>, key: string, path: string): void {
+  requireNonEmptyString(obj, key, path);
+  const value = obj[key] as string;
+  if (value.length > 63 || !DNS_LABEL_PATTERN.test(value)) {
+    throw new Error(`${path}.${key}: must be a DNS label`);
+  }
+}
+
 function requireBoolean(obj: Record<string, unknown>, key: string, path: string): void {
   if (typeof obj[key] !== "boolean") {
     throw new Error(`${path}.${key}: must be a boolean`);
@@ -198,5 +236,5 @@ function requireConst(obj: Record<string, unknown>, key: string, value: string, 
   }
 }
 
-export type * from "./config.js";
+export * from "./config.js";
 export * from "./context.js";

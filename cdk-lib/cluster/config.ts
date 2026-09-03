@@ -27,10 +27,29 @@ export interface OnePasswordConfig {
 }
 
 export interface KubernetesConfig {
-  readonly api: string;
+  readonly api: KubernetesApiConfig;
   readonly dns: string;
   readonly domain: string;
   readonly subnets: KubernetesSubnetsConfig;
+}
+
+export interface KubernetesApiConfig {
+  readonly primary: string;
+  readonly vips: KubernetesApiVipConfig[];
+}
+
+export interface KubernetesApiVipConfig {
+  readonly name: string;
+  readonly address: string;
+  readonly interface?: string;
+}
+
+export function primaryKubernetesApiVip(api: KubernetesApiConfig): KubernetesApiVipConfig {
+  const primary = api.vips.find(vip => vip.name === api.primary);
+  if (primary === undefined) {
+    throw new Error(`No Kubernetes API VIP named ${JSON.stringify(api.primary)}`);
+  }
+  return primary;
 }
 
 export interface KubernetesSubnetsConfig {

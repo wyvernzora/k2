@@ -42,7 +42,12 @@ func applyProvisionTestVM(repoRoot string, clusterTarget string, clusterName *st
 }
 
 func applyTestKubeVIP(cfg *clusterconfig.Config, vip string) {
-	cfg.Kubernetes.API = vip
+	cfg.Kubernetes.API = clusterconfig.KubernetesAPI{
+		Primary: "kube-vip",
+		VIPs: []clusterconfig.APIVIP{
+			{Name: "kube-vip", Address: vip},
+		},
+	}
 }
 
 func testKubeVIP(nodeIP string, prefix int) (string, error) {

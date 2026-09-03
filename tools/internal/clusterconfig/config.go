@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -33,10 +34,21 @@ type OIDCIssuer struct {
 }
 
 type Kubernetes struct {
-	API     string  `yaml:"api"`
-	DNS     string  `yaml:"dns"`
-	Domain  string  `yaml:"domain"`
-	Subnets Subnets `yaml:"subnets"`
+	API     KubernetesAPI `yaml:"api"`
+	DNS     string        `yaml:"dns"`
+	Domain  string        `yaml:"domain"`
+	Subnets Subnets       `yaml:"subnets"`
+}
+
+type KubernetesAPI struct {
+	Primary string   `yaml:"primary"`
+	VIPs    []APIVIP `yaml:"vips"`
+}
+
+type APIVIP struct {
+	Name      string `yaml:"name"`
+	Address   string `yaml:"address"`
+	Interface string `yaml:"interface,omitempty"`
 }
 
 type Subnets struct {
@@ -73,12 +85,30 @@ func (c Config) DeployDir(repoRoot string) string {
 }
 
 func (c Config) APIServerURL() string {
-	return fmt.Sprintf("https://%s:%d", c.Kubernetes.API, apiServerPort)
+	return fmt.Sprintf("https://%s:%d", c.Kubernetes.API.PrimaryAddress(), apiServerPort)
+}
+
+func (a KubernetesAPI) PrimaryAddress() string {
+	for _, vip := range a.VIPs {
+		if vip.Name == a.Primary {
+			return vip.Address
+		}
+	}
+	return ""
+}
+
+func (a KubernetesAPI) Addresses() []string {
+	addresses := make([]string, 0, len(a.VIPs))
+	for _, vip := range a.VIPs {
+		addresses = append(addresses, vip.Address)
+	}
+	return addresses
 }
 
 var (
 	accountIDPattern = regexp.MustCompile(`^\d{12}$`)
 	cidrPattern      = regexp.MustCompile(`^(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}$`)
+	dnsLabelPattern  = regexp.MustCompile(`^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$`)
 )
 
 func (c Config) validate(path string, target string) error {
@@ -120,7 +150,7 @@ func (a AWS) validate(fieldPath string) error {
 }
 
 func (k Kubernetes) validate(fieldPath string) error {
-	if err := requireIPv4(k.API, fieldPath+".api"); err != nil {
+	if err := k.API.validate(fieldPath + ".api"); err != nil {
 		return err
 	}
 	if err := requireIPv4(k.DNS, fieldPath+".dns"); err != nil {
@@ -134,6 +164,48 @@ func (k Kubernetes) validate(fieldPath string) error {
 	}
 	if err := requireCIDR(k.Subnets.Services, fieldPath+".subnets.services"); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (a KubernetesAPI) validate(fieldPath string) error {
+	if strings.TrimSpace(a.Primary) == "" {
+		return fmt.Errorf("%s.primary: must not be empty", fieldPath)
+	}
+	if len(a.VIPs) == 0 {
+		return fmt.Errorf("%s.vips: must not be empty", fieldPath)
+	}
+
+	names := make(map[string]struct{}, len(a.VIPs))
+	addresses := make(map[string]struct{}, len(a.VIPs))
+	for i, vip := range a.VIPs {
+		vipPath := fmt.Sprintf("%s.vips[%d]", fieldPath, i)
+		if strings.TrimSpace(vip.Name) == "" {
+			return fmt.Errorf("%s.name: must not be empty", vipPath)
+		}
+		if len(vip.Name) > 63 || !dnsLabelPattern.MatchString(vip.Name) {
+			return fmt.Errorf("%s.name: %q is not a DNS label", vipPath, vip.Name)
+		}
+		if _, exists := names[vip.Name]; exists {
+			return fmt.Errorf("%s.name: duplicate name %q", vipPath, vip.Name)
+		}
+		names[vip.Name] = struct{}{}
+
+		if err := requireIPv4(vip.Address, vipPath+".address"); err != nil {
+			return err
+		}
+		if _, exists := addresses[vip.Address]; exists {
+			return fmt.Errorf("%s.address: duplicate address %q", vipPath, vip.Address)
+		}
+		addresses[vip.Address] = struct{}{}
+
+		if vip.Interface != "" && strings.TrimSpace(vip.Interface) == "" {
+			return fmt.Errorf("%s.interface: must not be blank", vipPath)
+		}
+	}
+
+	if _, exists := names[a.Primary]; !exists {
+		return fmt.Errorf("%s.primary: no VIP named %q", fieldPath, a.Primary)
 	}
 	return nil
 }
