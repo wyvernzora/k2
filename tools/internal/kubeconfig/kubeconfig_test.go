@@ -1,9 +1,24 @@
 package kubeconfig
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestCredentialsDir(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	got, err := CredentialsDir("k2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(home, ".k2", "k2")
+	if got != want {
+		t.Fatalf("CredentialsDir() = %q, want %q", got, want)
+	}
+}
 
 func TestRewriteServer(t *testing.T) {
 	in := []byte(`

@@ -107,7 +107,7 @@ func hostOrAutoDetect(host string) string {
 
 func hostOrFromCluster(url string) string {
 	if url == "" {
-		return "(default — ~/.kube/k2/<cluster>/server-url, then cluster YAML VIP)"
+		return "(default — ~/.k2/<cluster>/server-url, then cluster YAML VIP)"
 	}
 	return url
 }

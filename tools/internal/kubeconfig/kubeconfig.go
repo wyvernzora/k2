@@ -13,7 +13,7 @@ func CredentialsDir(clusterName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".kube", "k2", clusterName), nil
+	return filepath.Join(home, ".k2", clusterName), nil
 }
 
 func Path(clusterName string) (string, error) {

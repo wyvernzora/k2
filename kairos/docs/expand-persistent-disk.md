@@ -19,7 +19,7 @@ instead.
 For example:
 
 ```sh
-kubectl --kubeconfig="$HOME/.kube/k2/k2/kubeconfig" \
+kubectl --kubeconfig="$HOME/.k2/k2/kubeconfig" \
   drain <node-name> \
   --ignore-daemonsets \
   --delete-emptydir-data \
@@ -138,8 +138,8 @@ From the operator machine, wait for the node to become Ready and then uncordon
 it:
 
 ```sh
-kubectl --kubeconfig="$HOME/.kube/k2/k2/kubeconfig" get nodes
-kubectl --kubeconfig="$HOME/.kube/k2/k2/kubeconfig" uncordon <node-name>
+kubectl --kubeconfig="$HOME/.k2/k2/kubeconfig" get nodes
+kubectl --kubeconfig="$HOME/.k2/k2/kubeconfig" uncordon <node-name>
 ```
 
 Finally, verify the persistence marker and mount on the node:

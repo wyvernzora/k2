@@ -234,7 +234,7 @@ func TestStorageKeyCHAPAndCredentialSecretBoundaries(t *testing.T) {
 func TestLoadStorageCredentialsFixedSchema(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	dir := filepath.Join(home, ".kube", "k2", "v3")
+	dir := filepath.Join(home, ".k2", "v3")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -336,7 +336,7 @@ func TestNewStorageStateBypassesCredentialReuseWhenRotatingOrKeySupplied(t *test
 		t.Fatal(err)
 	}
 	old := storageCredentials{CSIPublicKey: "old-public", CSIPrivateKey: "old-private", CHAPUsername: "old-user", CHAPPassword: "old-pass", PoolKey: poolKey}
-	dir := filepath.Join(home, ".kube", "k2", "v3")
+	dir := filepath.Join(home, ".k2", "v3")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -384,7 +384,7 @@ func TestNewStorageStateReusesOldCredentialsAndAddsMissingPoolKey(t *testing.T) 
 		SSHPort:            22,
 	}
 	old := storageCredentials{CSIPublicKey: "old-public", CSIPrivateKey: "old-private", CHAPUsername: "old-user", CHAPPassword: "old-pass"}
-	dir := filepath.Join(home, ".kube", "k2", "v3")
+	dir := filepath.Join(home, ".k2", "v3")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -414,7 +414,7 @@ func TestNewStorageStateReusesOldCredentialsAndAddsMissingPoolKey(t *testing.T) 
 func TestLoadStorageCredentialsMissingCHAPPasswordErrors(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	dir := filepath.Join(home, ".kube", "k2", "v3")
+	dir := filepath.Join(home, ".k2", "v3")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}

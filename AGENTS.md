@@ -329,7 +329,7 @@ Default cert details belong in `@k2/cert-manager`. Auth details belong in
 ### Live Cluster Diagnostics
 
 - For live v3 cluster diagnostics, use the explicit kubeconfig at
-  `/Users/wyvernzora/.kube/k2/k2/kubeconfig`; the ambient context may point at
+  `/Users/wyvernzora/.k2/k2/kubeconfig`; the ambient context may point at
   the legacy API VIP.
 - Do not reveal Secret values in command output or summaries.
 

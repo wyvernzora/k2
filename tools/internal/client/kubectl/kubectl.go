@@ -1,6 +1,6 @@
 // Package kubectl is a small wrapper around the local kubectl binary,
 // scoped to the operations k2-tools needs against the harvested
-// cluster kubeconfig at ~/.kube/k2/<inst>/kubeconfig. It exists
+// cluster kubeconfig at ~/.k2/<inst>/kubeconfig. It exists
 // because the rest of internal/ that talks to k8s does so via SSH'd
 // `sudo kubectl` on a CP node, but `k2-tools upgrade` needs to
 // cordon/drain/uncordon a node BEFORE the SSH session reboots it

@@ -7,7 +7,7 @@ Pocket ID setup creates the `proxmox-admins` group, restricts the `proxmox-shuna
 ```sh
 install -d -m 0700 ansible/credentials/oidc
 umask 077
-KUBECONFIG="$HOME/.kube/k2/k2/kubeconfig" kubectl -n pocket-id get secret proxmox-shuna-oidc -o json > ansible/credentials/oidc/shuna.json
+KUBECONFIG="$HOME/.k2/k2/kubeconfig" kubectl -n pocket-id get secret proxmox-shuna-oidc -o json > ansible/credentials/oidc/shuna.json
 ```
 
 Then run the separate playbook:

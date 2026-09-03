@@ -13,7 +13,7 @@ Conventions used throughout:
   sudo up front; you get one password prompt at the start of a run.
 - Test-VM state lives in `.testvm/` (repo root). Per-cluster credentials
   (kubeconfig, tokens, operator key, `storage-appliance.json`) live in
-  `~/.kube/k2/<cluster-name>/`.
+  `~/.k2/<cluster-name>/`.
 - All SSH against test VMs uses relaxed host keys; production nodes never
   do.
 
@@ -72,7 +72,7 @@ Walk the plan output (pool topology, wipe verdicts per disk), confirm,
 then verify:
 
 - Banner reports the credentials file; inspect
-  `~/.kube/k2/v3-vmtest/storage-appliance.json` — portal, IQN base, csi
+  `~/.k2/v3-vmtest/storage-appliance.json` — portal, IQN base, csi
   key, CHAP, and the escrowed `poolKey`.
 - On the appliance (`k2-tools vm ssh stor1`): `sudo zpool status`,
   `sudo zfs get keystatus tank` → `available`,
@@ -102,7 +102,7 @@ k2-tools provision storage --cluster-target v3 --test-vm stor1 \
 ```
 
 Cleanup: `k2-tools vm delete stor1 --force` and remove
-`~/.kube/k2/v3-vmtest/` if you're done with the credentials.
+`~/.k2/v3-vmtest/` if you're done with the credentials.
 
 ## 3. k8s cluster by hand (bootstrap + worker)
 
@@ -114,7 +114,7 @@ k2-tools vm create qemu-vmnet --id wrk1 --start --sudo
 k2-tools provision bootstrap --cluster-target v3 --test-vm srv1
 k2-tools provision worker    --cluster-target v3 --test-vm wrk1
 
-export KUBECONFIG=~/.kube/k2/v3-vmtest/kubeconfig
+export KUBECONFIG=~/.k2/v3-vmtest/kubeconfig
 kubectl get nodes    # both Ready; API answers on the derived test VIP
 ```
 
@@ -145,7 +145,7 @@ Flags that matter:
 
 - `--skip-teardown-on-fail` — keep everything on failure for post-mortem.
   Reruns reuse the preserved VMs and credentials; the operator key
-  persists in `~/.kube/k2/k2e2e/` precisely so reruns can authenticate
+  persists in `~/.k2/k2e2e/` precisely so reruns can authenticate
   to already-hardened nodes.
 - `--keep` — keep everything even on success.
 - `k2-tools e2e storage` is an alias for `e2e run storage-pvc`.
@@ -155,7 +155,7 @@ Flags that matter:
 - **See what a VM is doing:** `k2-tools vm console <id>` (serial),
   `k2-tools vm status <id>`, `k2-tools vm list`.
 - **SSH into e2e nodes:** as `kairos` with
-  `-i ~/.kube/k2/k2e2e/operator_ed25519` post-provision (password auth is
+  `-i ~/.k2/k2e2e/operator_ed25519` post-provision (password auth is
   disabled by hardening); fresh nodes accept kairos/kairos.
 - **Storage appliance sshd penalty box:** repeated failed auth (e.g. a
   crash-looping CSI pod) makes OpenSSH refuse connections from that
@@ -167,7 +167,7 @@ Flags that matter:
   `vm delete --all --force` now finds root QEMUs via pgrep and escalates
   powerdown → TERM → KILL through sudo.
 - **Full reset:** `k2-tools vm delete --all --force`, then remove
-  `~/.kube/k2/k2e2e/`. Never delete the credentials dir while hardened
+  `~/.k2/k2e2e/`. Never delete the credentials dir while hardened
   VMs are still running — the operator key inside is the only way back
   into them.
 

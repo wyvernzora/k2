@@ -22,7 +22,7 @@ func upgradeRegistration() Registration {
 // upgrade-specific knobs (--source, drain/reboot timeouts,
 // --allow-quorum-loss). See the plan file for the rationale.
 type upgradeCmd struct {
-	ClusterName string `name:"cluster-name" env:"K2_UPGRADE_CLUSTER_NAME" required:"" help:"Local cluster instance name (matches the dir under ~/.kube/k2/)."`
+	ClusterName string `name:"cluster-name" env:"K2_UPGRADE_CLUSTER_NAME" required:"" help:"Local cluster instance name (matches the dir under ~/.k2/)."`
 	Host        string `name:"host" env:"K2_UPGRADE_HOST" required:"" help:"InternalIP / SSH host of the node to upgrade."`
 	SSHPort     int    `name:"ssh-port" env:"K2_UPGRADE_SSH_PORT" default:"22" help:"SSH port."`
 	SSHUser     string `name:"ssh-user" env:"K2_UPGRADE_SSH_USER" default:"kairos" help:"SSH user."`

@@ -47,7 +47,7 @@ Use render mode to inspect the exact files before touching a node:
 `--cluster-target` selects the source cluster config and generated deploy tree,
 for example `clusters/v3.yaml` and `deploy/`. `--cluster-name` is the local
 cluster instance name and is reserved for per-test credential state such as
-`~/.kube/k2/<cluster-name>/`.
+`~/.k2/<cluster-name>/`.
 
 Local render mode does not include baked image metadata labels because those
 come from `/usr/share/k2/image-build/metadata.yaml` on the target node during
@@ -221,7 +221,7 @@ By default the target node reboots after files are installed. Pass
 `--no-reboot` to inspect the target before restart.
 
 After reboot, the provisioner waits for SSH and k3s credentials, then writes
-local operator state under `~/.kube/k2/<cluster-name>/`:
+local operator state under `~/.k2/<cluster-name>/`:
 
 - `kubeconfig`
 - `server-token`
@@ -258,7 +258,7 @@ running.
 ## Provision Additional Nodes
 
 Additional server and worker provisioning uses the local operator state written
-by bootstrap provisioning under `~/.kube/k2/<cluster-name>/`.
+by bootstrap provisioning under `~/.k2/<cluster-name>/`.
 
 Servers use `server-token`, activate the baked server invariant config, and get
 the automatic control-plane taint:
@@ -294,7 +294,7 @@ invariants:
 ```
 
 Both commands default the join endpoint from
-`~/.kube/k2/<cluster-name>/server-url`, falling back to the primary API VIP from
+`~/.k2/<cluster-name>/server-url`, falling back to the primary API VIP from
 `clusters/<target>.yaml`. The saved join URL intentionally uses the VIP IP, not
 the API DNS name, because cluster DNS depends on Kubernetes already being
 healthy. Use `--server-url https://<host>:6443` when a test network needs nodes
