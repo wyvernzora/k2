@@ -41,9 +41,6 @@ kubernetes:
   api:
     primary: kube-vip-cluster
     vips:
-      - name: kube-vip
-        address: 10.10.9.1
-        interface: end0
       - name: kube-vip-cluster
         address: 10.12.9.1
         interface: end0.12
