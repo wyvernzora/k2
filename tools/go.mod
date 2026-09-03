@@ -1,6 +1,6 @@
 module github.com/wyvernzora/k2/tools
 
-go 1.26
+go 1.26.0
 
 require (
 	charm.land/bubbles/v2 v2.2.1
@@ -12,7 +12,7 @@ require (
 	github.com/google/go-containerregistry v0.22.0
 	github.com/homeport/dyff v1.12.0
 	github.com/pkg/sftp v1.13.11
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/term v0.45.0
 	gopkg.in/yaml.v3 v3.0.1
 )
