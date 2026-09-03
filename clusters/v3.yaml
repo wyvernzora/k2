@@ -39,7 +39,7 @@ onePassword:
 # "cdk8s never reads this".
 kubernetes:
   api:
-    primary: kube-vip
+    primary: kube-vip-cluster
     vips:
       - name: kube-vip
         address: 10.10.9.1
