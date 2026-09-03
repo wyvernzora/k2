@@ -57,7 +57,6 @@ export class Cilium extends K2Chart {
       },
       encryption: {
         enabled: true,
-        nodeEncryption: true,
         type: "wireguard",
       },
       routingMode: "native",
