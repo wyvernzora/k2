@@ -8,7 +8,7 @@ import (
 	"github.com/wyvernzora/k2/tools/internal/ui"
 )
 
-const defaultArtifactBaseURL = "https://io.wyvernzora.k2.images.s3.us-west-2.amazonaws.com"
+const defaultArtifactBaseURL = "https://s3.us-west-2.amazonaws.com/io.wyvernzora.k2.images"
 
 type Runner struct {
 	RepoRoot string
