@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip-cluster
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip-cluster
-    app.kubernetes.io/version: v1.2.2
-    helm.sh/chart: kube-vip-0.11.0
+    app.kubernetes.io/version: v1.2.3
+    helm.sh/chart: kube-vip-0.11.1
     k2.wyvernzora.io/app: kube-vip
     k2.wyvernzora.io/component: kube-vip
   name: kube-vip-cluster
@@ -81,8 +81,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip-cluster
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip-cluster
-    app.kubernetes.io/version: v1.2.2
-    helm.sh/chart: kube-vip-0.11.0
+    app.kubernetes.io/version: v1.2.3
+    helm.sh/chart: kube-vip-0.11.1
     k2.wyvernzora.io/app: kube-vip
     k2.wyvernzora.io/component: kube-vip
   name: kube-vip-cluster
@@ -102,8 +102,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip-cluster
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip-cluster
-    app.kubernetes.io/version: v1.2.2
-    helm.sh/chart: kube-vip-0.11.0
+    app.kubernetes.io/version: v1.2.3
+    helm.sh/chart: kube-vip-0.11.1
     k2.wyvernzora.io/app: kube-vip
     k2.wyvernzora.io/component: kube-vip
   name: kube-vip-cluster
@@ -124,8 +124,8 @@ metadata:
     app.kubernetes.io/instance: kube-vip-cluster
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-vip-cluster
-    app.kubernetes.io/version: v1.2.2
-    helm.sh/chart: kube-vip-0.11.0
+    app.kubernetes.io/version: v1.2.3
+    helm.sh/chart: kube-vip-0.11.1
     k2.wyvernzora.io/app: kube-vip
     k2.wyvernzora.io/component: kube-vip
   name: kube-vip-cluster
@@ -199,7 +199,7 @@ spec:
               value: kube-vip-cluster-cp-lock
             - name: vip_subnet
               value: "32"
-          image: ghcr.io/kube-vip/kube-vip:v1.2.2
+          image: ghcr.io/kube-vip/kube-vip:v1.2.3
           imagePullPolicy: IfNotPresent
           name: kube-vip
           resources:
