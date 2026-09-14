@@ -9,7 +9,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/alecthomas/kong v1.16.1
 	github.com/gonvenience/ytbx v1.5.0
-	github.com/google/go-containerregistry v0.22.0
+	github.com/google/go-containerregistry v0.22.1
 	github.com/homeport/dyff v1.12.0
 	github.com/pkg/sftp v1.13.11
 	golang.org/x/crypto v0.56.0
