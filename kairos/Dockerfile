@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.26
+# syntax=docker/dockerfile:1.27
 
 ARG BASE_IMAGE=ubuntu:26.04
 # Supplied by k2-tools from kairos/versions.env; keep the version pin single-sourced.
