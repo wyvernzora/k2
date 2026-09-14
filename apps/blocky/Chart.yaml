@@ -7,5 +7,5 @@ annotations:
   k2.wyvernzora.io/allow-crd-template-failure: "true"
 dependencies:
   - name: k8s-gateway
-    repository: https://k8s-gateway.github.io/k8s_gateway
+    repository: https://k8s-gateway.kryptonian.kapsi.fi/
     version: 3.7.2
