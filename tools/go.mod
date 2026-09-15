@@ -12,7 +12,7 @@ require (
 	github.com/google/go-containerregistry v0.22.1
 	github.com/homeport/dyff v1.12.0
 	github.com/pkg/sftp v1.13.11
-	golang.org/x/crypto v0.56.0
+	golang.org/x/crypto v0.57.0
 	golang.org/x/term v0.46.0
 	gopkg.in/yaml.v3 v3.0.1
 )
