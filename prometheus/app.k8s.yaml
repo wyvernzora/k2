@@ -8532,6 +8532,8 @@ data:
     logs = /var/log/grafana
     plugins = /var/lib/grafana/plugins
     provisioning = /etc/grafana/provisioning
+    [plugins]
+    preinstall_auto_update = false
     [server]
     domain = ''
     [unified_storage]
@@ -10046,7 +10048,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: f618dff6b79d51afcf543de558a07caa1743689c9681025293cf0e13f54c45ee
+        checksum/config: e3df3cce15b7b0b39085cd7a7cfb7e46f0535f1c5bb2031434f3137c88bbc392
         checksum/sc-dashboard-provider-config: e3aca4961a8923a0814f12363c5e5e10511bb1deb6cd4e0cbe138aeee493354f
         kubectl.kubernetes.io/default-container: grafana
       labels:
