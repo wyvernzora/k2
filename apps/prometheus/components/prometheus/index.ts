@@ -108,6 +108,7 @@ function grafanaValues(grafanaHost: string) {
     },
     serviceMonitor: { enabled: false },
     "grafana.ini": {
+      plugins: { preinstall_auto_update: false },
       "auth.jwt": {
         enabled: true,
         header_name: "X-Pomerium-Jwt-Assertion",
