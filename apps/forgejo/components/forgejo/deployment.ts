@@ -34,7 +34,7 @@ import { forgejoEnv } from "./env.js";
 
 export const FORGEJO_IMAGE = oci`codeberg.org/forgejo/forgejo:16-rootless`;
 
-const CADDY_IMAGE = oci`caddy:2.11.4-alpine`;
+const CADDY_IMAGE = oci`caddy:2.11.7-alpine`;
 const BUSYBOX_IMAGE = oci`busybox:1.38.0`;
 const DEFAULT_CERTIFICATE_SECRET_NAME = "default-certificate";
 const PUID = 1000;
