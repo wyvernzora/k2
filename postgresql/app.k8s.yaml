@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -19,8 +19,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-controller-manager-config
@@ -35,9 +35,9 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
+    app.kubernetes.io/version: 1.30.1
     cnpg.io/reload: ""
-    helm.sh/chart: cloudnative-pg-0.29.0
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-default-monitoring
@@ -535,8 +535,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -573,8 +573,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg-view
@@ -606,8 +606,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg-edit
@@ -641,8 +641,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -662,8 +662,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -892,8 +892,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -914,8 +914,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-webhook-service
@@ -937,8 +937,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -952,9 +952,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 09887fe14149b2c3ccad31d9abfa50561a37ecfb13082302bc12241a233c0b52
-        checksum/monitoring-config: d53107de742ff96dba68a040c721e440d79647a53442165bcaa6dd0875aaf74e
-        checksum/rbac: cde1a507d763b56d8c26919af47466f0f1c1f7d2a0ada476fbdff7188f1d62ef
+        checksum/config: c2a0afe8b284d2806a7a9c141b0b0937324eb72e36e5fd29c0ab3fa280ed02ca
+        checksum/monitoring-config: 312f8369d8f50846dbcdcdb714ac49fe5ea9ac31b00883a63afd5ffc51ca0fa6
+        checksum/rbac: e45cf9a6c3f8084eafec1f93c08421894121fba16fb6d6f5cea8cbe5c156604b
       labels:
         app.kubernetes.io/instance: cnpg
         app.kubernetes.io/name: cloudnative-pg
@@ -970,7 +970,7 @@ spec:
             - /manager
           env:
             - name: OPERATOR_IMAGE_NAME
-              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.0
+              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1
             - name: OPERATOR_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -979,7 +979,7 @@ spec:
               value: cnpg-default-monitoring
             - name: WATCH_NAMESPACE
               value: postgresql
-          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.0
+          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1065,8 +1065,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-mutating-webhook-configuration
@@ -1163,8 +1163,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.0
-    helm.sh/chart: cloudnative-pg-0.29.0
+    app.kubernetes.io/version: 1.30.1
+    helm.sh/chart: cloudnative-pg-0.29.1
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-validating-webhook-configuration
