@@ -109,7 +109,7 @@ spec:
               value: /config
             - name: FLOOD_OPTION_ALLOWEDPATH
               value: /downloads
-          image: jesec/flood:4.16.1
+          image: jesec/flood:4.16.2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
