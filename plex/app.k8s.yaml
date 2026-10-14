@@ -112,7 +112,7 @@ spec:
               value: /config
             - name: XDG_DATA_HOME
               value: /data
-          image: caddy:2.11.4-alpine
+          image: caddy:2.11.7-alpine
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 6
