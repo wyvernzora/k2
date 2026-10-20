@@ -52,7 +52,7 @@ spec:
               value: America/Los_Angeles
             - name: WEBUI_PORTS
               value: 8080/tcp
-          image: lscr.io/linuxserver/qbittorrent:5.2.4
+          image: lscr.io/linuxserver/qbittorrent:5.3.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
