@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.2
+    app.kubernetes.io/version: 1.8.3
+    helm.sh/chart: k8s-gateway-3.7.4
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -19,8 +19,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.2
+    app.kubernetes.io/version: 1.8.3
+    helm.sh/chart: k8s-gateway-3.7.4
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -66,8 +66,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.2
+    app.kubernetes.io/version: 1.8.3
+    helm.sh/chart: k8s-gateway-3.7.4
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -118,8 +118,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.2
+    app.kubernetes.io/version: 1.8.3
+    helm.sh/chart: k8s-gateway-3.7.4
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -142,8 +142,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.2
+    app.kubernetes.io/version: 1.8.3
+    helm.sh/chart: k8s-gateway-3.7.4
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -171,8 +171,8 @@ metadata:
     app.kubernetes.io/instance: k8s-gateway
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: k8s-gateway
-    app.kubernetes.io/version: 1.8.0
-    helm.sh/chart: k8s-gateway-3.7.2
+    app.kubernetes.io/version: 1.8.3
+    helm.sh/chart: k8s-gateway-3.7.4
     k2.wyvernzora.io/app: blocky
     k2.wyvernzora.io/component: k8s-gateway
   name: k8s-gateway
@@ -186,13 +186,13 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 80647268b7182ae0659347910b634b3977ee7d844fc0f93edbf439825f550b5c
+        checksum/config: 99c8f8787c2576b65f02004aa401df52e1dad7e479830a764300c77287da9ed0
       labels:
         app.kubernetes.io/instance: k8s-gateway
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: k8s-gateway
-        app.kubernetes.io/version: 1.8.0
-        helm.sh/chart: k8s-gateway-3.7.2
+        app.kubernetes.io/version: 1.8.3
+        helm.sh/chart: k8s-gateway-3.7.4
     spec:
       affinity:
         nodeAffinity:
@@ -206,7 +206,7 @@ spec:
         - args:
             - -conf
             - /etc/coredns/Corefile
-          image: ghcr.io/k8s-gateway/k8s_gateway:1.7.0
+          image: codeberg.org/k8s-gateway/k8s_gateway:1.8.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
