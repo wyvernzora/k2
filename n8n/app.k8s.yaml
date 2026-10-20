@@ -236,7 +236,7 @@ spec:
               value: America/Los_Angeles
             - name: TZ
               value: America/Los_Angeles
-          image: n8nio/n8n:2.43.1
+          image: n8nio/n8n:2.44.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
