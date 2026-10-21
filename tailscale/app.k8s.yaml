@@ -474,6 +474,7 @@ spec:
         env:
           - name: TS_DEBUG_FIREWALL_MODE
             value: iptables
+        image: tailscale/tailscale:v1.104.2
 ---
 apiVersion: tailscale.com/v1alpha1
 kind: Connector
