@@ -1,5 +1,7 @@
 import type { Construct } from "constructs";
 
+import { oci } from "@k2/cdk-lib";
+
 import { ProxyClass, type ProxyClassSpec } from "../crds/tailscale.com.js";
 
 export interface TailscaleRouterProxyClassProps {
@@ -29,6 +31,8 @@ function tailscaleContainerSpec(): NonNullable<
   NonNullable<NonNullable<ProxyClassSpec["statefulSet"]>["pod"]>["tailscaleContainer"]
 > {
   return {
+    // The released proxy includes Go's eMudhra fix ahead of the operator chart.
+    image: oci`tailscale/tailscale:v1.104.2`,
     env: [
       {
         name: "TS_DEBUG_FIREWALL_MODE",
