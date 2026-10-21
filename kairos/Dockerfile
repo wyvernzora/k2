@@ -6,7 +6,7 @@ ARG KAIROS_INIT_VERSION
 
 FROM quay.io/kairos/kairos-init:${KAIROS_INIT_VERSION} AS kairos-init
 
-FROM --platform=$BUILDPLATFORM golang:1.27-bookworm AS k2-node-agent
+FROM --platform=$BUILDPLATFORM golang:1.27.3-bookworm AS k2-node-agent
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -17,6 +17,11 @@ COPY kairos/node-agent/ ./
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o /out/k2-node-agent ./cmd/k2-node-agent
 
 FROM ${BASE_IMAGE} AS base-kairos
+
+# Refresh base-image trust and fail builds that cannot obtain the emergency fix.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20260816ubuntu0.26.04.1 \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG MODEL=generic
 ARG TRUSTED_BOOT=false
