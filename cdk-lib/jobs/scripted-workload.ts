@@ -19,7 +19,7 @@ import type { Construct } from "constructs";
 import { Namespace } from "../context/namespace.js";
 import { oci } from "../oci.js";
 
-const JOB_RUNNER_IMAGE = oci`ghcr.io/wyvernzora/k2-job-runner:v2@sha256:2c60187954a2666381576a13176a3c7e829f6c24ba69c68c42f402b6acb935d8`;
+const JOB_RUNNER_IMAGE = oci`ghcr.io/wyvernzora/k2-job-runner:v2@sha256:7d836971538aff12f736b88907f4571a8bfa42be9646a49923df1cd303d1841d`;
 const SCRIPTED_WORKLOAD_TYPE_LABEL = "k2.wyvernzora.io/scripted-workload-type";
 const SCRIPT_MOUNT_PATH = "/scripts";
 const SCRIPT_VOLUME_NAME = "script";
