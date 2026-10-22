@@ -17,22 +17,41 @@ export interface K8sGatewayValuesProps {
 export function k8sGatewayValues(props: K8sGatewayValuesProps): HelmProps["values"] {
   const scheduling = Scheduling.profile(prefer(workers()));
   return {
-    domain: watchedDomains(props.apexDomain).join(" "),
-    ttl: 60,
     replicaCount: 2,
-    watchedResources: WATCHED_RESOURCES,
     priorityClassName: "system-cluster-critical",
     tolerations: scheduling.tolerations,
     affinity: scheduling.affinity,
-    fallthrough: {
-      enabled: true,
-    },
+    serviceType: "ClusterIP",
     service: {
-      type: "ClusterIP",
       clusterIP: props.serviceClusterIp,
-      useTcp: true,
+      annotations: { "prometheus.io/scrape": "true", "prometheus.io/port": "9153" },
     },
-    extraZonePlugins: extraZonePlugins(props),
+    securityContext: { runAsUser: 1000 },
+    resources: null,
+    deployment: { dnsPolicy: "ClusterFirst" },
+    rollingUpdate: { maxUnavailable: 0 },
+    readinessProbe: { initialDelaySeconds: 10, failureThreshold: 5 },
+    servers: [gatewayServer(props)],
+  };
+}
+
+function gatewayServer(props: K8sGatewayValuesProps) {
+  return {
+    zones: [{ zone: ".", use_tcp: true }],
+    port: 1053,
+    servicePort: 53,
+    plugins: [
+      plugin("k8s_gateway", {
+        parameters: watchedDomains(props.apexDomain).join(" "),
+        configBlock: [
+          "apex k8s-gateway.blocky",
+          "ttl 60",
+          `resources ${WATCHED_RESOURCES.join(" ")}`,
+          "fallthrough",
+        ].join("\n"),
+      }),
+      ...extraZonePlugins(props),
+    ],
   };
 }
 

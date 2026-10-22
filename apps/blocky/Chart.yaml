@@ -8,4 +8,4 @@ annotations:
 dependencies:
   - name: k8s-gateway
     repository: https://k8s-gateway.kryptonian.kapsi.fi/
-    version: 3.7.4
+    version: 4.0.1
