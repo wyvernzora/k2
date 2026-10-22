@@ -1,0 +1,10 @@
+#cloud-config
+name: "K2 system certificate trust"
+
+# /etc/ssl/certs persists across image upgrades. Rebuild it from the current
+# image's official CA package before host TLS consumers start.
+stages:
+  initramfs:
+    - name: "Refresh system certificate trust"
+      commands:
+        - update-ca-certificates --fresh

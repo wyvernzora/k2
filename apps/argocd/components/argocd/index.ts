@@ -3,9 +3,11 @@ import { fileURLToPath } from "node:url";
 
 import type { Construct } from "constructs";
 
-import { HelmCharts, K2Chart } from "@k2/cdk-lib";
+import { HelmCharts, K2Chart, oci } from "@k2/cdk-lib";
 
 import { ArgoCDIngress } from "./ingress.js";
+
+const ARGOCD_IMAGE = oci`quay.io/argoproj/argocd:v3.5.6`;
 
 /**
  * Load resource-health Lua customizations from the sibling `health/`
@@ -41,6 +43,13 @@ export class ArgoCD extends K2Chart {
     super(scope, id);
 
     HelmCharts.of(this).asChart(this, "argocd", "argo-cd", {
+      // The chart still defaults to 3.5.5; 3.5.6 includes Go's eMudhra fix.
+      global: {
+        image: {
+          repository: ARGOCD_IMAGE.split(":")[0],
+          tag: ARGOCD_IMAGE.split(":")[1],
+        },
+      },
       // CRDs ship via apps/argocd/crds/crds.k8s.yaml — disable Helm-side
       // rendering to avoid duplicate manifests at apply time.
       crds: {
