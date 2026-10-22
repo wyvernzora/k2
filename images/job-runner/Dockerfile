@@ -10,7 +10,7 @@ ARG DYFF_VERSION=1.12.0
 RUN apk add --no-cache \
     bash \
     bind-tools \
-    ca-certificates \
+    'ca-certificates>=20261020-r0' \
     coreutils \
     curl \
     diffutils \
