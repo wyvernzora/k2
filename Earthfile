@@ -110,7 +110,7 @@ go-lint:
     FROM golang:1.27-bookworm
     # Keep in sync with the golangci-lint-action version in go.yaml.
     # renovate: datasource=github-releases depName=golangci/golangci-lint
-    ARG GOLANGCI_LINT_VERSION=v2.14.0
+    ARG GOLANGCI_LINT_VERSION=v2.15.0
     RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
         go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
     WORKDIR /src
