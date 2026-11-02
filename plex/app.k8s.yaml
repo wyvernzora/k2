@@ -361,6 +361,33 @@ metadata:
   labels:
     k2.wyvernzora.io/app: plex
     k2.wyvernzora.io/component: network-policy
+  name: plex-plex-tailscale
+specs:
+  - endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/name: plex
+        k8s:io.kubernetes.pod.namespace: plex
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: tailscale
+              tailscale.com/managed: "true"
+              tailscale.com/parent-resource: k2-router
+              tailscale.com/parent-resource-type: connector
+        toPorts:
+          - ports:
+              - port: "80"
+                protocol: TCP
+              - port: "8443"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: plex
+    k2.wyvernzora.io/component: network-policy
   name: plex-plex-network
 specs:
   - egress:
