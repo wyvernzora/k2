@@ -2,6 +2,7 @@ import type { Construct } from "constructs";
 
 import { K2Chart, Namespace } from "@k2/cdk-lib";
 import { EndpointNetworkPolicy, NamespaceBoundaryPolicy, cidr, egress, endpoint, ingress, tcp } from "@k2/cilium";
+import * as tailscale from "@k2/tailscale";
 
 import { PLEX_ALLOW_VLANS, PLEX_CADDY_HTTP_REDIRECT_PORT, PLEX_CADDY_PORT, PLEX_HTTP_PORT } from "../constants.js";
 import { workloads } from "../index.js";
@@ -17,6 +18,15 @@ export class NetworkPolicy extends K2Chart {
     const plexClientCidrs = cidr.vlans(this, PLEX_ALLOW_VLANS);
 
     new NamespaceBoundaryPolicy(this, "namespace-boundary");
+    new EndpointNetworkPolicy(this, "plex-tailscale", {
+      endpoint: plex,
+      ingress: [
+        {
+          from: { endpoint: tailscale.workloads.router() },
+          ports: [tcp(PLEX_CADDY_HTTP_REDIRECT_PORT), tcp(PLEX_CADDY_PORT)],
+        },
+      ],
+    });
     new EndpointNetworkPolicy(this, "plex-network", {
       endpoint: plex,
       ingress: [
