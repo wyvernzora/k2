@@ -49,6 +49,10 @@ export class Cilium extends K2Chart {
 
     HelmCharts.of(this).asChart(this, "cilium", "cilium", {
       kubeProxyReplacement: true,
+      // Forwarded Tailscale packets need service translation in the packet path.
+      socketLB: {
+        hostNamespaceOnly: true,
+      },
       k8sServiceHost: kubernetesApi.address,
       k8sServicePort: 6443,
       k8sClientRateLimit: {
