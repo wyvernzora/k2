@@ -10,7 +10,7 @@ job-runner-image:
 job-runner-image-base:
     ARG TAG="latest"
     # renovate: datasource=docker depName=alpine
-    ARG ALPINE_VERSION="3.24.3"
+    ARG ALPINE_VERSION="3.24.4"
     # renovate: datasource=github-releases depName=kubernetes/kubernetes
     ARG KUBECTL_VERSION="v1.37.2"
     # renovate: datasource=github-releases depName=homeport/dyff extractVersion=^v(?<version>.+)$
