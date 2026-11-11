@@ -8328,8 +8328,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana
@@ -8346,7 +8346,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.20.0
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -8364,7 +8364,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/version: 1.12.1
-    helm.sh/chart: prometheus-node-exporter-4.60.0
+    helm.sh/chart: prometheus-node-exporter-4.60.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -8382,8 +8382,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-alertmanager
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8402,8 +8402,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8422,8 +8422,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8440,8 +8440,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8463,8 +8463,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -8479,8 +8479,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana-config-dashboards
@@ -8505,8 +8505,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana
@@ -8547,8 +8547,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_datasource: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8588,8 +8588,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8610,8 +8610,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8632,8 +8632,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8654,8 +8654,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8676,8 +8676,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8698,8 +8698,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8720,8 +8720,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8742,8 +8742,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8764,8 +8764,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8786,8 +8786,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8808,8 +8808,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8830,8 +8830,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8852,8 +8852,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8874,8 +8874,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8896,8 +8896,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8918,8 +8918,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8940,8 +8940,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8962,8 +8962,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -8984,8 +8984,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9006,8 +9006,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9028,8 +9028,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9050,8 +9050,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9072,8 +9072,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9094,8 +9094,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9116,8 +9116,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9138,8 +9138,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     grafana_dashboard: "1"
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
@@ -9156,8 +9156,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana-clusterrole
@@ -9182,7 +9182,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.20.0
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -9395,8 +9395,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9407,9 +9407,13 @@ rules:
       - monitoring.coreos.com
     resources:
       - alertmanagers
+      - alertmanagers/finalizers
       - prometheusagents
+      - prometheusagents/finalizers
       - prometheuses
+      - prometheuses/finalizers
       - thanosrulers
+      - thanosrulers/finalizers
     verbs:
       - patch
   - apiGroups:
@@ -9554,8 +9558,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9602,8 +9606,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana-clusterrolebinding
@@ -9626,7 +9630,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.20.0
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -9650,8 +9654,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9674,8 +9678,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9696,8 +9700,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana
@@ -9723,7 +9727,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.20.0
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -9750,7 +9754,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/version: 1.12.1
-    helm.sh/chart: prometheus-node-exporter-4.60.0
+    helm.sh/chart: prometheus-node-exporter-4.60.1
     jobLabel: node-exporter
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9776,8 +9780,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9809,8 +9813,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     jobLabel: coredns
     k2.wyvernzora.io/app: prometheus
@@ -9836,8 +9840,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     jobLabel: kube-etcd
     k2.wyvernzora.io/app: prometheus
@@ -9866,8 +9870,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9892,8 +9896,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -9927,7 +9931,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/version: 1.12.1
-    helm.sh/chart: prometheus-node-exporter-4.60.0
+    helm.sh/chart: prometheus-node-exporter-4.60.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -10062,8 +10066,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana
@@ -10086,8 +10090,8 @@ spec:
       labels:
         app.kubernetes.io/instance: prometheus
         app.kubernetes.io/name: grafana
-        app.kubernetes.io/version: 13.2.4
-        helm.sh/chart: grafana-14.0.1
+        app.kubernetes.io/version: 13.3.0
+        helm.sh/chart: grafana-14.3.1
     spec:
       automountServiceAccountToken: true
       containers:
@@ -10120,7 +10124,7 @@ spec:
               value: http://localhost:3000/api/admin/provisioning/dashboards/reload
             - name: REQ_METHOD
               value: POST
-          image: quay.io/kiwigrid/k8s-sidecar:2.14.1
+          image: quay.io/kiwigrid/k8s-sidecar:2.14.3
           imagePullPolicy: IfNotPresent
           name: grafana-sc-dashboard
           securityContext:
@@ -10159,7 +10163,7 @@ spec:
               value: http://localhost:3000/api/admin/provisioning/datasources/reload
             - name: REQ_METHOD
               value: POST
-          image: quay.io/kiwigrid/k8s-sidecar:2.14.1
+          image: quay.io/kiwigrid/k8s-sidecar:2.14.3
           imagePullPolicy: IfNotPresent
           name: grafana-sc-datasources
           securityContext:
@@ -10198,7 +10202,7 @@ spec:
               value: /etc/grafana/provisioning
             - name: GF_UNIFIED_STORAGE_INDEX_PATH
               value: /var/lib/grafana-search/bleve
-          image: docker.io/grafana/grafana:13.2.4-distroless
+          image: docker.io/grafana/grafana:13.3.0-distroless
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
@@ -10287,7 +10291,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.20.0
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -10355,6 +10359,8 @@ spec:
             readOnlyRootFilesystem: true
       dnsPolicy: ClusterFirst
       hostNetwork: false
+      nodeSelector:
+        kubernetes.io/os: linux
       securityContext:
         fsGroup: 65534
         runAsGroup: 65534
@@ -10374,8 +10380,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10398,8 +10404,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
         app.kubernetes.io/part-of: kube-prometheus-stack
-        app.kubernetes.io/version: 92.10.1
-        chart: kube-prometheus-stack-92.10.1
+        app.kubernetes.io/version: 92.18.0
+        chart: kube-prometheus-stack-92.18.0
         heritage: Helm
         release: prometheus
     spec:
@@ -10410,22 +10416,22 @@ spec:
             - --kubelet-endpoints=true
             - --kubelet-endpointslice=false
             - --localhost=127.0.0.1
-            - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.94.1
+            - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.94.2
             - --config-reloader-cpu-request=0
             - --config-reloader-cpu-limit=0
             - --config-reloader-memory-request=0
             - --config-reloader-memory-limit=0
-            - --thanos-default-base-image=quay.io/thanos/thanos:v0.42.4
+            - --thanos-default-base-image=quay.io/thanos/thanos:v0.42.5
             - --secret-field-selector=type!=kubernetes.io/dockercfg,type!=helm.sh/release.v1
             - --web.enable-tls=true
-            - --web.cert-file=/cert/cert
-            - --web.key-file=/cert/key
+            - --web.cert-file=/cert/tls.crt
+            - --web.key-file=/cert/tls.key
             - --web.listen-address=:10250
             - --web.tls-min-version=VersionTLS13
           env:
             - name: GOGC
               value: "30"
-          image: quay.io/prometheus-operator/prometheus-operator:v0.94.1
+          image: quay.io/prometheus-operator/prometheus-operator:v0.94.2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -10487,8 +10493,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10516,7 +10522,7 @@ spec:
   alertmanagerConfigSelector: {}
   automountServiceAccountToken: true
   externalUrl: http://prometheus-kube-prometheus-alertmanager.prometheus:9093
-  image: quay.io/prometheus/alertmanager:v0.34.1
+  image: quay.io/prometheus/alertmanager:v0.34.2
   imagePullPolicy: IfNotPresent
   listenLocal: false
   logFormat: logfmt
@@ -10536,7 +10542,7 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   serviceAccountName: prometheus-kube-prometheus-alertmanager
-  version: v0.34.1
+  version: v0.34.2
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -10548,8 +10554,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10587,8 +10593,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10624,7 +10630,7 @@ spec:
   enableOTLPReceiver: false
   externalUrl: http://prometheus-kube-prometheus-prometheus.prometheus:9090
   hostNetwork: false
-  image: quay.io/prometheus/prometheus:v3.15.0-distroless
+  image: quay.io/prometheus/prometheus:v3.15.1-distroless
   imagePullPolicy: IfNotPresent
   listenLocal: false
   logFormat: logfmt
@@ -10667,7 +10673,7 @@ spec:
         storageClassName: k2-iscsi
   tsdb:
     outOfOrderTimeWindow: 0s
-  version: v3.15.0-distroless
+  version: v3.15.1-distroless
   walCompression: true
 ---
 apiVersion: monitoring.coreos.com/v1
@@ -10678,8 +10684,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10833,8 +10839,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -10865,8 +10871,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11047,8 +11053,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11104,8 +11110,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11139,8 +11145,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11166,8 +11172,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11193,8 +11199,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11220,8 +11226,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11247,8 +11253,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11336,8 +11342,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11484,8 +11490,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11606,8 +11612,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11866,8 +11872,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11897,8 +11903,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11974,8 +11980,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -11999,8 +12005,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12032,8 +12038,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12101,8 +12107,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12152,8 +12158,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12446,8 +12452,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12652,8 +12658,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12766,8 +12772,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -12856,8 +12862,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13060,8 +13066,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13103,8 +13109,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13206,8 +13212,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13536,8 +13542,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13566,8 +13572,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13623,8 +13629,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -13716,8 +13722,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14008,7 +14014,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.20.0
-    helm.sh/chart: kube-state-metrics-8.6.0
+    helm.sh/chart: kube-state-metrics-9.0.0
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -14034,7 +14040,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/version: 1.12.1
-    helm.sh/chart: prometheus-node-exporter-4.60.0
+    helm.sh/chart: prometheus-node-exporter-4.60.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
     release: prometheus
@@ -14065,8 +14071,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14097,8 +14103,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14130,8 +14136,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14177,8 +14183,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14210,8 +14216,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14266,7 +14272,7 @@ spec:
           sourceLabels:
             - __name__
         - action: drop
-          regex: container_memory_(mapped_file|swap)
+          regex: container_memory_mapped_file
           sourceLabels:
             - __name__
         - action: drop
@@ -14347,8 +14353,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14363,7 +14369,7 @@ spec:
       tlsConfig:
         ca:
           secret:
-            key: ca
+            key: ca.crt
             name: prometheus-kube-prometheus-admission
             optional: false
         serverName: prometheus-kube-prometheus-operator
@@ -14383,8 +14389,8 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14416,8 +14422,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14478,8 +14484,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana-test
@@ -14498,8 +14504,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14517,8 +14523,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana-test
@@ -14545,8 +14551,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14576,8 +14582,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14605,8 +14611,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14621,6 +14627,14 @@ rules:
     verbs:
       - get
       - create
+  - apiGroups:
+      - ""
+    resourceNames:
+      - prometheus-kube-prometheus-admission
+    resources:
+      - secrets
+    verbs:
+      - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -14635,8 +14649,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14661,8 +14675,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/version: 13.2.4
-    helm.sh/chart: grafana-14.0.1
+    app.kubernetes.io/version: 13.3.0
+    helm.sh/chart: grafana-14.3.1
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
   name: prometheus-grafana-test
@@ -14719,8 +14733,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14737,8 +14751,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
         app.kubernetes.io/part-of: kube-prometheus-stack
-        app.kubernetes.io/version: 92.10.1
-        chart: kube-prometheus-stack-92.10.1
+        app.kubernetes.io/version: 92.18.0
+        chart: kube-prometheus-stack-92.18.0
         heritage: Helm
         release: prometheus
       name: prometheus-kube-prometheus-admission-create
@@ -14749,6 +14763,7 @@ spec:
             - --host=prometheus-kube-prometheus-operator,prometheus-kube-prometheus-operator.prometheus.svc
             - --namespace=prometheus
             - --secret-name=prometheus-kube-prometheus-admission
+            - --secret-type=kubernetes.io/tls
           image: ghcr.io/jkroepke/kube-webhook-certgen:1.11.0
           imagePullPolicy: IfNotPresent
           name: create
@@ -14784,8 +14799,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    app.kubernetes.io/version: 92.10.1
-    chart: kube-prometheus-stack-92.10.1
+    app.kubernetes.io/version: 92.18.0
+    chart: kube-prometheus-stack-92.18.0
     heritage: Helm
     k2.wyvernzora.io/app: prometheus
     k2.wyvernzora.io/component: prometheus
@@ -14802,8 +14817,8 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
         app.kubernetes.io/part-of: kube-prometheus-stack
-        app.kubernetes.io/version: 92.10.1
-        chart: kube-prometheus-stack-92.10.1
+        app.kubernetes.io/version: 92.18.0
+        chart: kube-prometheus-stack-92.18.0
         heritage: Helm
         release: prometheus
       name: prometheus-kube-prometheus-admission-patch
