@@ -419,7 +419,7 @@ spec:
             - name: CLIENT_SECRET_FILE
               value: /oauth/client_secret
             - name: PROXY_IMAGE
-              value: tailscale/tailscale:v1.104.2
+              value: tailscale/tailscale:v1.104.4
             - name: PROXY_TAGS
               value: tag:k8s
             - name: APISERVER_PROXY
@@ -436,7 +436,7 @@ spec:
                   fieldPath: metadata.uid
             - name: OPERATOR_SHARED_ACME_ACCOUNT_KEY
               value: "false"
-          image: tailscale/k8s-operator:v1.104.2
+          image: tailscale/k8s-operator:v1.104.4
           imagePullPolicy: Always
           name: operator
           volumeMounts:
