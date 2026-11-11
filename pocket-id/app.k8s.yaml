@@ -889,7 +889,7 @@ spec:
               value: proxmox-admins
             - name: PROXMOX_USERNAME
               value: wyvernzora
-          image: ghcr.io/wyvernzora/k2-job-runner:v2@sha256:f4e583289022f23fe86fae5b28af00802f6fc4b673a6aea6fd93796f689d92bc
+          image: ghcr.io/wyvernzora/k2-job-runner:v2@sha256:3e9614517d676ba85d6511686727d150bcc4451b99f24f14d4dba311135fe4a0
           imagePullPolicy: IfNotPresent
           name: script
           resources:
