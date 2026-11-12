@@ -23,7 +23,7 @@ import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib"
 import { PLEX_CADDY_HTTP_REDIRECT_PORT, PLEX_CADDY_PORT, PLEX_HTTP_PORT, PLEX_LABELS } from "../../constants.js";
 
 const PLEX_IMAGE = oci`plexinc/pms-docker:1.43.5.11079-b3b13e506`;
-const CADDY_IMAGE = oci`caddy:2.11.7-alpine`;
+const CADDY_IMAGE = oci`caddy:2.11.8-alpine`;
 const BUSYBOX_IMAGE = oci`busybox:1.38.0`;
 const DEFAULT_CERTIFICATE_SECRET_NAME = "default-certificate";
 const PUID = 3001;
