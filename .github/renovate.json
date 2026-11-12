@@ -3,7 +3,7 @@
   "extends": ["config:recommended"],
   "timezone": "America/Los_Angeles",
   "dependencyDashboard": true,
-  "prConcurrentLimit": 8,
+  "prConcurrentLimit": 0,
   "internalChecksFilter": "strict",
   "minimumReleaseAgeBehaviour": "timestamp-required",
   "osvVulnerabilityAlerts": true,
