@@ -225,7 +225,7 @@ spec:
                     operator: DoesNotExist
       automountServiceAccountToken: false
       containers:
-        - image: koenkk/zigbee2mqtt:2.14.2
+        - image: koenkk/zigbee2mqtt:2.14.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
