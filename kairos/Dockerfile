@@ -144,7 +144,7 @@ RUN set -eux; \
                         exit 1; \
                     fi; \
                     groupadd --gid "${uid}" "${account}"; \
-                    useradd --create-home --shell /bin/sh --uid "${uid}" --gid "${uid}" "${account}"; \
+                    useradd -K PASS_MAX_DAYS=-1 --create-home --shell /bin/sh --uid "${uid}" --gid "${uid}" "${account}"; \
                     touch "/home/${account}/.hushlogin"; \
                     chown "${account}:${account}" "/home/${account}/.hushlogin"; \
                 done; \
@@ -305,12 +305,31 @@ RUN set -eux; \
         exit 1; \
     fi; \
     groupadd --gid 7003 k2-rescue; \
-    useradd --create-home --shell /bin/bash --uid 7003 --gid 7003 k2-rescue; \
+    useradd -K PASS_MAX_DAYS=-1 --create-home --shell /bin/bash --uid 7003 --gid 7003 k2-rescue; \
     echo 'k2-rescue:$y$j9T$5oZ2TfT8.Q38aVPqk2jPT/$SLyChcYpT3rj1KjRU4giE2MLifEXwiW1jg/bv5J/a71' | chpasswd -e; \
     printf '%s\n' 'k2-rescue ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99-k2-rescue; \
     chmod 0440 /etc/sudoers.d/99-k2-rescue; \
     mkdir -p /etc/ssh/sshd_config.d; \
     printf '%s\n' 'DenyUsers k2-rescue' > /etc/ssh/sshd_config.d/99-k2-rescue-block.conf
+
+# Verify the installed runtime, not just the image's requested version label.
+RUN set -eu; \
+    test "$(/usr/bin/kairos --version)" = "kairos ${KAIROS_VERSION}"; \
+    for command in kairos-agent immucore; do \
+        command_path="$(command -v "${command}")"; \
+        test "$(readlink -f "${command_path}")" = /usr/bin/kairos; \
+        test "$("${command_path}" --version)" = "kairos ${KAIROS_VERSION}"; \
+    done
+
+# CIS password aging must not expire image-owned service or recovery identities.
+RUN set -eu; \
+    accounts="k2-rescue"; \
+    if [ "${ROLE}" = storage ]; then accounts="${accounts} k2-csi k2-backup"; fi; \
+    for account in ${accounts}; do \
+        awk -F: -v account="${account}" \
+            '$1 == account { found++; if (($5 != "" && $5 != "-1") || ($8 != "" && $8 != "-1")) bad = 1 } END { exit (found != 1 || bad) }' \
+            /etc/shadow || { echo "Unexpected account expiration policy for ${account}" >&2; exit 1; }; \
+    done
 
 COPY kairos/overlays /k2-overlays
 
