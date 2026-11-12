@@ -32,7 +32,7 @@ function tailscaleContainerSpec(): NonNullable<
 > {
   return {
     // The released proxy includes Go's eMudhra fix ahead of the operator chart.
-    image: oci`tailscale/tailscale:v1.104.2`,
+    image: oci`tailscale/tailscale:v1.104.4`,
     env: [
       {
         name: "TS_DEBUG_FIREWALL_MODE",
