@@ -312,6 +312,15 @@ RUN set -eux; \
     mkdir -p /etc/ssh/sshd_config.d; \
     printf '%s\n' 'DenyUsers k2-rescue' > /etc/ssh/sshd_config.d/99-k2-rescue-block.conf
 
+# Verify the installed runtime, not just the image's requested version label.
+RUN set -eu; \
+    test "$(/usr/bin/kairos --version)" = "kairos ${KAIROS_VERSION}"; \
+    for command in kairos-agent immucore; do \
+        command_path="$(command -v "${command}")"; \
+        test "$(readlink -f "${command_path}")" = /usr/bin/kairos; \
+        test "$("${command_path}" --version)" = "kairos ${KAIROS_VERSION}"; \
+    done
+
 # CIS password aging must not expire image-owned service or recovery identities.
 RUN set -eu; \
     accounts="k2-rescue"; \
