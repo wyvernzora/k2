@@ -785,7 +785,7 @@ spec:
                   name: paperless-provisioning
             - name: PAPERLESS_MCP_TOKEN_SECRET
               value: paperless-mcp-token
-          image: ghcr.io/wyvernzora/k2-job-runner:v2@sha256:3e9614517d676ba85d6511686727d150bcc4451b99f24f14d4dba311135fe4a0
+          image: ghcr.io/wyvernzora/k2-job-runner:v2@sha256:eb6fa18a6cebddf29c3539d8406d8026059fd080cc9734e7de180803a402ad2a
           imagePullPolicy: IfNotPresent
           name: script
           resources:
