@@ -5,10 +5,13 @@ ARG TAG="latest"
 # +job-runner-image: Creates the runtime utility image for K2 Jobs/init containers
 #
 job-runner-image:
-    BUILD --platform=linux/amd64 --platform=linux/arm64 +job-runner-image-base
+    ARG TAG="latest"
+    ARG REVISION=$EARTHLY_GIT_HASH
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +job-runner-image-base --TAG=$TAG --REVISION=$REVISION
 
 job-runner-image-base:
     ARG TAG="latest"
+    ARG REVISION=$EARTHLY_GIT_HASH
     # renovate: datasource=docker depName=alpine
     ARG ALPINE_VERSION="3.24.4"
     # renovate: datasource=github-releases depName=kubernetes/kubernetes
@@ -16,7 +19,8 @@ job-runner-image-base:
     # renovate: datasource=github-releases depName=homeport/dyff extractVersion=^v(?<version>.+)$
     ARG DYFF_VERSION="1.12.0"
     FROM DOCKERFILE --build-arg ALPINE_VERSION=$ALPINE_VERSION --build-arg KUBECTL_VERSION=$KUBECTL_VERSION --build-arg DYFF_VERSION=$DYFF_VERSION images/job-runner
-    SAVE IMAGE ghcr.io/wyvernzora/k2-job-runner:${TAG}
+    LABEL org.opencontainers.image.revision=$REVISION
+    SAVE IMAGE --push ghcr.io/wyvernzora/k2-job-runner:${TAG}
 
 #
 # +crd-manifest: Extracts CRDs from an app's Helm chart dependencies into

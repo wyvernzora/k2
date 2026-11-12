@@ -15,6 +15,11 @@ ghcr.io/wyvernzora/k2-job-runner:<tag>
 CI publishes immutable tags as `sha-<12-char-commit>` on non-PR builds.
 Pushes to `main` also publish `latest`.
 
+CI pushes the AMD64/ARM64 index through Earthly, verifies each platform's
+`org.opencontainers.image.revision` label, and promotes the verified index to
+`latest` and the contract tag. Count-based package pruning is disabled because
+untagged platform manifests can still be referenced by retained indexes.
+
 This image also has a manual contract tag in `image.json`, currently `v2`.
 Scripted workloads pin to that version tag under `cdk-lib/jobs/`. Increment
 the tag after important runner tool-surface changes, then update the scripted

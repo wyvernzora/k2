@@ -130,34 +130,47 @@ jobs:
 
       - name: Build image
         shell: bash
-        run: earthly "${{ matrix.earthlyTarget }}" --TAG="${{ steps.tags.outputs.tag }}"
+        run: |
+          push=()
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            push+=(--push)
+          fi
+          earthly "${push[@]}" "${{ matrix.earthlyTarget }}" \
+            --TAG="${{ steps.tags.outputs.tag }}" --REVISION="$GITHUB_SHA"
 
-      - name: Push immutable tag
+      - name: Verify immutable image
         if: github.event_name != 'pull_request'
-        shell: bash
-        run: docker push "${{ matrix.image }}:${{ steps.tags.outputs.tag }}"
-
-      - name: Push latest tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.tags.outputs.latest == 'true'
+        id: published
         shell: bash
         run: |
-          docker tag "${{ matrix.image }}:${{ steps.tags.outputs.tag }}" "${{ matrix.image }}:latest"
-          docker push "${{ matrix.image }}:latest"
+          image="${{ matrix.image }}"
+          docker buildx imagetools inspect "$image:${{ steps.tags.outputs.tag }}" --raw > /tmp/runtime-index.json
+          jq -e '[.manifests[].platform | .os + "/" + .architecture] | sort == ["linux/amd64", "linux/arm64"]' /tmp/runtime-index.json
+          digest="sha256:$(sha256sum /tmp/runtime-index.json | cut -d ' ' -f 1)"
+          while IFS= read -r child; do
+            docker buildx imagetools inspect "$image@$child" --format '{{json .Image}}' |
+              jq -e --arg revision "$GITHUB_SHA" '.config.Labels["org.opencontainers.image.revision"] == $revision'
+          done < <(jq -r '.manifests[].digest' /tmp/runtime-index.json)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
-      - name: Push version tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.tags.outputs.version_tag != ''
+      - name: Publish mutable tags
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
-          docker tag "${{ matrix.image }}:${{ steps.tags.outputs.tag }}" "${{ matrix.image }}:${{ steps.tags.outputs.version_tag }}"
-          docker push "${{ matrix.image }}:${{ steps.tags.outputs.version_tag }}"
+          image="${{ matrix.image }}"
+          digest="${{ steps.published.outputs.digest }}"
+          tags=()
+          if [[ "${{ steps.tags.outputs.latest }}" == "true" ]]; then
+            tags+=(latest)
+          fi
+          if [[ -n "${{ steps.tags.outputs.version_tag }}" ]]; then
+            tags+=("${{ steps.tags.outputs.version_tag }}")
+          fi
+          for tag in "${tags[@]}"; do
+            docker buildx imagetools create --tag "$image:$tag" "$image@$digest"
+            actual="sha256:$(docker buildx imagetools inspect "$image:$tag" --raw | sha256sum | cut -d ' ' -f 1)"
+            test "$actual" = "$digest"
+          done
 
-      - name: Prune old package versions
-        if: github.event_name != 'pull_request'
-        uses: actions/delete-package-versions@v5
-        with:
-          owner: ${{ github.repository_owner }}
-          package-name: ${{ matrix.packageName }}
-          package-type: container
-          min-versions-to-keep: ${{ matrix.keepVersions }}
-          delete-only-untagged-versions: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # Platform manifests are untagged but referenced by published indexes.
+      # Package cleanup must preserve those references before it can be enabled.
