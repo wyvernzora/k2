@@ -1548,7 +1548,7 @@ spec:
       postInitApplicationSQL:
         - ALTER ROLE dba WITH LOGIN CREATEDB CREATEROLE INHERIT;
   enableSuperuserAccess: true
-  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-standard-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.7-standard-bookworm
   instances: 3
   postgresql:
     parameters:
