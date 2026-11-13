@@ -227,6 +227,12 @@
       "automerge": false
     },
     {
+      "description": "MeTube uses YYYY.MM.DD release tags; compare year, month, and day numerically.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/alexta69/metube"],
+      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{2})\\.(?<patch>\\d{2})$"
+    },
+    {
       "description": "Plex tags are 4-part versions plus a build hash (1.43.1.10611-1e34174b1); docker versioning treats the hash as an incompatible suffix, so compare loosely instead.",
       "matchDatasources": ["docker"],
       "matchDepNames": ["plexinc/pms-docker"],
