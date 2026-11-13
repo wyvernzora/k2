@@ -1,0 +1,234 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k2.wyvernzora.io/app: metube
+    k2.wyvernzora.io/component: metube
+  name: metube
+  namespace: metube
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: metube
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: metube
+        cdk8s.io/metadata.addr: metube-deployment-c82d6f7c
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - preference:
+                matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - roxy
+              weight: 100
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: UMASK
+              value: "0007"
+          image: ghcr.io/alexta69/metube:2026.11.10
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8081
+              scheme: HTTP
+          name: metube
+          ports:
+            - containerPort: 8081
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8081
+              scheme: HTTP
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2048Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+          volumeMounts:
+            - mountPath: /downloads
+              name: vol-downloads
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsGroup: 2001
+        runAsNonRoot: true
+        runAsUser: 3000
+      setHostnameAsFQDN: false
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: vol-downloads
+          nfs:
+            path: /mnt/data/downloads
+            server: 10.10.8.1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k2.wyvernzora.io/app: metube
+    k2.wyvernzora.io/component: metube
+  name: metube
+  namespace: metube
+spec:
+  externalIPs: []
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8081
+  selector:
+    app.kubernetes.io/name: metube
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.pomerium.io/allow_websockets: "true"
+    ingress.pomerium.io/policy: |
+      - allow:
+          and:
+            - authenticated_user: true
+  labels:
+    k2.wyvernzora.io/app: metube
+    k2.wyvernzora.io/component: metube
+  name: ingress
+  namespace: metube
+spec:
+  ingressClassName: pomerium
+  rules:
+    - host: mt.wyvernzora.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: metube
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - mt.wyvernzora.io
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: metube
+    k2.wyvernzora.io/component: network-policy
+  name: namespace-boundary
+  namespace: metube
+spec:
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: metube
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: metube
+    - fromEntities:
+        - kube-apiserver
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: metube
+    k2.wyvernzora.io/component: network-policy
+  name: pomerium-metube-pomerium-to-metube
+specs:
+  - description: pomerium to metube
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              app.kubernetes.io/name: metube
+              k8s:io.kubernetes.pod.namespace: metube
+        toPorts:
+          - ports:
+              - port: "8081"
+                protocol: TCP
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/component: proxy
+        app.kubernetes.io/name: pomerium
+        k8s:io.kubernetes.pod.namespace: pomerium
+  - description: pomerium to metube
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: metube
+        k8s:io.kubernetes.pod.namespace: metube
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              app.kubernetes.io/component: proxy
+              app.kubernetes.io/name: pomerium
+              k8s:io.kubernetes.pod.namespace: pomerium
+        toPorts:
+          - ports:
+              - port: "8081"
+                protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  labels:
+    k2.wyvernzora.io/app: metube
+    k2.wyvernzora.io/component: network-policy
+  name: metube-metube-egress
+specs:
+  - egress:
+      - toEntities:
+          - world
+    endpointSelector:
+      matchLabels:
+        app.kubernetes.io/name: metube
+        k8s:io.kubernetes.pod.namespace: metube
