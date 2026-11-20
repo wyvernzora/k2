@@ -1,7 +1,8 @@
 VERSION 0.8
 
 image:
-    FROM willhallonline/ansible:2.18-alpine-3.18
+    FROM willhallonline/ansible:2.20.11-alpine-3.22
+    USER root
     WORKDIR /ansible
 
     COPY requirements.yml requirements.yml
