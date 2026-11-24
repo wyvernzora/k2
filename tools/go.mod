@@ -11,7 +11,7 @@ require (
 	github.com/gonvenience/ytbx v1.5.0
 	github.com/google/go-containerregistry v0.22.1
 	github.com/homeport/dyff v1.12.0
-	github.com/pkg/sftp v1.13.12
+	github.com/pkg/sftp v1.13.13
 	golang.org/x/crypto v0.59.0
 	golang.org/x/term v0.48.0
 	gopkg.in/yaml.v3 v3.0.1
