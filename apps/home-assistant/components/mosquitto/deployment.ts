@@ -17,7 +17,7 @@ import { K2Deployment, oci, type K2Mounters, type K2Volumes } from "@k2/cdk-lib"
 
 import { MOSQUITTO_LABELS, MOSQUITTO_MQTT_PORT } from "../../constants.js";
 
-const MOSQUITTO_IMAGE = oci`eclipse-mosquitto:2.0.22`;
+const MOSQUITTO_IMAGE = oci`eclipse-mosquitto:2.0.23`;
 
 export interface MosquittoDeploymentProps {
   readonly configChecksum: string;
