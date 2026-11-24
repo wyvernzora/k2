@@ -7,7 +7,7 @@ import { AuthenticatedIngress, authenticatedSourceIpPolicy } from "@k2/pomerium"
 
 import { METUBE_HTTP_PORT, METUBE_LABELS } from "../constants.js";
 
-const METUBE_IMAGE = oci`ghcr.io/alexta69/metube:2026.11.14`;
+const METUBE_IMAGE = oci`ghcr.io/alexta69/metube:2026.11.24`;
 
 export class Metube extends K2Chart {
   public constructor(scope: Construct, id: string) {
