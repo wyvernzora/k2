@@ -7,7 +7,7 @@ import { HelmCharts, K2Chart, oci } from "@k2/cdk-lib";
 
 import { ArgoCDIngress } from "./ingress.js";
 
-const ARGOCD_IMAGE = oci`quay.io/argoproj/argocd:v3.6.1`;
+const ARGOCD_IMAGE = oci`quay.io/argoproj/argocd:v3.6.3`;
 
 /**
  * Load resource-health Lua customizations from the sibling `health/`
