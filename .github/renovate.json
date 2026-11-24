@@ -16,6 +16,10 @@
     "automergeType": "pr",
     "automerge": true
   },
+  "npm": {
+    "skipInstalls": false,
+    "ignoreScripts": true
+  },
   "packageRules": [
     {
       "description": "Wait 7 days before opening PRs for datasources with reliable release timestamps.",
