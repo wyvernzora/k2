@@ -52,7 +52,7 @@ spec:
                     operator: DoesNotExist
       automountServiceAccountToken: false
       containers:
-        - image: eclipse-mosquitto:2.0.22
+        - image: eclipse-mosquitto:2.0.23
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
