@@ -5,8 +5,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -19,8 +19,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-controller-manager-config
@@ -35,9 +35,9 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
+    app.kubernetes.io/version: 1.30.2
     cnpg.io/reload: ""
-    helm.sh/chart: cloudnative-pg-0.29.1
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-default-monitoring
@@ -535,11 +535,11 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
-  name: cnpg-cloudnative-pg
+  name: cnpg-cloudnative-pg-postgresql
 rules:
   - apiGroups:
       - ""
@@ -573,11 +573,11 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
-  name: cnpg-cloudnative-pg-view
+  name: cnpg-cloudnative-pg-postgresql-view
 rules:
   - apiGroups:
       - postgresql.cnpg.io
@@ -606,11 +606,11 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
-  name: cnpg-cloudnative-pg-edit
+  name: cnpg-cloudnative-pg-postgresql-edit
 rules:
   - apiGroups:
       - postgresql.cnpg.io
@@ -641,15 +641,15 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
-  name: cnpg-cloudnative-pg
+  name: cnpg-cloudnative-pg-postgresql
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cnpg-cloudnative-pg
+  name: cnpg-cloudnative-pg-postgresql
 subjects:
   - kind: ServiceAccount
     name: cnpg-cloudnative-pg
@@ -662,8 +662,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -758,6 +758,7 @@ rules:
       - leases
     verbs:
       - create
+      - delete
       - get
       - list
       - update
@@ -892,8 +893,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -914,8 +915,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-webhook-service
@@ -937,8 +938,8 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
   name: cnpg-cloudnative-pg
@@ -952,9 +953,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: c2a0afe8b284d2806a7a9c141b0b0937324eb72e36e5fd29c0ab3fa280ed02ca
-        checksum/monitoring-config: 312f8369d8f50846dbcdcdb714ac49fe5ea9ac31b00883a63afd5ffc51ca0fa6
-        checksum/rbac: e45cf9a6c3f8084eafec1f93c08421894121fba16fb6d6f5cea8cbe5c156604b
+        checksum/config: 035959d256ac68daeb6f9495d976cbc877eb87ec78f52e4d4b71554cb869f5b8
+        checksum/monitoring-config: 1c596e0ac75cd7514ca1fb7344ebc8327c585b4bb4fcdff0ee3b4ab8be7928b1
+        checksum/rbac: 622d86de3be60b1ff3ec3d1277b0c17f74fb67ab4e07e66239bf1dd784bfdf7e
       labels:
         app.kubernetes.io/instance: cnpg
         app.kubernetes.io/name: cloudnative-pg
@@ -970,7 +971,7 @@ spec:
             - /manager
           env:
             - name: OPERATOR_IMAGE_NAME
-              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1
+              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.2
             - name: OPERATOR_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -979,7 +980,9 @@ spec:
               value: cnpg-default-monitoring
             - name: WATCH_NAMESPACE
               value: postgresql
-          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1
+            - name: ENABLE_WEBHOOK_NAMESPACE_SUFFIX
+              value: "true"
+          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1065,11 +1068,11 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
-  name: cnpg-mutating-webhook-configuration
+  name: cnpg-mutating-webhook-configuration-postgresql
 webhooks:
   - admissionReviewVersions:
       - v1
@@ -1081,6 +1084,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: mbackup.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1102,6 +1111,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: mcluster.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1123,6 +1138,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: mdatabase.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1144,6 +1165,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: mscheduledbackup.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1163,11 +1190,11 @@ metadata:
     app.kubernetes.io/instance: cnpg
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cloudnative-pg
-    app.kubernetes.io/version: 1.30.1
-    helm.sh/chart: cloudnative-pg-0.29.1
+    app.kubernetes.io/version: 1.30.2
+    helm.sh/chart: cloudnative-pg-0.29.2
     k2.wyvernzora.io/app: postgresql
     k2.wyvernzora.io/component: cnpg
-  name: cnpg-validating-webhook-configuration
+  name: cnpg-validating-webhook-configuration-postgresql
 webhooks:
   - admissionReviewVersions:
       - v1
@@ -1179,6 +1206,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: vbackup.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1200,6 +1233,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: vcluster.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1221,6 +1260,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: vscheduledbackup.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1242,6 +1287,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: vdatabase.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
@@ -1263,6 +1314,12 @@ webhooks:
         port: 443
     failurePolicy: Fail
     name: vpooler.cnpg.io
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - postgresql
     rules:
       - apiGroups:
           - postgresql.cnpg.io
