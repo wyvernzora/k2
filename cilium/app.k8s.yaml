@@ -33,7 +33,7 @@ kind: Namespace
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-secrets
@@ -358,7 +358,7 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium
@@ -477,7 +477,7 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-operator
@@ -718,7 +718,7 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: hubble-ui
@@ -749,7 +749,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium
@@ -767,7 +767,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-operator
@@ -785,7 +785,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: hubble-ui
@@ -803,7 +803,7 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-config-agent
@@ -823,7 +823,7 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-tlsinterception-secrets
@@ -843,7 +843,7 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-operator-tlsinterception-secrets
@@ -864,7 +864,7 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-operator-ztunnel
@@ -894,7 +894,7 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: hubble-generate-certs
@@ -933,7 +933,7 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-config-agent
@@ -952,7 +952,7 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-tlsinterception-secrets
@@ -971,7 +971,7 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-operator-tlsinterception-secrets
@@ -990,7 +990,7 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: cilium-operator-ztunnel
@@ -1009,7 +1009,7 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
   name: hubble-generate-certs
@@ -1032,7 +1032,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cilium-envoy
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     io.cilium/app: proxy
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
@@ -1056,7 +1056,7 @@ metadata:
   labels:
     app.kubernetes.io/name: hubble-relay
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: hubble-relay
@@ -1077,7 +1077,7 @@ metadata:
   labels:
     app.kubernetes.io/name: hubble-ui
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: hubble-ui
@@ -1098,7 +1098,7 @@ metadata:
   labels:
     app.kubernetes.io/name: hubble-peer
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: cilium
@@ -1120,7 +1120,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cilium-agent
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: cilium
@@ -1137,7 +1137,7 @@ spec:
       labels:
         app.kubernetes.io/name: cilium-agent
         app.kubernetes.io/part-of: cilium
-        helm.sh/chart: cilium-1.20.4
+        helm.sh/chart: cilium-1.20.5
         k8s-app: cilium
     spec:
       affinity:
@@ -1179,7 +1179,7 @@ spec:
               value: "1"
             - name: KUBE_CLIENT_BACKOFF_DURATION
               value: "120"
-          image: quay.io/cilium/cilium:v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+          image: quay.io/cilium/cilium:v1.20.5@sha256:aa72499f075ad729947ea91b026218aceba24f1a8e4534bf36b8368c7c561526
           imagePullPolicy: IfNotPresent
           lifecycle:
             postStart:
@@ -1337,7 +1337,7 @@ spec:
               value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/cilium:v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+          image: quay.io/cilium/cilium:v1.20.5@sha256:aa72499f075ad729947ea91b026218aceba24f1a8e4534bf36b8368c7c561526
           imagePullPolicy: IfNotPresent
           name: config
           securityContext:
@@ -1362,7 +1362,7 @@ spec:
               value: /run/cilium/cgroupv2
             - name: BIN_PATH
               value: /opt/cni/bin
-          image: quay.io/cilium/cilium:v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+          image: quay.io/cilium/cilium:v1.20.5@sha256:aa72499f075ad729947ea91b026218aceba24f1a8e4534bf36b8368c7c561526
           imagePullPolicy: IfNotPresent
           name: mount-cgroup
           securityContext:
@@ -1392,7 +1392,7 @@ spec:
           env:
             - name: BIN_PATH
               value: /opt/cni/bin
-          image: quay.io/cilium/cilium:v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+          image: quay.io/cilium/cilium:v1.20.5@sha256:aa72499f075ad729947ea91b026218aceba24f1a8e4534bf36b8368c7c561526
           imagePullPolicy: IfNotPresent
           name: apply-sysctl-overwrites
           securityContext:
@@ -1418,7 +1418,7 @@ spec:
             - /bin/bash
             - -c
             - --
-          image: quay.io/cilium/cilium:v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+          image: quay.io/cilium/cilium:v1.20.5@sha256:aa72499f075ad729947ea91b026218aceba24f1a8e4534bf36b8368c7c561526
           imagePullPolicy: IfNotPresent
           name: mount-bpf-fs
           securityContext:
@@ -1453,7 +1453,7 @@ spec:
               value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/cilium:v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+          image: quay.io/cilium/cilium:v1.20.5@sha256:aa72499f075ad729947ea91b026218aceba24f1a8e4534bf36b8368c7c561526
           imagePullPolicy: IfNotPresent
           name: clean-cilium-state
           securityContext:
@@ -1479,7 +1479,7 @@ spec:
               name: cilium-run
         - command:
             - /install-plugin.sh
-          image: quay.io/cilium/cilium:v1.20.4@sha256:20fe92e4c86641233a450098c158d2d29085f3419931ab6bf681d2485dedf16e
+          image: quay.io/cilium/cilium:v1.20.5@sha256:aa72499f075ad729947ea91b026218aceba24f1a8e4534bf36b8368c7c561526
           imagePullPolicy: IfNotPresent
           name: install-cni-binaries
           resources:
@@ -1615,7 +1615,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cilium-envoy
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: cilium-envoy
@@ -1631,7 +1631,7 @@ spec:
       labels:
         app.kubernetes.io/name: cilium-envoy
         app.kubernetes.io/part-of: cilium
-        helm.sh/chart: cilium-1.20.4
+        helm.sh/chart: cilium-1.20.5
         k8s-app: cilium-envoy
         name: cilium-envoy
     spec:
@@ -1680,7 +1680,7 @@ spec:
               value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/cilium-envoy:v1.39.5-1792733054-8c73b2816bc8239e27f1fd53b271884688137459@sha256:547ab45f6092f681d9f54f3be9fa8fb1e705c9c5dc2df388efe3a52aa6965629
+          image: quay.io/cilium/cilium-envoy:v1.39.6-1794557904-dee711ff0e84b106edd0abcdd71961af1b870359@sha256:bdef13043ebaa7b9dcd8e3a86be41080bb5369e017cd759a12daf89e2b8fafe7
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
@@ -1789,7 +1789,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cilium-operator
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     io.cilium/app: operator
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
@@ -1815,7 +1815,7 @@ spec:
       labels:
         app.kubernetes.io/name: cilium-operator
         app.kubernetes.io/part-of: cilium
-        helm.sh/chart: cilium-1.20.4
+        helm.sh/chart: cilium-1.20.5
         io.cilium/app: operator
         name: cilium-operator
     spec:
@@ -1861,7 +1861,7 @@ spec:
               value: 10.12.9.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/operator-generic:v1.20.4@sha256:7a7a3489dc66ad67e420d285c8a8d2e169b0957ad15e120f593d27081bf38d82
+          image: quay.io/cilium/operator-generic:v1.20.5@sha256:c6e7de6665aa9701db86c4fe46828a75a0d167afe084a9ffb5bce34b2c4fa8c4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1916,6 +1916,8 @@ spec:
           operator: Exists
         - key: node-role.kubernetes.io/master
           operator: Exists
+        - key: node-role.kubernetes.io/etcd
+          operator: Exists
         - key: node.kubernetes.io/not-ready
           operator: Exists
         - key: node.cloudprovider.kubernetes.io/uninitialized
@@ -1933,7 +1935,7 @@ metadata:
   labels:
     app.kubernetes.io/name: hubble-relay
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: hubble-relay
@@ -1953,7 +1955,7 @@ spec:
       labels:
         app.kubernetes.io/name: hubble-relay
         app.kubernetes.io/part-of: cilium
-        helm.sh/chart: cilium-1.20.4
+        helm.sh/chart: cilium-1.20.5
         k8s-app: hubble-relay
     spec:
       affinity:
@@ -1969,7 +1971,7 @@ spec:
             - serve
           command:
             - hubble-relay
-          image: quay.io/cilium/hubble-relay:v1.20.4@sha256:cb23408209697ed30d2bc462e1f01eb622ea4423a891458f78bc88d7255bbfc1
+          image: quay.io/cilium/hubble-relay:v1.20.5@sha256:d0b3f5b944adc4a79f82ac51bcdc2d723b734c2c97872d8551626ad48b3c5538
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 12
@@ -2051,7 +2053,7 @@ metadata:
   labels:
     app.kubernetes.io/name: hubble-ui
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: hubble-ui
@@ -2071,7 +2073,7 @@ spec:
       labels:
         app.kubernetes.io/name: hubble-ui
         app.kubernetes.io/part-of: cilium
-        helm.sh/chart: cilium-1.20.4
+        helm.sh/chart: cilium-1.20.5
         k8s-app: hubble-ui
     spec:
       automountServiceAccountToken: true
@@ -2144,11 +2146,11 @@ metadata:
   labels:
     app.kubernetes.io/name: hubble-generate-certs
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: hubble-generate-certs
-  name: hubble-generate-certs-14ed815ae0
+  name: hubble-generate-certs-f99375757d
   namespace: cilium
 spec:
   template:
@@ -2192,7 +2194,7 @@ spec:
                   - key encipherment
                   - client auth
                   validity: 8760h
-          image: quay.io/cilium/certgen:v0.4.13@sha256:f0c16ea8abe251d448a7fd04bdd93fe0f85fb1c3a456a455e05f7bb107dc2ff1
+          image: quay.io/cilium/certgen:v0.4.14@sha256:2f89929b7474b739d5225d69f44bd70d9e28067ff6dc7fdbe0f6407828fb8395
           imagePullPolicy: IfNotPresent
           name: certgen
           securityContext:
@@ -2213,7 +2215,7 @@ metadata:
   labels:
     app.kubernetes.io/name: hubble-generate-certs
     app.kubernetes.io/part-of: cilium
-    helm.sh/chart: cilium-1.20.4
+    helm.sh/chart: cilium-1.20.5
     k2.wyvernzora.io/app: cilium
     k2.wyvernzora.io/component: cilium
     k8s-app: hubble-generate-certs
@@ -2265,7 +2267,7 @@ spec:
                       - key encipherment
                       - client auth
                       validity: 8760h
-              image: quay.io/cilium/certgen:v0.4.13@sha256:f0c16ea8abe251d448a7fd04bdd93fe0f85fb1c3a456a455e05f7bb107dc2ff1
+              image: quay.io/cilium/certgen:v0.4.14@sha256:2f89929b7474b739d5225d69f44bd70d9e28067ff6dc7fdbe0f6407828fb8395
               imagePullPolicy: IfNotPresent
               name: certgen
               securityContext:
