@@ -19,10 +19,11 @@ import {
 } from "cdk8s-plus-32";
 import type { Construct } from "constructs";
 
-import { linux, oci, only, Scheduling, withReplaceableJobSyncOptions, workers } from "@k2/cdk-lib";
+import { linux, oci, only, Scheduling, workers } from "@k2/cdk-lib";
 
 import { POMERIUM_LABELS, POMERIUM_PROXY_SERVICE_NAME } from "../../constants.js";
 
+import { nameBootstrapJob } from "./bootstrap-job-name.js";
 import { metadata } from "./metadata.js";
 
 const POMERIUM_IMAGE = oci`pomerium/ingress-controller:v0.34.2`;
@@ -62,7 +63,7 @@ function createControllerDeployment(scope: Construct, serviceAccount: IServiceAc
 
 function createGenSecretsJob(scope: Construct, serviceAccount: IServiceAccount): void {
   const job = new Job(scope, "gen-secrets-job", {
-    metadata: withReplaceableJobSyncOptions(metadata("pomerium-gen-secrets")),
+    metadata: metadata("pomerium-gen-secrets"),
     select: false,
     podMetadata: { name: "pomerium-gen-secrets" },
     automountServiceAccountToken: true,
@@ -77,6 +78,8 @@ function createGenSecretsJob(scope: Construct, serviceAccount: IServiceAccount):
   });
 
   applyScheduling(job);
+  // Immutable templates need a new identity before Argo's server-side diff runs.
+  nameBootstrapJob(job);
 }
 
 function controllerContainer(tmpVolume: Volume): ContainerProps {
