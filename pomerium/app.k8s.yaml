@@ -399,12 +399,10 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     k2.wyvernzora.io/app: pomerium
     k2.wyvernzora.io/component: pomerium
-  name: pomerium-gen-secrets
+  name: pomerium-gen-secrets-d33f15a8dcf5
   namespace: pomerium
 spec:
   template:
