@@ -462,7 +462,7 @@ spec:
                     operator: DoesNotExist
       automountServiceAccountToken: false
       containers:
-        - image: linuxserver/homeassistant:2026.11.1
+        - image: linuxserver/homeassistant:2026.11.2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
