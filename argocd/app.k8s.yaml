@@ -38,7 +38,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -66,7 +66,7 @@ metadata:
     app.kubernetes.io/name: argocd-repo-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-repo-server
@@ -110,7 +110,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -135,7 +135,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis
@@ -175,7 +175,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -192,7 +192,7 @@ metadata:
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-applicationset-controller
@@ -209,7 +209,7 @@ metadata:
     app.kubernetes.io/name: argocd-repo-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-repo-server
@@ -226,7 +226,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -243,7 +243,7 @@ metadata:
     app.kubernetes.io/name: argocd-secret
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-secret
@@ -260,7 +260,7 @@ metadata:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-cm
@@ -448,7 +448,7 @@ metadata:
     app.kubernetes.io/name: argocd-cmd-params-cm
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-cmd-params-cm
@@ -484,7 +484,7 @@ metadata:
     app.kubernetes.io/name: argocd-gpg-keys-cm
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-gpg-keys-cm
@@ -500,7 +500,7 @@ metadata:
     app.kubernetes.io/name: argocd-rbac-cm
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-rbac-cm
@@ -520,7 +520,7 @@ metadata:
     app.kubernetes.io/name: argocd-ssh-known-hosts-cm
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-ssh-known-hosts-cm
@@ -554,7 +554,7 @@ metadata:
     app.kubernetes.io/name: argocd-tls-certs-cm
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-tls-certs-cm
@@ -570,7 +570,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis-health-configmap
@@ -613,7 +613,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -639,7 +639,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -705,7 +705,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -728,7 +728,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -751,7 +751,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -806,7 +806,7 @@ metadata:
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-applicationset-controller
@@ -908,7 +908,7 @@ metadata:
     app.kubernetes.io/name: argocd-repo-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-repo-server
@@ -924,7 +924,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -975,7 +975,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -999,7 +999,7 @@ metadata:
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-applicationset-controller
@@ -1023,7 +1023,7 @@ metadata:
     app.kubernetes.io/name: argocd-repo-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-repo-server
@@ -1047,7 +1047,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -1071,7 +1071,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -1092,7 +1092,7 @@ metadata:
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-applicationset-controller
@@ -1117,7 +1117,7 @@ metadata:
     app.kubernetes.io/name: argocd-repo-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-repo-server
@@ -1142,7 +1142,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -1173,7 +1173,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis
@@ -1197,7 +1197,7 @@ metadata:
     app.kubernetes.io/name: argocd-applicationset-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-applicationset-controller
@@ -1536,7 +1536,7 @@ metadata:
     app.kubernetes.io/name: argocd-repo-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-repo-server
@@ -2001,7 +2001,7 @@ metadata:
     app.kubernetes.io/name: argocd-server
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-server
@@ -2509,7 +2509,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis
@@ -2596,7 +2596,7 @@ metadata:
     app.kubernetes.io/name: argocd-application-controller
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-application-controller
@@ -3054,7 +3054,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis-secret-init
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis-secret-init
@@ -3074,7 +3074,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis-secret-init
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis-secret-init
@@ -3108,7 +3108,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis-secret-init
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis-secret-init
@@ -3135,7 +3135,7 @@ metadata:
     app.kubernetes.io/name: argocd-redis-secret-init
     app.kubernetes.io/part-of: argocd
     app.kubernetes.io/version: v3.6.3
-    helm.sh/chart: argo-cd-10.18.1
+    helm.sh/chart: argo-cd-10.18.2
     k2.wyvernzora.io/app: argocd
     k2.wyvernzora.io/component: argocd
   name: argocd-redis-secret-init
@@ -3150,7 +3150,7 @@ spec:
         app.kubernetes.io/name: argocd-redis-secret-init
         app.kubernetes.io/part-of: argocd
         app.kubernetes.io/version: v3.6.3
-        helm.sh/chart: argo-cd-10.18.1
+        helm.sh/chart: argo-cd-10.18.2
     spec:
       affinity:
         podAntiAffinity:
